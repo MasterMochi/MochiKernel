@@ -1,0 +1,22 @@
+#******************************************************************************#
+#* vm/vmware/mochi.vmdk                                                       *#
+#*                                                                 2016/12/04 *#
+#* Copyright (C) 2016 Mochi.                                                  *#
+#******************************************************************************#
+# Disk DescriptorFile
+version=1
+encording="UTF-8"
+createType="monolithicFlat"
+
+# Extent description
+RW 10080 FLAT "../../build/mochi.img" 0
+
+# The Disk Data Base
+#DDB
+
+ddb.virtualHWVersion = "7"
+ddb.uuid = ""
+ddb.geometry.cylinders = "10"
+ddb.geometry.heads = "16"
+ddb.geometry.sectors = "63"
+ddb.adapterType = "ide"

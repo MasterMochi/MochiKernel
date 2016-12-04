@@ -1,0 +1,25 @@
+#******************************************************************************#
+#* vm/vmware/mochi.vmx                                                        *#
+#*                                                                 2016/12/04 *#
+#* Copyright (C) 2016 Mochi.                                                  *#
+#******************************************************************************#
+# VMware基本設定
+.encoding = "UTF-8"
+config.version = "8"
+virtualHW.version = "7"
+nvram = "mochi.nvram"
+guestOS = "other"
+displayName = "Mochi"
+gui.exitOnCLIHLT = "FALSE"
+
+# メモリサイズ (MB)
+memsize = "32"
+
+# IDE
+ide0:0.present = "TRUE"
+ide0:0.fileName = "mochi.vmdk"
+
+# フロッピー
+floppy0.present = "FALSE"
+
+# 以下vmwareによる自動生成

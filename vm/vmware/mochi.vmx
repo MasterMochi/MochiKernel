@@ -20,6 +20,5 @@ ide0:0.present = "TRUE"
 ide0:0.fileName = "mochi.vmdk"
 
 # フロッピー
-floppy0.present = "FALSE"
 
 # 以下vmwareによる自動生成

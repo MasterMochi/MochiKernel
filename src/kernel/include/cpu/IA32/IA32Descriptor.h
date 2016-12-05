@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/cpu/IA32/IA32Descriptors.h                              */
 /*                                                                 2016/12/05 */
-/* Copyright (C) 2016 Mochi                                                   */
+/* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_DESCRIPTOR_H
 #define IA32_DESCRIPTOR_H
@@ -71,6 +71,22 @@
 /* システム利用可能フラグ */
 #define IA32_DESCRIPTOR_AVL_OFF          ( 0 )  /**< 0 */
 #define IA32_DESCRIPTOR_AVL_ON           ( 1 )  /**< 1 */
+
+/** セグメントリミット（0-15）マクロ */
+#define IA32_DESCRIPTOR_LIMIT_LOW( _limit )   \
+    ( ( uint16_t )   ( ( uint32_t ) ( _limit ) & 0x0000FFFF )         )
+/** セグメントリミット（16-23）マクロ */
+#define IA32_DESCRIPTOR_LIMIT_HIGH( _limit )  \
+    ( ( uint8_t  ) ( ( ( uint32_t ) ( _limit ) & 0x00FF0000 ) >> 16 ) )
+/** セグメントベースアドレス（0-15）マクロ */
+#define IA32_DESCRIPTOR_BASE_LOW( _pBase )    \
+    ( ( uint16_t )   ( ( uint32_t ) ( _pBase ) & 0x0000FFFF )         )
+/** セグメントベースアドレス（16-23）マクロ */
+#define IA32_DESCRIPTOR_BASE_MIDDLE( _pBase ) \
+    ( ( uint8_t  ) ( ( ( uint32_t ) ( _pBase ) & 0x00FF0000 ) >> 16 ) )
+/** セグメントベースアドレス（24-31）マクロ */
+#define IA32_DESCRIPTOR_BASE_HIGH( _pBase )   \
+    ( ( uint8_t  ) ( ( ( uint32_t ) ( _pBase ) & 0xFF000000 ) >> 24 ) )
 
 /* セグメントディスクリプタ */
 typedef struct {

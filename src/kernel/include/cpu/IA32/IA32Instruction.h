@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/cpu/IA32/IA32Instruction.h                              */
 /*                                                                 2016/12/05 */
-/* Copyright (C) 2016 Mochi                                                   */
+/* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
 #define IA32_INSTRUCTION_H
@@ -23,7 +23,7 @@
  * @param[in]   value 加算値
  */
 /******************************************************************************/
-static inline void IA32InstructionAddESP( int32_t value )
+static inline void IA32InstructionAddEsp( int32_t value )
 {
     /* add命令実行 */
     __asm__ __volatile__ ( "add esp, %0"
@@ -76,7 +76,7 @@ static inline void IA32InstructionCli( void )
  * @param[out]  *pValue espレジスタ値格納先
  */
 /******************************************************************************/
-static inline void IA32InstructionGetESP( uint32_t *pValue )
+static inline void IA32InstructionGetEsp( uint32_t *pValue )
 {
     /* mov命令実行 */
     __asm__ __volatile__ ( "mov %0, esp"
@@ -377,7 +377,7 @@ static inline void IA32InstructionPopad( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPopDS( void )
+static inline void IA32InstructionPopDs( void )
 {
     /* pop ds命令実行 */
     __asm__ __volatile__ ( "pop ds" );
@@ -394,7 +394,7 @@ static inline void IA32InstructionPopDS( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPopES( void )
+static inline void IA32InstructionPopEs( void )
 {
     /* pop es命令実行 */
     __asm__ __volatile__ ( "pop es" );
@@ -428,7 +428,7 @@ static inline void IA32InstructionPopfd( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPopFS( void )
+static inline void IA32InstructionPopFs( void )
 {
     /* pop fs命令実行 */
     __asm__ __volatile__ ( "pop fs" );
@@ -445,7 +445,7 @@ static inline void IA32InstructionPopFS( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPopGS( void )
+static inline void IA32InstructionPopGs( void )
 {
     /* pop gs命令実行 */
     __asm__ __volatile__ ( "pop gs" );
@@ -499,7 +499,7 @@ static inline void IA32InstructionPushad( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPushDS( void )
+static inline void IA32InstructionPushDs( void )
 {
     /* push ds命令実行 */
     __asm__ __volatile__ ( "push ds" );
@@ -516,7 +516,7 @@ static inline void IA32InstructionPushDS( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPushES( void )
+static inline void IA32InstructionPushEs( void )
 {
     /* push es命令実行 */
     __asm__ __volatile__ ( "push es" );
@@ -551,7 +551,7 @@ static inline void IA32InstructionPushfd( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPushFS( void )
+static inline void IA32InstructionPushFs( void )
 {
     /* push fs命令実行 */
     __asm__ __volatile__ ( "push fs" );
@@ -568,7 +568,7 @@ static inline void IA32InstructionPushFS( void )
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
-static inline void IA32InstructionPushGS( void )
+static inline void IA32InstructionPushGs( void )
 {
     /* push gs命令実行 */
     __asm__ __volatile__ ( "push gs" );
@@ -585,7 +585,7 @@ static inline void IA32InstructionPushGS( void )
  * @param[in]   value 設定値
  */
 /******************************************************************************/
-static inline void IA32InstructionSetESP( uint32_t value )
+static inline void IA32InstructionSetEsp( uint32_t value )
 {
     /* mov命令実行 */
     __asm__ __volatile__ ( "mov esp, %0"
@@ -620,7 +620,7 @@ static inline void IA32InstructionSti( void )
  * @param[in]   value 減算値
  */
 /******************************************************************************/
-static inline void IA32InstructionSubESP( int32_t value )
+static inline void IA32InstructionSubEsp( int32_t value )
 {
     /* add命令実行 */
     __asm__ __volatile__ ( "sub esp, %0"

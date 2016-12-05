@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2016/03/21 *#
-#* Copyright (C) 2016 Mochi                                                   *#
+#*                                                                 2016/12/05 *#
+#* Copyright (C) 2016 Mochi.                                                  *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
@@ -13,7 +13,9 @@ CUR_DIR      = kernel
 KERNEL_NAME  = kernel
 
 # ソースコード
-SRCS = Initctrl/InitctrlInit.c
+SRCS = InitCtrl/InitCtrlInit.c \
+       MemMng/MemMngInit.c     \
+       MemMng/MemMngGdt.c
 
 # Cフラグ
 CFLAGS = -O             \

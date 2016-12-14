@@ -1,5 +1,5 @@
 #******************************************************************************#
-#* src/kernel/Makefile                                                        *#
+#* src/libraries/libc/Makefile                                                *#
 #*                                                                 2016/12/13 *#
 #* Copyright (C) 2016 Mochi.                                                  *#
 #******************************************************************************#
@@ -7,32 +7,21 @@
 #* マクロ設定                                                                 *#
 #******************************************************************************#
 # ベースディレクトリsrc/からの相対パス
-CUR_DIR      = kernel
+CUR_DIR   = libraries/libc
 
 # バイナリ名
-KERNEL_NAME  = kernel
+LIB_NAME  = libc.a
 
 # ソースコード
-SRCS = InitCtrl/InitCtrlInit.c \
-       MemMng/MemMngInit.c     \
-       MemMng/MemMngGdt.c      \
-       IntMng/IntMngInit.c     \
-       IntMng/IntMngIdt.c      \
-       IntMng/IntMngHdl.c      \
-       IntMng/IntMngPic.c
+SRCS = string/memset.c
 
 # Cフラグ
-CFLAGS = -O             \
-         -Wall          \
-         -masm=intel    \
-         -m32           \
-         -ffreestanding \
-         -Iinclude/     \
-         -I../include
-
-# LDフラグ
-LDFLAGS = -melf_i386 \
-          -lc
+CFLAGS = -O               \
+         -Wall            \
+         -masm=intel      \
+         -m32             \
+         -ffreestanding   \
+         -I../../include/
 
 
 #******************************************************************************#
@@ -46,10 +35,7 @@ OBJS_DIR  = $(BASE_DIR)/build/objs/$(CUR_DIR)
 DIR_LIST  = $(sort $(addprefix $(OBJS_DIR)/, $(dir $(SRCS))))
 
 # オブジェクトファイル
-OBJS  = $(addprefix $(OBJS_DIR)/, $(SRCS:.c=.o))
-
-# ライブラリディレクトリ
-LDFLAGS += -L$(BASE_DIR)/build/objs/libraries
+OBJS      = $(addprefix $(OBJS_DIR)/, $(SRCS:.c=.o))
 
 
 #******************************************************************************#
@@ -57,12 +43,12 @@ LDFLAGS += -L$(BASE_DIR)/build/objs/libraries
 #******************************************************************************#
 # サブディレクトリも含めたコンパイル
 .PHONY: all
-all: $(DIR_LIST) $(OBJS_DIR)/$(KERNEL_NAME) Makefile
+all: $(DIR_LIST) $(OBJS_DIR)/$(LIB_NAME) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(OBJS_DIR)
+	-rm -rf $(OBJS_DIR)/../$(LIB_NAME) $(OBJS_DIR)
 
 
 #******************************************************************************#
@@ -74,8 +60,9 @@ $(DIR_LIST):
 endif
 
 # バイナリ
-$(OBJS_DIR)/$(KERNEL_NAME): $(OBJS) Makefile
-	$(LD) -T kernel.lds -o $@ $(OBJS) $(LDFLAGS)
+$(OBJS_DIR)/$(LIB_NAME): $(OBJS) Makefile
+	$(AR) rcs $@ $(OBJS)
+	ln -f -s $@ $(OBJS_DIR)/../$(LIB_NAME)
 
 # アセンブラファイルコンパイル
 $(OBJS_DIR)/%.o: %.s Makefile

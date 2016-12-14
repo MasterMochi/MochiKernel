@@ -3,3 +3,4 @@ build/objs/booter
 build/objs/kernel
 vm/vmware/*
 *.o
+*.a

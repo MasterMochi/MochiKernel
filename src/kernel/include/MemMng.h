@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2016/12/05 */
+/*                                                                 2016/12/12 */
 /* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -17,24 +17,32 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* GDT定義 */
-#define MEMMNG_GDT_NULL         (  0 )          /**< GDTエントリ無し          */
-#define MEMMNG_GDT_ENTRY_MIN    (  1 )          /**< GDTエントリ最小値        */
-#define MEMMNG_GDT_ENTRY_MAX    ( 10 )          /**< GDTエントリ最大値        */
+#define MEMMNG_GDT_ENTRY_FULL  (  0 )           /**< GDTエントリ空き無し   */
+#define MEMMNG_GDT_ENTRY_MIN   (  1 )           /**< GDTエントリ番号最小値 */
+#define MEMMNG_GDT_ENTRY_MAX   (  9 )           /**< GDTエントリ番号最大値 */
+#define MEMMNG_GDT_ENTRY_NUM   \
+    ( MEMMNG_GDT_ENTRY_MAX + 1 )                /**< GDTエントリ数         */
 
 /* セグメント定義 */
-#define MEMMNG_SEG_KERNEL_CODE  ( 1 * 8     )   /**< カーネルコードセグメント */
-#define MEMMNG_SEG_KERNEL_DATA  ( 2 * 8     )   /**< カーネルデータセグメント */
-#define MEMMNG_SEG_USER_CODE    ( 3 * 8 + 3 )   /**< ユーザコードセグメント   */
-#define MEMMNG_SEG_USER_DATA    ( 4 * 8 + 3 )   /**< ユーザデータセグメント   */
+#define MEMMNG_SEG_KERNEL_CODE ( 1 * 8     )    /**< カーネルコードセグメント */
+#define MEMMNG_SEG_KERNEL_DATA ( 2 * 8     )    /**< カーネルデータセグメント */
+#define MEMMNG_SEG_USER_CODE   ( 3 * 8 + 3 )    /**< ユーザコードセグメント   */
+#define MEMMNG_SEG_USER_DATA   ( 4 * 8 + 3 )    /**< ユーザデータセグメント   */
 
 
 /******************************************************************************/
 /* グローバル関数宣言                                                         */
 /******************************************************************************/
+/*--------------*/
 /* MemMngInit.c */
+/*--------------*/
+/* メモリ管理初期化 */
 extern void MemMngInit( void );
 
+/*-------------*/
 /* MemMngGdt.c */
+/*-------------*/
+/* GDTエントリ追加 */
 extern uint16_t MemMngGdtAdd( void    *pBase,
                               size_t  limit,
                               uint8_t limitG,

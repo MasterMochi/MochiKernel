@@ -1,6 +1,6 @@
 /******************************************************************************/
-/* src/kernel/include/cpu/IA32/IA32Instruction.h                              */
-/*                                                                 2016/12/05 */
+/* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
+/*                                                                 2016/12/13 */
 /* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H

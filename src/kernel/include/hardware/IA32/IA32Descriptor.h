@@ -1,6 +1,6 @@
 /******************************************************************************/
-/* src/kernel/include/cpu/IA32/IA32Descriptors.h                              */
-/*                                                                 2016/12/05 */
+/* src/kernel/include/hardware/IA32/IA32Descriptors.h                         */
+/*                                                                 2016/12/13 */
 /* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_DESCRIPTOR_H
@@ -25,8 +25,8 @@
 #define IA32_DESCRIPTOR_DPL_3            ( 3 )  /**< レベル3 */
 
 /* システムフラグ */
-#define IA32_DESCRIPTOR_S_YES            ( 0 )  /**< システムディスクリプタ   */
-#define IA32_DESCRIPTOR_S_NO             ( 1 )  /**< 非システムディスクリプタ */
+#define IA32_DESCRIPTOR_S_SYSTEM         ( 0 )  /**< システムディスクリプタ      */
+#define IA32_DESCRIPTOR_S_CODEDATA       ( 1 )  /**< コード/データディスクリプタ */
 
 /* システムディスクリプタタイプ */
 #define IA32_DESCRIPTOR_TYPE_TSS16       ( 1 )  /**< 16ビットTSS            */
@@ -42,13 +42,13 @@
 #define IA32_DESCRIPTOR_TYPE_GATE32_INT  ( 14 ) /**< 32ビット割込みゲート   */
 #define IA32_DESCRIPTOR_TYPE_GATE32_TRAP ( 15 ) /**< 32ビットトラップゲート */
 
-/* 非システムディスクリプタタイプ */
+/* コード/データディスクリプタタイプ */
 #define IA32_DESCRIPTOR_TYPE_DATA_R      ( 0 )  /**< データ 読取専用                                 */
-#define IA32_DESCRIPTOR_TYPE_DATA_A      ( 1 )  /**< データ 読取専用, アクセス済                     */
+#define IA32_DESCRIPTOR_TYPE_DATA_RA     ( 1 )  /**< データ 読取専用, アクセス済                     */
 #define IA32_DESCRIPTOR_TYPE_DATA_RW     ( 2 )  /**< データ 読書                                     */
 #define IA32_DESCRIPTOR_TYPE_DATA_RWA    ( 3 )  /**< データ 読書, アクセス済                         */
 #define IA32_DESCRIPTOR_TYPE_DATA_ER     ( 4 )  /**< データ エクスパンドダウン, 読取専用             */
-#define IA32_DESCRIPTOR_TYPE_DATA_EA     ( 5 )  /**< データ エクスパンドダウン, 読取専用, アクセス済 */
+#define IA32_DESCRIPTOR_TYPE_DATA_ERA    ( 5 )  /**< データ エクスパンドダウン, 読取専用, アクセス済 */
 #define IA32_DESCRIPTOR_TYPE_DATA_ERW    ( 6 )  /**< データ エクスパンドダウン, 読書                 */
 #define IA32_DESCRIPTOR_TYPE_DATA_ERWA   ( 7 )  /**< データ エクスパンドダウン, 読書, アクセス済     */
 #define IA32_DESCRIPTOR_TYPE_CODE_X      ( 8 )  /**< コード 実行専用                                 */
@@ -65,8 +65,8 @@
 #define IA32_DESCRIPTOR_G_4K             ( 1 )  /**< 4,095byte単位 */
 
 /* デフォルトオペレーションサイズ */
-#define IA32_DESCRIPTOR_DB_16            ( 0 )  /**< 16bitビット */
-#define IA32_DESCRIPTOR_DB_32            ( 1 )  /**< 32bitビット */
+#define IA32_DESCRIPTOR_DB_16            ( 0 )  /**< 16bit */
+#define IA32_DESCRIPTOR_DB_32            ( 1 )  /**< 32bit */
 
 /* システム利用可能フラグ */
 #define IA32_DESCRIPTOR_AVL_OFF          ( 0 )  /**< 0 */
@@ -74,19 +74,25 @@
 
 /** セグメントリミット（0-15）マクロ */
 #define IA32_DESCRIPTOR_LIMIT_LOW( _limit )   \
-    ( ( uint16_t )   ( ( uint32_t ) ( _limit ) & 0x0000FFFF )         )
+    ( ( uint16_t ) ( ( ( uint32_t ) ( _limit   ) & 0x0000FFFF )       ) )
 /** セグメントリミット（16-23）マクロ */
 #define IA32_DESCRIPTOR_LIMIT_HIGH( _limit )  \
-    ( ( uint8_t  ) ( ( ( uint32_t ) ( _limit ) & 0x00FF0000 ) >> 16 ) )
+    ( ( uint8_t  ) ( ( ( uint32_t ) ( _limit   ) & 0x00FF0000 ) >> 16 ) )
 /** セグメントベースアドレス（0-15）マクロ */
 #define IA32_DESCRIPTOR_BASE_LOW( _pBase )    \
-    ( ( uint16_t )   ( ( uint32_t ) ( _pBase ) & 0x0000FFFF )         )
+    ( ( uint16_t ) ( ( ( uint32_t ) ( _pBase   ) & 0x0000FFFF )       ) )
 /** セグメントベースアドレス（16-23）マクロ */
 #define IA32_DESCRIPTOR_BASE_MIDDLE( _pBase ) \
-    ( ( uint8_t  ) ( ( ( uint32_t ) ( _pBase ) & 0x00FF0000 ) >> 16 ) )
+    ( ( uint8_t  ) ( ( ( uint32_t ) ( _pBase   ) & 0x00FF0000 ) >> 16 ) )
 /** セグメントベースアドレス（24-31）マクロ */
 #define IA32_DESCRIPTOR_BASE_HIGH( _pBase )   \
-    ( ( uint8_t  ) ( ( ( uint32_t ) ( _pBase ) & 0xFF000000 ) >> 24 ) )
+    ( ( uint8_t  ) ( ( ( uint32_t ) ( _pBase   ) & 0xFF000000 ) >> 24 ) )
+/** オフセット（0-15）マクロ */
+#define IA32_DESCRIPTOR_OFFSET_LOW( _pOffset ) \
+    ( ( uint16_t ) ( ( ( uint32_t ) ( _pOffset ) & 0x0000FFFF )       ) )
+/** オフセット（16-31）マクロ */
+#define IA32_DESCRIPTOR_OFFSET_HIGH( _pOffset ) \
+    ( ( uint16_t ) ( ( ( uint32_t ) ( _pOffset ) & 0xFFFF0000 ) >> 16 ) )
 
 /* セグメントディスクリプタ */
 typedef struct {

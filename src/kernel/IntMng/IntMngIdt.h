@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngIdt.h                                              */
-/*                                                                 2016/12/13 */
+/*                                                                 2016/12/18 */
 /* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 #ifndef INTMNG_IDT_H
@@ -29,7 +29,7 @@
 extern void IntMngIdtInit( void );
 
 /* IDTエントリ設定 */
-extern void IntMngIdtSet( uint32_t entryNo,
+extern void IntMngIdtSet( uint32_t index,
                           uint16_t selector,
                           void     *pOffset,
                           uint8_t  count,

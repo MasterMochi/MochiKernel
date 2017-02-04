@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngIdt.c                                              */
-/*                                                                 2016/12/13 */
+/*                                                                 2016/12/18 */
 /* Copyright (C) 2016 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -52,7 +52,7 @@ void IntMngIdtInit( void )
  * @brief       IDTエントリ設定
  * @details     IDTにエントリを設定する。
  * 
- * @param[in]   entryNo  IDTエントリ番号
+ * @param[in]   index    IDTエントリ番号
  *                  - INTMNG_IDT_ENTRY_MIN 割込み番号（最小値）
  *                  - INTMNG_IDT_ENTRY_MAX 割込み番号（最大値）
  * @param[in]   selector セレクタ
@@ -78,7 +78,7 @@ void IntMngIdtInit( void )
  *                  - IA32_DESCRIPTOR_DPL_3 特権レベル3
  */
 /******************************************************************************/
-void IntMngIdtSet( uint32_t entryNo,
+void IntMngIdtSet( uint32_t index,
                    uint16_t selector,
                    void     *pOffset,
                    uint8_t  count,
@@ -86,14 +86,14 @@ void IntMngIdtSet( uint32_t entryNo,
                    uint8_t  level )
 {
     /* ディスクリプタ設定 */
-    gIdt[ entryNo ].offset_low  = IA32_DESCRIPTOR_OFFSET_LOW( pOffset );
-    gIdt[ entryNo ].selector    = selector;
-    gIdt[ entryNo ].count       = count;
-    gIdt[ entryNo ].attr_type   = type;
-    gIdt[ entryNo ].attr_s      = IA32_DESCRIPTOR_S_SYSTEM;
-    gIdt[ entryNo ].attr_dpl    = level;
-    gIdt[ entryNo ].attr_p      = IA32_DESCRIPTOR_P_YES;
-    gIdt[ entryNo ].offset_high = IA32_DESCRIPTOR_OFFSET_HIGH( pOffset );
+    gIdt[ index ].offset_low  = IA32_DESCRIPTOR_OFFSET_LOW( pOffset );
+    gIdt[ index ].selector    = selector;
+    gIdt[ index ].count       = count;
+    gIdt[ index ].attr_type   = type;
+    gIdt[ index ].attr_s      = IA32_DESCRIPTOR_S_SYSTEM;
+    gIdt[ index ].attr_dpl    = level;
+    gIdt[ index ].attr_p      = IA32_DESCRIPTOR_P_YES;
+    gIdt[ index ].offset_high = IA32_DESCRIPTOR_OFFSET_HIGH( pOffset );
     
     return;
 }

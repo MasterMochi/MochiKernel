@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngGdt.c                                              */
-/*                                                                 2016/12/13 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/01/18 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -50,7 +50,63 @@ static IA32Descriptor_t gGdt[ MEMMNG_GDT_ENTRY_NUM ] = {
         IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
         IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
         0x00                          } },  /* セグメントベース(24-31)        */
-    /* GDT#3 ユーザコードセグメント */
+    /* GDT#3 ドライバコードセグメント */
+    { { 0xFFFF,                             /* セグメントリミット(0-15)       */
+        0x0000,                             /* セグメントベース(0-15)         */
+        0x00,                               /* セグメントベース(16-23)        */
+        IA32_DESCRIPTOR_TYPE_CODE_X,        /* セグメントタイプ               */
+        IA32_DESCRIPTOR_S_CODEDATA,         /* システムフラグ                 */
+        IA32_DESCRIPTOR_DPL_1,              /* ディスクリプタ特権レベル       */
+        IA32_DESCRIPTOR_P_YES,              /* ディスクリプタ存在フラグ       */
+        0xF,                                /* セグメントリミット(16-19)      */
+        IA32_DESCRIPTOR_AVL_OFF,            /* 未使用                         */
+        0x0,                                /* 予約(0)                        */
+        IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
+        IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
+        0x00                          } },  /* セグメントベース(24-31)        */
+    /* GDT#4 ドライバデータセグメント */
+    { { 0xFFFF,                             /* セグメントリミット(0-15)       */
+        0x0000,                             /* セグメントベース(0-15)         */
+        0x00,                               /* セグメントベース(16-23)        */
+        IA32_DESCRIPTOR_TYPE_DATA_RW,       /* セグメントタイプ               */
+        IA32_DESCRIPTOR_S_CODEDATA,         /* システムフラグ                 */
+        IA32_DESCRIPTOR_DPL_1,              /* ディスクリプタ特権レベル       */
+        IA32_DESCRIPTOR_P_YES,              /* ディスクリプタ存在フラグ       */
+        0xF,                                /* セグメントリミット(16-19)      */
+        IA32_DESCRIPTOR_AVL_OFF,            /* 未使用                         */
+        0x0,                                /* 予約(0)                        */
+        IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
+        IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
+        0x00                          } },  /* セグメントベース(24-31)        */
+    /* GDT#5 サーバコードセグメント */
+    { { 0xFFFF,                             /* セグメントリミット(0-15)       */
+        0x0000,                             /* セグメントベース(0-15)         */
+        0x00,                               /* セグメントベース(16-23)        */
+        IA32_DESCRIPTOR_TYPE_CODE_X,        /* セグメントタイプ               */
+        IA32_DESCRIPTOR_S_CODEDATA,         /* システムフラグ                 */
+        IA32_DESCRIPTOR_DPL_2,              /* ディスクリプタ特権レベル       */
+        IA32_DESCRIPTOR_P_YES,              /* ディスクリプタ存在フラグ       */
+        0xF,                                /* セグメントリミット(16-19)      */
+        IA32_DESCRIPTOR_AVL_OFF,            /* 未使用                         */
+        0x0,                                /* 予約(0)                        */
+        IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
+        IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
+        0x00                          } },  /* セグメントベース(24-31)        */
+    /* GDT#6 サーバデータセグメント */
+    { { 0xFFFF,                             /* セグメントリミット(0-15)       */
+        0x0000,                             /* セグメントベース(0-15)         */
+        0x00,                               /* セグメントベース(16-23)        */
+        IA32_DESCRIPTOR_TYPE_DATA_RW,       /* セグメントタイプ               */
+        IA32_DESCRIPTOR_S_CODEDATA,         /* システムフラグ                 */
+        IA32_DESCRIPTOR_DPL_2,              /* ディスクリプタ特権レベル       */
+        IA32_DESCRIPTOR_P_YES,              /* ディスクリプタ存在フラグ       */
+        0xF,                                /* セグメントリミット(16-19)      */
+        IA32_DESCRIPTOR_AVL_OFF,            /* 未使用                         */
+        0x0,                                /* 予約(0)                        */
+        IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
+        IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
+        0x00                          } },  /* セグメントベース(24-31)        */
+    /* GDT#7 ユーザコードセグメント */
     { { 0xFFFF,                             /* セグメントリミット(0-15)       */
         0x0000,                             /* セグメントベース(0-15)         */
         0x00,                               /* セグメントベース(16-23)        */
@@ -64,7 +120,7 @@ static IA32Descriptor_t gGdt[ MEMMNG_GDT_ENTRY_NUM ] = {
         IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
         IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
         0x00                          } },  /* セグメントベース(24-31)        */
-    /* GDT#4 ユーザデータセグメント */
+    /* GDT#8 ユーザデータセグメント */
     { { 0xFFFF,                             /* セグメントリミット(0-15)       */
         0x0000,                             /* セグメントベース(0-15)         */
         0x00,                               /* セグメントベース(16-23)        */
@@ -78,7 +134,7 @@ static IA32Descriptor_t gGdt[ MEMMNG_GDT_ENTRY_NUM ] = {
         IA32_DESCRIPTOR_DB_32,              /* デフォルトオペレーションサイズ */
         IA32_DESCRIPTOR_G_4K,               /* リミット粒度                   */
         0x00                          } },  /* セグメントベース(24-31)        */
-    /* GDT#5以降 空ディスクリプタ */
+    /* GDT#9以降 空ディスクリプタ */
     { { 0 } }, };
 
 
@@ -164,15 +220,15 @@ uint16_t MemMngGdtAdd( void    *pBase,
                        uint8_t level,
                        uint8_t opSize  )
 {
-    uint16_t            selector;       /* セグメントセレクタ       */
+    uint16_t            index;          /* GDTエントリ番号          */
     IA32DescriptorSeg_t *pDescriptor;   /* セグメントディスクリプタ */
     
     /* 空きディスクリプタ検索 */
-    for ( selector = MEMMNG_GDT_ENTRY_MIN;
-          selector < MEMMNG_GDT_ENTRY_MAX;
-          selector++                       ) {
+    for ( index = MEMMNG_GDT_ENTRY_MIN;
+          index < MEMMNG_GDT_ENTRY_MAX;
+          index++                       ) {
         /* 参照変数設定 */
-        pDescriptor = &( gGdt[ selector ].seg );
+        pDescriptor = &( gGdt[ index ].seg );
         
         /* 空きディスクリプタ判定 */
         if ( pDescriptor->attr_p == IA32_DESCRIPTOR_P_NO ) {
@@ -193,7 +249,7 @@ uint16_t MemMngGdtAdd( void    *pBase,
             pDescriptor->attr_g        = limitG;
             pDescriptor->base_high     = IA32_DESCRIPTOR_BASE_HIGH( pBase );
             
-            return selector;
+            return index;
         }
     }
     

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2016/12/12 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/01/15 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
 #define MEMMNG_H
@@ -23,11 +23,15 @@
 #define MEMMNG_GDT_ENTRY_NUM   \
     ( MEMMNG_GDT_ENTRY_MAX + 1 )                /**< GDTエントリ数         */
 
-/* セグメント定義 */
-#define MEMMNG_SEG_KERNEL_CODE ( 1 * 8     )    /**< カーネルコードセグメント */
-#define MEMMNG_SEG_KERNEL_DATA ( 2 * 8     )    /**< カーネルデータセグメント */
-#define MEMMNG_SEG_USER_CODE   ( 3 * 8 + 3 )    /**< ユーザコードセグメント   */
-#define MEMMNG_SEG_USER_DATA   ( 4 * 8 + 3 )    /**< ユーザデータセグメント   */
+/* セグメントセレクタ定義 */
+#define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /**< カーネルコードセグメント */
+#define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /**< カーネルデータセグメント */
+#define MEMMNG_SEGSEL_DRIVER_CODE ( 3 * 8 + 1 ) /**< ドライバコードセグメント */
+#define MEMMNG_SEGSEL_DRIVER_DATA ( 4 * 8 + 1 ) /**< ドライバデータセグメント */
+#define MEMMNG_SEGSEL_SERVER_CODE ( 5 * 8 + 2 ) /**< サーバコードセグメント   */
+#define MEMMNG_SEGSEL_SERVER_DATA ( 6 * 8 + 2 ) /**< サーバデータセグメント   */
+#define MEMMNG_SEGSEL_USER_CODE   ( 7 * 8 + 3 ) /**< ユーザコードセグメント   */
+#define MEMMNG_SEGSEL_USER_DATA   ( 8 * 8 + 3 ) /**< ユーザデータセグメント   */
 
 
 /******************************************************************************/

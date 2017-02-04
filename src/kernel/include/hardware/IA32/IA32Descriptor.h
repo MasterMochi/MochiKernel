@@ -65,8 +65,9 @@
 #define IA32_DESCRIPTOR_G_4K             ( 1 )  /**< 4,095byte単位 */
 
 /* デフォルトオペレーションサイズ */
-#define IA32_DESCRIPTOR_DB_16            ( 0 )  /**< 16bit */
-#define IA32_DESCRIPTOR_DB_32            ( 1 )  /**< 32bit */
+#define IA32_DESCRIPTOR_DB_UNUSED        ( 0 )  /**< 未使用 */
+#define IA32_DESCRIPTOR_DB_16            ( 0 )  /**< 16bit  */
+#define IA32_DESCRIPTOR_DB_32            ( 1 )  /**< 32bit  */
 
 /* システム利用可能フラグ */
 #define IA32_DESCRIPTOR_AVL_OFF          ( 0 )  /**< 0 */

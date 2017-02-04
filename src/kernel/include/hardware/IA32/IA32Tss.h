@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Tss.h                                 */
-/*                                                                 2016/12/13 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/01/06 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_TSS_H
 #define IA32_TSS_H
@@ -29,7 +29,7 @@ typedef struct {
     uint16_t reserved4;         /* 予約                    */
     uint32_t cr3;               /* CR0                     */
     uint32_t eip;               /* EIP                     */
-    uint32_t eflags;            /* ELAGS                   */
+    uint32_t eflags;            /* EFLAGS                  */
     uint32_t eax;               /* eax                     */
     uint32_t ecx;               /* ecx                     */
     uint32_t edx;               /* edx                     */

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2016/12/13 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/01/09 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
 #define IA32_INSTRUCTION_H
@@ -71,20 +71,22 @@ static inline void IA32InstructionCli( void )
 /******************************************************************************/
 /**
  * @brief       espレジスタ値取得
- * @details     espレジスタの値を指定したアドレスに格納する。
+ * @details     espレジスタの値を返す。
  * 
- * @param[out]  *pValue espレジスタ値格納先
+ * @return      espレジスタ値
  */
 /******************************************************************************/
-static inline void IA32InstructionGetEsp( uint32_t *pValue )
+static inline uint32_t IA32InstructionGetEsp( void )
 {
+    uint32_t esp;   /* espレジスタ値 */
+    
     /* mov命令実行 */
     __asm__ __volatile__ ( "mov %0, esp"
-                           : "=m" ( *pValue )
+                           : "=m" ( *&esp )
                            :
-                           :                  );
+                           :                );
     
-    return;
+    return esp;
 }
 
 

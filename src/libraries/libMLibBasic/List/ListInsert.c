@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/libraries/libMLibBasic/List/ListInsert.c                               */
-/*                                                                 2017/02/05 */
+/*                                                                 2017/02/17 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -16,168 +16,6 @@
 /******************************************************************************/
 /* グローバル関数宣言                                                         */
 /******************************************************************************/
-/******************************************************************************/
-/**
- * @brief       ノード後挿入
- * @details     指定したノードの後ろに新しいノードを挿入する。
- * 
- * @param[in]   *pList      連結リスト
- * @param[in]   *pNode      挿入先ノード
- * @param[in]   *pNewNode   挿入ノード
- * 
- * @retval      MLIB_SUCCESS 正常終了
- * @retval      MLIB_FAILURE 異常終了
- */
-/******************************************************************************/
-MLibRet_t MLibBasicListInsertAfter( MLibBasicList_t     *pList,
-                                    MLibBasicListNode_t *pNode,
-                                    MLibBasicListNode_t *pNewNode )
-{
-    MLibBasicListNode_t *pNextNode; /* 挿入後ノード */
-    
-    /* 初期化 */
-    pNextNode = NULL;
-    
-    /* 引数pListチェック */
-    if ( pList == NULL ) {
-        /* 不正値 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 引数pNodeチェック */
-    if ( pNode == NULL ) {
-        /* 不正値 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 引数pNewNodeチェック */
-    if ( pNewNode == NULL ) {
-        /* 不正値 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 連結リストサイズチェック */
-    if ( ( pList->size == 0 ) || ( pList->size == SIZE_MAX ) ) {
-        /* サイズ不正 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 挿入後ノード取得 */
-    pNextNode = pNode->pNext;
-    
-    /* 挿入前ノード設定 */
-    pNode->pNext = pNewNode;
-    
-    /* 挿入ノード設定 */
-    pNewNode->pPrev = pNode;
-    pNewNode->pNext = pNextNode;
-    
-    /* 挿入後ノード有無判定 */
-    if ( pNextNode == NULL ) {
-        /* 挿入後ノード無 */
-        
-        /* 連結リスト最後尾ノード設定 */
-        pList->pTail = pNewNode;
-        
-    } else {
-        /* 挿入後ノード有 */
-        
-        /* 挿入後ノード設定 */
-        pNextNode->pPrev = pNextNode;
-    }
-    
-    /* 連結リストサイズ設定 */
-    pList->size++;
-    
-    return MLIB_SUCCESS;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       ノード前挿入
- * @details     指定したノードの前に新しいノードを挿入する。
- * 
- * @param[in]   *pList      連結リスト
- * @param[in]   *pNode      挿入先ノード
- * @param[in]   *pNewNode   挿入ノード
- * 
- * @retval      MLIB_SUCCESS 正常終了
- * @retval      MLIB_FAILURE 異常終了
- */
-/******************************************************************************/
-MLibRet_t MLibBasicListInsertBefore( MLibBasicList_t     *pList,
-                                     MLibBasicListNode_t *pNode,
-                                     MLibBasicListNode_t *pNewNode )
-{
-    MLibBasicListNode_t *pBeforeNode; /* 挿入前ノード */
-    
-    /* 初期化 */
-    pBeforeNode = NULL;
-    
-    /* 引数pListチェック */
-    if ( pList == NULL ) {
-        /* 不正値 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 引数pNodeチェック */
-    if ( pNode == NULL ) {
-        /* 不正値 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 引数pNewNodeチェック */
-    if ( pNewNode == NULL ) {
-        /* 不正値 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 連結リストサイズチェック */
-    if ( ( pList->size == 0 ) || ( pList->size == SIZE_MAX ) ) {
-        /* サイズ不正 */
-        
-        return MLIB_FAILURE;
-    }
-    
-    /* 挿入前ノード取得 */
-    pBeforeNode = pNode->pPrev;
-    
-    /* 挿入後ノード設定 */
-    pNode->pPrev = pNewNode;
-    
-    /* 挿入ノード設定 */
-    pNewNode->pNext = pNode;
-    pNewNode->pPrev = pBeforeNode;
-    
-    /* 挿入前ノード有無判定 */
-    if ( pBeforeNode == NULL ) {
-        /* 挿入前ノード無 */
-        
-        /* 連結リスト先頭ノード設定 */
-        pList->pHead = pNewNode;
-        
-    } else {
-        /* 挿入前ノード有 */
-        
-        /* 挿入前ノード設定 */
-        pBeforeNode->pNext = pNewNode;
-    }
-    
-    /* 連結リストサイズ設定 */
-    pList->size++;
-    
-    return MLIB_SUCCESS;
-}
-
-
 /******************************************************************************/
 /**
  * @brief       ノード先頭挿入
@@ -241,6 +79,168 @@ MLibRet_t MLibBasicListInsertHead( MLibBasicList_t     *pList,
         
         /* 旧先頭ノード設定 */
         pOldHead->pPrev = pNewNode;
+    }
+    
+    /* 連結リストサイズ設定 */
+    pList->size++;
+    
+    return MLIB_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ノード次挿入
+ * @details     指定したノードの次に新しいノードを挿入する。
+ * 
+ * @param[in]   *pList      連結リスト
+ * @param[in]   *pNode      挿入先ノード
+ * @param[in]   *pNewNode   挿入ノード
+ * 
+ * @retval      MLIB_SUCCESS 正常終了
+ * @retval      MLIB_FAILURE 異常終了
+ */
+/******************************************************************************/
+MLibRet_t MLibBasicListInsertNext( MLibBasicList_t     *pList,
+                                   MLibBasicListNode_t *pNode,
+                                   MLibBasicListNode_t *pNewNode )
+{
+    MLibBasicListNode_t *pNextNode; /* 次ノード */
+    
+    /* 初期化 */
+    pNextNode = NULL;
+    
+    /* 引数pListチェック */
+    if ( pList == NULL ) {
+        /* 不正値 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 引数pNodeチェック */
+    if ( pNode == NULL ) {
+        /* 不正値 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 引数pNewNodeチェック */
+    if ( pNewNode == NULL ) {
+        /* 不正値 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 連結リストサイズチェック */
+    if ( ( pList->size == 0 ) || ( pList->size == SIZE_MAX ) ) {
+        /* サイズ不正 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 次ノード取得 */
+    pNextNode = pNode->pNext;
+    
+    /* 前ノード設定 */
+    pNode->pNext = pNewNode;
+    
+    /* 挿入ノード設定 */
+    pNewNode->pPrev = pNode;
+    pNewNode->pNext = pNextNode;
+    
+    /* 次ノード有無判定 */
+    if ( pNextNode == NULL ) {
+        /* 次ノード無 */
+        
+        /* 連結リスト最後尾ノード設定 */
+        pList->pTail = pNewNode;
+        
+    } else {
+        /* 次ノード有 */
+        
+        /* 次ノード設定 */
+        pNextNode->pPrev = pNextNode;
+    }
+    
+    /* 連結リストサイズ設定 */
+    pList->size++;
+    
+    return MLIB_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ノード前挿入
+ * @details     指定したノードの前に新しいノードを挿入する。
+ * 
+ * @param[in]   *pList      連結リスト
+ * @param[in]   *pNode      挿入先ノード
+ * @param[in]   *pNewNode   挿入ノード
+ * 
+ * @retval      MLIB_SUCCESS 正常終了
+ * @retval      MLIB_FAILURE 異常終了
+ */
+/******************************************************************************/
+MLibRet_t MLibBasicListInsertPrev( MLibBasicList_t     *pList,
+                                   MLibBasicListNode_t *pNode,
+                                   MLibBasicListNode_t *pNewNode )
+{
+    MLibBasicListNode_t *pPrevNode; /* 前ノード */
+    
+    /* 初期化 */
+    pPrevNode = NULL;
+    
+    /* 引数pListチェック */
+    if ( pList == NULL ) {
+        /* 不正値 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 引数pNodeチェック */
+    if ( pNode == NULL ) {
+        /* 不正値 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 引数pNewNodeチェック */
+    if ( pNewNode == NULL ) {
+        /* 不正値 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 連結リストサイズチェック */
+    if ( ( pList->size == 0 ) || ( pList->size == SIZE_MAX ) ) {
+        /* サイズ不正 */
+        
+        return MLIB_FAILURE;
+    }
+    
+    /* 前ノード取得 */
+    pPrevNode = pNode->pPrev;
+    
+    /* 次ノード設定 */
+    pNode->pPrev = pNewNode;
+    
+    /* 挿入ノード設定 */
+    pNewNode->pNext = pNode;
+    pNewNode->pPrev = pPrevNode;
+    
+    /* 前ノード有無判定 */
+    if ( pPrevNode == NULL ) {
+        /* 前ノード無 */
+        
+        /* 連結リスト先頭ノード設定 */
+        pList->pHead = pNewNode;
+        
+    } else {
+        /* 前ノード有 */
+        
+        /* 前ノード設定 */
+        pPrevNode->pNext = pNewNode;
     }
     
     /* 連結リストサイズ設定 */

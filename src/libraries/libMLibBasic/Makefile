@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/libraries/libMLibBasic/Makefile                                        *#
-#*                                                                 2017/02/05 *#
+#*                                                                 2017/02/17 *#
 #* Copyright (C) 2017 Mochi.                                                  *#
 #******************************************************************************#
 #******************************************************************************#
@@ -13,7 +13,8 @@ CUR_DIR   = libraries/libMLibBasic
 LIB_NAME  = libMLibBasic.a
 
 # ソースコード
-SRCS = List/ListInit.c   \
+SRCS = List/ListGet.c    \
+       List/ListInit.c   \
        List/ListInsert.c \
        List/ListRemove.c
 

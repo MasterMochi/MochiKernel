@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/MLib/Basic/MLibBasicList.h                                     */
-/*                                                                 2017/02/05 */
+/*                                                                 2017/02/17 */
 /* Copyright (C) 2017 Mochi                                                   */
 /******************************************************************************/
 #ifndef _MLIB_BASIC_LIST_H_
@@ -33,21 +33,31 @@ typedef struct {
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
+/* 次ノード取得 */
+extern MLibBasicListNode_t *MLibBasicListGetNextNode(
+    MLibBasicList_t     *pList,
+    MLibBasicListNode_t *pNode  );
+
+/* 前ノード取得 */
+extern MLibBasicListNode_t *MLibBasicListGetPrevNode(
+    MLibBasicList_t     *pList,
+    MLibBasicListNode_t *pNode  );
+
 /* 連結リスト初期化 */
 extern MLibRet_t MLibBasicListInit( MLibBasicList_t *pList );
 
-/* ノード後挿入 */
-extern MLibRet_t MLibBasicListInsertAfter( MLibBasicList_t     *pList,
-                                           MLibBasicListNode_t *pNode,
-                                           MLibBasicListNode_t *pNewNode );
-
-/* ノード前挿入 */
-extern MLibRet_t MLibBasicListInsertBefore( MLibBasicList_t     *pList,
-                                            MLibBasicListNode_t *pNode,
-                                            MLibBasicListNode_t *pNewNode );
-
 /* ノード先頭挿入 */
 extern MLibRet_t MLibBasicListInsertHead( MLibBasicList_t     *pList,
+                                          MLibBasicListNode_t *pNewNode );
+
+/* ノード次挿入 */
+extern MLibRet_t MLibBasicListInsertNext( MLibBasicList_t     *pList,
+                                          MLibBasicListNode_t *pNode,
+                                          MLibBasicListNode_t *pNewNode );
+
+/* ノード前挿入 */
+extern MLibRet_t MLibBasicListInsertPrev( MLibBasicList_t     *pList,
+                                          MLibBasicListNode_t *pNode,
                                           MLibBasicListNode_t *pNewNode );
 
 /* ノード最後尾挿入 */

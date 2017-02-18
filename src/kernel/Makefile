@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2016/12/16 *#
-#* Copyright (C) 2016 Mochi.                                                  *#
+#*                                                                 2017/02/17 *#
+#* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
@@ -16,6 +16,7 @@ KERNEL_NAME  = kernel
 SRCS = InitCtrl/InitCtrlInit.c \
        MemMng/MemMngInit.c     \
        MemMng/MemMngGdt.c      \
+       MemMng/MemMngArea.c     \
        IntMng/IntMngInit.c     \
        IntMng/IntMngIdt.c      \
        IntMng/IntMngHdl.c      \
@@ -33,8 +34,9 @@ CFLAGS = -O             \
          -I../include
 
 # LDフラグ
-LDFLAGS = -melf_i386 \
-          -lc
+LDFLAGS = -melf_i386    \
+          -lc           \
+          -lMLibBasic
 
 
 #******************************************************************************#

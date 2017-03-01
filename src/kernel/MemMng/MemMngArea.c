@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2017/02/18 */
+/*                                                                 2017/02/27 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -9,6 +9,7 @@
 /* 共通ヘッダ */
 #include <stdbool.h>
 #include <string.h>
+#include <kernel/MochiKernel.h>
 #include <MLib/MLib.h>
 #include <MLib/Basic/MLibBasic.h>
 #include <MLib/Basic/MLibBasicList.h>
@@ -24,6 +25,9 @@
 /******************************************************************************/
 /** メモリ領域情報数 */
 #define AREA_INFO_NUM  ( 1000000 )
+
+/** 未使用メモリ領域始点 */
+#define AREA_FREE_ADDR ( 0x100000 )
 
 /** メモリ領域アライメント */
 #define AREA_ALIGNMENT ( 0x1000 )
@@ -42,10 +46,12 @@ typedef struct {
 
 /** メモリ領域管理テーブル構造体 */
 typedef struct {
-    MLibBasicList_t usedList;                   /**< 使用中メモリ領域リスト */
-    MLibBasicList_t freeList;                   /**< 未使用メモリ領域リスト */
-    MLibBasicList_t emptyList;                  /**< 空メモリ領域情報リスト */
-    AreaInfo_t      areaInfo[ AREA_INFO_NUM ];  /**< メモリ領域情報         */
+    MochiKernelMemoryMap_t *pMemoryMap;                 /**< メモリマップ           */
+    size_t                 memoryMapSize;               /**< メモリマップサイズ     */
+    MLibBasicList_t        usedList;                    /**< 使用中メモリ領域リスト */
+    MLibBasicList_t        freeList;                    /**< 未使用メモリ領域リスト */
+    MLibBasicList_t        emptyList;                   /**< 空メモリ領域情報リスト */
+    AreaInfo_t             areaInfo[ AREA_INFO_NUM ];   /**< メモリ領域情報         */
 } AreaTbl_t;
 
 
@@ -76,6 +82,16 @@ static CmnRet_t AreaFreeAfterTail( AreaInfo_t *pUsed );
 /* 指定メモリ領域解放（前挿入） */
 static CmnRet_t AreaFreeBefore( AreaInfo_t *pFree,
                                 AreaInfo_t *pUsed  );
+
+/* 空メモリ領域情報リスト初期化 */
+static void AreaInitEmptyList( void );
+
+/* 未使用メモリ領域リスト初期化 */
+static void AreaInitFreeList( MochiKernelMemoryMap_t *pMap,
+                              size_t                 mapSize );
+
+/* 使用中メモリ領域リスト初期化 */
+static void AreaInitUsedList( void );
 
 
 /******************************************************************************/
@@ -254,68 +270,22 @@ CmnRet_t MemMngAreaFree( void *pAddr )
 /**
  * @brief       メモリ領域管理初期化
  * @details     メモリ領域管理テーブルを初期化する。
+ * 
+ * @param[in]   *pMap   メモリマップ
+ * @param[in]   mapSize メモリマップサイズ
  */
 /******************************************************************************/
-void MemMngAreaInit( void )
+void MemMngAreaInit( MochiKernelMemoryMap_t *pMap,
+                     size_t                 mapSize )
 {
-    uint32_t            index;      /* メモリ領域情報インデックス */
-    MLibRet_t           retMLib;    /* MLib関数戻り値             */
-    MLibBasicListNode_t *pEmpty;    /* 空メモリ領域情報           */
-    
-    /* 初期化 */
-    index   = 0;
-    retMLib = MLIB_FAILURE;
-    pEmpty  = NULL;
-    
-    /* 使用中メモリ領域リスト初期化 */
-    retMLib = MLibBasicListInit( &( gAreaTbl.usedList ) );
-    
-    /* 初期化結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
-        /* 失敗 */
-        
-        /* [TODO]カーネルパニック */
-    }
+    /* 空メモリ領域情報リスト初期化 */
+    AreaInitEmptyList();
     
     /* 未使用メモリ領域リスト初期化 */
-    retMLib = MLibBasicListInit( &( gAreaTbl.freeList ) );
+    AreaInitFreeList( pMap, mapSize );
     
-    /* 初期化結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
-        /* 失敗 */
-        
-        /* [TODO]カーネルパニック */
-    }
-    
-    /* 空メモリ領域情報リスト初期化 */
-    retMLib = MLibBasicListInit( &( gAreaTbl.emptyList ) );
-    
-    /* 初期化結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
-        /* 失敗 */
-        
-        /* [TODO]カーネルパニック */
-    }
-    
-    /* メモリ領域情報初期化 */
-    memset( gAreaTbl.areaInfo, 0, sizeof ( gAreaTbl.areaInfo ) );
-    
-    for ( index = 0; index < AREA_INFO_NUM; index++ ) {
-        /* 空メモリ領域情報参照変数設定 */
-        pEmpty = ( MLibBasicListNode_t * ) &( gAreaTbl.areaInfo[ index ] );
-        
-        /* 空メモリ領域情報リスト挿入 */
-        retMLib = MLibBasicListInsertTail( &( gAreaTbl.emptyList ),
-                                           pEmpty );
-        
-        /* 挿入結果判定 */
-        if ( retMLib != MLIB_SUCCESS ) {
-            /* 失敗 */
-            
-            /* [TODO]カーネルパニック */
-            
-        }
-    }
+    /* 使用中メモリ領域リスト初期化 */
+    AreaInitUsedList();
     
     return;
 }
@@ -587,6 +557,215 @@ static CmnRet_t AreaFreeBefore( AreaInfo_t *pFree,
     }
     
     return CMN_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       空メモリ領域情報リスト初期化
+ * @details     空メモリ領域情報リストを初期化する。
+ */
+/******************************************************************************/
+static void AreaInitEmptyList( void )
+{
+    uint32_t            index;      /* メモリ領域情報リストインデックス */
+    MLibRet_t           retMLib;    /* MLIB関数戻り値                   */
+    MLibBasicListNode_t *pEmpty;    /* 空メモリ領域情報ノード           */
+    
+    /* 空メモリ領域情報リスト初期化 */
+    retMLib = MLibBasicListInit( &( gAreaTbl.emptyList ) );
+    
+    /* 初期化結果判定 */
+    if ( retMLib != MLIB_SUCCESS ) {
+        /* 失敗 */
+        
+        /* [TODO]カーネルパニック */
+    }
+    
+    /* メモリ領域情報初期化 */
+    memset( gAreaTbl.areaInfo, 0, sizeof ( gAreaTbl.areaInfo ) );
+    
+    for ( index = 0; index < AREA_INFO_NUM; index++ ) {
+        /* 空メモリ領域情報参照変数設定 */
+        pEmpty = ( MLibBasicListNode_t * ) &( gAreaTbl.areaInfo[ index ] );
+        
+        /* 空メモリ領域情報リスト挿入 */
+        retMLib = MLibBasicListInsertTail( &( gAreaTbl.emptyList ),
+                                           pEmpty );
+        
+        /* 挿入結果判定 */
+        if ( retMLib != MLIB_SUCCESS ) {
+            /* 失敗 */
+            
+            /* [TODO]カーネルパニック */
+            
+        }
+    }
+    
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       未使用メモリ領域リスト初期化
+ * @details     未使用メモリ領域リストをメモリマップを基に初期化する。
+ * 
+ * @param[in]   *pMap   メモリマップ
+ * @param[in]   mapSize メモリマップサイズ
+ * 
+ * @attention   空メモリ領域情報リストを初期化済みである事。
+ */
+/******************************************************************************/
+static void AreaInitFreeList( MochiKernelMemoryMap_t *pMap,
+                              size_t                 mapSize )
+{
+    size_t                 size;    /* メモリ領域サイズ       */
+    uint32_t               index;   /* インデックス           */
+    uint32_t               addr;    /* メモリ領域先頭アドレス */
+    uint32_t               delta;   /* アライメント差分       */
+    MLibRet_t              retMLib; /* MLIB関数戻り値         */
+    AreaInfo_t             *pEmpty; /* 空メモリ領域情報       */
+    MochiKernelMemoryMap_t *pEntry; /* メモリマップエントリ   */
+    
+    /* 初期化 */
+    size    = 0;
+    index   = 0;
+    addr    = 0;
+    delta   = 0;
+    retMLib = MLIB_FAILURE;
+    pEmpty  = NULL;
+    pEntry  = NULL;
+    
+    /* 未使用メモリ領域リスト初期化 */
+    retMLib = MLibBasicListInit( &( gAreaTbl.freeList ) );
+    
+    /* 初期化結果判定 */
+    if ( retMLib != MLIB_SUCCESS ) {
+        /* 失敗 */
+        
+        /* [TODO]カーネルパニック */
+    }
+    
+    /* メモリマップ有無判定 */
+    if ( pMap == NULL ) {
+        /* メモリマップ無し */
+        
+        /* [TODO]カーネルパニック */
+        
+    }
+    
+    /* メモリマップ設定 */
+    gAreaTbl.pMemoryMap    = pMap;
+    gAreaTbl.memoryMapSize = mapSize;
+    
+    /* メモリマップ全エントリ毎に繰り返し */
+    for ( index = 0; index < gAreaTbl.memoryMapSize; index++ ) {
+        /* メモリマップ参照変数設定 */
+        pEntry = &gAreaTbl.pMemoryMap[ index ];
+        
+        /* メモリ領域タイプ判定 */
+        if ( pEntry->type != MOCHIKERNEL_MEMORY_TYPE_AVAILABLE ) {
+            /* 使用可能メモリ領域でない */
+            
+            /* 次のメモリマップ */
+            continue;
+        }
+        
+        /* 変数設定 */
+        addr  = ( uint32_t ) pEntry->pAddr; /* 先頭アドレス               */
+        delta = addr % AREA_ALIGNMENT;      /* 先頭アドレスアライメント差 */
+        size  = pEntry->size;               /* サイズ                     */
+        
+        /* メモリ領域位置判定 */
+        if ( addr < AREA_FREE_ADDR ) {
+            /* スキップ領域 */
+            
+            /* 次のメモリマップ */
+            continue;
+        }
+        
+        /* 先頭アドレスアライメント判定 */
+        if ( delta != 0 ) {
+            /* アライメント不一致 */
+            
+            /* 変数設定 */
+            addr += AREA_ALIGNMENT - delta; /* 先頭アドレス */
+            size -= AREA_ALIGNMENT - delta; /* サイズ       */
+        }
+        
+        /* サイズアライメント差計算 */
+        delta = size % AREA_ALIGNMENT;
+        
+        /* メモリ領域サイズアライメント判定 */
+        if ( delta != 0 ) {
+            /* アライメント不一致 */
+            
+            /* メモリ領域サイズ修正 */
+            size -= delta;
+        }
+        
+        /* メモリ領域サイズ判定 */
+        if ( ( size / AREA_ALIGNMENT ) == 0 ) {
+            /* サイズ不足 */
+            
+            /* 次のメモリマップ */
+            continue;
+        }
+        
+        /* 空メモリ情報領域リストからメモリ領域情報取得 */
+        pEmpty = ( AreaInfo_t * )
+            MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
+        
+        /* 取得結果判定 */
+        if ( pEmpty == NULL ) {
+            /* 失敗 */
+            
+            break;
+        }
+        
+        /* メモリ領域情報設定 */
+        pEmpty->used  = AREA_INFO_USED;     /* 使用フラグ   */
+        pEmpty->pAddr = ( void * ) addr;    /* 先頭アドレス */
+        pEmpty->size  = size;               /* サイズ       */
+        
+        /* 未使用メモリ領域リストの最後尾に挿入 */
+        retMLib = MLibBasicListInsertTail( &( gAreaTbl.usedList ),
+                                           ( MLibBasicListNode_t * ) pEmpty );
+        
+        /* 挿入結果判定 */
+        if ( retMLib != MLIB_SUCCESS ) {
+            /* 失敗 */
+            
+            /* [TODO]トレースログ */
+        }
+    }
+    
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       使用中メモリ領域リスト初期化
+ * @details     使用中メモリ領域リストを初期化する。
+ */
+/******************************************************************************/
+static void AreaInitUsedList( void )
+{
+    MLibRet_t retMLib;  /* MLIB関数戻り値 */
+    
+    /* 使用中メモリ領域リスト初期化 */
+    retMLib = MLibBasicListInit( &( gAreaTbl.usedList ) );
+    
+    /* 初期化結果判定 */
+    if ( retMLib != MLIB_SUCCESS ) {
+        /* 失敗 */
+        
+        /* [TODO]カーネルパニック */
+    }
+    
+    return;
 }
 
 

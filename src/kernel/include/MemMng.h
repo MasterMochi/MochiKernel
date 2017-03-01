@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2017/02/17 */
+/*                                                                 2017/02/27 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -11,6 +11,7 @@
 /* 共通ヘッダ */
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/MochiKernel.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -67,7 +68,8 @@ extern uint16_t MemMngGdtAdd( void    *pBase,
 /* MemMngInit.c */
 /*--------------*/
 /* メモリ管理初期化 */
-extern void MemMngInit( void );
+extern void MemMngInit( MochiKernelMemoryMap_t *pMap,
+                        size_t                 mapSize );
 
 
 /******************************************************************************/

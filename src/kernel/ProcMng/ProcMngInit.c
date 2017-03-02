@@ -1,22 +1,20 @@
 /******************************************************************************/
-/* src/kernel/InitCtrl/InitCtrlInit.c                                         */
+/* src/kernel/ProcMng/ProcMngInit.c                                           */
 /*                                                                 2017/03/01 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
-#include <kernel/MochiKernel.h>
-#include <hardware/IA32/IA32Instruction.h>
+#include <stdint.h>
 
 /* 外部モジュールヘッダ */
-#include <IntMng.h>
-#include <MemMng.h>
-#include <ProcMng.h>
-#include <TimerMng.h>
 
 /* 内部モジュールヘッダ */
+#include "ProcMngSched.h"
+#include "ProcMngTask.h"
+#include "ProcMngTss.h"
 
 
 /******************************************************************************/
@@ -24,37 +22,22 @@
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       Mochi Kernel起動
- * @details     Mochi Kernelのエントリ関数。各モジュールの初期化を行う。
+ * @brief       プロセス管理初期化
+ * @details     プロセス管理内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void InitCtrlInit( void )
+void ProcMngInit( void )
 {
-    /* [TODO]カーネル起動引数対応まで仮 */
-    MochiKernelMemoryMap_t map = {
-        ( void * ) 0x200000,
-        0x500000,
-        MOCHIKERNEL_MEMORY_TYPE_AVAILABLE };
+    /* TSS管理サブモジュール初期化 */
+    ProcMngTssInit();
     
-    /* メモリ管理モジュール初期化 */
-    MemMngInit( &map, 1 );
+    /* タスク管理サブモジュール初期化 */
+    ProcMngTaskInit();
     
-    /* プロセス管理モジュール初期化 */
-    ProcMngInit();
+    /* スケジューラサブモジュール初期化 */
+    ProcMngSchedInit();
     
-    /* 割込み管理モジュール初期化 */
-    IntMngInit();
-    
-    /* タイマ管理モジュール初期化 */
-    TimerMngInit();
-    
-    /* アイドル（仮） */
-    while ( 1 ) {
-        /* hlt */
-        IA32InstructionHlt();
-    }
-    
-    /* not retern */
+    return;
 }
 
 

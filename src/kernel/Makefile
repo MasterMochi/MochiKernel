@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2017/02/17 *#
+#*                                                                 2017/03/01 *#
 #* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -22,7 +22,11 @@ SRCS = InitCtrl/InitCtrlInit.c \
        IntMng/IntMngHdl.c      \
        IntMng/IntMngPic.c      \
        TimerMng/TimerMngInit.c \
-       TimerMng/TimerMngPit.c
+       TimerMng/TimerMngPit.c  \
+       ProcMng/ProcMngInit.c   \
+       ProcMng/ProcMngTss.c    \
+       ProcMng/ProcMngTask.c   \
+       ProcMng/ProcMngSched.c
 
 # Cフラグ
 CFLAGS = -O             \

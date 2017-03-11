@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/ProcMng.h                                               */
-/*                                                                 2017/03/01 */
+/*                                                                 2017/03/03 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef PROCMNG_H
@@ -36,6 +36,9 @@ extern void ProcMngInit( void );
 /* スケジューラ実行 */
 extern void ProcMngSchedExec( void );
 
+/* タスク追加 */
+extern uint32_t ProcMngTaskAdd( uint8_t taskType,
+                                void    *pEntryPoint );
 
 /******************************************************************************/
 #endif

@@ -1,25 +1,20 @@
 /******************************************************************************/
-/* src/kernel/InitCtrl/InitCtrlInit.c                                         */
+/* src/kernel/Debug/DebugInit.c                                               */
 /*                                                                 2017/03/11 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
 #include <stdarg.h>
-#include <kernel/MochiKernel.h>
-#include <hardware/IA32/IA32Instruction.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <IntMng.h>
-#include <MemMng.h>
-#include <ProcMng.h>
-#include <TimerMng.h>
 
 /* 内部モジュールヘッダ */
+#include "DebugLog.h"
 
 
 /******************************************************************************/
@@ -28,59 +23,28 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_INIT_INIT,   \
+    DebugLogOutput( CMN_MODULE_DEBUG_INIT,  \
                     __LINE__,               \
                     __VA_ARGS__ )
 #else
 #define DEBUG_LOG( ... )
 #endif
 
-
 /******************************************************************************/
 /* グローバル関数定義                                                         */
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       Mochi Kernel起動
- * @details     Mochi Kernelのエントリ関数。各モジュールの初期化を行う。
+ * @brief       デバッグ制御初期化
+ * @details     デバッグ制御内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void InitCtrlInit( void )
+void DebugInit( void )
 {
-    /* [TODO]カーネル起動引数対応まで仮 */
-    MochiKernelMemoryMap_t map = {
-        ( void * ) 0x200000,
-        0x500000,
-        MOCHIKERNEL_MEMORY_TYPE_AVAILABLE };
+    /* ログ管理サブモジュール初期化 */
+    DebugLogInit();
     
-    /* デバッグ制御初期化 */
-    DebugInit();
-    
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "Mochi Kernel start!!!" );
-    
-    /* メモリ管理モジュール初期化 */
-    MemMngInit( &map, 1 );
-    
-    /* プロセス管理モジュール初期化 */
-    ProcMngInit();
-    
-    /* 割込み管理モジュール初期化 */
-    IntMngInit();
-    
-    /* タイマ管理モジュール初期化 */
-    TimerMngInit();
-    
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "hlt!!!" );
-    
-    /* アイドル（仮） */
-    while ( 1 ) {
-        /* hlt */
-        IA32InstructionHlt();
-    }
-    
-    /* not retern */
+    return;
 }
 
 

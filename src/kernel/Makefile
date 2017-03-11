@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2017/03/01 *#
+#*                                                                 2017/03/11 *#
 #* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -26,16 +26,19 @@ SRCS = InitCtrl/InitCtrlInit.c \
        ProcMng/ProcMngInit.c   \
        ProcMng/ProcMngTss.c    \
        ProcMng/ProcMngTask.c   \
-       ProcMng/ProcMngSched.c
+       ProcMng/ProcMngSched.c  \
+       Debug/DebugInit.c       \
+       Debug/DebugLog.c
 
 # Cフラグ
-CFLAGS = -O             \
-         -Wall          \
-         -masm=intel    \
-         -m32           \
-         -ffreestanding \
-         -Iinclude/     \
-         -I../include
+CFLAGS = -O                 \
+         -Wall              \
+         -masm=intel        \
+         -m32               \
+         -ffreestanding     \
+         -Iinclude/         \
+         -I../include       \
+         -DDEBUG_LOG_ENABLE
 
 # LDフラグ
 LDFLAGS = -melf_i386    \

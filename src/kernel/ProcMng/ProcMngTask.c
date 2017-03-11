@@ -1,17 +1,20 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTask.c                                           */
-/*                                                                 2017/03/02 */
+/*                                                                 2017/03/11 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
+#include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 #include <hardware/IA32/IA32Instruction.h>
 
 /* 外部モジュールヘッダ */
+#include <Cmn.h>
+#include <Debug.h>
 #include <MemMng.h>
 #include <ProcMng.h>
 
@@ -24,6 +27,16 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/* デバッグトレースログ出力マクロ */
+#ifdef DEBUG_LOG_ENABLE
+#define DEBUG_LOG( ... )                        \
+    DebugLogOutput( CMN_MODULE_PROCMNG_TASK,    \
+                    __LINE__,                   \
+                    __VA_ARGS__ )
+#else
+#define DEBUG_LOG( ... )
+#endif
+
 /* タスクID使用フラグ */
 #define TASK_ID_UNUSED ( 0 )    /** 未使用 */
 #define TASK_ID_USED   ( 1 )    /** 使用済 */
@@ -68,7 +81,6 @@ static taskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
  * @details     タスク追加を行う。
  * 
  * @param[in]   taskType     タスクタイプ
- *                  - PROCMNG_TASK_TYPE_KERNEL カーネル
  *                  - PROCMNG_TASK_TYPE_DRIVER ドライバ
  *                  - PROCMNG_TASK_TYPE_SERVER サーバ
  *                  - PROCMNG_TASK_TYPE_USER   ユーザ

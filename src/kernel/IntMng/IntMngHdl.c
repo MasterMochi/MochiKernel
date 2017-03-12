@@ -26,9 +26,9 @@
 /******************************************************************************/
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                \
-    DebugLogOutput( CMN_MODULE_INT_HDL, \
-                    __LINE__,           \
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_INTMNG_HDL,  \
+                    __LINE__,               \
                     __VA_ARGS__ )
 #else
 #define DEBUG_LOG( ... )
@@ -187,6 +187,9 @@ void IntMngHdlInit( void )
 {
     uint32_t intNo;     /* 割込み番号 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* 全割込み番号毎に繰り返し */
     for ( intNo =  INTMNG_INT_NO_MIN;
           intNo <= INTMNG_INT_NO_MAX;
@@ -203,6 +206,9 @@ void IntMngHdlInit( void )
             IA32_DESCRIPTOR_TYPE_GATE32_INT,    /* タイプ             */
             IA32_DESCRIPTOR_DPL_3            ); /* 特権レベル         */
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

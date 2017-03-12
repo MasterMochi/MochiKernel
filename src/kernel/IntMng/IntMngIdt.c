@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngIdt.c                                              */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/12 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -27,9 +27,9 @@
 /******************************************************************************/
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                \
-    DebugLogOutput( CMN_MODULE_INT_IDT, \
-                    __LINE__,           \
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_INTMNG_IDT,  \
+                    __LINE__,               \
                     __VA_ARGS__ )
 #else
 #define DEBUG_LOG( ... )
@@ -54,11 +54,17 @@ static IA32DescriptorGate_t gIdt[ INTMNG_IDT_ENTRY_NUM ];
 /******************************************************************************/
 void IntMngIdtInit( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* IDT初期化 */
     memset( gIdt, 0, sizeof ( gIdt ) );
     
     /* IDTR設定 */
     IA32InstructionLidt( ( IA32Descriptor_t * ) gIdt, sizeof ( gIdt ) - 1 );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -102,6 +108,17 @@ void IntMngIdtSet( uint32_t index,
                    uint8_t  type,
                    uint8_t  level )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. index=%#x, selector=%u, ",
+               __func__,
+               index,
+               selector );
+    DEBUG_LOG( " pOffset=%010p, count=%u, type=%#x, level=%u",
+               pOffset,
+               count,
+               type,
+               level );
+    
     /* ディスクリプタ設定 */
     gIdt[ index ].offset_low  = IA32_DESCRIPTOR_OFFSET_LOW( pOffset );
     gIdt[ index ].selector    = selector;
@@ -111,6 +128,9 @@ void IntMngIdtSet( uint32_t index,
     gIdt[ index ].attr_dpl    = level;
     gIdt[ index ].attr_p      = IA32_DESCRIPTOR_P_YES;
     gIdt[ index ].offset_high = IA32_DESCRIPTOR_OFFSET_HIGH( pOffset );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

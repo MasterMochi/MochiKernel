@@ -107,6 +107,12 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
     taskId       = PROCMNG_TASK_ID_MIN;
     pStackInfo   = NULL;
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. taskType=%u, pEntryPoint=%010p",
+               __func__,
+               taskType,
+               pEntryPoint );
+    
     /* 空タスク検索 */
     for ( ; taskId < PROCMNG_TASK_ID_MAX; taskId++ ) {
         /* 使用フラグ判定 */
@@ -163,9 +169,15 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 return PROCMNG_TASK_ID_NULL;
             }
             
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "%s() end. ret=%u", __func__, taskId );
+            
             return taskId;
         }
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%u", __func__, PROCMNG_TASK_ID_NULL );
     
     return PROCMNG_TASK_ID_NULL;
 }
@@ -238,11 +250,17 @@ uint8_t ProcMngTaskGetType( uint32_t taskId )
 /******************************************************************************/
 void ProcMngTaskInit( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* タスク管理テーブル初期化 */
     memset( gTaskTbl, 0, sizeof ( gTaskTbl ) );
     
     /* アイドルタスク設定 */
     gTaskTbl[ PROCMNG_TASK_ID_IDLE ].used = TASK_ID_USED;   /* 使用フラグ */
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -291,6 +309,9 @@ void ProcMngTaskStart( void )
     pEntryPoint = pTask->pEntryPoint;           /* エントリポイント */
     pStack      = pTask->stackInfo.pBottomAddr; /* スタックアドレス */
     taskType    = pTask->type;                  /* タスクタイプ     */
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
     
     /* タスクタイプ判定 */
     if ( taskType == PROCMNG_TASK_TYPE_DRIVER ) {

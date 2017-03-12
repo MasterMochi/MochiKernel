@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/12 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -116,7 +116,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT管理)          */
     { CMN_MODULE_INTMNG_HDL,    "INT-HDL " },   /* 割込管理(ハンドラ管理)     */
     { CMN_MODULE_TIMERMNG_INIT, "TIM-INIT" },   /* タイマ管理(初期化)         */
-    { CMN_MODUlE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)        */
+    { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)        */
     { CMN_MODULE_PROCMNG_INIT,  "PRC-INIT" },   /* プロセス管理(初期化)       */
     { CMN_MODULE_PROCMNG_TSS,   "PRC-TSS " },   /* プロセス管理(TSS管理)      */
     { CMN_MODULE_PROCMNG_SCHED, "PRC-SCHD" },   /* プロセス管理(スケジューラ) */
@@ -216,7 +216,7 @@ void DebugLogInit( void )
  *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
  *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ管理)
  *                  - CMN_MODULE_TIMERMNG_INIT タイマ管理(初期化)
- *                  - CMN_MODUlE_TIMERMNG_PIT  タイマ管理(PIT管理)
+ *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理)
  *                  - CMN_MODULE_PROCMNG_INIT  プロセス管理(初期化)
  *                  - CMN_MODULE_PROCMNG_TSS   プロセス管理(TSS管理)
  *                  - CMN_MODULE_PROCMNG_SCHED プロセス管理(スケジューラ)

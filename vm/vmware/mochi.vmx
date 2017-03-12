@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* vm/vmware/mochi.vmx                                                        *#
-#*                                                                 2016/12/04 *#
-#* Copyright (C) 2016 Mochi.                                                  *#
+#*                                                                 2017/03/11 *#
+#* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 # VMware基本設定
 .encoding = "UTF-8"
@@ -13,7 +13,7 @@ displayName = "Mochi"
 gui.exitOnCLIHLT = "FALSE"
 
 # メモリサイズ (MB)
-memsize = "32"
+memsize = "64"
 
 # IDE
 ide0:0.present = "TRUE"

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2017/03/06 */
+/*                                                                 2017/03/11 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef CMN_H
@@ -28,7 +28,7 @@
 #define CMN_MODULE_INTMNG_IDT    ( 0x0303 ) /**< 割込管理(IDT管理)          */
 #define CMN_MODULE_INTMNG_HDL    ( 0x0304 ) /**< 割込管理(ハンドラ管理)     */
 #define CMN_MODULE_TIMERMNG_INIT ( 0x0401 ) /**< タイマ管理(初期化)         */
-#define CMN_MODUlE_TIMERMNG_PIT  ( 0x0402 ) /**< タイマ管理(PIT管理)        */
+#define CMN_MODULE_TIMERMNG_PIT  ( 0x0402 ) /**< タイマ管理(PIT管理)        */
 #define CMN_MODULE_PROCMNG_INIT  ( 0x0501 ) /**< プロセス管理(初期化)       */
 #define CMN_MODULE_PROCMNG_TSS   ( 0x0502 ) /**< プロセス管理(TSS管理)      */
 #define CMN_MODULE_PROCMNG_SCHED ( 0x0503 ) /**< プロセス管理(スケジューラ) */

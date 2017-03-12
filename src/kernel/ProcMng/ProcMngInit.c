@@ -45,6 +45,9 @@
 /******************************************************************************/
 void ProcMngInit( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* TSS管理サブモジュール初期化 */
     ProcMngTssInit();
     
@@ -53,6 +56,9 @@ void ProcMngInit( void )
     
     /* スケジューラサブモジュール初期化 */
     ProcMngSchedInit();
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

@@ -25,7 +25,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_INT_INIT,    \
+    DebugLogOutput( CMN_MODULE_INTMNG_INIT, \
                     __LINE__,               \
                     __VA_ARGS__ )
 #else
@@ -44,6 +44,9 @@
 /******************************************************************************/
 void IntMngInit( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* IDT管理サブモジュール初期化 */
     IntMngIdtInit();
     
@@ -52,6 +55,9 @@ void IntMngInit( void )
     
     /* PIC管理サブモジュール初期化 */
     IntMngPicInit();
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
     
     return;
 }

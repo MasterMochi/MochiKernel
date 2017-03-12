@@ -166,8 +166,14 @@ static IA32Descriptor_t gGdt[ MEMMNG_GDT_ENTRY_NUM ] = {
 /******************************************************************************/
 void MemMngGdtInit( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* GDTR設定 */
     IA32InstructionLgdt( gGdt, sizeof ( gGdt ) - 1 );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -240,9 +246,21 @@ uint16_t MemMngGdtAdd( void    *pBase,
     uint16_t            index;          /* GDTエントリ番号          */
     IA32DescriptorSeg_t *pDescriptor;   /* セグメントディスクリプタ */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pBase=%010p, limit=%u, ",
+               __func__,
+               pBase,
+               limit );
+    DEBUG_LOG( " limitG=%u, sysFlg=%u, type=%u, level=%u, opSize=%u",
+               limitG,
+               sysFlg,
+               type,
+               level,
+               opSize );
+    
     /* 空きディスクリプタ検索 */
-    for ( index = MEMMNG_GDT_ENTRY_MIN;
-          index < MEMMNG_GDT_ENTRY_MAX;
+    for ( index =  MEMMNG_GDT_ENTRY_MIN;
+          index <= MEMMNG_GDT_ENTRY_MAX;
           index++                       ) {
         /* 参照変数設定 */
         pDescriptor = &( gGdt[ index ].seg );
@@ -266,9 +284,15 @@ uint16_t MemMngGdtAdd( void    *pBase,
             pDescriptor->attr_g        = limitG;
             pDescriptor->base_high     = IA32_DESCRIPTOR_BASE_HIGH( pBase );
             
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "%s() end. ret=%#x", __func__, index );
+            
             return index;
         }
     }
+    
+    /* デバッグトレースログ */
+    DEBUG_LOG( "%s() end. ret=%#x", __func__, MEMMNG_GDT_ENTRY_FULL );
     
     /* 空き無しによる追加失敗 */
     return MEMMNG_GDT_ENTRY_FULL;

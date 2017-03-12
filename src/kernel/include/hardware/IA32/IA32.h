@@ -20,7 +20,7 @@
 
 /** セグメントセレクタマクロ */
 #define IA32_SEGMENT_SELECTOR( _INDEX, _TI, _RPL ) \
-    ( ( uint16_t ) ( ( ( _INDEX ) << 3 ) + ( ( _TI ) << 2 ) + ( _RPL ) ) )
+    ( ( uint16_t ) ( ( ( _INDEX ) << 3 ) | ( ( _TI ) << 2 ) | ( _RPL ) ) )
 
 /* EFLAGSレジスタ */
 #define IA32_EFLAGS_ID             ( 0x00200000 )

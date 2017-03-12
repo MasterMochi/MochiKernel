@@ -49,7 +49,7 @@ void InitCtrlInit( void )
 {
     /* [TODO]カーネル起動引数対応まで仮 */
     MochiKernelMemoryMap_t map = {
-        ( void * ) 0x200000,
+        ( void * ) 0x03000000,
         0x500000,
         MOCHIKERNEL_MEMORY_TYPE_AVAILABLE };
     
@@ -72,7 +72,7 @@ void InitCtrlInit( void )
     TimerMngInit();
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "hlt!!!" );
+    DEBUG_LOG( "Idle running." );
     
     /* アイドル（仮） */
     while ( 1 ) {

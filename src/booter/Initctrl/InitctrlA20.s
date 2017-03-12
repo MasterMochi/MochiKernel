@@ -1,121 +1,121 @@
 /******************************************************************************/
 /* src/booter/Initctrl/InitctrlA20.s                                          */
-/*                                                                 2016/12/04 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/03/12 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
  .intel_syntax noprefix
 .code16
 /******************************************************************************/
-/* ƒOƒ[ƒoƒ‹éŒ¾                                                             */
+/* ã‚°ãƒ­ãƒ¼ãƒãƒ«å®£è¨€                                                             */
 /******************************************************************************/
 .global A20Enable
 
 
 /******************************************************************************/
-/* TEXTƒZƒNƒVƒ‡ƒ“                                                             */
+/* TEXTã‚»ã‚¯ã‚·ãƒ§ãƒ³                                                             */
 /******************************************************************************/
 .section .text
 /******************************************************************************/
-/* ƒOƒ[ƒoƒ‹ŠÖ”                                                             */
+/* ã‚°ãƒ­ãƒ¼ãƒãƒ«é–¢æ•°                                                             */
 /******************************************************************************/
 A20Enable:
-    /* A20ƒ‰ƒCƒ“—LŒø‰»”»’è */
+    /* A20ãƒ©ã‚¤ãƒ³æœ‰åŠ¹åŒ–åˆ¤å®š */
     call        CheckA20
     cmp         ax, 0
     je          A20Enable_0
     
-    /* System Port A‚ð—p‚¢‚Ä—LŒø‰» */
+    /* System Port Aã‚’ç”¨ã„ã¦æœ‰åŠ¹åŒ– */
     in          al, 0x92
-    or          al, 0x02        /* —LŒø‰»                       */
-    and         al, 0xFE        /* ƒVƒXƒeƒ€ƒŠƒZƒbƒg‚ðŠmŽÀ‚É–h‚® */
-    out         0x92, al        /* Ý’è                         */
+    or          al, 0x02        /* æœ‰åŠ¹åŒ–                       */
+    and         al, 0xFE        /* ã‚·ã‚¹ãƒ†ãƒ ãƒªã‚»ãƒƒãƒˆã‚’ç¢ºå®Ÿã«é˜²ã */
+    out         0x92, al        /* è¨­å®š                         */
     
-    /* A20ƒ‰ƒCƒ“—LŒø‰»”»’è */
+    /* A20ãƒ©ã‚¤ãƒ³æœ‰åŠ¹åŒ–åˆ¤å®š */
     call        CheckA20
     cmp         ax, 0
     je          A20Enable_0
     
-    /* ƒL[ƒ{[ƒhƒRƒ“ƒgƒ[ƒ‰‚ð—p‚¢‚Ä—LŒø‰» */
-    call        waitKBC     /* “ü—ÍŽó•tŠm”F   */
+    /* ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ã‚’ç”¨ã„ã¦æœ‰åŠ¹åŒ– */
+    call        waitKBC     /* å…¥åŠ›å—ä»˜ç¢ºèª   */
     mov         al, 0xD1
-    out         0x64, al    /* ƒRƒ}ƒ“ƒh‘ž‚Ý */
-    call        waitKBC     /* “ü—ÍŽó•tŠm”F   */
+    out         0x64, al    /* ã‚³ãƒžãƒ³ãƒ‰æ›¸è¾¼ã¿ */
+    call        waitKBC     /* å…¥åŠ›å—ä»˜ç¢ºèª   */
     mov         al, 0xDF
-    out         0x60, al    /* —LŒø‰»         */
-    call        waitKBC     /* “ü—ÍŽó•tŠm”F   */
+    out         0x60, al    /* æœ‰åŠ¹åŒ–         */
+    call        waitKBC     /* å…¥åŠ›å—ä»˜ç¢ºèª   */
     
-    /* A20ƒ‰ƒCƒ“—LŒø‰»”»’è */
+    /* A20ãƒ©ã‚¤ãƒ³æœ‰åŠ¹åŒ–åˆ¤å®š */
     call        CheckA20
     cmp         ax, 0
     je          A20Enable_0
     
-    /* BIOS‚ð—p‚¢‚Ä—LŒø‰» */
+    /* BIOSã‚’ç”¨ã„ã¦æœ‰åŠ¹åŒ– */
     mov         ax, 0x2401
     int         0x15
     
-    /* A20ƒ‰ƒCƒ“—LŒø‰»”»’è */
+    /* A20ãƒ©ã‚¤ãƒ³æœ‰åŠ¹åŒ–åˆ¤å®š */
     call        CheckA20
     cmp         ax, 0
     je          A20Enable_0
     
 A20Enable_0:
-    /* A20ƒ‰ƒCƒ“—LŒø‰»Ž¸”s */
+    /* A20ãƒ©ã‚¤ãƒ³æœ‰åŠ¹åŒ–å¤±æ•— */
     mov         ax, -1
     ret
 A20Enable_M1:
-    /* A20ƒ‰ƒCƒ“—LŒø‰»¬Œ÷ */
+    /* A20ãƒ©ã‚¤ãƒ³æœ‰åŠ¹åŒ–æˆåŠŸ */
     xor         ax, ax
     ret
 
 
 /******************************************************************************/
-/* ƒ[ƒJƒ‹ŠÖ”                                                               */
+/* ãƒ­ãƒ¼ã‚«ãƒ«é–¢æ•°                                                               */
 /******************************************************************************/
 CheckA20:
-    /* 0xFFFF:0x0010(0x0010_0000)‚ðƒoƒbƒNƒAƒbƒv */
+    /* 0xFFFF:0x0010(0x0010_0000)ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ— */
     mov         ax, 0xFFFF
     mov         fs, ax
     mov         ax, [ fs:0x0010 ]
     push        ax
     
-    /* CPUƒLƒƒƒbƒVƒ“ƒO–³Œø‰» */
-    mov         eax, cr0            /* CR0ƒŒƒWƒXƒ^Žæ“¾              */
-    or          eax, 0x40000000     /* CDƒrƒbƒg‚ð1‚ÉÝ’è            */
-    and         eax, 0xD0000000     /* NWƒrƒbƒg‚ð0‚ÉÝ’è            */
-    mov         cr0, eax            /* CR0ƒŒƒWƒXƒ^‚ÉÝ’è‚µ‚Ä–³Œø‰»  */
-    wbinvd                          /* ƒLƒƒƒbƒVƒ…ƒƒ‚ƒŠƒ‰ƒCƒgƒoƒbƒN */
+    /* CPUã‚­ãƒ£ãƒƒã‚·ãƒ³ã‚°ç„¡åŠ¹åŒ– */
+    mov         eax, cr0            /* CR0ãƒ¬ã‚¸ã‚¹ã‚¿å–å¾—              */
+    or          eax, 0x40000000     /* CDãƒ“ãƒƒãƒˆã‚’1ã«è¨­å®š            */
+    and         eax, 0xD0000000     /* NWãƒ“ãƒƒãƒˆã‚’0ã«è¨­å®š            */
+    mov         cr0, eax            /* CR0ãƒ¬ã‚¸ã‚¹ã‚¿ã«è¨­å®šã—ã¦ç„¡åŠ¹åŒ–  */
+    wbinvd                          /* ã‚­ãƒ£ãƒƒã‚·ãƒ¥ãƒ¡ãƒ¢ãƒªãƒ©ã‚¤ãƒˆãƒãƒƒã‚¯ */
     
-    /* 0xFFFF:0x0010(0x0010_0000)‚É’l0xC0DE‘‚«ž‚Ý */
+    /* 0xFFFF:0x0010(0x0010_0000)ã«å€¤0xC0DEæ›¸ãè¾¼ã¿ */
     mov         word ptr [ fs:0x0010 ], 0xC0DE
     
-    /* 0x0000:0x0000(0x0000_0000)‚Ì’l‚ð“Ç‚Ýž‚Þ */
+    /* 0x0000:0x0000(0x0000_0000)ã®å€¤ã‚’èª­ã¿è¾¼ã‚€ */
     xor         ax, ax
     mov         gs, ax
     mov         bx, [ gs:0x0000 ]
     
-    /* 0xFFFF:0x0010(0x0010_0000)‚ðƒŠƒXƒgƒA */
+    /* 0xFFFF:0x0010(0x0010_0000)ã‚’ãƒªã‚¹ãƒˆã‚¢ */
     pop         ax
     mov         [ fs:0x0010 ], ax
     
-    /* CPUƒLƒƒƒbƒVƒ“ƒO—LŒø‰» */
-    mov         eax, cr0            /* CR0ƒŒƒWƒXƒ^Žæ“¾             */
-    or          eax, 0x60000000     /* CD,NWƒrƒbƒg‚ð1‚ÉÝ’è        */
-    mov         cr0, eax            /* CR0ƒŒƒWƒXƒ^‚ÉÝ’è‚µ‚Ä—LŒø‰» */
+    /* CPUã‚­ãƒ£ãƒƒã‚·ãƒ³ã‚°æœ‰åŠ¹åŒ– */
+    mov         eax, cr0            /* CR0ãƒ¬ã‚¸ã‚¹ã‚¿å–å¾—             */
+    or          eax, 0x60000000     /* CD,NWãƒ“ãƒƒãƒˆã‚’1ã«è¨­å®š        */
+    mov         cr0, eax            /* CR0ãƒ¬ã‚¸ã‚¹ã‚¿ã«è¨­å®šã—ã¦æœ‰åŠ¹åŒ– */
     
-    /* “Ç‚Ýž‚ñ‚¾’l‚Æ”äŠr */
+    /* èª­ã¿è¾¼ã‚“ã å€¤ã¨æ¯”è¼ƒ */
     cmp         bx, 0xC0DE
     je          checkA20_M1
     
-    /* A20ƒ‰ƒCƒ“‚Í—LŒø */
+    /* A20ãƒ©ã‚¤ãƒ³ã¯æœ‰åŠ¹ */
     xor         ax, ax
     ret
 checkA20_M1:
-    /* A20ƒ‰ƒCƒ“‚Í–³Œø */
+    /* A20ãƒ©ã‚¤ãƒ³ã¯ç„¡åŠ¹ */
     mov         ax, -1
     ret
 
 waitKBC:
-    /* IBFƒ`ƒFƒbƒN */
+    /* IBFãƒã‚§ãƒƒã‚¯ */
     in          al, 0x64
     test        al, 0x02
     jnz         waitKBC

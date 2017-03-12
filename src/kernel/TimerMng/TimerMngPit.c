@@ -67,6 +67,9 @@ void TimerMngPitHdlInt( uint32_t intNo )
 /******************************************************************************/
 void TimerMngPitInit( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* PIT（カウンタ0）初期化 */
     IA32InstructionOutByte( I8254_PORT_CTRLW,
                             ( I8254_CTRLW_SC_CNTR0 |
@@ -81,6 +84,9 @@ void TimerMngPitInit( void )
     
     /* 割込み許可設定 */
     IntMngPicAllowIrq( I8259A_IRQ0 );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

@@ -48,11 +48,17 @@
 void MemMngInit( MochiKernelMemoryMap_t *pMap,
                  size_t                 mapSize )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* GDT管理サブモジュール初期化 */
     MemMngGdtInit();
     
     /* メモリ領域管理サブモジュール初期化 */
     MemMngAreaInit( pMap, mapSize );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

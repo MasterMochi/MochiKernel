@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTss.c                                            */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/12 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -57,6 +57,9 @@ void ProcMngTssInit( void )
     uint16_t index;     /* GDTエントリ番号    */
     uint16_t selector;  /* セグメントセレクタ */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* TSS初期化 */
     memset( &gTss, 0, sizeof ( IA32Tss_t ) );
     
@@ -77,6 +80,9 @@ void ProcMngTssInit( void )
     
     /* TR設定 */
     IA32InstructionLtr( selector );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

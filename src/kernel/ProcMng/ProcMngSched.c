@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngSched.c                                          */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/12 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -129,6 +129,9 @@ int32_t ProcMngSchedAdd( uint32_t taskId )
 {
     schedTaskInfo_t *pTaskInfo; /* タスク情報 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. taskId=%u", __func__, taskId );
+    
     /* 空タスクキューから空タスク情報取得 */
     pTaskInfo =
         ( schedTaskInfo_t * ) MLibBasicListRemoveTail( &( gSchedTbl.freeQ ) );
@@ -136,6 +139,9 @@ int32_t ProcMngSchedAdd( uint32_t taskId )
     /* 取得結果判定 */
     if ( pTaskInfo == NULL ) {
         /* 空タスク情報無し */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
         
         return CMN_FAILURE;
     }
@@ -146,6 +152,9 @@ int32_t ProcMngSchedAdd( uint32_t taskId )
     
     /* 実行予約タスクグループにエンキュー */
     SchedEnqueueToReservedGrp( pTaskInfo );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_SUCCESS );
     
     return CMN_SUCCESS;
 }
@@ -169,6 +178,9 @@ void ProcMngSchedExec( void )
     nowTaskId   = gSchedTbl.pRunningTaskInfo->taskId;
     pRunningGrp = NULL;
     pTaskInfo   = NULL;
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
     
     /* 実行中タスク判定 */
     if ( nowTaskId == PROCMNG_TASK_ID_IDLE ) {
@@ -230,6 +242,9 @@ void ProcMngSchedExec( void )
                 /* 再スケジューリング */
                 ProcMngSchedExec();
                 
+                /* デバッグトレースログ出力 */
+                DEBUG_LOG( "%s() end.", __func__ );
+                
                 return;
             }
         }
@@ -245,6 +260,9 @@ void ProcMngSchedExec( void )
     
     /* タスクスイッチ */
     SchedSwitchTask( nowTaskId, pTaskInfo->taskId );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -278,6 +296,9 @@ void ProcMngSchedInit( void )
     MLibRet_t       retMLib;        /* MLib関数戻り値     */
     schedTaskInfo_t *pIdleTaskInfo; /* アイドルタスク情報 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* スケジューラテーブル0初期化 */
     memset( &gSchedTbl, 0, sizeof ( schedTbl_t ) );
     
@@ -299,7 +320,6 @@ void ProcMngSchedInit( void )
         /* エンキュー */
         retMLib =  MLibBasicListInsertHead( &( gSchedTbl.freeQ ),
                                             &( gSchedTbl.taskInfo[ i ].node ) );
-        
         /* エンキュー結果判定 */
         if ( retMLib != MLIB_SUCCESS ) {
             /* 失敗 */
@@ -307,6 +327,9 @@ void ProcMngSchedInit( void )
             /* [TODO] トレース出力 */
         }
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -335,6 +358,9 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     pTaskQ       = NULL;
     pReservedGrp = &gSchedTbl.runGrp[ gSchedTbl.reservedGrpIdx ];
     retMLib      = MLIB_FAILURE;
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );
     
     /* タスクタイプ取得 */
     taskType = ProcMngTaskGetType( pTaskInfo->taskId );
@@ -370,6 +396,9 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
         /* [TODO] トレース出力 */
     }
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
+    
     return;
 }
 
@@ -382,12 +411,18 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
 /******************************************************************************/
 static void SchedSwitchRunGrpRole( void )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* グループ役割切替 */
     gSchedTbl.runningGrpIdx  ^= 1;
     gSchedTbl.reservedGrpIdx ^= 1;
     
     /* タスク実行済みフラグ初期化 */
     gSchedTbl.runFlg = false;
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -408,6 +443,12 @@ static void SchedSwitchTask( uint32_t nowTaskId,
 {
     void                 *pKernelStack; /* カーネルスタック */
     ProcMngTaskContext_t context;       /* コンテキスト     */
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
+               __func__,
+               nowTaskId,
+               nextTaskId );
     
     /* 初期化 */
     memset( &context, 0, sizeof ( ProcMngTaskContext_t ) );
@@ -430,6 +471,9 @@ static void SchedSwitchTask( uint32_t nowTaskId,
     
     /* ラベル */
     __asm__ __volatile__ ( "SchedSwitchTaskEnd:" );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

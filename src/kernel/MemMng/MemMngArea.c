@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/12 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -132,9 +132,15 @@ void *MemMngAreaAlloc( size_t size )
     pAddr = NULL;
     pFree = NULL;
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. size=%#x", __func__, size );
+    
     /* サイズチェック */
     if ( size == 0 ) {
         /* 不正 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
         
         return NULL;
         
@@ -156,6 +162,9 @@ void *MemMngAreaAlloc( size_t size )
         if ( pFree == NULL ) {
             /* メモリ領域情報無 */
             
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+            
             return NULL;
         }
         
@@ -175,6 +184,9 @@ void *MemMngAreaAlloc( size_t size )
         /* 超過サイズの未使用メモリ領域からメモリ割当 */
         pAddr = AreaAllocPartially( pFree, size );
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%010p", __func__, pAddr );
     
     return pAddr;
 }
@@ -204,9 +216,15 @@ CmnRet_t MemMngAreaFree( void *pAddr )
     pFree   = NULL;
     pInfo   = NULL;
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pAddr=%010p", __func__, pAddr );
+    
     /* 引数チェック */
     if ( pAddr == NULL ) {
         /* 不正 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
         
         return CMN_FAILURE;
     }
@@ -222,6 +240,9 @@ CmnRet_t MemMngAreaFree( void *pAddr )
         if ( pInfo == NULL ) {
             /* メモリ領域情報無 */
             
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
+            
             return CMN_FAILURE;
         }
         
@@ -235,6 +256,9 @@ CmnRet_t MemMngAreaFree( void *pAddr )
     /* 削除結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
         
         return CMN_FAILURE;
     }
@@ -274,6 +298,9 @@ CmnRet_t MemMngAreaFree( void *pAddr )
         break;
     }
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%d", __func__, ret );
+    
     return ret;
 }
 
@@ -290,6 +317,9 @@ CmnRet_t MemMngAreaFree( void *pAddr )
 void MemMngAreaInit( MochiKernelMemoryMap_t *pMap,
                      size_t                 mapSize )
 {
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* 空メモリ領域情報リスト初期化 */
     AreaInitEmptyList();
     
@@ -298,6 +328,9 @@ void MemMngAreaInit( MochiKernelMemoryMap_t *pMap,
     
     /* 使用中メモリ領域リスト初期化 */
     AreaInitUsedList();
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -321,6 +354,9 @@ static void *AreaAlloc( AreaInfo_t *pFree )
 {
     MLibRet_t retMLib;  /* MLib関数戻り値 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pFree=%010p", __func__, pFree );
+    
     /* 未使用メモリ領域リストから削除 */
     retMLib = MLibBasicListRemove( &( gAreaTbl.freeList ),
                                    ( MLibBasicListNode_t * ) pFree );
@@ -328,6 +364,9 @@ static void *AreaAlloc( AreaInfo_t *pFree )
     /* 削除結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
         
         return NULL;
     }
@@ -340,8 +379,14 @@ static void *AreaAlloc( AreaInfo_t *pFree )
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+        
         return NULL;
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%010p", __func__, pFree->pAddr );
     
     /* メモリ領域先頭アドレス返却 */
     return pFree->pAddr;
@@ -370,6 +415,9 @@ static void *AreaAllocPartially( AreaInfo_t *pFree,
     /* 初期化 */
     retMLib = MLIB_FAILURE;
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pFree=%010p, size=%#x", __func__, pFree, size );
+    
     /* 空メモリ領域情報リストからメモリ領域情報取得 */
     pEmpty = ( AreaInfo_t * )
         MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
@@ -377,6 +425,9 @@ static void *AreaAllocPartially( AreaInfo_t *pFree,
     /* 取得結果判定 */
     if ( pEmpty == NULL ) {
         /* メモリ領域情報無 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
         
         return NULL;
     }
@@ -394,12 +445,21 @@ static void *AreaAllocPartially( AreaInfo_t *pFree,
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+        
         return NULL;
     }
     
     /* 未使用メモリ領域情報設定 */
     pFree->pAddr += size;               /* 先頭アドレス */
     pFree->size  -= size;               /* サイズ       */
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%010p", __func__, pEmpty->pAddr );
     
     /* メモリ領域先頭アドレス返却 */
     return pEmpty->pAddr;
@@ -429,6 +489,9 @@ static CmnRet_t AreaFree( AreaInfo_t *pFree,
     size    = pFree->size;
     retMLib = MLIB_FAILURE;
     pNext   = NULL;
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pFree=%010p, pUsed=%010p", __func__, pFree, pUsed );
     
     /* メモリ領域位置関係比較 */
     if ( pUsed->pAddr > pFree->pAddr ) {
@@ -464,6 +527,9 @@ static CmnRet_t AreaFree( AreaInfo_t *pFree,
     if ( pNext == NULL ) {
         /* メモリ領域情報無 */
         
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_SUCCESS );
+        
         return CMN_SUCCESS;
     }
     
@@ -481,6 +547,9 @@ static CmnRet_t AreaFree( AreaInfo_t *pFree,
             
             /* 未使用メモリ領域サイズ復元 */
             pFree->size = size;
+            
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
             
             return CMN_FAILURE;
         }
@@ -503,6 +572,9 @@ static CmnRet_t AreaFree( AreaInfo_t *pFree,
         }
     }
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_SUCCESS );
+    
     return CMN_SUCCESS;
 }
 
@@ -523,6 +595,9 @@ static CmnRet_t AreaFreeAfterTail( AreaInfo_t *pUsed )
 {
     MLibRet_t retMLib;  /* MLib関数戻り値 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pUsed=%010p", __func__, pUsed );
+    
     /* 最後尾挿入 */
     retMLib = MLibBasicListInsertTail( &( gAreaTbl.freeList ),
                                        ( MLibBasicListNode_t * ) pUsed );
@@ -531,8 +606,14 @@ static CmnRet_t AreaFreeAfterTail( AreaInfo_t *pUsed )
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
+        
         return CMN_FAILURE;
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_SUCCESS );
     
     return CMN_SUCCESS;
 }
@@ -556,6 +637,9 @@ static CmnRet_t AreaFreeBefore( AreaInfo_t *pFree,
 {
     MLibRet_t retMLib;  /* MLib関数戻り値 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pFree=%010p, pUsed=%010p", __func__, pFree, pUsed );
+    
     /* 指定した未使用メモリ領域の前に挿入 */
     retMLib = MLibBasicListInsertPrev( &( gAreaTbl.freeList ),
                                        ( MLibBasicListNode_t * ) pFree,
@@ -565,8 +649,14 @@ static CmnRet_t AreaFreeBefore( AreaInfo_t *pFree,
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
+        
         return CMN_FAILURE;
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_SUCCESS );
     
     return CMN_SUCCESS;
 }
@@ -584,6 +674,9 @@ static void AreaInitEmptyList( void )
     MLibRet_t           retMLib;    /* MLIB関数戻り値                   */
     MLibBasicListNode_t *pEmpty;    /* 空メモリ領域情報ノード           */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* 空メモリ領域情報リスト初期化 */
     retMLib = MLibBasicListInit( &( gAreaTbl.emptyList ) );
     
@@ -592,6 +685,7 @@ static void AreaInitEmptyList( void )
         /* 失敗 */
         
         /* [TODO]カーネルパニック */
+        DEBUG_LOG( "ERROR!!! retMLib=%d", retMLib );
     }
     
     /* メモリ領域情報初期化 */
@@ -610,9 +704,13 @@ static void AreaInitEmptyList( void )
             /* 失敗 */
             
             /* [TODO]カーネルパニック */
+            DEBUG_LOG( "ERROR!!! retMLib=%d", retMLib );
             
         }
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }
@@ -648,6 +746,9 @@ static void AreaInitFreeList( MochiKernelMemoryMap_t *pMap,
     retMLib = MLIB_FAILURE;
     pEmpty  = NULL;
     pEntry  = NULL;
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pMap=%010p, mapSize=%u", __func__, pMap, mapSize );
     
     /* 未使用メモリ領域リスト初期化 */
     retMLib = MLibBasicListInit( &( gAreaTbl.freeList ) );
@@ -753,6 +854,9 @@ static void AreaInitFreeList( MochiKernelMemoryMap_t *pMap,
         }
     }
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
+    
     return;
 }
 
@@ -767,6 +871,9 @@ static void AreaInitUsedList( void )
 {
     MLibRet_t retMLib;  /* MLIB関数戻り値 */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* 使用中メモリ領域リスト初期化 */
     retMLib = MLibBasicListInit( &( gAreaTbl.usedList ) );
     
@@ -775,7 +882,11 @@ static void AreaInitUsedList( void )
         /* 失敗 */
         
         /* [TODO]カーネルパニック */
+        DEBUG_LOG( "ERROR!!! retMLib=%d", retMLib );
     }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
     
     return;
 }

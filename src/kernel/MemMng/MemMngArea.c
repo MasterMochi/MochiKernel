@@ -843,7 +843,7 @@ static void AreaInitFreeList( MochiKernelMemoryMap_t *pMap,
         pEmpty->size  = size;               /* サイズ       */
         
         /* 未使用メモリ領域リストの最後尾に挿入 */
-        retMLib = MLibBasicListInsertTail( &( gAreaTbl.usedList ),
+        retMLib = MLibBasicListInsertTail( &( gAreaTbl.freeList ),
                                            ( MLibBasicListNode_t * ) pEmpty );
         
         /* 挿入結果判定 */

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngPic.c                                              */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/13 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -306,7 +306,7 @@ void IntMngPicEnable( void )
 void IntMngPicEoi( uint8_t irqNo )
 {
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. irqNo=%u", __func__, irqNo );
+    /*DEBUG_LOG( "%s() start. irqNo=%d", __func__, irqNo );*/
     
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
@@ -339,7 +339,7 @@ void IntMngPicEoi( uint8_t irqNo )
     }
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /*DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }

@@ -120,13 +120,6 @@ MLibBasicListNode_t *MLibBasicListRemoveHead( MLibBasicList_t *pList )
         return NULL;
     }
     
-    /* 引数pNodeチェック */
-    if ( pNode == NULL ) {
-        /* 不正値 */
-        
-        return NULL;
-    }
-    
     /* 連結リストサイズチェック */
     if ( pList->size == 0 ) {
         /* サイズ不正 */
@@ -192,13 +185,6 @@ MLibBasicListNode_t *MLibBasicListRemoveTail( MLibBasicList_t *pList )
     
     /* 引数pListチェック */
     if ( pList == NULL ) {
-        /* 不正値 */
-        
-        return NULL;
-    }
-    
-    /* 引数pNodeチェック */
-    if ( pNode == NULL ) {
         /* 不正値 */
         
         return NULL;

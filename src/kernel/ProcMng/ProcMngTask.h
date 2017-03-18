@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTask.h                                           */
-/*                                                                 2017/03/01 */
+/*                                                                 2017/03/18 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef PROCMNG_TASK_H
@@ -22,6 +22,7 @@
 typedef struct {
     uint32_t eip;   /**< eipレジスタ */
     uint32_t esp;   /**< espレジスタ */
+    uint32_t ebp;   /**< ebpレジスタ */
 } ProcMngTaskContext_t;
 
 

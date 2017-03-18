@@ -63,6 +63,9 @@ void ProcMngTssInit( void )
     /* TSS初期化 */
     memset( &gTss, 0, sizeof ( IA32Tss_t ) );
     
+    /* TSS設定 */
+    gTss.ss0 = MEMMNG_SEGSEL_KERNEL_DATA;
+    
     /* TSSディスクリプタ設定 */
     index = MemMngGdtAdd(
                 &gTss,                          /* セグメントベース     */

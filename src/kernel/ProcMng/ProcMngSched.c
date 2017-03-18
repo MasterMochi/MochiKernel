@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngSched.c                                          */
-/*                                                                 2017/03/12 */
+/*                                                                 2017/03/18 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -180,7 +180,7 @@ void ProcMngSchedExec( void )
     pTaskInfo   = NULL;
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    /*DEBUG_LOG( "%s() start.", __func__ );*/
     
     /* 実行中タスク判定 */
     if ( nowTaskId == PROCMNG_TASK_ID_IDLE ) {
@@ -191,6 +191,9 @@ void ProcMngSchedExec( void )
         
     } else {
         /* アイドルタスク以外 */
+        
+        /* タスク実行済みフラグ設定 */
+        gSchedTbl.runFlg = true;
         
         /* 実行予約タスクグループにキューイング */
         SchedEnqueueToReservedGrp( gSchedTbl.pRunningTaskInfo );
@@ -239,13 +242,14 @@ void ProcMngSchedExec( void )
                 /* 実行可能タスクグループ役割切替 */
                 SchedSwitchRunGrpRole();
                 
+                /* 実行中タスクグループ設定 */
+                pRunningGrp = &gSchedTbl.runGrp[ gSchedTbl.runningGrpIdx ];
+                
+                /* 実行中レベル初期化 */
+                level = SCHED_LEVEL_DRIVER;
+                
                 /* 再スケジューリング */
-                ProcMngSchedExec();
-                
-                /* デバッグトレースログ出力 */
-                DEBUG_LOG( "%s() end.", __func__ );
-                
-                return;
+                continue;
             }
         }
         
@@ -262,7 +266,7 @@ void ProcMngSchedExec( void )
     SchedSwitchTask( nowTaskId, pTaskInfo->taskId );
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /*DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }
@@ -360,7 +364,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     retMLib      = MLIB_FAILURE;
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );
+    /*DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );*/
     
     /* タスクタイプ取得 */
     taskType = ProcMngTaskGetType( pTaskInfo->taskId );
@@ -397,7 +401,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     }
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /*DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }
@@ -412,7 +416,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
 static void SchedSwitchRunGrpRole( void )
 {
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    /*DEBUG_LOG( "%s() start.", __func__ );*/
     
     /* グループ役割切替 */
     gSchedTbl.runningGrpIdx  ^= 1;
@@ -422,7 +426,7 @@ static void SchedSwitchRunGrpRole( void )
     gSchedTbl.runFlg = false;
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /*DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }
@@ -438,17 +442,18 @@ static void SchedSwitchRunGrpRole( void )
  * @param[in]   nextTaskId タスクスイッチ先タスクID
  */
 /******************************************************************************/
-static void SchedSwitchTask( uint32_t nowTaskId,
-                             uint32_t nextTaskId )
+static __attribute__ ( ( noinline ) )
+    void SchedSwitchTask( uint32_t nowTaskId,
+                          uint32_t nextTaskId )
 {
     void                 *pKernelStack; /* カーネルスタック */
     ProcMngTaskContext_t context;       /* コンテキスト     */
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
+    /*DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
                __func__,
                nowTaskId,
-               nextTaskId );
+               nextTaskId );*/
     
     /* 初期化 */
     memset( &context, 0, sizeof ( ProcMngTaskContext_t ) );
@@ -456,6 +461,7 @@ static void SchedSwitchTask( uint32_t nowTaskId,
     /* コンテキスト退避 */
     context.eip = ( uint32_t ) SchedSwitchTaskEnd;
     context.esp = IA32InstructionGetEsp();
+    context.ebp = IA32InstructionGetEbp();
     ProcMngTaskSetContext( nowTaskId, &context );
     
     /* コンテキスト復旧 */
@@ -467,13 +473,14 @@ static void SchedSwitchTask( uint32_t nowTaskId,
     
     /* タスクスイッチ */
     IA32InstructionSwitchTask( ( void * ) context.eip,
-                               ( void * ) context.esp  );
+                               ( void * ) context.esp,
+                               ( void * ) context.ebp  );
     
     /* ラベル */
     __asm__ __volatile__ ( "SchedSwitchTaskEnd:" );
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /*DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }

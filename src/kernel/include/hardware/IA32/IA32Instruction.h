@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2017/01/09 */
+/*                                                                 2017/03/18 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
@@ -65,6 +65,28 @@ static inline void IA32InstructionCli( void )
     __asm__ __volatile__ ( "cli" );
     
     return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ebpレジスタ値取得
+ * @details     ebpレジスタの値を返す。
+ * 
+ * @return      ebpレジスタ値
+ */
+/******************************************************************************/
+static inline uint32_t IA32InstructionGetEbp( void )
+{
+    uint32_t ebp;   /* ebpレジスタ値 */
+    
+    /* mov命令実行 */
+    __asm__ __volatile__ ( "mov %0, ebp"
+                           : "=m" ( *&ebp )
+                           :
+                           :                );
+    
+    return ebp;
 }
 
 
@@ -636,23 +658,26 @@ static inline void IA32InstructionSubEsp( int32_t value )
 /******************************************************************************/
 /**
  * @brief       タスクスイッチ
- * @details     指定したスタックポインタをespレジスタに設定し、jmp命令を用いて
- *              指定したアドレスを実行する。
+ * @details     指定したスタックポインタをespレジスタに、ベースポインタをebpレ
+ *              ジスタに設定し、jmp命令を用いて指定したアドレスを実行する。
  * 
  * @param[in]   *pEip 移動先アドレス
  * @param[in]   *pEsp スタックポインタ
+ * @param[in]   *pEbp ベースポインタ
  */
 /******************************************************************************/
 static inline void IA32InstructionSwitchTask( void *pEip,
-                                              void *pEsp )
+                                              void *pEsp,
+                                              void *pEbp  )
 {
     /* タスクスイッチ */
     __asm__ __volatile__ ( "mov eax, %0\n"
                            "mov esp, %1\n"
+                           "mov ebp, %2\n"
                            "jmp eax"
                            :
-                           : "m" ( pEip ), "m" ( pEsp )
-                           :                            );
+                           : "m" ( pEip ), "m" ( pEsp ), "m" ( pEbp )
+                           :                                          );
 }
 
 

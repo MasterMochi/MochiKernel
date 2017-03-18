@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTask.c                                           */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/03/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -42,8 +42,8 @@
 #define TASK_ID_USED   ( 1 )    /** 使用済 */
 
 /* スタックサイズ */
-#define TASK_KERNEL_STACK_SIZE ( 8192 ) /**< カーネルスタックサイズ */
-#define TASK_STACK_SIZE        ( 8192 ) /**< スタックサイズ         */
+#define TASK_KERNEL_STACK_SIZE ( 1024000 )  /**< カーネルスタックサイズ */
+#define TASK_STACK_SIZE        ( 1024000 )  /**< スタックサイズ         */
 
 /** タスクスタック情報 */
 typedef struct {
@@ -141,7 +141,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
             gTaskTbl[ taskId ].type        = taskType;
             gTaskTbl[ taskId ].state       = 0;
             gTaskTbl[ taskId ].context.eip = ( uint32_t ) ProcMngTaskStart;
-            gTaskTbl[ taskId ].context.esp = ( uint32_t ) pKernelStack;
+            gTaskTbl[ taskId ].context.esp = ( uint32_t ) pKernelStack + TASK_KERNEL_STACK_SIZE;
             gTaskTbl[ taskId ].pEntryPoint = pEntryPoint;
             
             /* カーネルスタック情報設定 */
@@ -303,6 +303,9 @@ void ProcMngTaskStart( void )
     uint32_t  dataSegSel;   /* データセグメントセレクタ */
     taskTbl_t *pTask;       /* タスク管理情報           */
     
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
     /* 初期化 */
     taskId      = ProcMngSchedGetTaskId();      /* タスクID         */
     pTask       = &( gTaskTbl[ taskId ] );      /* タスク管理情報   */
@@ -311,7 +314,10 @@ void ProcMngTaskStart( void )
     taskType    = pTask->type;                  /* タスクタイプ     */
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG( "taskId=%d, pEntryPoint=%p, pStack=%p",
+               taskId,
+               pEntryPoint,
+               pStack );
     
     /* タスクタイプ判定 */
     if ( taskType == PROCMNG_TASK_TYPE_DRIVER ) {

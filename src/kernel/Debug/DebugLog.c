@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2017/03/12 */
+/*                                                                 2017/03/23 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -315,7 +315,7 @@ void DebugLogOutput( uint32_t moduleId,
  * @param[out]  *pLength 数字文字列長
  * 
  * @retval      CMN_SUCCESS 正常終了
- * @retval      CMN_FAILURE 以上終了（数字文字列無し）
+ * @retval      CMN_FAILURE 異常終了（数字文字列無し）
  * 
  * @note        「DEBUG_LOG_ENABLE」マクロが定義されている場合に有効となる。
  */
@@ -509,6 +509,8 @@ static void LogOutputChar( char c )
  *                  - LOG_FLAG_UNSIGNED  符号無
  * @param[in]   width 最小フィールド幅
  *                  - 0～80
+ * 
+ * @note        「DEBUG_LOG_ENABLE」マクロが定義されている場合に有効となる。
  */
 /******************************************************************************/
 static void LogOutputNumber( uint32_t value,
@@ -708,6 +710,8 @@ static void LogOutputNumber( uint32_t value,
  * @details     文字列を画面に出力する。
  * 
  * @param[in]   pStr 文字列
+ * 
+ * @note        「DEBUG_LOG_ENABLE」マクロが定義されている場合に有効となる。
  */
 /******************************************************************************/
 static void LogOutputString( char *pStr )

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2017/03/18 */
+/*                                                                 2017/05/24 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -48,10 +48,21 @@
 void InitCtrlInit( void )
 {
     /* [TODO]カーネル起動引数対応まで仮 */
-    MochiKernelMemoryMap_t map = {
-        ( void * ) 0x03000000,
-        0x500000,
-        MOCHIKERNEL_MEMORY_TYPE_AVAILABLE };
+    MochiKernelMemoryMap_t map[] =
+        {
+            /* カーネル領域 */
+            {
+                ( void * ) 0x00100000,              /* 先頭アドレス */
+                0x03F00000,                         /* メモリサイズ */
+                MOCHIKERNEL_MEMORY_TYPE_KERNEL      /* メモリタイプ */
+            },
+            /* 利用可能領域 */
+            {
+                ( void * ) 0x04000000,              /* 先頭アドレス */
+                0x04000000,                         /* メモリサイズ */
+                MOCHIKERNEL_MEMORY_TYPE_AVAILABLE   /* メモリタイプ */
+            }
+        };
     
     /* デバッグ制御初期化 */
     DebugInit();
@@ -60,7 +71,7 @@ void InitCtrlInit( void )
     DEBUG_LOG( "Mochi Kernel start!!!" );
     
     /* メモリ管理モジュール初期化 */
-    MemMngInit( &map, 1 );
+    MemMngInit( map, 2 );
     
     /* プロセス管理モジュール初期化 */
     ProcMngInit();

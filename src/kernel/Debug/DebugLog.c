@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2017/03/23 */
+/*                                                                 2017/05/24 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -13,6 +13,7 @@
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
+#include <hardware/Vga/Vga.h>
 
 /* 内部モジュールヘッダ */
 #include "DebugLog.h"
@@ -22,19 +23,14 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 長さ定義 */
-#define LOG_LENGTH_ID      (  8 )   /**< 識別子文字数   */
-#define LOG_LENGTH_COLUMN  ( 80 )   /**< 一行最大文字数 */
-#define LOG_LENGTH_ROW     ( 25 )   /**< 最大行数       */
-#define LOG_LENGTH_LINENUM (  4 )   /**< 行番号文字数   */
-
-/** VRAM先頭アドレス */
-#define LOG_VRAM_ADDR ( 0xB8000 )
+#define LOG_LENGTH_ID      (  8 )   /** 識別子文字数 */
+#define LOG_LENGTH_LINENUM (  4 )   /** 行番号文字数 */
 
 /** カーソル位置アドレス計算 */
-#define LOG_CURSOR_ADDR( __ROW, __COLUMN )                      \
-    ( ( uint8_t * ) ( LOG_VRAM_ADDR +                           \
-                      ( __ROW ) * LOG_LENGTH_COLUMN * 2 +       \
-                      ( __COLUMN ) * 2                    ) )
+#define LOG_CURSOR_ADDR( __ROW, __COLUMN )                  \
+    ( ( uint8_t * ) ( VGA_M3_VRAM_ADDR +                    \
+                      ( __ROW ) * VGA_M3_COLUMN * 2 +       \
+                      ( __COLUMN ) * 2                ) )
 
 /** 文字色取得マクロ */
 #define LOG_ATTR_FG( __BASE )           ( __BASE & 0x0F )
@@ -47,26 +43,6 @@
 
 /** 背景色変更マクロ */
 #define LOG_ATTR_BG_CHG( __BASE, __BG ) ( LOG_ATTR_FG( __BASE ) | ( __BG ) )
-
-/* 文字属性 */
-#define LOG_ATTR_FG_BLACK  ( 0x00 ) /* 黒色文字属性 */
-#define LOG_ATTR_FG_BLUE   ( 0x01 ) /* 青色文字属性 */
-#define LOG_ATTR_FG_GREEN  ( 0x02 ) /* 緑色文字属性 */
-#define LOG_ATTR_FG_CYAN   ( 0x03 ) /* 水色文字属性 */
-#define LOG_ATTR_FG_RED    ( 0x04 ) /* 赤色文字属性 */
-#define LOG_ATTR_FG_PURPLE ( 0x05 ) /* 紫色文字属性 */
-#define LOG_ATTR_FG_BROWN  ( 0x06 ) /* 茶色文字属性 */
-#define LOG_ATTR_FG_WHITE  ( 0x07 ) /* 白色文字属性 */
-#define LOG_ATTR_FG_BRIGHT ( 0x08 ) /* 明色文字属性 */
-#define LOG_ATTR_BG_BLACK  ( 0x00 ) /* 黒色背景属性 */
-#define LOG_ATTR_BG_BLUE   ( 0x10 ) /* 青色背景属性 */
-#define LOG_ATTR_BG_GREEN  ( 0x20 ) /* 緑色背景属性 */
-#define LOG_ATTR_BG_CYAN   ( 0x30 ) /* 水色背景属性 */
-#define LOG_ATTR_BG_RED    ( 0x40 ) /* 赤色背景属性 */
-#define LOG_ATTR_BG_PURPLE ( 0x50 ) /* 紫色背景属性 */
-#define LOG_ATTR_BG_BROWN  ( 0x60 ) /* 茶色背景属性 */
-#define LOG_ATTR_BG_WHITE  ( 0x70 ) /* 白色背景属性 */
-#define LOG_ATTR_BLINK     ( 0x80 ) /* 点滅文字属性 */
 
 /* 変換指定子フラグ */
 #define LOG_FLAG_LEFT      ( 0x01 ) /* 左寄せ       */
@@ -111,6 +87,8 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_MEMMNG_INIT,   "MEM-INIT" },   /* メモリ管理(初期化)         */
     { CMN_MODULE_MEMMNG_GDT,    "MEM-GDT " },   /* メモリ管理(GDT管理)        */
     { CMN_MODULE_MEMMNG_AREA,   "MEM-AREA" },   /* メモリ管理(メモリ領域管理) */
+    { CMN_MODULE_MEMMNG_PAGE,   "MEM-PAGE" },   /* メモリ管理(ページ管理)     */
+    { CMN_MODULE_MEMMNG_CTRL,   "MEM-CTRL" },   /* メモリ管理(メモリ制御)     */
     { CMN_MODULE_INTMNG_INIT,   "INT-INIT" },   /* 割込管理(初期化)           */
     { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC管理)          */
     { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT管理)          */
@@ -192,9 +170,9 @@ void DebugLogInit( void )
     memset( &gLogTbl, 0, sizeof ( logTbl_t ) );
     
     /* 文字属性設定 */
-    gLogTbl.attr = LOG_ATTR_FG_WHITE  | /* 白色文字属性 */
-                   LOG_ATTR_FG_BRIGHT | /* 明色文字属性 */
-                   LOG_ATTR_BG_BLACK;   /* 黒色背景属性 */
+    gLogTbl.attr = VGA_M3_ATTR_FG_WHITE  |  /* 白色文字属性 */
+                   VGA_M3_ATTR_FG_BRIGHT |  /* 明色文字属性 */
+                   VGA_M3_ATTR_BG_BLACK;    /* 黒色背景属性 */
     
     return;
 }
@@ -211,6 +189,8 @@ void DebugLogInit( void )
  *                  - CMN_MODULE_MEMMNG_INIT   メモリ管理(初期化)
  *                  - CMN_MODULE_MEMMNG_GDT    メモリ管理(GDT管理)
  *                  - CMN_MODULE_MEMMNG_AREA   メモリ管理(メモリ領域管理)
+ *                  - CMN_MODULE_MEMMNG_PAGE   メモリ管理(ページ管理)
+ *                  - CMN_MODULE_MEMMNG_CTRL   メモリ管理(メモリ制御)
  *                  - CMN_MODULE_INTMNG_INIT   割込管理(初期化)
  *                  - CMN_MODULE_INTMNG_PIC    割込管理(PIC管理)
  *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
@@ -248,28 +228,28 @@ void DebugLogOutput( uint32_t moduleId,
     gLogTbl.column = 0;
     
     /* カーソル行範囲判定 */
-    if ( gLogTbl.row >= LOG_LENGTH_ROW ) {
+    if ( gLogTbl.row >= VGA_M3_ROW ) {
         /* 上限越え */
         
         /* カーソル行設定 */
-        gLogTbl.row = LOG_LENGTH_ROW - 1;
+        gLogTbl.row = VGA_M3_ROW - 1;
         
         /* 画面スクロール */
-        for ( row = 0; row < ( LOG_LENGTH_ROW - 1 ); row++ ) {
+        for ( row = 0; row < ( VGA_M3_ROW - 1 ); row++ ) {
             /* 一行コピー */
             memcpy( LOG_CURSOR_ADDR( row, 0 ),
                     LOG_CURSOR_ADDR( row + 1, 0 ),
-                    LOG_LENGTH_COLUMN * 2 );
+                    VGA_M3_COLUMN * 2 );
         }
         
         /* 最下行初期化 */
-        for ( column = 0; column < LOG_LENGTH_COLUMN; column++ ) {
+        for ( column = 0; column < VGA_M3_COLUMN; column++ ) {
             /* 一文字設定 */
             LOG_CURSOR_ADDR( row, column )[ 0 ] = ' ';
             LOG_CURSOR_ADDR( row, column )[ 1 ] =
-                LOG_ATTR_FG_WHITE  |    /* 白色文字属性 */
-                LOG_ATTR_FG_BRIGHT |    /* 明色文字属性 */
-                LOG_ATTR_BG_BLACK;      /* 黒色背景属性 */
+                VGA_M3_ATTR_FG_WHITE  |     /* 白色文字属性 */
+                VGA_M3_ATTR_FG_BRIGHT |     /* 明色文字属性 */
+                VGA_M3_ATTR_BG_BLACK;       /* 黒色背景属性 */
         }
     }
     
@@ -468,7 +448,7 @@ static void LogOutputChar( char c )
     uint8_t *pCursor;   /* カーソル */
     
     /* カーソル列チェック */
-    if ( gLogTbl.column >= LOG_LENGTH_COLUMN ) {
+    if ( gLogTbl.column >= VGA_M3_COLUMN ) {
         /* 行数超 */
         
         return;
@@ -518,11 +498,11 @@ static void LogOutputNumber( uint32_t value,
                              uint32_t flags,
                              int32_t  width  )
 {
-    char     buffer[ LOG_LENGTH_COLUMN ];   /* 出力バッファ     */
-    char     *pTrans;                       /* 数字変換表       */
-    int32_t  length;                        /* バッファ文字列長 */
-    uint32_t tmp;                           /* 一時変数         */
-    uint32_t idx;                           /* インデックス     */
+    char     buffer[ VGA_M3_COLUMN ];   /* 出力バッファ     */
+    char     *pTrans;                   /* 数字変換表       */
+    int32_t  length;                    /* バッファ文字列長 */
+    uint32_t tmp;                       /* 一時変数         */
+    uint32_t idx;                       /* インデックス     */
     
     /* 初期化 */
     memset( buffer, '0', sizeof ( buffer ) );
@@ -530,7 +510,7 @@ static void LogOutputNumber( uint32_t value,
     tmp    = value;
     
     /* 最小フィールド幅範囲チェック */
-    if ( ( width < 0 ) && ( LOG_LENGTH_COLUMN <= width ) ) {
+    if ( ( width < 0 ) && ( VGA_M3_COLUMN <= width ) ) {
         /* 0未満、LOG_LENGTH_COLUMN超過 */
         
         /* 最小フィールド幅初期化 */
@@ -868,9 +848,9 @@ static void LogProcEscapeAttr( uint32_t funcNo )
         case 0:
             /* 属性初期化 */
             
-            gLogTbl.attr = LOG_ATTR_FG_WHITE  | /* 白色文字属性 */
-                           LOG_ATTR_FG_BRIGHT | /* 明色文字属性 */
-                           LOG_ATTR_BG_BLACK;   /* 黒色背景属性 */
+            gLogTbl.attr = VGA_M3_ATTR_FG_WHITE  |  /* 白色文字属性 */
+                           VGA_M3_ATTR_FG_BRIGHT |  /* 明色文字属性 */
+                           VGA_M3_ATTR_BG_BLACK;    /* 黒色背景属性 */
             
             break;
             
@@ -878,8 +858,9 @@ static void LogProcEscapeAttr( uint32_t funcNo )
             /* 反転 */
             
             /* 反転 */
-            attr  = ( LOG_ATTR_BG( gLogTbl.attr ) >> 4 ) | LOG_ATTR_FG_BRIGHT;
-            attr &= ( LOG_ATTR_FG( gLogTbl.attr ) << 4 ) & ~LOG_ATTR_BLINK;
+            attr  = ( LOG_ATTR_BG( gLogTbl.attr ) >> 4 ) |
+                    VGA_M3_ATTR_FG_BRIGHT;
+            attr &= ( LOG_ATTR_FG( gLogTbl.attr ) << 4 ) & ~VGA_M3_ATTR_BLINK;
             
             /* 設定 */
             gLogTbl.attr = attr;
@@ -890,49 +871,50 @@ static void LogProcEscapeAttr( uint32_t funcNo )
             /* 黒色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_BLACK | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_BLACK | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 31:
             /* 赤色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_RED | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_RED | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 32:
             /* 緑色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_GREEN | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_GREEN | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 33:
             /* 黄色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_BROWN | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_BROWN | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 34:
             /* 青色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_BLUE | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_BLUE | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 35:
             /* 紫色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_PURPLE | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_PURPLE | 
+                                     VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 36:
             /* 水色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_CYAN | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_CYAN | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 37:
@@ -941,49 +923,53 @@ static void LogProcEscapeAttr( uint32_t funcNo )
             /* 標準色文字 */
             gLogTbl.attr =
                 LOG_ATTR_FG_CHG( gLogTbl.attr,
-                                 LOG_ATTR_FG_WHITE | LOG_ATTR_FG_BRIGHT );
+                                 VGA_M3_ATTR_FG_WHITE | VGA_M3_ATTR_FG_BRIGHT );
             break;
             
         case 40:
             /* 黒色背景 *//* FALL THROUGH */
         case 49:
             /* 標準色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_BLACK );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr,
+                                            VGA_M3_ATTR_BG_BLACK );
             break;
             
         case 41:
             /* 赤色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_RED );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, VGA_M3_ATTR_BG_RED );
             break;
             
         case 42:
             /* 緑色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_RED );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, VGA_M3_ATTR_BG_RED );
             break;
             
         case 43:
             /* 黄色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_BROWN );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr,
+                                            VGA_M3_ATTR_BG_BROWN );
             break;
             
         case 44:
             /* 青色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_BLUE );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, VGA_M3_ATTR_BG_BLUE );
             break;
             
         case 45:
             /* 紫色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_PURPLE );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr,
+                                            VGA_M3_ATTR_BG_PURPLE );
             break;
             
         case 46:
             /* 水色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_CYAN );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, VGA_M3_ATTR_BG_CYAN );
             break;
             
         case 47:
             /* 白色背景 */
-            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr, LOG_ATTR_BG_WHITE );
+            gLogTbl.attr = LOG_ATTR_BG_CHG( gLogTbl.attr,
+                                            VGA_M3_ATTR_BG_WHITE );
             break;
             
         default:

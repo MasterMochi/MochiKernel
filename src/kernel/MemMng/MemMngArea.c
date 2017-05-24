@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2017/03/12 */
+/*                                                                 2017/05/24 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,6 +18,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
+#include <MemMng.h>
 
 /* 内部モジュールヘッダ */
 
@@ -189,6 +190,83 @@ void *MemMngAreaAlloc( size_t size )
     DEBUG_LOG( "%s() end. ret=%010p", __func__, pAddr );
     
     return pAddr;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       メモリ領域情報取得
+ * @details     指定したメモリ領域情報を取得する。
+ * 
+ * @param[out]  *pInfo メモリ領域情報
+ * @param[in]   type   メモリ領域種別
+ *                  - MOCHIKERNEL_MEMORY_TYPE_ACPI     ACPIメモリ領域
+ *                  - MOCHIKERNEL_MEMORY_TYPE_ACPI_NVS ACPI NVSメモリ領域
+ *                  - MOCHIKERNEL_MEMORY_TYPE_KERNEL   MochiKernel領域
+ * 
+ * @retval      CMN_SUCCESS 正常終了
+ * @retval      CMN_FAILURE 異常終了
+ * 
+ * @note        下記メモリ領域情報は取得不可。
+ *              - 使用可能メモリ領域
+ *              - 使用不可メモリ領域
+ */
+/******************************************************************************/
+CmnRet_t MemMngAreaGetInfo( MemMngAreaInfo_t *pInfo,
+                            uint32_t         type    )
+{
+    uint32_t               index;   /* インデックス         */
+    MochiKernelMemoryMap_t *pEntry; /* メモリマップエントリ */
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start. pInfo=%010p, type=%u", __func__, pInfo, type );
+    
+    /* メモリ領域情報チェック */
+    if ( pInfo == NULL ) {
+        /* 不正値 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        
+        return CMN_FAILURE;
+    }
+    
+    /* メモリ領域種別チェック */
+    if ( ( type != MOCHIKERNEL_MEMORY_TYPE_ACPI     ) &&
+         ( type != MOCHIKERNEL_MEMORY_TYPE_ACPI_NVS ) &&
+         ( type != MOCHIKERNEL_MEMORY_TYPE_KERNEL   )    ) {
+        /* 不正値 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        
+        return CMN_FAILURE;
+    }
+    
+    /* メモリマップ全エントリ毎に繰り返し */
+    for ( index = 0; index < gAreaTbl.memoryMapSize; index++ ) {
+        /* メモリマップ参照変数設定 */
+        pEntry = &gAreaTbl.pMemoryMap[ index ];
+        
+        /* メモリ領域タイプ判定 */
+        if ( pEntry->type == type ) {
+            /* 一致 */
+            
+            /* メモリ領域情報設定 */
+            pInfo->pAddr = pEntry->pAddr;
+            pInfo->size  = pEntry->size;
+            
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "%s() end. ret=CMN_SUCCESS, index=%d" );
+            
+            return CMN_SUCCESS;
+        }
+    }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+    
+    return CMN_FAILURE;
 }
 
 

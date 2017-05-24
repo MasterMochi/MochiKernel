@@ -108,7 +108,7 @@ void IntMngIdtSet( uint32_t index,
                    uint8_t  type,
                    uint8_t  level )
 {
-    /* デバッグトレースログ出力 */
+    /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. index=%#x, selector=%u, ",
                __func__,
                index,
@@ -117,7 +117,7 @@ void IntMngIdtSet( uint32_t index,
                pOffset,
                count,
                type,
-               level );
+               level );*/
     
     /* ディスクリプタ設定 */
     gIdt[ index ].offset_low  = IA32_DESCRIPTOR_OFFSET_LOW( pOffset );
@@ -129,8 +129,8 @@ void IntMngIdtSet( uint32_t index,
     gIdt[ index ].attr_p      = IA32_DESCRIPTOR_P_YES;
     gIdt[ index ].offset_high = IA32_DESCRIPTOR_OFFSET_HIGH( pOffset );
     
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }

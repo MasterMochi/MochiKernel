@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2017/03/11 *#
+#*                                                                 2017/05/18 *#
 #* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -17,6 +17,8 @@ SRCS = InitCtrl/InitCtrlInit.c \
        MemMng/MemMngInit.c     \
        MemMng/MemMngGdt.c      \
        MemMng/MemMngArea.c     \
+       MemMng/MemMngPage.c     \
+       MemMng/MemMngCtrl.c     \
        IntMng/IntMngInit.c     \
        IntMng/IntMngIdt.c      \
        IntMng/IntMngHdl.c      \

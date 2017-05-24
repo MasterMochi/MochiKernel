@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTask.h                                           */
-/*                                                                 2017/03/18 */
+/*                                                                 2017/04/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef PROCMNG_TASK_H
@@ -34,6 +34,9 @@ extern ProcMngTaskContext_t ProcMngTaskGetContext( uint32_t taskId );
 
 /* カーネルスタックアドレス取得 */
 extern void *ProcMngTaskGetKernelStack( uint32_t taskId );
+
+/* ページディレクトリID取得 */
+extern uint32_t ProcMngTaskGetPageDirId( uint32_t taskId );
 
 /* タスクタイプ取得 */
 extern uint8_t ProcMngTaskGetType( uint32_t taskId );

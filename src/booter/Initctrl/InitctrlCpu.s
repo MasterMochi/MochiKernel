@@ -46,7 +46,7 @@ setSegment:
     mov         ss, ax
     
     /* スタックポインタ変更 */
-    mov         esp, 0x03000000
+    mov         esp, 0x04000000
     
     /* カーネル実行 */
     jmp         0x00100000

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2017/03/18 */
+/*                                                                 2017/03/30 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
@@ -10,6 +10,7 @@
 /******************************************************************************/
 #include <stdint.h>
 #include "IA32Descriptor.h"
+#include "IA32Paging.h"
 
 
 /******************************************************************************/
@@ -365,9 +366,7 @@ static inline void IA32InstructionPop( uint32_t *pValue )
 {
     /* pop命令実行 */
     __asm__ __volatile__ ( "pop %0"
-                           : "=a" ( *pValue )
-                           :
-                           :                  );
+                           : "=a" ( *pValue ) );
     
     return;
 }
@@ -584,6 +583,7 @@ static inline void IA32InstructionPushFs( void )
 }
 
 
+
 /******************************************************************************/
 /**
  * @brief       push（gs）命令実行
@@ -596,6 +596,101 @@ static inline void IA32InstructionPushGs( void )
 {
     /* push gs命令実行 */
     __asm__ __volatile__ ( "push gs" );
+    
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       cr0レジスタ設定
+ * @details     cr0レジスタにシステム制御フラグを設定する。
+ * 
+ * @param[in]   cr0  システム制御フラグ
+ *                  - IA32_CR0_PG ページング
+ *                  - IA32_CR0_CD キャッシュディスエーブル
+ *                  - IA32_CR0_NW ノットライトスルー
+ *                  - IA32_CR0_AM アライメントマスク
+ *                  - IA32_CR0_WP 書込み保護
+ *                  - IA32_CR0_NE 数値演算エラー
+ *                  - IA32_CR0_ET 拡張タイプ
+ *                  - IA32_CR0_TS タスクスイッチ
+ *                  - IA32_CR0_EM エミュレーション
+ *                  - IA32_CR0_MP モニタコプロセッサ
+ *                  - IA32_CR0_PE 保護イネーブル
+ * @param[in]   mask 設定マスク
+ *                  - IA32_CR0_PG ページング
+ *                  - IA32_CR0_CD キャッシュディスエーブル
+ *                  - IA32_CR0_NW ノットライトスルー
+ *                  - IA32_CR0_AM アライメントマスク
+ *                  - IA32_CR0_WP 書込み保護
+ *                  - IA32_CR0_NE 数値演算エラー
+ *                  - IA32_CR0_ET 拡張タイプ
+ *                  - IA32_CR0_TS タスクスイッチ
+ *                  - IA32_CR0_EM エミュレーション
+ *                  - IA32_CR0_MP モニタコプロセッサ
+ *                  - IA32_CR0_PE 保護イネーブル
+ */
+/******************************************************************************/
+static inline void IA32InstructionSetCr0( uint32_t cr0,
+                                          uint32_t mask )
+{
+    /* 初期化 */
+    cr0  = cr0 & mask;
+    mask = ~mask;
+    
+    /* cr0レジスタ取得 */
+    __asm__ __volatile__ ( "mov eax, cr0"
+                           :
+                           :
+                           : "eax"        );
+    
+    /* システム制御フラグ設定 */
+    __asm__ __volatile__ ( "and eax, %0;"
+                           "or  eax, %1"
+                           :
+                           : "r" ( mask ), "r" ( cr0 )
+                           : "eax"                     );
+    
+    /* cr0レジスタ設定 */
+    __asm__ __volatile__ ( "mov cr0, eax"
+                           :
+                           :
+                           : "eax"        );
+    
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       cr3レジスタ設定
+ * @details     cr3レジスタにページディレクトリのベースアドレスを設定する。
+ * 
+ * @param[in]   *pBase  ベースアドレス
+ * @param[in]   attrPcd ページレベルキャッシュディスエーブルフラグ
+ *                  - IA32_PAGING_PCD_ENABLE  キャッシング有効
+ *                  - IA32_PAGING_PCD_DISABLE キャッシング無効
+ * @param[in]   attrPwt ページレベルライトスルーフラグ
+ *                  - IA32_PAGING_PWT_WB ライトバックキャッシング
+ *                  - IA32_PAGING_PWT_WT ライトスルーキャッシング
+ */
+/******************************************************************************/
+static inline void IA32InstructionSetCr3( void     *pBase,
+                                          uint32_t attrPcd,
+                                          uint32_t attrPwt  )
+{
+    IA32PagingPDBR_t pdbr;  /* 設定値 */
+    
+    /* 値設定 */
+    *( ( uint32_t * ) &pdbr ) = ( ( uint32_t ) pBase ) & 0xFFFFF000;
+    pdbr.attr_pcd             = attrPcd;
+    pdbr.attr_pwt             = attrPwt;
+    
+    /* cr3レジスタ設定 */
+    __asm__ __volatile__ ( "mov cr3, %0"
+                           :
+                           : "a" ( pdbr ) );
     
     return;
 }

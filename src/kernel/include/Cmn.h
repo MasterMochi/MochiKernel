@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2017/03/11 */
+/*                                                                 2017/05/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef CMN_H
@@ -23,6 +23,8 @@
 #define CMN_MODULE_MEMMNG_INIT   ( 0x0201 ) /**< メモリ管理(初期化)         */
 #define CMN_MODULE_MEMMNG_GDT    ( 0x0202 ) /**< メモリ管理(GDT管理)        */
 #define CMN_MODULE_MEMMNG_AREA   ( 0x0203 ) /**< メモリ管理(メモリ領域管理) */
+#define CMN_MODULE_MEMMNG_PAGE   ( 0x0204 ) /**< メモリ管理(ページ管理)     */
+#define CMN_MODULE_MEMMNG_CTRL   ( 0x0205 ) /**< メモリ管理(メモリ制御)     */
 #define CMN_MODULE_INTMNG_INIT   ( 0x0301 ) /**< 割込管理(初期化)           */
 #define CMN_MODULE_INTMNG_PIC    ( 0x0302 ) /**< 割込管理(PIC管理)          */
 #define CMN_MODULE_INTMNG_IDT    ( 0x0303 ) /**< 割込管理(IDT管理)          */
@@ -37,7 +39,7 @@
 #define CMN_MODULE_DEBUG_LOG     ( 0x0602 ) /**< デバッグ制御(ログ管理)     */
 
 /** モジュール・サブモジュール数 */
-#define CMN_MODULE_NUM           ( 16 )
+#define CMN_MODULE_NUM           ( 18 )
 
 /* 処理結果構造体 */
 typedef int32_t CmnRet_t;

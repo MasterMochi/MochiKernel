@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTask.c                                           */
-/*                                                                 2017/03/16 */
+/*                                                                 2017/04/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -59,6 +59,7 @@ typedef struct {
     uint8_t              state;             /**< タスク状態               */
     uint8_t              reserved;          /**< パディング               */
     ProcMngTaskContext_t context;           /**< コンテキスト             */
+    uint32_t             pageDirId;         /**< ページディレクトリID     */
     void                 *pEntryPoint;      /**< エントリポイント         */
     taskStackInfo_t      kernelStackInfo;   /**< カーネルスタックアドレス */
     taskStackInfo_t      stackInfo;         /**< スタックアドレス         */
@@ -94,17 +95,19 @@ static taskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
 uint32_t ProcMngTaskAdd( uint8_t taskType,
                          void    *pEntryPoint )
 {
-    void            *pKernelStack; /* カーネルスタック */
-    void            *pStack;       /* スタック         */
-    int32_t         ret;           /* 関数戻り値       */
-    uint32_t        taskId;        /* タスクID         */
-    taskStackInfo_t *pStackInfo;   /* スタック情報     */
+    void            *pKernelStack;  /* カーネルスタック     */
+    void            *pStack;        /* スタック             */
+    int32_t         ret;            /* 関数戻り値           */
+    uint32_t        taskId;         /* タスクID             */
+    uint32_t        pageDirId;      /* ページディレクトリID */
+    taskStackInfo_t *pStackInfo;    /* スタック情報         */
     
     /* 初期化 */
     pKernelStack = NULL;
     pStack       = NULL;
     ret          = CMN_FAILURE;
     taskId       = PROCMNG_TASK_ID_MIN;
+    pageDirId    = MEMMNG_PAGE_DIR_FULL;
     pStackInfo   = NULL;
     
     /* デバッグトレースログ出力 */
@@ -118,6 +121,19 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
         /* 使用フラグ判定 */
         if ( gTaskTbl[ taskId ].used == TASK_ID_UNUSED ) {
             /* 未使用 */
+            
+            /* ページディレクトリ割当 */
+            pageDirId = MemMngPageAllocDir();
+            
+            /* ページディレクトリ割当結果判定 */
+            if ( pageDirId == MEMMNG_PAGE_DIR_FULL ) {
+                /* 失敗 */
+                
+                /* [TODO] */
+                /* 設定したタスクを初期化する処理。異常処理はちょっと後回し */
+                
+                return PROCMNG_TASK_ID_NULL;
+            }
             
             /* カーネルスタック領域割り当て */
             pKernelStack = MemMngAreaAlloc( TASK_KERNEL_STACK_SIZE );
@@ -136,13 +152,31 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 return PROCMNG_TASK_ID_NULL;
             }
             
+            /* ページマッピング（仮） */
+            MemMngPageMap( pageDirId,
+                           pKernelStack,
+                           pKernelStack,
+                           TASK_KERNEL_STACK_SIZE,
+                           IA32_PAGING_G_NO,
+                           IA32_PAGING_US_SV,
+                           IA32_PAGING_RW_RW       );
+            MemMngPageMap( pageDirId,
+                           pStack,
+                           pStack,
+                           TASK_STACK_SIZE,
+                           IA32_PAGING_G_NO,
+                           IA32_PAGING_US_USER,
+                           IA32_PAGING_RW_RW    );
+            
             /* タスク基本設定 */
             gTaskTbl[ taskId ].used        = TASK_ID_USED;
             gTaskTbl[ taskId ].type        = taskType;
             gTaskTbl[ taskId ].state       = 0;
             gTaskTbl[ taskId ].context.eip = ( uint32_t ) ProcMngTaskStart;
-            gTaskTbl[ taskId ].context.esp = ( uint32_t ) pKernelStack + TASK_KERNEL_STACK_SIZE;
+            gTaskTbl[ taskId ].context.esp = ( uint32_t ) pKernelStack +
+                                             TASK_KERNEL_STACK_SIZE;
             gTaskTbl[ taskId ].pEntryPoint = pEntryPoint;
+            gTaskTbl[ taskId ].pageDirId   = pageDirId;
             
             /* カーネルスタック情報設定 */
             pStackInfo              = &( gTaskTbl[ taskId ].kernelStackInfo );
@@ -223,6 +257,25 @@ void *ProcMngTaskGetKernelStack( uint32_t taskId )
 
 /******************************************************************************/
 /**
+ * @brief       ページディレクトリID取得
+ * @details     指定したタスクIDのページディレクトリIDを取得する。
+ * 
+ * @param[in]   taskId タスクID
+ *                  - PROCMNG_TASK_ID_MIN タスクID最小値
+ *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ * 
+ * @return      ページディレクトリID
+ */
+/******************************************************************************/
+uint32_t ProcMngTaskGetPageDirId( uint32_t taskId )
+{
+    /* ページディレクトリID返却 */
+    return gTaskTbl[ taskId ].pageDirId;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       タスクタイプ取得
  * @details     指定したタスクIDのタスクタイプを取得する。
  * 
@@ -257,7 +310,8 @@ void ProcMngTaskInit( void )
     memset( gTaskTbl, 0, sizeof ( gTaskTbl ) );
     
     /* アイドルタスク設定 */
-    gTaskTbl[ PROCMNG_TASK_ID_IDLE ].used = TASK_ID_USED;   /* 使用フラグ */
+    gTaskTbl[ PROCMNG_TASK_ID_IDLE ].used      = TASK_ID_USED;
+    gTaskTbl[ PROCMNG_TASK_ID_IDLE ].pageDirId = MEMMNG_PAGE_DIR_ID_IDLE;
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

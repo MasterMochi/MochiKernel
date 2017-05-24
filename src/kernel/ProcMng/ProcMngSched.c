@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngSched.c                                          */
-/*                                                                 2017/03/18 */
+/*                                                                 2017/05/19 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,6 +18,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
+#include <MemMng.h>
 
 /* 内部モジュールヘッダ */
 #include "ProcMngTask.h"
@@ -262,8 +263,13 @@ void ProcMngSchedExec( void )
     /* 実行中タスク情報切り替え */
     gSchedTbl.pRunningTaskInfo = pTaskInfo;
     
-    /* タスクスイッチ */
-    SchedSwitchTask( nowTaskId, pTaskInfo->taskId );
+    /* タスクID比較 */
+    if ( nowTaskId != pTaskInfo->taskId ) {
+        /* 別タスク */
+        
+        /* タスクスイッチ */
+        SchedSwitchTask( nowTaskId, pTaskInfo->taskId );
+    }
     
     /* デバッグトレースログ出力 */
     /*DEBUG_LOG( "%s() end.", __func__ );*/
@@ -446,11 +452,12 @@ static __attribute__ ( ( noinline ) )
     void SchedSwitchTask( uint32_t nowTaskId,
                           uint32_t nextTaskId )
 {
-    void                 *pKernelStack; /* カーネルスタック */
-    ProcMngTaskContext_t context;       /* コンテキスト     */
+    void                 *pKernelStack; /* カーネルスタック     */
+    uint32_t             pdId;          /* ページディレクトリID */
+    ProcMngTaskContext_t context;       /* コンテキスト         */
     
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
                __func__,
                nowTaskId,
                nextTaskId );*/
@@ -464,12 +471,18 @@ static __attribute__ ( ( noinline ) )
     context.ebp = IA32InstructionGetEbp();
     ProcMngTaskSetContext( nowTaskId, &context );
     
-    /* コンテキスト復旧 */
+    /* コンテキスト取得 */
     context = ProcMngTaskGetContext( nextTaskId );
     
     /* カーネルスタック設定 */
     pKernelStack = ProcMngTaskGetKernelStack( nextTaskId );
     ProcMngTssSetEsp0( ( uint32_t ) pKernelStack );
+    
+    /* ページディレクトリID取得 */
+    pdId = ProcMngTaskGetPageDirId( nextTaskId );
+    
+    /* ページディレクトリ切替 */
+    MemMngPageSwitchDir( pdId );
     
     /* タスクスイッチ */
     IA32InstructionSwitchTask( ( void * ) context.eip,

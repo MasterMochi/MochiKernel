@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2017/03/30 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
@@ -667,26 +667,11 @@ static inline void IA32InstructionSetCr0( uint32_t cr0,
  * @brief       cr3レジスタ設定
  * @details     cr3レジスタにページディレクトリのベースアドレスを設定する。
  * 
- * @param[in]   *pBase  ベースアドレス
- * @param[in]   attrPcd ページレベルキャッシュディスエーブルフラグ
- *                  - IA32_PAGING_PCD_ENABLE  キャッシング有効
- *                  - IA32_PAGING_PCD_DISABLE キャッシング無効
- * @param[in]   attrPwt ページレベルライトスルーフラグ
- *                  - IA32_PAGING_PWT_WB ライトバックキャッシング
- *                  - IA32_PAGING_PWT_WT ライトスルーキャッシング
+ * @param[in]   pdbr ページディレクトリベースレジスタ
  */
 /******************************************************************************/
-static inline void IA32InstructionSetCr3( void     *pBase,
-                                          uint32_t attrPcd,
-                                          uint32_t attrPwt  )
+static inline void IA32InstructionSetCr3( IA32PagingPDBR_t pdbr )
 {
-    IA32PagingPDBR_t pdbr;  /* 設定値 */
-    
-    /* 値設定 */
-    *( ( uint32_t * ) &pdbr ) = ( ( uint32_t ) pBase ) & 0xFFFFF000;
-    pdbr.attr_pcd             = attrPcd;
-    pdbr.attr_pwt             = attrPwt;
-    
     /* cr3レジスタ設定 */
     __asm__ __volatile__ ( "mov cr3, %0"
                            :
@@ -754,25 +739,33 @@ static inline void IA32InstructionSubEsp( int32_t value )
 /**
  * @brief       タスクスイッチ
  * @details     指定したスタックポインタをespレジスタに、ベースポインタをebpレ
- *              ジスタに設定し、jmp命令を用いて指定したアドレスを実行する。
+ *              ジスタに、ページディレクトリベースをpdbrレジスタに設定し、jmp命
+ *              令を用いて指定したアドレスを実行する。
  * 
- * @param[in]   *pEip 移動先アドレス
- * @param[in]   *pEsp スタックポインタ
- * @param[in]   *pEbp ベースポインタ
+ * @param[in]   pdbr   ページディレクトリベースレジスタ
+ * @param[in]   *pEip  移動先アドレス
+ * @param[in]   *pEsp  スタックポインタ
+ * @param[in]   *pEbp  ベースポインタ
  */
 /******************************************************************************/
-static inline void IA32InstructionSwitchTask( void *pEip,
-                                              void *pEsp,
-                                              void *pEbp  )
+static inline void IA32InstructionSwitchTask( IA32PagingPDBR_t pdbr,
+                                              void             *pEip,
+                                              void             *pEsp,
+                                              void             *pEbp  )
 {
     /* タスクスイッチ */
     __asm__ __volatile__ ( "mov eax, %0\n"
-                           "mov esp, %1\n"
-                           "mov ebp, %2\n"
-                           "jmp eax"
+                           "mov ebx, %1\n"
+                           "mov esp, %2\n"
+                           "mov ebp, %3\n"
+                           "mov cr3, eax\n"
+                           "jmp ebx"
                            :
-                           : "m" ( pEip ), "m" ( pEsp ), "m" ( pEbp )
-                           :                                          );
+                           : "a" ( pdbr ),
+                             "m" ( pEip ),
+                             "m" ( pEsp ),
+                             "m" ( pEbp )
+                           : );
 }
 
 

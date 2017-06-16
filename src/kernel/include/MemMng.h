@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2017/05/24 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -11,6 +11,7 @@
 /* 共通ヘッダ */
 #include <stddef.h>
 #include <stdint.h>
+#include <hardware/IA32/IA32Paging.h>
 #include <kernel/MochiKernel.h>
 
 /* 外部モジュールヘッダ */
@@ -22,25 +23,25 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* GDT定義 */
-#define MEMMNG_GDT_ENTRY_FULL     (  0 )        /**< GDTエントリ空き無し   */
-#define MEMMNG_GDT_ENTRY_MIN      (  1 )        /**< GDTエントリ番号最小値 */
-#define MEMMNG_GDT_ENTRY_MAX      (  9 )        /**< GDTエントリ番号最大値 */
-#define MEMMNG_GDT_ENTRY_NUM   \
-    ( MEMMNG_GDT_ENTRY_MAX + 1 )                /**< GDTエントリ数         */
+#define MEMMNG_GDT_ENTRY_FULL     (  0 )        /** GDTエントリ空き無し   */
+#define MEMMNG_GDT_ENTRY_MIN      (  1 )        /** GDTエントリ番号最小値 */
+#define MEMMNG_GDT_ENTRY_MAX      (  9 )        /** GDTエントリ番号最大値 */
+#define MEMMNG_GDT_ENTRY_NUM        \
+    ( MEMMNG_GDT_ENTRY_MAX + 1 )                /** GDTエントリ数         */
 
 /* セグメントセレクタ定義 */
-#define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /**< カーネルコードセグメント */
-#define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /**< カーネルデータセグメント */
-#define MEMMNG_SEGSEL_DRIVER_CODE ( 3 * 8 + 1 ) /**< ドライバコードセグメント */
-#define MEMMNG_SEGSEL_DRIVER_DATA ( 4 * 8 + 1 ) /**< ドライバデータセグメント */
-#define MEMMNG_SEGSEL_SERVER_CODE ( 5 * 8 + 2 ) /**< サーバコードセグメント   */
-#define MEMMNG_SEGSEL_SERVER_DATA ( 6 * 8 + 2 ) /**< サーバデータセグメント   */
-#define MEMMNG_SEGSEL_USER_CODE   ( 7 * 8 + 3 ) /**< ユーザコードセグメント   */
-#define MEMMNG_SEGSEL_USER_DATA   ( 8 * 8 + 3 ) /**< ユーザデータセグメント   */
+#define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /** カーネルコードセグメント */
+#define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /** カーネルデータセグメント */
+#define MEMMNG_SEGSEL_DRIVER_CODE ( 3 * 8 + 1 ) /** ドライバコードセグメント */
+#define MEMMNG_SEGSEL_DRIVER_DATA ( 4 * 8 + 1 ) /** ドライバデータセグメント */
+#define MEMMNG_SEGSEL_SERVER_CODE ( 5 * 8 + 2 ) /** サーバコードセグメント   */
+#define MEMMNG_SEGSEL_SERVER_DATA ( 6 * 8 + 2 ) /** サーバデータセグメント   */
+#define MEMMNG_SEGSEL_USER_CODE   ( 7 * 8 + 3 ) /** ユーザコードセグメント   */
+#define MEMMNG_SEGSEL_USER_DATA   ( 8 * 8 + 3 ) /** ユーザデータセグメント   */
 
 /** ページディレクトリID */
-#define MEMMNG_PAGE_DIR_ID_IDLE   ( 0 )         /**< アイドルプロセス用PDID */
-#define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /**< PDID最小値             */
+#define MEMMNG_PAGE_DIR_ID_IDLE   ( 0 )         /** アイドルプロセス用PDID */
+#define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /** PDID最小値             */
 
 /* ページディレクトリ定義 */
 #define MEMMNG_PAGE_DIR_NUM       PROCMNG_TASK_ID_NUM   /** PD管理数   */
@@ -108,7 +109,7 @@ extern CmnRet_t MemMngPageFreeDir( uint32_t id );
 extern uint32_t MemMngPageGetDirId( void );
 
 /* ページディレクトリ切替 */
-extern void MemMngPageSwitchDir( uint32_t id );
+extern IA32PagingPDBR_t MemMngPageSwitchDir( uint32_t pageDirId );
 
 /* ページマッピング設定 */
 extern CmnRet_t MemMngPageSet( uint32_t dirId,

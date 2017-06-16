@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngTask.c                                           */
-/*                                                                 2017/04/16 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -14,11 +14,13 @@
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
+#include <Config.h>
 #include <Debug.h>
 #include <MemMng.h>
 #include <ProcMng.h>
 
 /* 内部モジュールヘッダ */
+#include "ProcMngElf.h"
 #include "ProcMngSched.h"
 #include "ProcMngTask.h"
 #include "ProcMngTss.h"
@@ -41,36 +43,12 @@
 #define TASK_ID_UNUSED ( 0 )    /** 未使用 */
 #define TASK_ID_USED   ( 1 )    /** 使用済 */
 
-/* スタックサイズ */
-#define TASK_KERNEL_STACK_SIZE ( 1024000 )  /**< カーネルスタックサイズ */
-#define TASK_STACK_SIZE        ( 1024000 )  /**< スタックサイズ         */
-
-/** タスクスタック情報 */
-typedef struct {
-    void   *pTopAddr;       /**< 先頭アドレス */
-    void   *pBottomAddr;    /**< 後尾アドレス */
-    size_t size;            /**< サイズ       */
-} taskStackInfo_t;
-
-/** タスク管理テーブル構造体 */
-typedef struct {
-    uint8_t              used;              /**< 使用フラグ               */
-    uint8_t              type;              /**< タスクタイプ             */
-    uint8_t              state;             /**< タスク状態               */
-    uint8_t              reserved;          /**< パディング               */
-    ProcMngTaskContext_t context;           /**< コンテキスト             */
-    uint32_t             pageDirId;         /**< ページディレクトリID     */
-    void                 *pEntryPoint;      /**< エントリポイント         */
-    taskStackInfo_t      kernelStackInfo;   /**< カーネルスタックアドレス */
-    taskStackInfo_t      stackInfo;         /**< スタックアドレス         */
-} taskTbl_t;
-
 
 /******************************************************************************/
 /* 変数定義                                                                   */
 /******************************************************************************/
 /** タスク管理テーブル */
-static taskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
+static ProcMngTaskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
 
 
 /******************************************************************************/
@@ -81,11 +59,12 @@ static taskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
  * @brief       タスク追加
  * @details     タスク追加を行う。
  * 
- * @param[in]   taskType     タスクタイプ
+ * @param[in]   taskType タスクタイプ
  *                  - PROCMNG_TASK_TYPE_DRIVER ドライバ
  *                  - PROCMNG_TASK_TYPE_SERVER サーバ
  *                  - PROCMNG_TASK_TYPE_USER   ユーザ
- * @param[in]   *pEntryPoint エントリポイント
+ * @param[in]   *pAddr   実行ファイル
+ * @param[in]   size     実行ファイルサイズ
  * 
  * @retval      PROCMNG_TASK_ID_NULL 失敗
  * @retval      PROCMNG_TASK_ID_MIN  タスクID最小値
@@ -93,14 +72,15 @@ static taskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
  */
 /******************************************************************************/
 uint32_t ProcMngTaskAdd( uint8_t taskType,
-                         void    *pEntryPoint )
+                         void    *pAddr,
+                         size_t  size      )
 {
-    void            *pKernelStack;  /* カーネルスタック     */
-    void            *pStack;        /* スタック             */
-    int32_t         ret;            /* 関数戻り値           */
-    uint32_t        taskId;         /* タスクID             */
-    uint32_t        pageDirId;      /* ページディレクトリID */
-    taskStackInfo_t *pStackInfo;    /* スタック情報         */
+    void                   *pKernelStack;   /* カーネルスタック     */
+    void                   *pStack;         /* スタック             */
+    CmnRet_t               ret;             /* 関数戻り値           */
+    uint32_t               taskId;          /* タスクID             */
+    uint32_t               pageDirId;       /* ページディレクトリID */
+    ProcMngTaskStackInfo_t *pStackInfo;     /* スタック情報         */
     
     /* 初期化 */
     pKernelStack = NULL;
@@ -111,10 +91,11 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
     pStackInfo   = NULL;
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. taskType=%u, pEntryPoint=%010p",
+    DEBUG_LOG( "%s() start. taskType=%u, pAddr=%010p, size=%d",
                __func__,
                taskType,
-               pEntryPoint );
+               pAddr,
+               size );
     
     /* 空タスク検索 */
     for ( ; taskId < PROCMNG_TASK_ID_MAX; taskId++ ) {
@@ -130,65 +111,111 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 /* 失敗 */
                 
                 /* [TODO] */
-                /* 設定したタスクを初期化する処理。異常処理はちょっと後回し */
+                
+                return PROCMNG_TASK_ID_NULL;
+            }
+            
+            /* PDBR設定 */
+            
+            /* タスク基本設定 */
+            gTaskTbl[ taskId ].used         = TASK_ID_USED;
+            gTaskTbl[ taskId ].type         = taskType;
+            gTaskTbl[ taskId ].state        = 0;
+            gTaskTbl[ taskId ].context.eip  = ( uint32_t ) ProcMngTaskStart;
+            gTaskTbl[ taskId ].context.esp  = CONFIG_MEM_KERNEL_STACK_ADDR +
+                                              CONFIG_MEM_KERNEL_STACK_SIZE -
+                                              sizeof ( uint32_t );
+            gTaskTbl[ taskId ].pageDirId    = pageDirId;
+            
+            /* カーネルスタック情報設定 */
+            pStackInfo              = &( gTaskTbl[ taskId ].kernelStackInfo );
+            pStackInfo->pTopAddr    = ( void * ) CONFIG_MEM_KERNEL_STACK_ADDR;
+            pStackInfo->pBottomAddr = ( void * )
+                                      ( CONFIG_MEM_KERNEL_STACK_ADDR +
+                                        CONFIG_MEM_KERNEL_STACK_SIZE -
+                                        sizeof ( uint32_t )            );
+            pStackInfo->size        = CONFIG_MEM_KERNEL_STACK_SIZE;
+            
+            /* スタック情報設定 */
+            pStackInfo              = &( gTaskTbl[ taskId ].stackInfo );
+            pStackInfo->pTopAddr    = ( void * ) CONFIG_MEM_TASK_STACK_ADDR;
+            pStackInfo->pBottomAddr = ( void * )
+                                      ( CONFIG_MEM_TASK_STACK_ADDR +
+                                        CONFIG_MEM_TASK_STACK_SIZE -
+                                        sizeof ( uint32_t )          );
+            pStackInfo->size        = CONFIG_MEM_TASK_STACK_SIZE;
+            
+            /* ELFファイル読込 */
+            ret = ProcMngElfLoad( pAddr, size, &gTaskTbl[ taskId ] );
+            
+            /* ELFファイル読込結果判定 */
+            if ( ret != CMN_SUCCESS ) {
+                /* 失敗 */
+                
+                /* [TODO] */
                 
                 return PROCMNG_TASK_ID_NULL;
             }
             
             /* カーネルスタック領域割り当て */
-            pKernelStack = MemMngAreaAlloc( TASK_KERNEL_STACK_SIZE );
-            
-            /* スタック領域割り当て */
-            pStack = MemMngAreaAlloc( TASK_STACK_SIZE );
+            pKernelStack = MemMngAreaAlloc( CONFIG_MEM_KERNEL_STACK_SIZE );
             
             /* 割り当て結果判定 */
-            if ( ( pKernelStack == NULL ) ||
-                 ( pStack       == NULL )    ) {
+            if ( pKernelStack == NULL ) {
                 /* 失敗 */
                 
                 /* [TODO] */
-                /* 設定したタスクを初期化する処理。異常処理はちょっと後回し */
                 
                 return PROCMNG_TASK_ID_NULL;
             }
             
-            /* ページマッピング（仮） */
-            MemMngPageMap( pageDirId,
-                           pKernelStack,
-                           pKernelStack,
-                           TASK_KERNEL_STACK_SIZE,
-                           IA32_PAGING_G_NO,
-                           IA32_PAGING_US_SV,
-                           IA32_PAGING_RW_RW       );
-            MemMngPageMap( pageDirId,
-                           pStack,
-                           pStack,
-                           TASK_STACK_SIZE,
-                           IA32_PAGING_G_NO,
-                           IA32_PAGING_US_USER,
-                           IA32_PAGING_RW_RW    );
+            /* スタック領域割り当て */
+            pStack = MemMngAreaAlloc( CONFIG_MEM_TASK_STACK_SIZE );
             
-            /* タスク基本設定 */
-            gTaskTbl[ taskId ].used        = TASK_ID_USED;
-            gTaskTbl[ taskId ].type        = taskType;
-            gTaskTbl[ taskId ].state       = 0;
-            gTaskTbl[ taskId ].context.eip = ( uint32_t ) ProcMngTaskStart;
-            gTaskTbl[ taskId ].context.esp = ( uint32_t ) pKernelStack +
-                                             TASK_KERNEL_STACK_SIZE;
-            gTaskTbl[ taskId ].pEntryPoint = pEntryPoint;
-            gTaskTbl[ taskId ].pageDirId   = pageDirId;
+            /* 割り当て結果判定 */
+            if ( pStack == NULL ) {
+                /* 失敗 */
+                
+                /* [TODO] */
+                
+                return PROCMNG_TASK_ID_NULL;
+            }
             
-            /* カーネルスタック情報設定 */
-            pStackInfo              = &( gTaskTbl[ taskId ].kernelStackInfo );
-            pStackInfo->pTopAddr    = pKernelStack;
-            pStackInfo->pBottomAddr = pKernelStack + TASK_KERNEL_STACK_SIZE;
-            pStackInfo->size        = TASK_KERNEL_STACK_SIZE;
+            /* カーネルスタックページマップ設定 */
+            ret = MemMngPageSet( pageDirId,
+                                 ( void * ) CONFIG_MEM_KERNEL_STACK_ADDR,
+                                 pKernelStack,
+                                 CONFIG_MEM_KERNEL_STACK_SIZE,
+                                 IA32_PAGING_G_NO,
+                                 IA32_PAGING_US_SV,
+                                 IA32_PAGING_RW_RW );
             
-            /* スタック情報設定 */
-            pStackInfo              = &( gTaskTbl[ taskId ].stackInfo );
-            pStackInfo->pTopAddr    = pStack;
-            pStackInfo->pBottomAddr = pStack + TASK_STACK_SIZE;
-            pStackInfo->size        = TASK_STACK_SIZE;
+            /* ページマップ設定結果判定 */
+            if ( ret != CMN_SUCCESS ) {
+                /* 失敗 */
+                
+                /* [TODO] */
+                
+                return PROCMNG_TASK_ID_NULL;
+            }
+            
+            /* スタックページマップ設定 */
+            ret = MemMngPageSet( pageDirId,
+                                 ( void * ) CONFIG_MEM_TASK_STACK_ADDR,
+                                 pStack,
+                                 CONFIG_MEM_TASK_STACK_SIZE,
+                                 IA32_PAGING_G_NO,
+                                 IA32_PAGING_US_USER,
+                                 IA32_PAGING_RW_RW );
+            
+            /* ページマップ設定結果判定 */
+            if ( ret != CMN_SUCCESS ) {
+                /* 失敗 */
+                
+                /* [TODO] */
+                
+                return PROCMNG_TASK_ID_NULL;
+            }
             
             /* スケジューラ追加 */
             ret = ProcMngSchedAdd( taskId );
@@ -198,7 +225,6 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 /* 失敗 */
                 
                 /* [TODO] */
-                /* 設定したタスクを初期化する処理。異常処理はちょっと後回し */
                 
                 return PROCMNG_TASK_ID_NULL;
             }
@@ -349,13 +375,13 @@ void ProcMngTaskSetContext( uint32_t             taskId,
 /******************************************************************************/
 void ProcMngTaskStart( void )
 {
-    void      *pEntryPoint; /* エントリポイント         */
-    void      *pStack;      /* スタックアドレス         */
-    uint8_t   taskType;     /* タスクタイプ             */
-    uint32_t  taskId;       /* タスクID                 */
-    uint32_t  codeSegSel;   /* コードセグメントセレクタ */
-    uint32_t  dataSegSel;   /* データセグメントセレクタ */
-    taskTbl_t *pTask;       /* タスク管理情報           */
+    void             *pEntryPoint;  /* エントリポイント         */
+    void             *pStack;       /* スタックアドレス         */
+    uint8_t          taskType;      /* タスクタイプ             */
+    uint32_t         taskId;        /* タスクID                 */
+    uint32_t         codeSegSel;    /* コードセグメントセレクタ */
+    uint32_t         dataSegSel;    /* データセグメントセレクタ */
+    ProcMngTaskTbl_t *pTask;        /* タスク管理情報           */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );

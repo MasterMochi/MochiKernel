@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Paging.h                              */
-/*                                                                 2017/03/30 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_PAGING_H
@@ -14,20 +14,29 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/** PDBR設定マクロ */
+#define IA32_PAGING_SET_PDBR( _PDBR, _PBASE, _PCD, _PWT )   \
+    {                                                       \
+        *( ( uint32_t * ) &( _PDBR ) ) =                    \
+            ( ( uint32_t ) ( _PBASE ) ) & 0xFFFFF000;       \
+        ( _PDBR ).attr_pcd             = ( _PCD );          \
+        ( _PDBR ).attr_pwt             = ( _PWT );          \
+    }
+
 /** ページディレクトリエントリインデックス取得マクロ */
-#define IA32_PAGING_GET_PDE_IDX( _PADDR ) \
+#define IA32_PAGING_GET_PDE_IDX( _PADDR )               \
     ( ( ( ( uint32_t ) ( _PADDR ) ) >> 22 ) & 0x3FF )
 /** ページテーブルエントリインデックス取得マクロ */
-#define IA32_PAGING_GET_PTE_IDX( _PADDR ) \
+#define IA32_PAGING_GET_PTE_IDX( _PADDR )               \
     ( ( ( ( uint32_t ) ( _PADDR ) ) >> 12 ) & 0x3FF )
 
 /** ページテーブル・ページベースアドレス設定マクロ */
-#define IA32_PAGING_SET_BASE( _PENTRY, _PBASE )              \
-    ( *( ( uint32_t * ) ( _PENTRY ) ) =                      \
-        (  ( ( uint32_t   ) ( _PBASE  ) ) & 0xFFFFF000 ) |   \
+#define IA32_PAGING_SET_BASE( _PENTRY, _PBASE )                 \
+    ( *( ( uint32_t * ) ( _PENTRY ) ) =                         \
+        (  ( ( uint32_t   ) ( _PBASE  ) ) & 0xFFFFF000 ) |      \
         ( *( ( uint32_t * ) ( _PENTRY ) ) & 0x00000FFF )   )
 /** ページテーブル・ページベースアドレス取得マクロ */
-#define IA32_PAGING_GET_BASE( _PENTRY ) \
+#define IA32_PAGING_GET_BASE( _PENTRY )                             \
     ( ( void * ) ( *( ( uint32_t * ) ( _PENTRY ) ) & 0xFFFFF000 ) )
 
 /* ページテーブル・ページ存在フラグ */
@@ -76,8 +85,8 @@
 /** PDBR */
 typedef struct {
     uint32_t reserved2:3;   /**< 予約済み                                   */
-    uint32_t attr_pwt:1;    /**< ページレベルライトスルーフラグ             */
-    uint32_t attr_pcd:1;    /**< ページレベルキャッシュディスエーブルフラグ */
+    uint32_t attr_pwt :1;   /**< ページレベルライトスルーフラグ             */
+    uint32_t attr_pcd :1;   /**< ページレベルキャッシュディスエーブルフラグ */
     uint32_t reserved1:7;   /**< 予約済み                                   */
     uint32_t base     :20;  /**< ページディレクトリベースアドレス           */
 } IA32PagingPDBR_t;

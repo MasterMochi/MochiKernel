@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2017/05/21 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -36,8 +36,8 @@
 #endif
 
 /* テーブル使用フラグ */
-#define PAGE_UNUSED ( 0 )   /**< 未使用テーブル */
-#define PAGE_USED   ( 1 )   /**< 使用中テーブル */
+#define PAGE_UNUSED ( 0 )   /** 未使用テーブル */
+#define PAGE_USED   ( 1 )   /** 使用中テーブル */
 
 /** ページ管理テーブル構造体 */
 typedef struct {
@@ -204,28 +204,33 @@ uint32_t MemMngPageGetDirId( void )
 /******************************************************************************/
 /**
  * @brief       ページディレクトリ切替
- * @details     指定したページディレクトリをCPUに設定する。
+ * @details     指定したページディレクトリに切り替える。
  * 
- * @param[in]   id ページディレクトリID
+ * @param[in]   pageDirId ページディレクトリID
+ * 
+ * @return      ページディレクトリベースレジスタ
  */
 /******************************************************************************/
-void MemMngPageSwitchDir( uint32_t id )
+IA32PagingPDBR_t MemMngPageSwitchDir( uint32_t pageDirId )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. id=%u", __func__, id );
+    IA32PagingPDBR_t pdbr;  /* 戻り値 */
     
-    /* CPU設定 */
-    IA32InstructionSetCr3( &gPageDir[ id ],
-                           IA32_PAGING_PCD_ENABLE,
-                           IA32_PAGING_PWT_WB      );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() start. pageDirId=%u", __func__, pageDirId );*/
     
     /* 現ページディレクトリID設定 */
-    gPageMngTbl.nowDirId = id;
+    gPageMngTbl.nowDirId = pageDirId;
     
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /* PDBR作成 */
+    IA32_PAGING_SET_PDBR( pdbr,
+                          &gPageDir[ pageDirId ],
+                          IA32_PAGING_PCD_ENABLE,
+                          IA32_PAGING_PWT_WB );
     
-    return;
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() end.", __func__ );*/
+    
+    return pdbr;
 }
 
 
@@ -237,7 +242,8 @@ void MemMngPageSwitchDir( uint32_t id )
 /******************************************************************************/
 void MemMngPageInit( void )
 {
-    CmnRet_t ret;   /* 戻り値 */
+    CmnRet_t         ret;   /* 戻り値 */
+    IA32PagingPDBR_t pdbr;  /* PDBR   */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
@@ -263,8 +269,11 @@ void MemMngPageInit( void )
         /* [TODO] */
     }
     
+    /* ページディレクトリ切替 */
+    pdbr = MemMngPageSwitchDir( MEMMNG_PAGE_DIR_ID_IDLE );
+    
     /* ページディレクトリ設定 */
-    MemMngPageSwitchDir( MEMMNG_PAGE_DIR_ID_IDLE );
+    IA32InstructionSetCr3( pdbr );
     
     /* ページング有効化 */
     IA32InstructionSetCr0( IA32_CR0_PG, IA32_CR0_PG );
@@ -407,7 +416,6 @@ void MemMngPageUnset( uint32_t dirId,
         /* サイズ更新 */
         size -= IA32_PAGING_PAGE_SIZE;
     }
-    
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2017/05/24 */
+/*                                                                 2017/05/31 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -99,6 +99,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_PROCMNG_TSS,   "PRC-TSS " },   /* プロセス管理(TSS管理)      */
     { CMN_MODULE_PROCMNG_SCHED, "PRC-SCHD" },   /* プロセス管理(スケジューラ) */
     { CMN_MODULE_PROCMNG_TASK,  "PRC-TASK" },   /* プロセス管理(タスク管理)   */
+    { CMN_MODULE_PROCMNG_ELF,   "PRC-ELF " },   /* プロセス管理(ELFローダ)    */
     { CMN_MODULE_DEBUG_INIT,    "DBG-INIT" },   /* デバッグ制御(初期化)       */
     { CMN_MODULE_DEBUG_LOG,     "DBG-LOG " },   /* デバッグ制御(ログ管理)     */
     { 0,                        "UNKNOWN " }  };/* 終端                       */

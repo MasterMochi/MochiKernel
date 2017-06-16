@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2017/05/18 *#
+#*                                                                 2017/06/01 *#
 #* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -29,6 +29,7 @@ SRCS = InitCtrl/InitCtrlInit.c \
        ProcMng/ProcMngTss.c    \
        ProcMng/ProcMngTask.c   \
        ProcMng/ProcMngSched.c  \
+       ProcMng/ProcMngElf.c    \
        Debug/DebugInit.c       \
        Debug/DebugLog.c
 

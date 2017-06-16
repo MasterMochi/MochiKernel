@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngSched.c                                          */
-/*                                                                 2017/05/19 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -45,13 +45,13 @@
 #define SCHED_IDLE_IDX         ( 0 )
 
 /* タスク情報使用フラグ */
-#define SCHED_TASK_INFO_UNUSED ( 0 )    /**< 未使用 */
-#define SCHED_TASK_INFO_USED   ( 1 )    /**< 使用中 */
+#define SCHED_TASK_INFO_UNUSED ( 0 )    /** 未使用 */
+#define SCHED_TASK_INFO_USED   ( 1 )    /** 使用中 */
 
 /* スケジューラ実行中レベル */
-#define SCHED_LEVEL_DRIVER     ( 0 )    /**< ドライバレベル */
-#define SCHED_LEVEL_SERVER     ( 1 )    /**< サーバレベル   */
-#define SCHED_LEVEL_USER       ( 2 )    /**< ユーザレベル   */
+#define SCHED_LEVEL_DRIVER     ( 0 )    /** ドライバレベル */
+#define SCHED_LEVEL_SERVER     ( 1 )    /** サーバレベル   */
+#define SCHED_LEVEL_USER       ( 2 )    /** ユーザレベル   */
 
 /** タスク情報構造体 */
 typedef struct {
@@ -126,7 +126,7 @@ static schedTbl_t gSchedTbl;
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-int32_t ProcMngSchedAdd( uint32_t taskId )
+CmnRet_t ProcMngSchedAdd( uint32_t taskId )
 {
     schedTaskInfo_t *pTaskInfo; /* タスク情報 */
     
@@ -334,7 +334,7 @@ void ProcMngSchedInit( void )
         if ( retMLib != MLIB_SUCCESS ) {
             /* 失敗 */
             
-            /* [TODO] トレース出力 */
+            /* [TODO] */
         }
     }
     
@@ -403,7 +403,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
-        /* [TODO] トレース出力 */
+        /* [TODO] */
     }
     
     /* デバッグトレースログ出力 */
@@ -437,7 +437,7 @@ static void SchedSwitchRunGrpRole( void )
     return;
 }
 
-
+uint32_t __test__ = 0;
 /******************************************************************************/
 /**
  * @brief       タスクスイッチ
@@ -453,7 +453,8 @@ static __attribute__ ( ( noinline ) )
                           uint32_t nextTaskId )
 {
     void                 *pKernelStack; /* カーネルスタック     */
-    uint32_t             pdId;          /* ページディレクトリID */
+    uint32_t             pageDirId;     /* ページディレクトリID */
+    IA32PagingPDBR_t     pdbr;          /* PDBR                 */
     ProcMngTaskContext_t context;       /* コンテキスト         */
     
     /* デバッグトレースログ出力 *//*
@@ -479,13 +480,14 @@ static __attribute__ ( ( noinline ) )
     ProcMngTssSetEsp0( ( uint32_t ) pKernelStack );
     
     /* ページディレクトリID取得 */
-    pdId = ProcMngTaskGetPageDirId( nextTaskId );
+    pageDirId = ProcMngTaskGetPageDirId( nextTaskId );
     
     /* ページディレクトリ切替 */
-    MemMngPageSwitchDir( pdId );
+    pdbr = MemMngPageSwitchDir( pageDirId );
     
     /* タスクスイッチ */
-    IA32InstructionSwitchTask( ( void * ) context.eip,
+    IA32InstructionSwitchTask( pdbr,
+                               ( void * ) context.eip,
                                ( void * ) context.esp,
                                ( void * ) context.ebp  );
     

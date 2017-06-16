@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngCtrl.c                                             */
-/*                                                                 2017/05/19 */
+/*                                                                 2017/06/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,9 +12,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <hardware/IA32/IA32Paging.h>
+#include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
+#include <Config.h>
 #include <Debug.h>
 #include <MemMng.h>
 
@@ -26,20 +28,13 @@
 /******************************************************************************/
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                     \
-    DebugLogOutput( CMN_MODULE_MEMMNG_CTRL,  \
-                    __LINE__,                \
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_MEMMNG_CTRL, \
+                    __LINE__,               \
                     __VA_ARGS__ )
 #else
 #define DEBUG_LOG( ... )
 #endif
-
-/* 物理マッピング用領域定義 */
-#define CTRL_MAP_ADDR1 ( 0x3F000000 )   /** 物理マッピング用領域1先頭アドレス */
-#define CTRL_MAP_ADDR2 ( 0x3F800000 )   /** 物理マッピング用領域2先頭アドレス */
-#define CTRL_MAP_SIZE  ( 0x01000000 )   /** 物理マッピング用領域全サイズ      */
-#define CTRL_MAP_SIZE1 ( 0x00800000 )   /** 物理マッピング用領域1サイズ       */
-#define CTRL_MAP_SIZE2 ( 0x00800000 )   /** 物理マッピング用領域2サイズ       */
 
 
 /******************************************************************************/
@@ -54,16 +49,17 @@
  * @param[in]   pVAddr コピー元仮想アドレス
  * @param[in]   size   コピーサイズ
  * 
- * @attention   引数pPhysAddrは4KiBアライメントであること。
+ * @attention   引数pPAddrは4KiBアライメントであること。
  */
 /******************************************************************************/
 void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
                                void   *pVAddr,
                                size_t size     )
 {
-    uint32_t dirId; /* ページディレクトリID */
-    uint32_t idx;   /* インデックス         */
-    size_t   count; /* コピーサイズ         */
+    size_t   count;     /* コピーサイズ         */
+    uint32_t pageDirId; /* ページディレクトリID */
+    uint32_t idx;       /* インデックス         */
+    CmnRet_t ret;       /* 関数戻り値           */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
@@ -73,39 +69,49 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
                size );
     
     /* ページディレクトリID取得 */
-    dirId = MemMngPageGetDirId();
+    pageDirId = MemMngPageGetDirId();
     
     /* 物理マッピング用領域サイズ毎に繰り返し */
-    for ( idx = 0; idx < size; idx += CTRL_MAP_SIZE ) {
+    for ( idx = 0; idx < size; idx += CONFIG_MEM_KERNEL_MAP_SIZE ) {
         /* 次コピー有無判定 */
-        if ( ( size - idx ) > CTRL_MAP_SIZE ) {
+        if ( ( size - idx ) > CONFIG_MEM_KERNEL_MAP_SIZE ) {
             /* 次コピー有 */
             
             /* コピーサイズ設定 */
-            count = CTRL_MAP_SIZE;
+            count = CONFIG_MEM_KERNEL_MAP_SIZE;
             
         } else {
             /* 次コピー無 */
             
             /* コピーサイズ設定 */
-            count = size - idx;
+            count = MLIB_BASIC_ALIGN( size - idx,
+                                      IA32_PAGING_PAGE_SIZE );
         }
         
         /* ページマッピング設定 */
-        MemMngPageSet( dirId,
-                       ( void * ) CTRL_MAP_ADDR1,
-                       pPAddr + idx,
-                       count,
-                       IA32_PAGING_G_NO,
-                       IA32_PAGING_US_SV,
-                       IA32_PAGING_RW_RW  );
+        ret = MemMngPageSet( pageDirId,
+                             ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
+                             pPAddr + idx,
+                             count,
+                             IA32_PAGING_G_NO,
+                             IA32_PAGING_US_SV,
+                             IA32_PAGING_RW_RW );
+        
+        /* 設定結果判定 */
+        if ( ret != CMN_SUCCESS ) {
+            /* 失敗 */
+            
+            /* [TODO] */
+        }
         
         /* コピー */
-        memcpy( ( void * ) CTRL_MAP_ADDR1, pVAddr + idx, count );
+        memcpy( ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1, pVAddr + idx, count );
     }
     
     /* ページマッピング解除 */
-    MemMngPageUnset( dirId, ( void * ) CTRL_MAP_ADDR1, CTRL_MAP_SIZE );
+    MemMngPageUnset( pageDirId,
+                     ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
+                     CONFIG_MEM_KERNEL_MAP_SIZE );
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -130,9 +136,10 @@ void MemMngCtrlSet( void    *pPAddr,
                     uint8_t value,
                     size_t  size     )
 {
-    uint32_t dirId; /* ページディレクトリID */
-    uint32_t idx;   /* インデックス         */
-    size_t   count; /* コピーサイズ         */
+    size_t   count;     /* コピーサイズ         */
+    uint32_t pageDirId; /* ページディレクトリID */
+    uint32_t idx;       /* インデックス         */
+    CmnRet_t ret;       /* 関数戻り値           */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start. pPAddr=%010p, value=%0#4X, size=%#X",
@@ -142,39 +149,49 @@ void MemMngCtrlSet( void    *pPAddr,
                size );
     
     /* ページディレクトリID取得 */
-    dirId = MemMngPageGetDirId();
+    pageDirId = MemMngPageGetDirId();
     
     /* 物理マッピング用領域サイズ毎に繰り返し */
-    for ( idx = 0; idx < size; idx += CTRL_MAP_SIZE ) {
+    for ( idx = 0; idx < size; idx += CONFIG_MEM_KERNEL_MAP_SIZE ) {
         /* 次設定有無判定 */
-        if ( ( size - idx ) > CTRL_MAP_SIZE ) {
+        if ( ( size - idx ) > CONFIG_MEM_KERNEL_MAP_SIZE ) {
             /* 次設定有 */
             
             /* サイズ設定 */
-            count = CTRL_MAP_SIZE;
+            count = CONFIG_MEM_KERNEL_MAP_SIZE;
             
         } else {
             /* 次設定無 */
             
             /* サイズ設定 */
-            count = size - idx;
+            count = MLIB_BASIC_ALIGN( size - idx,
+                                      IA32_PAGING_PAGE_SIZE );
         }
         
         /* ページマッピング設定 */
-        MemMngPageSet( dirId,
-                       ( void * ) CTRL_MAP_ADDR1,
-                       pPAddr + idx,
-                       count,
-                       IA32_PAGING_G_NO,
-                       IA32_PAGING_US_SV,
-                       IA32_PAGING_RW_RW  );
+        ret = MemMngPageSet( pageDirId,
+                             ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
+                             pPAddr + idx,
+                             count,
+                             IA32_PAGING_G_NO,
+                             IA32_PAGING_US_SV,
+                             IA32_PAGING_RW_RW );
+        
+        /* 設定結果判定 */
+        if ( ret != CMN_SUCCESS ) {
+            /* 失敗 */
+            
+            /* [TODO] */
+        }
         
         /* メモリ設定 */
-        memset( ( void * ) CTRL_MAP_ADDR1, value, count );
+        memset( ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1, value, count );
     }
     
     /* ページマッピング解除 */
-    MemMngPageUnset( dirId, ( void * ) CTRL_MAP_ADDR1, CTRL_MAP_SIZE );
+    MemMngPageUnset( pageDirId,
+                     ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
+                     CONFIG_MEM_KERNEL_MAP_SIZE );
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

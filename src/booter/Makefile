@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2016/12/04 *#
-#* Copyright (C) 2016 Mochi.                                                  *#
+#*                                                                 2017/07/06 *#
+#* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
@@ -17,16 +17,36 @@ MAIN_NAME = booter-main
 # IPL部ソースコード
 IPL_SRCS  = Ipl/IplMain.s
 # メイン部ソースコード
-MAIN_SRCS = Initctrl/InitctrlMain.s \
-            Initctrl/InitctrlA20.s  \
-            Initctrl/InitctrlCpu.s  \
-            Loader/LoaderLoad.s
+MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
+            InitCtrl/InitCtrlInit32.s \
+            IntMng/IntMngInit.c       \
+            IntMng/IntMngIdt.c        \
+            IntMng/IntMngHdl.c        \
+            IntMng/IntMngPic.c        \
+            Driver/DriverInit.c       \
+            Driver/DriverA20.c        \
+            Driver/DriverAta.c        \
+            LoadMng/LoadMngInit.c     \
+            LoadMng/LoadMngKernel.c   \
+            Debug/DebugInit.c         \
+            Debug/DebugLog.c
 
 # ASフラグ
-ASFLAGS = -32
+ASFLAGS = --32
+
+# Cフラグ
+CFLAGS = -O                 \
+         -Wall              \
+         -masm=intel        \
+         -m32               \
+         -ffreestanding     \
+         -Iinclude/         \
+         -I../include       \
+         -DDEBUG_LOG_ENABLE
 
 # LDフラグ
-LDFLAGS = -melf_i386
+LDFLAGS = -melf_i386 \
+          -lc
 
 
 #******************************************************************************#
@@ -42,7 +62,12 @@ DIR_LIST  = $(sort $(addprefix $(OBJS_DIR)/, $(dir $(IPL_SRCS) $(MAIN_SRCS))))
 # IPL部オブジェクトファイル
 IPL_OBJS  = $(addprefix $(OBJS_DIR)/, $(IPL_SRCS:.s=.o))
 # メイン部オブジェクトファイル
-MAIN_OBJS = $(addprefix $(OBJS_DIR)/, $(MAIN_SRCS:.s=.o))
+MAIN_OBJS = $(addprefix $(OBJS_DIR)/,                           \
+              $(patsubst %.s,%.o,$(filter %.s, $(MAIN_SRCS)))   \
+              $(patsubst %.c,%.o,$(filter %.c, $(MAIN_SRCS))))
+
+# ライブラリディレクトリ
+LDFLAGS += -L$(BASE_DIR)/build/objs/libraries
 
 
 #******************************************************************************#

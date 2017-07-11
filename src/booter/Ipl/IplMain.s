@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/booter/Ipl/IplMain.s                                                   */
-/*                                                                 2016/12/04 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/06/18 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 .intel_syntax noprefix
 .code16
@@ -38,29 +38,33 @@ migrate:
     mov         ds, ax
     
     /* メインプログラム格納位置取得 */
-    mov         eax, [ pt1_start_lba ]
-    mov         [ pReadAddr ], eax
+    mov         eax, [ pt1StartLBA ]
+    mov         [ dapReadAddr ], eax
+    mov         ax, [ pt1Size ]
+    mov         [ dapReadSize ], ax
     
     /* メインプログラム読み込み */
-    mov         ah, 0x42                    /* 機能番号（EXTENDED READ）   */
-    mov         dl, 0x80                    /* ドライブ番号                */
-    mov         si, offset pDiskAddrPckt    /* Disk address packetアドレス */
+    mov         ah, 0x42        /* 機能番号（EXTENDED READ）   */
+    mov         dl, 0x80        /* ドライブ番号                */
+    mov         si, offset dap  /* Disk address packetアドレス */
     int         0x13
     
     /* メインプログラム実行 */
     jmp         0x0000:0x7C00
     
 .align 8
-/* Disk address packet */
-pDiskAddrPckt:
+/* Disk Address Packet */
+dap:
     .byte       0x10            /* サイズ                          */
     .byte       0x00            /* Reserved                        */
-    .word       0x0010          /* 読込み論理セクタ数              */
+dapReadSize:
+    .word       0x0000          /* 読込み論理セクタ数              */
     .word       0x0000          /* 転送先アドレス（オフセット）    */
     .word       0x07C0          /* 転送先アドレス（セグメント）    */
-pReadAddr:
+dapReadAddr:
     .long       0x00000000      /* 読込み先頭論理セクタ番号（LSB） */
     .long       0x00000000      /* 読込み先頭論理セクタ番号（MSB） */
+
 
 /******************************************************************************/
 /* パーティションテーブル                                                     */
@@ -71,10 +75,10 @@ pReadAddr:
     .byte       0x00, 0x00, 0x00    /* パーティション先頭位置（CHS方式） */
     .byte       0x00                /* パーティション種別                */
     .byte       0x00, 0x00, 0x00    /* パーティション末尾位置（CHS方式） */
-pt1_start_lba:
+pt1StartLBA:
     .long       0x00000000          /* パーティション先頭位置（LBA方式） */
-pt1_size:
-    .long       0x00000000          /* パーティションサイズ              */
+pt1Size:
+    .long       0x00000000          /* パーティションサイズ（セクタ）    */
 
 
 /******************************************************************************/

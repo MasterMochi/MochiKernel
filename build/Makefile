@@ -1,16 +1,13 @@
 #******************************************************************************#
 #* build/Makefile                                                             *#
-#*                                                                 2016/12/05 *#
-#* Copyright (C) 2016 Mochi                                                   *#
+#*                                                                 2017/07/11 *#
+#* Copyright (C) 2016-2017 Mochi                                              *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
 #******************************************************************************#
 # ディスクイメージファイル
 IMG_NAME    = mochi.img
-
-# パーティションテーブル
-PTABLE      = ptable.bin
 
 # ループデバイス
 LOOP_DEV    = /dev/loop0
@@ -38,6 +35,7 @@ all:
 clean:
 	make -C ../src/ clean
 	-rm -f $(IMG_NAME)
+	-rm -rf objs
 
 # ディスクイメージの作成
 .PHONY: image
@@ -49,16 +47,7 @@ image: $(IMG_NAME)
 #******************************************************************************#
 $(IMG_NAME): all
 	sync
-	dd if=/dev/zero of=$@ count=10080 conv=fsync
-	dd if=$(BOOTER_IPL) of=$@ conv=notrunc,fsync
-	dd if=$(PTABLE) of=$@ ibs=1 obs=1 seek=446 conv=notrunc,fsync
-	sudo losetup $(LOOP_DEV) $@
-	-sudo partx -a $(LOOP_DEV)
-	-sudo dd if=$(BOOTER_MAIN) of=$(LOOP_DEV_P1) conv=fsync
-	-sudo dd if=$(KERNEL) of=$(LOOP_DEV_P2) conv=fsync
+	tools/makedisk -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(KERNEL)
 	sync
-	-sudo partx -d $(LOOP_DEV)
-	sudo losetup -d $(LOOP_DEV)
-
 
 #******************************************************************************#

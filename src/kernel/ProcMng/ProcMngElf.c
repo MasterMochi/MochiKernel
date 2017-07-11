@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ProcMng/ProcMngElf.c                                            */
-/*                                                                 2017/06/13 */
+/*                                                                 2017/06/22 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -155,7 +155,7 @@ CmnRet_t ProcMngElfLoad( void             *pAddr,
             pEntry->p_filesz );
         
         /* フラグ判定 */
-        if ( MLIB_BASIC_IS_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
+        if ( MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
             /* 読書可能セグメント */
             
             attrRw = IA32_PAGING_RW_RW;
@@ -459,9 +459,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         }
         
         /* フラグチェック */
-        if ( !( MLIB_BASIC_IS_FLAG( pEntry->p_flags, PF_X ) ||
-                MLIB_BASIC_IS_FLAG( pEntry->p_flags, PF_W ) ||
-                MLIB_BASIC_IS_FLAG( pEntry->p_flags, PF_R )    ) ) {
+        if ( !( MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_X ) ||
+                MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_W ) ||
+                MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_R )    ) ) {
             /* 不正値 */
             
             /* デバッグトレースログ出力 */

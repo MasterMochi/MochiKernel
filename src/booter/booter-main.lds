@@ -1,15 +1,17 @@
 /******************************************************************************/
 /* src/booter/booter-main.lds                                                 */
-/*                                                                 2016/12/04 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2017/06/28 */
+/* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 OUTPUT_FORMAT( binary )
-ENTRY( InitctrlMain )
+ENTRY( InitCtrlInit16 )
 
 SECTIONS {
     . = 0x7C00;
-    .text : { * ( .text ) }
-    .data : { * ( .data ) }
+    .text   : { * ( .text   ) }
+    .rodata : { * ( .rodata ) }
+    .data   : { * ( .data   ) }
+    .bss    : { * ( .bss    ) }
 }
 
 

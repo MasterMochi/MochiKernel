@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/MLib/Basic/MLibBasic.h                                         */
-/*                                                                 2017/06/16 */
+/*                                                                 2017/06/22 */
 /* Copyright (C) 2017 Mochi                                                   */
 /******************************************************************************/
 #ifndef _MLIB_BASIC_H_
@@ -13,7 +13,7 @@
     ( ( ( _VALUE ) + ( ( _ALIGNMENT ) - 1 ) ) & ~( ( _ALIGNMENT ) - 1 ) )
 
 /** フラグ判定マクロ */
-#define MLIB_BASIC_IS_FLAG( _VALUE, _FLAG )     \
+#define MLIB_BASIC_HAVE_FLAG( _VALUE, _FLAG )   \
     ( ( ( _VALUE ) & ( _FLAG ) ) == ( _FLAG ) )
 
 

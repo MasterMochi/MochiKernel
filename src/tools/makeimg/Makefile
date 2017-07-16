@@ -1,17 +1,23 @@
 #******************************************************************************#
-#* src/tools/Makefile                                                         *#
-#*                                                                 2017/07/11 *#
+#* src/tools/makeimg/Makefile                                                 *#
+#*                                                                 2017/07/16 *#
 #* Copyright (C) 2017 Mochi.                                                  *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
 #******************************************************************************#
 # ベースディレクトリsrc/からの相対パス
-CUR_DIR  = tools
+CUR_DIR   = tools/makeimg
 
-# サブディレクトリ
-SUB_DIRS = makedisk \
-           makeimg
+# バイナリ名
+TOOL_NAME = makeimg
+
+# ソースコード
+SRCS      = makeimg.c
+
+# Cフラグ
+CFLAGS    = -include../../include/kernel/MochiKernel.h   \
+            -include../../include/MLib/Basic/MLibBasic.h
 
 
 #******************************************************************************#
@@ -22,29 +28,30 @@ BASE_DIR  = $(shell pwd | sed -e 's/\/src\/$(subst /,\/,$(CUR_DIR))//')
 # 生成ファイル格納先ディレクトリパス
 TOOLS_DIR  = $(BASE_DIR)/build/tools
 
+
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
 # サブディレクトリも含めたコンパイル
 .PHONY: all
-all:
-ifdef SUB_DIRS
-	@for subdir in $(SUB_DIRS); \
-	do \
-	    $(MAKE) -C $$subdir all; \
-	done
-endif
+all: $(TOOLS_DIR) $(TOOLS_DIR)/$(TOOL_NAME) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-ifdef SUB_DIRS
-	@for subdir in $(SUB_DIRS); \
-	do \
-	    $(MAKE) -C $$subdir clean; \
-	done
-endif
-	-rm -rf $(TOOLS_DIR)
+	-rm -rf $(TOOLS_DIR)/$(TOOL_NAME)
+
+
+#******************************************************************************#
+#* 生成規則                                                                   *#
+#******************************************************************************#
+# ディレクトリ
+$(TOOLS_DIR):
+	mkdir -p $@
+
+# バイナリ
+$(TOOLS_DIR)/$(TOOL_NAME): $(SRCS) Makefile
+	$(CC) $(CFLAGS) -o $@ $(SRCS)
 
 
 #******************************************************************************#

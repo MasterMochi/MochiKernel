@@ -1,25 +1,21 @@
 #******************************************************************************#
 #* build/Makefile                                                             *#
-#*                                                                 2017/07/11 *#
+#*                                                                 2017/07/16 *#
 #* Copyright (C) 2016-2017 Mochi                                              *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
 #******************************************************************************#
 # ディスクイメージファイル
-IMG_NAME    = mochi.img
-
-# ループデバイス
-LOOP_DEV    = /dev/loop0
-LOOP_DEV_P1 = /dev/loop0p1
-LOOP_DEV_P2 = /dev/loop0p2
+DISK_IMG    = mochi.img
 
 # booter
-BOOTER_IPL  = objs/booter/booter-ipl
-BOOTER_MAIN = objs/booter/booter-main
+BOOTER_IPL  = objs/booter/booter-ipl.bin
+BOOTER_MAIN = objs/booter/booter-main.bin
 
 # kernel
-KERNEL      = objs/kernel/kernel
+KERNEL      = objs/kernel/kernel.bin
+KERNEL_IMG  = kernel.img
 
 
 #******************************************************************************#
@@ -34,20 +30,21 @@ all:
 .PHONY: clean
 clean:
 	make -C ../src/ clean
-	-rm -f $(IMG_NAME)
+	-rm -f $(DISK_IMG)
+	-rm -f $(KERNEL_IMG)
 	-rm -rf objs
 
 # ディスクイメージの作成
 .PHONY: image
-image: $(IMG_NAME)
+image: $(DISK_IMG)
 
 
 #******************************************************************************#
 #* イメージファイル作成                                                       *#
 #******************************************************************************#
-$(IMG_NAME): all
-	sync
-	tools/makedisk -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(KERNEL)
+$(DISK_IMG): all
+	tools/makeimg  -o $(KERNEL_IMG) -K $(KERNEL)
+	tools/makedisk -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(KERNEL_IMG)
 	sync
 
 #******************************************************************************#

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/LoadMng/LoadMngKernel.c                                         */
-/*                                                                 2017/07/11 */
+/*                                                                 2017/07/16 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -9,6 +9,7 @@
 /* 共通ヘッダ */
 #include <stdarg.h>
 #include <kernel/MochiKernel.h>
+#include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -45,13 +46,24 @@
 /******************************************************************************/
 void LoadMngKernelLoad( void )
 {
+    uint32_t            size;   /* LBAサイズ              */
+    MochiKernelImgHdr_t header; /* カーネルイメージヘッダ */
+    
     /* トレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
+    /* 初期化 */
+    size = sizeof ( MochiKernelImgHdr_t ) / 512;
+    
+    /* カーネルイメージヘッダ読込み */
+    DriverAtaRead( &header,
+                   gLoadMngInitPt[ 1 ].lbaFirstAddr,
+                   size );
+    
     /* カーネル読込み */
     DriverAtaRead( ( void * ) MOCHIKERNEL_ADDR_ENTRY,
-                   gLoadMngInitPt[ 1 ].lbaFirstAddr,
-                   gLoadMngInitPt[ 1 ].lbaSize );
+                   gLoadMngInitPt[ 1 ].lbaFirstAddr + size,
+                   MLIB_BASIC_ALIGN( header.fileSize, 512 ) / 512);
     
     /* トレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

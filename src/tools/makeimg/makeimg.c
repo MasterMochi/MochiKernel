@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/tools/makeimg/makeimg.c                                                */
-/*                                                                 2017/07/16 */
+/*                                                                 2017/07/20 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -83,8 +83,13 @@ uint8_t gFileType;      /* 入力ファイルタイプ         */
 int main( int  argNum,
           char *pArg[] )
 {
-    int imgFd;  /* イメージファイルディスクリプタ */
-    int flags;  /* オープンフラグ                 */
+    int                 imgFd;      /* イメージファイルディスクリプタ */
+    int                 flags;      /* オープンフラグ                 */
+    ssize_t             writeSize;  /* 書込みサイズ                   */
+    MochiKernelImgHdr_t header;     /* 空ヘッダ                       */
+    
+    /* 初期化 */
+    memset( &header, 0, sizeof ( MochiKernelImgHdr_t ) );
     
     /* オプションチェック */
     checkOptions( argNum, pArg );
@@ -117,6 +122,26 @@ int main( int  argNum,
                __LINE__,
                gpImgPath,
                errno );
+    }
+    
+    /* 書込みタイプチェック */
+    if ( gFileType == MOCHIKERNEL_PROCESS_TYPE_KERNEL ) {
+        /* カーネル */
+        
+        /* 空ヘッダ書込み */
+        writeSize = write( imgFd, &header, sizeof ( MochiKernelImgHdr_t ) );
+        
+        /* 書込み結果判定 */
+        if ( writeSize != sizeof ( MochiKernelImgHdr_t ) ) {
+            /* 失敗 */
+            
+            /* アボート */
+            ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+                   __LINE__,
+                   gpImgPath,
+                   ( int32_t ) writeSize,
+                   errno );
+        }
     }
     
     /* ファイル書込み */
@@ -161,7 +186,7 @@ static void addFile( int  imgFd,
     memset( &header, 0, sizeof ( MochiKernelImgHdr_t ) );
     
     /* イメージファイルシーク */
-    offset = lseek( imgFd, 512, SEEK_END );
+    offset = lseek( imgFd, 0, SEEK_END );
     
     /* シーク結果判定 */
     if ( ( ( ( int32_t ) offset       ) <  0 ) &&
@@ -169,7 +194,7 @@ static void addFile( int  imgFd,
         /* 失敗または異常 */
         
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the image. ret=%d, errno%d.\n",
+        ABORT( "ERROR(%04u): Can't seek at the image. ret=%d, errno=%d.\n",
                __LINE__,
                ( int32_t ) offset,
                errno );
@@ -236,10 +261,26 @@ static void addFile( int  imgFd,
         
     } while ( readSize == BUFFER_SIZE );
     
+    /* 空ヘッダ書込み */
+    writeSize = write( imgFd, &header, sizeof ( MochiKernelImgHdr_t ) );
+    
+    /* 書込み結果判定 */
+    if ( writeSize != sizeof ( MochiKernelImgHdr_t ) ) {
+        /* 失敗 */
+        
+        /* アボート */
+        ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+               __LINE__,
+               pPath,
+               ( int32_t ) writeSize,
+               errno );
+    }
+    
     /* ファイルヘッダ設定 */
     getFileName( header.fileName, pPath, sizeof ( header.fileName ) - 1 );
     header.fileSize = size;
     header.fileType = gFileType;
+    
     
     /* イメージファイルシーク */
     offset = lseek( imgFd, headerOffset, SEEK_SET );

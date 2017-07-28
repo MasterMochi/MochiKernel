@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/MochiKernel.h                                           */
-/*                                                                 2017/07/16 */
+/*                                                                 2017/07/27 */
 /* Copyright (C) 2017 Mochi                                                   */
 /******************************************************************************/
 #ifndef _MOCHI_KERNEL_H_
@@ -16,8 +16,9 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* カーネル位置 */
-#define MOCHIKERNEL_ADDR_ENTRY ( 0x00100000 )   /** エントリポイント */
-#define MOCHIKERNEL_ADDR_STACK ( 0x04000000 )   /** スタックアドレス */
+#define MOCHIKERNEL_ADDR_ENTRY   ( 0x00100000 ) /** エントリポイント */
+#define MOCHIKERNEL_ADDR_STACK   ( 0x04000000 ) /** スタックアドレス */
+#define MOCHIKERNEL_ADDR_PROCIMG ( 0x04000000 ) /** プロセスイメージ */
 
 /* メモリ領域タイプ */
 #define MOCHIKERNEL_MEMORY_TYPE_AVAILABLE ( 0x01 )  /** 使用可能メモリ領域 */

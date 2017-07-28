@@ -1,6 +1,8 @@
 build/mochi.img
+build/kernel.img
 build/objs/booter
 build/objs/kernel
+build/tools/*
 vm/vmware/*
 *.o
 *.a

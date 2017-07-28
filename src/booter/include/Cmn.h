@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/include/Cmn.h                                                   */
-/*                                                                 2017/07/04 */
+/*                                                                 2017/07/19 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef CMN_H
@@ -32,11 +32,12 @@
 #define CMN_MODULE_DRIVER_ATA     ( 0x0303 )  /** ドライバ(ATA)          */
 #define CMN_MODULE_LOADMNG_INIT   ( 0x0401 )  /** 読込管理(初期化)       */
 #define CMN_MODULE_LOADMNG_KERNEL ( 0x0402 )  /** 読込管理(カーネル)     */
+#define CMN_MODULE_LOADMNG_PROC   ( 0x0403 )  /** 読込管理(プロセス)     */
 #define CMN_MODULE_DEBUG_INIT     ( 0x0401 )  /** デバッグ制御(初期化)   */
 #define CMN_MODULE_DEBUG_LOG      ( 0x0402 )  /** デバッグ制御(ログ管理) */
 
 /** モジュール・サブモジュール数 */
-#define CMN_MODULE_NUM          ( 12 )
+#define CMN_MODULE_NUM          ( 13 )
 
 /** 処理結果構造体 */
 typedef int32_t CmnRet_t;

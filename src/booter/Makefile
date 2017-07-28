@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2017/07/16 *#
+#*                                                                 2017/07/19 *#
 #* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -28,6 +28,7 @@ MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
             Driver/DriverAta.c        \
             LoadMng/LoadMngInit.c     \
             LoadMng/LoadMngKernel.c   \
+            LoadMng/LoadMngProc.c     \
             Debug/DebugInit.c         \
             Debug/DebugLog.c
 

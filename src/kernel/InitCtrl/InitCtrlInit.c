@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2017/05/24 */
+/*                                                                 2017/07/27 */
 /* Copyright (C) 2016-2017 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <kernel/MochiKernel.h>
 #include <hardware/IA32/IA32Instruction.h>
+#include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -37,6 +38,12 @@
 
 
 /******************************************************************************/
+/* ローカル関数宣言                                                           */
+/******************************************************************************/
+static void InitLoadProcImg( void );
+
+
+/******************************************************************************/
 /* グローバル関数定義                                                         */
 /******************************************************************************/
 /******************************************************************************/
@@ -53,13 +60,13 @@ void InitCtrlInit( void )
             /* カーネル領域 */
             {
                 ( void * ) 0x00100000,              /* 先頭アドレス */
-                0x03F00000,                         /* メモリサイズ */
+                0x04F00000,                         /* メモリサイズ */
                 MOCHIKERNEL_MEMORY_TYPE_KERNEL      /* メモリタイプ */
             },
             /* 利用可能領域 */
             {
-                ( void * ) 0x04000000,              /* 先頭アドレス */
-                0x04000000,                         /* メモリサイズ */
+                ( void * ) 0x05000000,              /* 先頭アドレス */
+                0x03000000,                         /* メモリサイズ */
                 MOCHIKERNEL_MEMORY_TYPE_AVAILABLE   /* メモリタイプ */
             }
         };
@@ -82,6 +89,9 @@ void InitCtrlInit( void )
     /* タイマ管理モジュール初期化 */
     TimerMngInit();
     
+    /* プロセスイメージ読込 */
+    InitLoadProcImg();
+    
     /* 割込み有効化 */
     IntMngPicEnable();
     IA32InstructionSti();
@@ -96,6 +106,93 @@ void InitCtrlInit( void )
     }
     
     /* not retern */
+}
+
+
+/******************************************************************************/
+/* ローカル関数定義                                                           */
+/******************************************************************************/
+/******************************************************************************/
+/**
+ * @brief       プロセスイメージ読込
+ * @details     プロセスイメージを読み込み、タスクを追加する。
+ */
+/******************************************************************************/
+static void InitLoadProcImg( void )
+{
+    void                *pAddr;     /* ファイルアドレス */
+    uint8_t             type;       /* プロセスタイプ   */
+    uint32_t            taskId;     /* タスクID         */
+    MochiKernelImgHdr_t *pHeader;   /* ファイルヘッダ   */
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    
+    /* 初期化 */
+    pAddr   = ( void * ) MOCHIKERNEL_ADDR_PROCIMG;
+    pHeader = ( MochiKernelImgHdr_t * ) pAddr;
+    
+    /* ファイル毎に繰り返し */
+    while ( pHeader->fileSize != 0 ) {
+        
+        /* ファイルヘッダアドレス設定 */
+        pAddr = pAddr + sizeof ( MochiKernelImgHdr_t );
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "Header:" );
+        DEBUG_LOG( " Name=%s", pHeader->fileName );
+        DEBUG_LOG( " Size=%d", pHeader->fileSize );
+        DEBUG_LOG( " Type=%d", pHeader->fileType );
+        
+        /* プロセスタイプ判定 */
+        if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_DRIVER ) {
+            /* ドライバ */
+            
+            /* プロセスタイプ変換 */
+            type = PROCMNG_TASK_TYPE_DRIVER;
+            
+        } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_SERVER ) {
+            /* サーバ */
+            
+            /* プロセスタイプ変換 */
+            type = PROCMNG_TASK_TYPE_SERVER;
+            
+        } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_USER ) {
+            /* ユーザ */
+            
+            /* プロセスタイプ変換 */
+            type = PROCMNG_TASK_TYPE_USER;
+        }
+        
+        /* タスク追加 */
+        taskId = ProcMngTaskAdd(
+                     type,
+                     ( ( void * ) pHeader ) + sizeof ( MochiKernelImgHdr_t ),
+                     pHeader->fileSize );
+        
+        /* タスク追加結果判定 */
+        if ( taskId == PROCMNG_TASK_ID_NULL ) {
+            /* 失敗 */
+            
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "ProcMngTaskAdd() error." );
+            
+        } else {
+            /* 成功 */
+            
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "ProcMngTaskAdd() OK. taskId=%d", taskId );
+        }
+        
+        /* アドレス更新 */
+        pAddr   = pAddr + MLIB_BASIC_ALIGN( pHeader->fileSize, 512 );
+        pHeader = ( MochiKernelImgHdr_t * ) pAddr;
+    }
+    
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
+    
+    return;
 }
 
 

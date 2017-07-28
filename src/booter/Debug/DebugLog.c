@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/Debug/DebugLog.c                                                */
-/*                                                                 2017/07/04 */
+/*                                                                 2017/07/19 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -93,6 +93,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_DRIVER_ATA,     "DRV-ATA " },    /* ドライバ(ATA)          */
     { CMN_MODULE_LOADMNG_INIT,   "LDM-INIT" },    /* 読込管理               */
     { CMN_MODULE_LOADMNG_KERNEL, "LDM-KRNL" },    /* 読込管理(カーネル)     */
+    { CMN_MODULE_LOADMNG_PROC,   "LDM-PROC" },    /* 読込管理(プロセス)     */
     { CMN_MODULE_DEBUG_INIT,     "DBG-INIT" },    /* デバッグ制御(初期化)   */
     { CMN_MODULE_DEBUG_LOG,      "DBG-LOG " },    /* デバッグ制御(ログ管理) */
     { 0,                         "UNKNOWN " }  }; /* 終端                   */

@@ -1,7 +1,7 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngTask.c                                           */
-/*                                                                 2017/06/16 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngTask.c                                           */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -17,13 +17,13 @@
 #include <Config.h>
 #include <Debug.h>
 #include <MemMng.h>
-#include <ProcMng.h>
+#include <TaskMng.h>
 
 /* 内部モジュールヘッダ */
-#include "ProcMngElf.h"
-#include "ProcMngSched.h"
-#include "ProcMngTask.h"
-#include "ProcMngTss.h"
+#include "TaskMngElf.h"
+#include "TaskMngSched.h"
+#include "TaskMngTask.h"
+#include "TaskMngTss.h"
 
 
 /******************************************************************************/
@@ -32,7 +32,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_PROCMNG_TASK,    \
+    DebugLogOutput( CMN_MODULE_TASKMNG_TASK,    \
                     __LINE__,                   \
                     __VA_ARGS__ )
 #else
@@ -48,7 +48,7 @@
 /* 変数定義                                                                   */
 /******************************************************************************/
 /** タスク管理テーブル */
-static ProcMngTaskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
+static TaskMngTaskTbl_t gTaskTbl[ TASKMNG_TASK_ID_NUM ];
 
 
 /******************************************************************************/
@@ -60,18 +60,18 @@ static ProcMngTaskTbl_t gTaskTbl[ PROCMNG_TASK_ID_NUM ];
  * @details     タスク追加を行う。
  * 
  * @param[in]   taskType タスクタイプ
- *                  - PROCMNG_TASK_TYPE_DRIVER ドライバ
- *                  - PROCMNG_TASK_TYPE_SERVER サーバ
- *                  - PROCMNG_TASK_TYPE_USER   ユーザ
+ *                  - TASKMNG_TASK_TYPE_DRIVER ドライバ
+ *                  - TASKMNG_TASK_TYPE_SERVER サーバ
+ *                  - TASKMNG_TASK_TYPE_USER   ユーザ
  * @param[in]   *pAddr   実行ファイル
  * @param[in]   size     実行ファイルサイズ
  * 
- * @retval      PROCMNG_TASK_ID_NULL 失敗
- * @retval      PROCMNG_TASK_ID_MIN  タスクID最小値
- * @retval      PROCMNG_TASK_ID_MAX  タスクID最大値
+ * @retval      TASKMNG_TASK_ID_NULL 失敗
+ * @retval      TASKMNG_TASK_ID_MIN  タスクID最小値
+ * @retval      TASKMNG_TASK_ID_MAX  タスクID最大値
  */
 /******************************************************************************/
-uint32_t ProcMngTaskAdd( uint8_t taskType,
+uint32_t TaskMngTaskAdd( uint8_t taskType,
                          void    *pAddr,
                          size_t  size      )
 {
@@ -80,13 +80,13 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
     CmnRet_t               ret;             /* 関数戻り値           */
     uint32_t               taskId;          /* タスクID             */
     uint32_t               pageDirId;       /* ページディレクトリID */
-    ProcMngTaskStackInfo_t *pStackInfo;     /* スタック情報         */
+    TaskMngTaskStackInfo_t *pStackInfo;     /* スタック情報         */
     
     /* 初期化 */
     pKernelStack = NULL;
     pStack       = NULL;
     ret          = CMN_FAILURE;
-    taskId       = PROCMNG_TASK_ID_MIN;
+    taskId       = TASKMNG_TASK_ID_MIN;
     pageDirId    = MEMMNG_PAGE_DIR_FULL;
     pStackInfo   = NULL;
     
@@ -98,7 +98,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                size );
     
     /* 空タスク検索 */
-    for ( ; taskId < PROCMNG_TASK_ID_MAX; taskId++ ) {
+    for ( ; taskId < TASKMNG_TASK_ID_MAX; taskId++ ) {
         /* 使用フラグ判定 */
         if ( gTaskTbl[ taskId ].used == TASK_ID_UNUSED ) {
             /* 未使用 */
@@ -112,7 +112,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* PDBR設定 */
@@ -121,7 +121,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
             gTaskTbl[ taskId ].used         = TASK_ID_USED;
             gTaskTbl[ taskId ].type         = taskType;
             gTaskTbl[ taskId ].state        = 0;
-            gTaskTbl[ taskId ].context.eip  = ( uint32_t ) ProcMngTaskStart;
+            gTaskTbl[ taskId ].context.eip  = ( uint32_t ) TaskMngTaskStart;
             gTaskTbl[ taskId ].context.esp  = CONFIG_MEM_KERNEL_STACK_ADDR +
                                               CONFIG_MEM_KERNEL_STACK_SIZE -
                                               sizeof ( uint32_t );
@@ -146,7 +146,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
             pStackInfo->size        = CONFIG_MEM_TASK_STACK_SIZE;
             
             /* ELFファイル読込 */
-            ret = ProcMngElfLoad( pAddr, size, &gTaskTbl[ taskId ] );
+            ret = TaskMngElfLoad( pAddr, size, &gTaskTbl[ taskId ] );
             
             /* ELFファイル読込結果判定 */
             if ( ret != CMN_SUCCESS ) {
@@ -154,7 +154,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* カーネルスタック領域割り当て */
@@ -166,7 +166,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* スタック領域割り当て */
@@ -178,7 +178,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* カーネルスタックページマップ設定 */
@@ -196,7 +196,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* スタックページマップ設定 */
@@ -214,11 +214,11 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* スケジューラ追加 */
-            ret = ProcMngSchedAdd( taskId );
+            ret = TaskMngSchedAdd( taskId );
             
             /* 追加結果判定 */
             if ( ret == CMN_FAILURE ) {
@@ -226,7 +226,7 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
                 
                 /* [TODO] */
                 
-                return PROCMNG_TASK_ID_NULL;
+                return TASKMNG_TASK_ID_NULL;
             }
             
             /* デバッグトレースログ出力 */
@@ -237,9 +237,9 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
     }
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%u", __func__, PROCMNG_TASK_ID_NULL );
+    DEBUG_LOG( "%s() end. ret=%u", __func__, TASKMNG_TASK_ID_NULL );
     
-    return PROCMNG_TASK_ID_NULL;
+    return TASKMNG_TASK_ID_NULL;
 }
 
 
@@ -249,13 +249,13 @@ uint32_t ProcMngTaskAdd( uint8_t taskType,
  * @details     指定したタスクIDのコンテキストを取得する。
  * 
  * @param[in]   taskId タスクID
- *                  - PROCMNG_TASK_ID_MIN タスクID最小値
- *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ *                  - TASKMNG_TASK_ID_MIN タスクID最小値
+ *                  - TASKMNG_TASK_ID_MAX タスクID最大値
  * 
  * @return      コンテキスト
  */
 /******************************************************************************/
-ProcMngTaskContext_t ProcMngTaskGetContext( uint32_t taskId )
+TaskMngTaskContext_t TaskMngTaskGetContext( uint32_t taskId )
 {
     /* コンテキスト返却 */
     return gTaskTbl[ taskId ].context;
@@ -268,13 +268,13 @@ ProcMngTaskContext_t ProcMngTaskGetContext( uint32_t taskId )
  * @details     指定したタスクIDのカーネルスタックアドレスを取得する。
  * 
  * @param[in]   taskId タスクID
- *                  - PROCMNG_TASK_ID_MIN タスクID最小値
- *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ *                  - TASKMNG_TASK_ID_MIN タスクID最小値
+ *                  - TASKMNG_TASK_ID_MAX タスクID最大値
  * 
  * @return      カーネルスタックアドレス
  */
 /******************************************************************************/
-void *ProcMngTaskGetKernelStack( uint32_t taskId )
+void *TaskMngTaskGetKernelStack( uint32_t taskId )
 {
     /* カーネルスタックアドレス返却 */
     return gTaskTbl[ taskId ].kernelStackInfo.pBottomAddr;
@@ -287,13 +287,13 @@ void *ProcMngTaskGetKernelStack( uint32_t taskId )
  * @details     指定したタスクIDのページディレクトリIDを取得する。
  * 
  * @param[in]   taskId タスクID
- *                  - PROCMNG_TASK_ID_MIN タスクID最小値
- *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ *                  - TASKMNG_TASK_ID_MIN タスクID最小値
+ *                  - TASKMNG_TASK_ID_MAX タスクID最大値
  * 
  * @return      ページディレクトリID
  */
 /******************************************************************************/
-uint32_t ProcMngTaskGetPageDirId( uint32_t taskId )
+uint32_t TaskMngTaskGetPageDirId( uint32_t taskId )
 {
     /* ページディレクトリID返却 */
     return gTaskTbl[ taskId ].pageDirId;
@@ -306,15 +306,15 @@ uint32_t ProcMngTaskGetPageDirId( uint32_t taskId )
  * @details     指定したタスクIDのタスクタイプを取得する。
  * 
  * @param[in]   taskId タスクID
- *                  - PROCMNG_TASK_ID_MIN タスクID最小値
- *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ *                  - TASKMNG_TASK_ID_MIN タスクID最小値
+ *                  - TASKMNG_TASK_ID_MAX タスクID最大値
  * 
- * @retval      PROCMNG_TASK_TYPE_DRIVER ドライバ
- * @retval      PROCMNG_TASK_TYPE_SERVER サーバ
- * @retval      PROCMNG_TASK_TYPE_USER   ユーザ
+ * @retval      TASKMNG_TASK_TYPE_DRIVER ドライバ
+ * @retval      TASKMNG_TASK_TYPE_SERVER サーバ
+ * @retval      TASKMNG_TASK_TYPE_USER   ユーザ
  */
 /******************************************************************************/
-uint8_t ProcMngTaskGetType( uint32_t taskId )
+uint8_t TaskMngTaskGetType( uint32_t taskId )
 {
     /* タスクタイプ返却 */
     return gTaskTbl[ taskId ].type;
@@ -327,7 +327,7 @@ uint8_t ProcMngTaskGetType( uint32_t taskId )
  * @details     タスク管理サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void ProcMngTaskInit( void )
+void TaskMngTaskInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
@@ -336,8 +336,8 @@ void ProcMngTaskInit( void )
     memset( gTaskTbl, 0, sizeof ( gTaskTbl ) );
     
     /* アイドルタスク設定 */
-    gTaskTbl[ PROCMNG_TASK_ID_IDLE ].used      = TASK_ID_USED;
-    gTaskTbl[ PROCMNG_TASK_ID_IDLE ].pageDirId = MEMMNG_PAGE_DIR_ID_IDLE;
+    gTaskTbl[ TASKMNG_TASK_ID_IDLE ].used      = TASK_ID_USED;
+    gTaskTbl[ TASKMNG_TASK_ID_IDLE ].pageDirId = MEMMNG_PAGE_DIR_ID_IDLE;
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -352,13 +352,13 @@ void ProcMngTaskInit( void )
  * @details     指定したタスクIDのコンテキストを設定する。
  * 
  * @param[in]   taskId    設定先タスクID
- *                  - PROCMNG_TASK_ID_MIN タスクID最小値
- *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ *                  - TASKMNG_TASK_ID_MIN タスクID最小値
+ *                  - TASKMNG_TASK_ID_MAX タスクID最大値
  * @param[in]   *pContext コンテキスト
  */
 /******************************************************************************/
-void ProcMngTaskSetContext( uint32_t             taskId,
-                            ProcMngTaskContext_t *pContext )
+void TaskMngTaskSetContext( uint32_t             taskId,
+                            TaskMngTaskContext_t *pContext )
 {
     /* コンテキスト設定 */
     gTaskTbl[ taskId ].context = *pContext;
@@ -373,7 +373,7 @@ void ProcMngTaskSetContext( uint32_t             taskId,
  * @details     タスクの起動を開始する。
  */
 /******************************************************************************/
-void ProcMngTaskStart( void )
+void TaskMngTaskStart( void )
 {
     void             *pEntryPoint;  /* エントリポイント         */
     void             *pStack;       /* スタックアドレス         */
@@ -381,13 +381,13 @@ void ProcMngTaskStart( void )
     uint32_t         taskId;        /* タスクID                 */
     uint32_t         codeSegSel;    /* コードセグメントセレクタ */
     uint32_t         dataSegSel;    /* データセグメントセレクタ */
-    ProcMngTaskTbl_t *pTask;        /* タスク管理情報           */
+    TaskMngTaskTbl_t *pTask;        /* タスク管理情報           */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
     /* 初期化 */
-    taskId      = ProcMngSchedGetTaskId();      /* タスクID         */
+    taskId      = TaskMngSchedGetTaskId();      /* タスクID         */
     pTask       = &( gTaskTbl[ taskId ] );      /* タスク管理情報   */
     pEntryPoint = pTask->pEntryPoint;           /* エントリポイント */
     pStack      = pTask->stackInfo.pBottomAddr; /* スタックアドレス */
@@ -400,14 +400,14 @@ void ProcMngTaskStart( void )
                pStack );
     
     /* タスクタイプ判定 */
-    if ( taskType == PROCMNG_TASK_TYPE_DRIVER ) {
+    if ( taskType == TASKMNG_TASK_TYPE_DRIVER ) {
         /* ドライバ */
         
         /* セグメントセレクタ設定 */
         codeSegSel = MEMMNG_SEGSEL_DRIVER_CODE;     /* コード */
         dataSegSel = MEMMNG_SEGSEL_DRIVER_DATA;     /* データ */
         
-    } else if ( taskType == PROCMNG_TASK_TYPE_SERVER ) {
+    } else if ( taskType == TASKMNG_TASK_TYPE_SERVER ) {
         /* サーバ */
         
         codeSegSel = MEMMNG_SEGSEL_SERVER_CODE;     /* コード */

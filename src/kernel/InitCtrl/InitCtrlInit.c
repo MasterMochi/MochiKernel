@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2017/07/27 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -17,7 +17,7 @@
 #include <Debug.h>
 #include <IntMng.h>
 #include <MemMng.h>
-#include <ProcMng.h>
+#include <TaskMng.h>
 #include <TimerMng.h>
 
 /* 内部モジュールヘッダ */
@@ -80,8 +80,8 @@ void InitCtrlInit( void )
     /* メモリ管理モジュール初期化 */
     MemMngInit( map, 2 );
     
-    /* プロセス管理モジュール初期化 */
-    ProcMngInit();
+    /* タスク管理モジュール初期化 */
+    TaskMngInit();
     
     /* 割込み管理モジュール初期化 */
     IntMngInit();
@@ -149,39 +149,39 @@ static void InitLoadProcImg( void )
             /* ドライバ */
             
             /* プロセスタイプ変換 */
-            type = PROCMNG_TASK_TYPE_DRIVER;
+            type = TASKMNG_TASK_TYPE_DRIVER;
             
         } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_SERVER ) {
             /* サーバ */
             
             /* プロセスタイプ変換 */
-            type = PROCMNG_TASK_TYPE_SERVER;
+            type = TASKMNG_TASK_TYPE_SERVER;
             
         } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_USER ) {
             /* ユーザ */
             
             /* プロセスタイプ変換 */
-            type = PROCMNG_TASK_TYPE_USER;
+            type = TASKMNG_TASK_TYPE_USER;
         }
         
         /* タスク追加 */
-        taskId = ProcMngTaskAdd(
+        taskId = TaskMngTaskAdd(
                      type,
                      ( ( void * ) pHeader ) + sizeof ( MochiKernelImgHdr_t ),
                      pHeader->fileSize );
         
         /* タスク追加結果判定 */
-        if ( taskId == PROCMNG_TASK_ID_NULL ) {
+        if ( taskId == TASKMNG_TASK_ID_NULL ) {
             /* 失敗 */
             
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "ProcMngTaskAdd() error." );
+            DEBUG_LOG( "TaskMngTaskAdd() error." );
             
         } else {
             /* 成功 */
             
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "ProcMngTaskAdd() OK. taskId=%d", taskId );
+            DEBUG_LOG( "TaskMngTaskAdd() OK. taskId=%d", taskId );
         }
         
         /* アドレス更新 */

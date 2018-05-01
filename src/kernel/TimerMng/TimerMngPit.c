@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/TimerMng/TimerMngPit.c                                          */
-/*                                                                 2017/03/13 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -17,7 +17,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <ProcMng.h>
+#include <TaskMng.h>
 #include <TimerMng.h>
 
 /* 内部モジュールヘッダ */
@@ -60,7 +60,7 @@ void TimerMngPitHdlInt( uint32_t intNo )
     IntMngPicEoi( I8259A_IRQ0 );
     
     /* スケジューラ実行 */
-    ProcMngSchedExec();
+    TaskMngSchedExec();
     
     /* デバッグトレースログ出力 */
     /*DEBUG_LOG( "%s() end.", __func__ );*/

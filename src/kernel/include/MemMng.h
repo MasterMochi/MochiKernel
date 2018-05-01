@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2017/06/16 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
 #define MEMMNG_H
@@ -16,7 +16,7 @@
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
-#include <ProcMng.h>
+#include <TaskMng.h>
 
 
 /******************************************************************************/
@@ -44,7 +44,7 @@
 #define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /** PDID最小値             */
 
 /* ページディレクトリ定義 */
-#define MEMMNG_PAGE_DIR_NUM       PROCMNG_TASK_ID_NUM   /** PD管理数   */
+#define MEMMNG_PAGE_DIR_NUM       TASKMNG_TASK_ID_NUM   /** PD管理数   */
 #define MEMMNG_PAGE_DIR_FULL      MEMMNG_PAGE_DIR_NUM   /** PD空き無し */
 
 /* ページテーブル定義 */

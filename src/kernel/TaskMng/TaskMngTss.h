@@ -1,18 +1,18 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngTss.h                                            */
-/*                                                                 2017/03/01 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngTss.h                                            */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
-#ifndef PROCMNG_TSS_H
-#define PROCMNG_TSS_H
+#ifndef TASKMNG_TSS_H
+#define TASKMNG_TSS_H
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
 /* TSS管理初期化 */
-extern void ProcMngTssInit( void );
+extern void TaskMngTssInit( void );
 
 /* ESP0設定 */
-extern void ProcMngTssSetEsp0( uint32_t esp0 );
+extern void TaskMngTssSetEsp0( uint32_t esp0 );
 
 
 /******************************************************************************/

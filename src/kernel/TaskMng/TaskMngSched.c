@@ -1,7 +1,7 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngSched.c                                          */
-/*                                                                 2017/06/16 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngSched.c                                          */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -21,8 +21,8 @@
 #include <MemMng.h>
 
 /* 内部モジュールヘッダ */
-#include "ProcMngTask.h"
-#include "ProcMngTss.h"
+#include "TaskMngTask.h"
+#include "TaskMngTss.h"
 
 
 /******************************************************************************/
@@ -31,7 +31,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_PROCMNG_SCHED,   \
+    DebugLogOutput( CMN_MODULE_TASKMNG_SCHED,   \
                     __LINE__,                   \
                     __VA_ARGS__ )
 #else
@@ -82,7 +82,7 @@ typedef struct {
     schedRunGrp_t   runGrp[ SCHED_RUNGRP_NUM ];     /**< 実行可能タスクグループ  */
     schedWaitGrp_t  waitGrp;                        /**< 待ちタスクグループ      */
     MLibBasicList_t freeQ;                          /**< 空タスクキュー          */
-    schedTaskInfo_t taskInfo[ PROCMNG_TASK_ID_NUM ];/**< タスク情報              */
+    schedTaskInfo_t taskInfo[ TASKMNG_TASK_ID_NUM ];/**< タスク情報              */
 } schedTbl_t;
 
 
@@ -119,14 +119,14 @@ static schedTbl_t gSchedTbl;
  * @details     指定したタスクIDをスケジュールに追加する。
  * 
  * @param[in]   taskId タスクID
- *                  - PROCMNG_TASK_ID_MIN タスクID最小値
- *                  - PROCMNG_TASK_ID_MAX タスクID最大値
+ *                  - TASKMNG_TASK_ID_MIN タスクID最小値
+ *                  - TASKMNG_TASK_ID_MAX タスクID最大値
  * 
  * @retval      CMN_SUCCESS 成功
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-CmnRet_t ProcMngSchedAdd( uint32_t taskId )
+CmnRet_t TaskMngSchedAdd( uint32_t taskId )
 {
     schedTaskInfo_t *pTaskInfo; /* タスク情報 */
     
@@ -167,7 +167,7 @@ CmnRet_t ProcMngSchedAdd( uint32_t taskId )
  * @details     スケジューラを実行して次に実行可能なタスクにタスクスイッチする。
  */
 /******************************************************************************/
-void ProcMngSchedExec( void )
+void TaskMngSchedExec( void )
 {
     uint32_t        level;          /* 実行中レベル         */
     uint32_t        nowTaskId;      /* 実行中タスクID       */
@@ -184,7 +184,7 @@ void ProcMngSchedExec( void )
     /*DEBUG_LOG( "%s() start.", __func__ );*/
     
     /* 実行中タスク判定 */
-    if ( nowTaskId == PROCMNG_TASK_ID_IDLE ) {
+    if ( nowTaskId == TASKMNG_TASK_ID_IDLE ) {
         /* アイドルタスク */
         
         /* 実行可能タスクグループ役割切替 */
@@ -283,11 +283,11 @@ void ProcMngSchedExec( void )
  * @brief       タスクID取得
  * @details     現在実行中タスクのタスクIDを取得する。
  * 
- * @retval      PROCMNG_TASK_ID_MIN タスクID最小値
- * @retval      PROCMNG_TASK_ID_MAX タスクID最大値
+ * @retval      TASKMNG_TASK_ID_MIN タスクID最小値
+ * @retval      TASKMNG_TASK_ID_MAX タスクID最大値
  */
 /******************************************************************************/
-uint32_t ProcMngSchedGetTaskId( void )
+uint32_t TaskMngSchedGetTaskId( void )
 {
     /* タスクID返却 */
     return gSchedTbl.pRunningTaskInfo->taskId;
@@ -300,7 +300,7 @@ uint32_t ProcMngSchedGetTaskId( void )
  * @details     スケジューラサブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void ProcMngSchedInit( void )
+void TaskMngSchedInit( void )
 {
     uint32_t        i;              /* カウンタ           */
     MLibRet_t       retMLib;        /* MLib関数戻り値     */
@@ -323,10 +323,10 @@ void ProcMngSchedInit( void )
     pIdleTaskInfo              = &gSchedTbl.taskInfo[ SCHED_IDLE_IDX ];
     gSchedTbl.pRunningTaskInfo = pIdleTaskInfo;
     pIdleTaskInfo->used        = SCHED_TASK_INFO_USED;
-    pIdleTaskInfo->taskId      = PROCMNG_TASK_ID_IDLE;
+    pIdleTaskInfo->taskId      = TASKMNG_TASK_ID_IDLE;
     
     /* 空タスクキュー初期化 */
-    for ( i = 1; i < PROCMNG_TASK_ID_NUM; i++ ) {
+    for ( i = 1; i < TASKMNG_TASK_ID_NUM; i++ ) {
         /* エンキュー */
         retMLib =  MLibBasicListInsertHead( &( gSchedTbl.freeQ ),
                                             &( gSchedTbl.taskInfo[ i ].node ) );
@@ -364,7 +364,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     MLibBasicList_t *pTaskQ;          /* タスクキュー           */
     
     /* 初期化 */
-    taskType     = PROCMNG_TASK_TYPE_USER;
+    taskType     = TASKMNG_TASK_TYPE_USER;
     pTaskQ       = NULL;
     pReservedGrp = &gSchedTbl.runGrp[ gSchedTbl.reservedGrpIdx ];
     retMLib      = MLIB_FAILURE;
@@ -373,16 +373,16 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     /*DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );*/
     
     /* タスクタイプ取得 */
-    taskType = ProcMngTaskGetType( pTaskInfo->taskId );
+    taskType = TaskMngTaskGetType( pTaskInfo->taskId );
     
     /* タスクタイプ判定 */
-    if ( taskType == PROCMNG_TASK_TYPE_DRIVER ) {
+    if ( taskType == TASKMNG_TASK_TYPE_DRIVER ) {
         /* ドライバ */
         
         /* タスクキュー設定 */
         pTaskQ = &pReservedGrp->driverQ;
         
-    } else if ( taskType == PROCMNG_TASK_TYPE_SERVER ) {
+    } else if ( taskType == TASKMNG_TASK_TYPE_SERVER ) {
         /* サーバ */
         
         /* タスクキュー設定 */
@@ -455,7 +455,7 @@ static __attribute__ ( ( noinline ) )
     void                 *pKernelStack; /* カーネルスタック     */
     uint32_t             pageDirId;     /* ページディレクトリID */
     IA32PagingPDBR_t     pdbr;          /* PDBR                 */
-    ProcMngTaskContext_t context;       /* コンテキスト         */
+    TaskMngTaskContext_t context;       /* コンテキスト         */
     
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
@@ -464,23 +464,23 @@ static __attribute__ ( ( noinline ) )
                nextTaskId );*/
     
     /* 初期化 */
-    memset( &context, 0, sizeof ( ProcMngTaskContext_t ) );
+    memset( &context, 0, sizeof ( TaskMngTaskContext_t ) );
     
     /* コンテキスト退避 */
     context.eip = ( uint32_t ) SchedSwitchTaskEnd;
     context.esp = IA32InstructionGetEsp();
     context.ebp = IA32InstructionGetEbp();
-    ProcMngTaskSetContext( nowTaskId, &context );
+    TaskMngTaskSetContext( nowTaskId, &context );
     
     /* コンテキスト取得 */
-    context = ProcMngTaskGetContext( nextTaskId );
+    context = TaskMngTaskGetContext( nextTaskId );
     
     /* カーネルスタック設定 */
-    pKernelStack = ProcMngTaskGetKernelStack( nextTaskId );
-    ProcMngTssSetEsp0( ( uint32_t ) pKernelStack );
+    pKernelStack = TaskMngTaskGetKernelStack( nextTaskId );
+    TaskMngTssSetEsp0( ( uint32_t ) pKernelStack );
     
     /* ページディレクトリID取得 */
-    pageDirId = ProcMngTaskGetPageDirId( nextTaskId );
+    pageDirId = TaskMngTaskGetPageDirId( nextTaskId );
     
     /* ページディレクトリ切替 */
     pdbr = MemMngPageSwitchDir( pageDirId );

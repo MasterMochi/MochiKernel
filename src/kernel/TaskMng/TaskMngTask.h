@@ -1,10 +1,10 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngTask.h                                           */
-/*                                                                 2017/06/15 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngTask.h                                           */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
-#ifndef PROCMNG_TASK_H
-#define PROCMNG_TASK_H
+#ifndef TASKMNG_TASK_H
+#define TASKMNG_TASK_H
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
@@ -14,7 +14,7 @@
 #include <hardware/IA32/IA32Paging.h>
 
 /* 外部モジュールヘッダ */
-#include <ProcMng.h>
+#include <TaskMng.h>
 
 
 /******************************************************************************/
@@ -25,14 +25,14 @@ typedef struct {
     uint32_t               eip;             /**< eipレジスタ */
     uint32_t               esp;             /**< espレジスタ */
     uint32_t               ebp;             /**< ebpレジスタ */
-} ProcMngTaskContext_t;
+} TaskMngTaskContext_t;
 
 /** タスクスタック情報 */
 typedef struct {
     void                   *pTopAddr;       /**< 先頭アドレス */
     void                   *pBottomAddr;    /**< 後尾アドレス */
     size_t                 size;            /**< サイズ       */
-} ProcMngTaskStackInfo_t;
+} TaskMngTaskStackInfo_t;
 
 /** タスク管理テーブル構造体 */
 typedef struct {
@@ -40,38 +40,38 @@ typedef struct {
     uint8_t                type;            /**< タスクタイプ             */
     uint8_t                state;           /**< タスク状態               */
     uint8_t                reserved;        /**< パディング               */
-    ProcMngTaskContext_t   context;         /**< コンテキスト             */
+    TaskMngTaskContext_t   context;         /**< コンテキスト             */
     uint32_t               pageDirId;       /**< ページディレクトリID     */
     void                   *pEntryPoint;    /**< エントリポイント         */
-    ProcMngTaskStackInfo_t kernelStackInfo; /**< カーネルスタックアドレス */
-    ProcMngTaskStackInfo_t stackInfo;       /**< スタックアドレス         */
-} ProcMngTaskTbl_t;
+    TaskMngTaskStackInfo_t kernelStackInfo; /**< カーネルスタックアドレス */
+    TaskMngTaskStackInfo_t stackInfo;       /**< スタックアドレス         */
+} TaskMngTaskTbl_t;
 
 
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
 /* コンテキスト取得 */
-extern ProcMngTaskContext_t ProcMngTaskGetContext( uint32_t taskId );
+extern TaskMngTaskContext_t TaskMngTaskGetContext( uint32_t taskId );
 
 /* カーネルスタックアドレス取得 */
-extern void *ProcMngTaskGetKernelStack( uint32_t taskId );
+extern void *TaskMngTaskGetKernelStack( uint32_t taskId );
 
 /* ページディレクトリID取得 */
-extern uint32_t ProcMngTaskGetPageDirId( uint32_t taskId );
+extern uint32_t TaskMngTaskGetPageDirId( uint32_t taskId );
 
 /* タスクタイプ取得 */
-extern uint8_t ProcMngTaskGetType( uint32_t taskId );
+extern uint8_t TaskMngTaskGetType( uint32_t taskId );
 
 /* タスク管理初期化 */
-extern void ProcMngTaskInit( void );
+extern void TaskMngTaskInit( void );
 
 /* コンテキスト設定 */
-extern void ProcMngTaskSetContext( uint32_t             taskId,
-                                   ProcMngTaskContext_t *pContext );
+extern void TaskMngTaskSetContext( uint32_t             taskId,
+                                   TaskMngTaskContext_t *pContext );
 
 /* タスク起動開始 */
-extern void ProcMngTaskStart( void );
+extern void TaskMngTaskStart( void );
 
 
 /******************************************************************************/

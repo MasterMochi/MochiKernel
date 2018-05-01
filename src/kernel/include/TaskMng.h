@@ -1,10 +1,10 @@
 /******************************************************************************/
-/* src/kernel/include/ProcMng.h                                               */
-/*                                                                 2017/06/09 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/include/TaskMng.h                                               */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
-#ifndef PROCMNG_H
-#define PROCMNG_H
+#ifndef TASKMNG_H
+#define TASKMNG_H
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
@@ -17,35 +17,35 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* タスクID */
-#define PROCMNG_TASK_ID_MIN  ( 0 )                      /** タスクID最小値 */
-#define PROCMNG_TASK_ID_MAX  ( 4096 )                   /** タスクID最大値 */
-#define PROCMNG_TASK_ID_NULL ( PROCMNG_TASK_ID_MAX + 1 )/** タスクID無     */
-#define PROCMNG_TASK_ID_NUM  ( PROCMNG_TASK_ID_MAX + 1 )/** タスクID数     */
-#define PROCMNG_TASK_ID_IDLE ( 0 )                      /** アイドルタスク */
+#define TASKMNG_TASK_ID_MIN  ( 0 )                      /** タスクID最小値 */
+#define TASKMNG_TASK_ID_MAX  ( 4096 )                   /** タスクID最大値 */
+#define TASKMNG_TASK_ID_NULL ( TASKMNG_TASK_ID_MAX + 1 )/** タスクID無     */
+#define TASKMNG_TASK_ID_NUM  ( TASKMNG_TASK_ID_MAX + 1 )/** タスクID数     */
+#define TASKMNG_TASK_ID_IDLE ( 0 )                      /** アイドルタスク */
 
 /* タスクタイプ */
-#define PROCMNG_TASK_TYPE_DRIVER ( 0 )  /** ドライバ */
-#define PROCMNG_TASK_TYPE_SERVER ( 1 )  /** サーバ   */
-#define PROCMNG_TASK_TYPE_USER   ( 2 )  /** ユーザ   */
+#define TASKMNG_TASK_TYPE_DRIVER ( 0 )  /** ドライバ */
+#define TASKMNG_TASK_TYPE_SERVER ( 1 )  /** サーバ   */
+#define TASKMNG_TASK_TYPE_USER   ( 2 )  /** ユーザ   */
 
 
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
 /*---------------*/
-/* ProcMngInit.c */
+/* TaskMngInit.c */
 /*---------------*/
-/* プロセス管理初期化 */
-extern void ProcMngInit( void );
+/* タスク管理初期化 */
+extern void TaskMngInit( void );
 
 /*--------------*/
-/* ProcMngSched */
+/* TaskMngSched */
 /*--------------*/
 /* スケジューラ実行 */
-extern void ProcMngSchedExec( void );
+extern void TaskMngSchedExec( void );
 
 /* タスク追加 */
-extern uint32_t ProcMngTaskAdd( uint8_t taskType,
+extern uint32_t TaskMngTaskAdd( uint8_t taskType,
                                 void    *pAddr,
                                 size_t  size      );
 

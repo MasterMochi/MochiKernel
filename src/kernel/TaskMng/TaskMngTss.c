@@ -1,7 +1,7 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngTss.c                                            */
-/*                                                                 2017/03/12 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngTss.c                                            */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -28,7 +28,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_PROCMNG_TSS, \
+    DebugLogOutput( CMN_MODULE_TASKMNG_TSS, \
                     __LINE__,               \
                     __VA_ARGS__ )
 #else
@@ -52,7 +52,7 @@ static IA32Tss_t gTss;
  * @details     TSS管理サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void ProcMngTssInit( void )
+void TaskMngTssInit( void )
 {
     uint16_t index;     /* GDTエントリ番号    */
     uint16_t selector;  /* セグメントセレクタ */
@@ -99,7 +99,7 @@ void ProcMngTssInit( void )
  * @param[in]   esp0 ESP0設定値
  */
 /******************************************************************************/
-void ProcMngTssSetEsp0( uint32_t esp0 )
+void TaskMngTssSetEsp0( uint32_t esp0 )
 {
     /* esp0設定 */
     gTss.esp0 = esp0;

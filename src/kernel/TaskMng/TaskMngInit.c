@@ -1,7 +1,7 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngInit.c                                           */
-/*                                                                 2017/03/11 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngInit.c                                           */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -15,9 +15,9 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "ProcMngSched.h"
-#include "ProcMngTask.h"
-#include "ProcMngTss.h"
+#include "TaskMngSched.h"
+#include "TaskMngTask.h"
+#include "TaskMngTss.h"
 
 
 /******************************************************************************/
@@ -26,7 +26,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_PROCMNG_INIT,    \
+    DebugLogOutput( CMN_MODULE_TASKMNG_INIT,    \
                     __LINE__,                   \
                     __VA_ARGS__ )
 #else
@@ -39,23 +39,23 @@
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       プロセス管理初期化
- * @details     プロセス管理内サブモジュールの初期化を行う。
+ * @brief       タスク管理初期化
+ * @details     タスク管理内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void ProcMngInit( void )
+void TaskMngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
     /* TSS管理サブモジュール初期化 */
-    ProcMngTssInit();
+    TaskMngTssInit();
     
     /* タスク管理サブモジュール初期化 */
-    ProcMngTaskInit();
+    TaskMngTaskInit();
     
     /* スケジューラサブモジュール初期化 */
-    ProcMngSchedInit();
+    TaskMngSchedInit();
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

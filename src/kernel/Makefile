@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2017/07/16 *#
-#* Copyright (C) 2016-2017 Mochi.                                             *#
+#*                                                                 2018/05/01 *#
+#* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
@@ -25,11 +25,11 @@ SRCS = InitCtrl/InitCtrlInit.c \
        IntMng/IntMngPic.c      \
        TimerMng/TimerMngInit.c \
        TimerMng/TimerMngPit.c  \
-       ProcMng/ProcMngInit.c   \
-       ProcMng/ProcMngTss.c    \
-       ProcMng/ProcMngTask.c   \
-       ProcMng/ProcMngSched.c  \
-       ProcMng/ProcMngElf.c    \
+       TaskMng/TaskMngInit.c   \
+       TaskMng/TaskMngTss.c    \
+       TaskMng/TaskMngTask.c   \
+       TaskMng/TaskMngSched.c  \
+       TaskMng/TaskMngElf.c    \
        Debug/DebugInit.c       \
        Debug/DebugLog.c
 

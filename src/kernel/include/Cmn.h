@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2017/06/16 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef CMN_H
 #define CMN_H
@@ -31,11 +31,11 @@
 #define CMN_MODULE_INTMNG_HDL    ( 0x0304 ) /** 割込管理(ハンドラ管理)     */
 #define CMN_MODULE_TIMERMNG_INIT ( 0x0401 ) /** タイマ管理(初期化)         */
 #define CMN_MODULE_TIMERMNG_PIT  ( 0x0402 ) /** タイマ管理(PIT管理)        */
-#define CMN_MODULE_PROCMNG_INIT  ( 0x0501 ) /** プロセス管理(初期化)       */
-#define CMN_MODULE_PROCMNG_TSS   ( 0x0502 ) /** プロセス管理(TSS管理)      */
-#define CMN_MODULE_PROCMNG_SCHED ( 0x0503 ) /** プロセス管理(スケジューラ) */
-#define CMN_MODULE_PROCMNG_TASK  ( 0x0504 ) /** プロセス管理(タスク管理)   */
-#define CMN_MODULE_PROCMNG_ELF   ( 0x0505 ) /** プロセス管理(ELFローダ)    */
+#define CMN_MODULE_TASKMNG_INIT  ( 0x0501 ) /** タスク管理(初期化)         */
+#define CMN_MODULE_TASKMNG_TSS   ( 0x0502 ) /** タスク管理(TSS管理)        */
+#define CMN_MODULE_TASKMNG_SCHED ( 0x0503 ) /** タスク管理(スケジューラ)   */
+#define CMN_MODULE_TASKMNG_TASK  ( 0x0504 ) /** タスク管理(タスク管理)     */
+#define CMN_MODULE_TASKMNG_ELF   ( 0x0505 ) /** タスク管理(ELFローダ)      */
 #define CMN_MODULE_DEBUG_INIT    ( 0x0601 ) /** デバッグ制御(初期化)       */
 #define CMN_MODULE_DEBUG_LOG     ( 0x0602 ) /** デバッグ制御(ログ管理)     */
 

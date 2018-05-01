@@ -1,26 +1,30 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngSched.h                                          */
-/*                                                                 2017/06/09 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngElf.h                                            */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
-#ifndef PROCMNG_SCHED_H
-#define PROCMNG_SCHED_H
+#ifndef TASKMNG_ELF_H
+#define TASKMNG_ELF_H
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
+/* 共通ヘッダ */
+#include <stddef.h>
+
+/* 外部モジュールヘッダ */
 #include <Cmn.h>
+
+/* 内部モジュールヘッダ */
+#include "TaskMngTask.h"
+
 
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
-/* スケジュール追加 */
-extern CmnRet_t ProcMngSchedAdd( uint32_t taskId );
-
-/* タスクID取得 */
-extern uint32_t ProcMngSchedGetTaskId( void );
-
-/* スケジューラ初期化 */
-extern void ProcMngSchedInit( void );
+/* ELFファイル読込 */
+extern CmnRet_t TaskMngElfLoad( void             *pAddr,
+                                size_t           size,
+                                TaskMngTaskTbl_t *pTaskInfo );
 
 
 /******************************************************************************/

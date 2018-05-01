@@ -1,7 +1,7 @@
 /******************************************************************************/
-/* src/kernel/ProcMng/ProcMngElf.c                                            */
-/*                                                                 2017/06/22 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/* src/kernel/TaskMng/TaskMngElf.c                                            */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -18,10 +18,10 @@
 #include <Config.h>
 #include <Debug.h>
 #include <MemMng.h>
-#include <ProcMng.h>
+#include <TaskMng.h>
 
 /* 内部モジュールヘッダ */
-#include "ProcMngTask.h"
+#include "TaskMngTask.h"
 
 
 /******************************************************************************/
@@ -30,7 +30,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_PROCMNG_ELF, \
+    DebugLogOutput( CMN_MODULE_TASKMNG_ELF, \
                     __LINE__,               \
                     __VA_ARGS__ )
 #else
@@ -66,9 +66,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t ProcMngElfLoad( void             *pAddr,
+CmnRet_t TaskMngElfLoad( void             *pAddr,
                          size_t           size,
-                         ProcMngTaskTbl_t *pTaskInfo )
+                         TaskMngTaskTbl_t *pTaskInfo )
 {
     void       *pPhyAddr;   /* 物理アドレス                     */
     uint32_t   index;       /* インデックス                     */

@@ -49,9 +49,11 @@
  * @details     PITからの割込み処理を行う。
  * 
  * @param[in]   intNo 割込み番号
+ * @param[in]   reg   汎用レジスタ値(未使用)
  */
 /******************************************************************************/
-void TimerMngPitHdlInt( uint32_t intNo )
+void TimerMngPitHdlInt( uint32_t     intNo,
+                        IA32Pushad_t reg    )
 {
     /* デバッグトレースログ出力 */
     /*DEBUG_LOG( "%s() start. intNo=%#x", __func__, intNo );*/

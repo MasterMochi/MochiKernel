@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/TimerMng.h                                              */
-/*                                                                 2016/12/16 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2018/05/02 */
+/* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef TIMERMNG_H
 #define TIMERMNG_H
@@ -18,7 +18,8 @@ extern void TimerMngInit( void );
 /* TimerMngPit.c */
 /*---------------*/
 /* PIT割込みハンドラ */
-extern void TimerMngPitHdlInt( uint32_t intNo );
+extern void TimerMngPitHdlInt( uint32_t     intNo,
+                               IA32Pushad_t reg    );
 
 
 /******************************************************************************/

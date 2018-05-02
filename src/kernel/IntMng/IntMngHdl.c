@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngHdl.c                                              */
-/*                                                                 2017/08/27 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2016-2015 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -35,30 +35,34 @@
 #endif
 
 /** 割込みハンドラ共通関数定義マクロ */
-#define HDL_CMN_PROC( _INT_NO )                             \
-    static void HdlCmnProc##_INT_NO( void )                 \
-    {                                                       \
-        /* コンテキスト保存 */                              \
-        IA32InstructionPushDs();                            \
-        IA32InstructionPushEs();                            \
-        IA32InstructionPushFs();                            \
-        IA32InstructionPushGs();                            \
-        IA32InstructionPushad();                            \
-                                                            \
-        /* 割込みハンドラ呼出し */                          \
-        IA32InstructionPush( _INT_NO );                     \
-        IA32InstructionCall( gHdlIntProcTbl[ _INT_NO ] );   \
-        IA32InstructionAddEsp( 4 );                         \
-                                                            \
-        /* コンテキスト復帰 */                              \
-        IA32InstructionPopad();                             \
-        IA32InstructionPopGs();                             \
-        IA32InstructionPopFs();                             \
-        IA32InstructionPopEs();                             \
-        IA32InstructionPopDs();                             \
-                                                            \
-        /* return */                                        \
-        IA32InstructionIretd();                             \
+#define HDL_CMN_PROC( _INT_NO )                                                \
+    static void HdlCmnProc##_INT_NO( void )                                    \
+    {                                                                          \
+        /* コンテキスト保存 */                                                 \
+        IA32InstructionPushDs();                                               \
+        IA32InstructionPushEs();                                               \
+        IA32InstructionPushFs();                                               \
+        IA32InstructionPushGs();                                               \
+        IA32InstructionPushad();                                               \
+                                                                               \
+        /* 割込みハンドラ呼出し */                                             \
+        IA32InstructionPush( _INT_NO );                                        \
+        IA32InstructionCall( gHdlIntProcTbl[ _INT_NO ] );                      \
+        IA32InstructionAddEsp( 4 );                                            \
+        /* [MEMO]                                                            */\
+        /* コンパイラによって本関数用にスタック領域が確保されてスタックアド  */\
+        /* レスがズレてしまい、iretd命令による割込み直前へのリターンが出来な */\
+        /* くなってしまう為、C言語による関数呼出しは行わずに直接行う。       */\
+                                                                               \
+        /* コンテキスト復帰 */                                                 \
+        IA32InstructionPopad();                                                \
+        IA32InstructionPopGs();                                                \
+        IA32InstructionPopFs();                                                \
+        IA32InstructionPopEs();                                                \
+        IA32InstructionPopDs();                                                \
+                                                                               \
+        /* return */                                                           \
+        IA32InstructionIretd();                                                \
     }
 
 /** 割込みハンドラ共通関数連続定義マクロ */

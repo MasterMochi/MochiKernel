@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2018/05/01 */
+/*                                                                 2018/05/02 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -83,26 +83,29 @@ typedef struct {
 #ifdef DEBUG_LOG_ENABLE
 /** 識別子変換テーブル */
 const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
-    { CMN_MODULE_INIT_INIT,     "INI-INIT" },   /* 初期化制御(初期化)         */
-    { CMN_MODULE_MEMMNG_INIT,   "MEM-INIT" },   /* メモリ管理(初期化)         */
-    { CMN_MODULE_MEMMNG_GDT,    "MEM-GDT " },   /* メモリ管理(GDT管理)        */
-    { CMN_MODULE_MEMMNG_AREA,   "MEM-AREA" },   /* メモリ管理(メモリ領域管理) */
-    { CMN_MODULE_MEMMNG_PAGE,   "MEM-PAGE" },   /* メモリ管理(ページ管理)     */
-    { CMN_MODULE_MEMMNG_CTRL,   "MEM-CTRL" },   /* メモリ管理(メモリ制御)     */
-    { CMN_MODULE_INTMNG_INIT,   "INT-INIT" },   /* 割込管理(初期化)           */
-    { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC管理)          */
-    { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT管理)          */
-    { CMN_MODULE_INTMNG_HDL,    "INT-HDL " },   /* 割込管理(ハンドラ管理)     */
-    { CMN_MODULE_TIMERMNG_INIT, "TIM-INIT" },   /* タイマ管理(初期化)         */
-    { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)        */
-    { CMN_MODULE_TASKMNG_INIT,  "TSK-INIT" },   /* タスク管理(初期化)         */
-    { CMN_MODULE_TASKMNG_TSS,   "TSK-TSS " },   /* タスク管理(TSS管理)        */
-    { CMN_MODULE_TASKMNG_SCHED, "TSK-SCHD" },   /* タスク管理(スケジューラ)   */
-    { CMN_MODULE_TASKMNG_TASK,  "TSK-TASK" },   /* タスク管理(タスク管理)     */
-    { CMN_MODULE_TASKMNG_ELF,   "TSK-ELF " },   /* タスク管理(ELFローダ)      */
-    { CMN_MODULE_DEBUG_INIT,    "DBG-INIT" },   /* デバッグ制御(初期化)       */
-    { CMN_MODULE_DEBUG_LOG,     "DBG-LOG " },   /* デバッグ制御(ログ管理)     */
-    { 0,                        "UNKNOWN " }  };/* 終端                       */
+    { CMN_MODULE_INIT_INIT,     "INI-INIT" },   /* 初期化制御(初期化)               */
+    { CMN_MODULE_DEBUG_INIT,    "DBG-INIT" },   /* デバッグ制御(初期化)             */
+    { CMN_MODULE_DEBUG_LOG,     "DBG-LOG " },   /* デバッグ制御(ログ管理)           */
+    { CMN_MODULE_MEMMNG_INIT,   "MEM-INIT" },   /* メモリ管理(初期化)               */
+    { CMN_MODULE_MEMMNG_GDT,    "MEM-GDT " },   /* メモリ管理(GDT管理)              */
+    { CMN_MODULE_MEMMNG_AREA,   "MEM-AREA" },   /* メモリ管理(メモリ領域管理)       */
+    { CMN_MODULE_MEMMNG_PAGE,   "MEM-PAGE" },   /* メモリ管理(ページ管理)           */
+    { CMN_MODULE_MEMMNG_CTRL,   "MEM-CTRL" },   /* メモリ管理(メモリ制御)           */
+    { CMN_MODULE_TASKMNG_INIT,  "TSK-INIT" },   /* タスク管理(初期化)               */
+    { CMN_MODULE_TASKMNG_TSS,   "TSK-TSS " },   /* タスク管理(TSS管理)              */
+    { CMN_MODULE_TASKMNG_SCHED, "TSK-SCHD" },   /* タスク管理(スケジューラ)         */
+    { CMN_MODULE_TASKMNG_TASK,  "TSK-TASK" },   /* タスク管理(タスク管理)           */
+    { CMN_MODULE_TASKMNG_ELF,   "TSK-ELF " },   /* タスク管理(ELFローダ)            */
+    { CMN_MODULE_TASKMNG_PROC,  "TSK-PROC" },   /* タスク管理(プロセス管理)         */
+    { CMN_MODULE_INTMNG_INIT,   "INT-INIT" },   /* 割込管理(初期化)                 */
+    { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC管理)                */
+    { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT管理)                */
+    { CMN_MODULE_INTMNG_HDL,    "INT-HDL " },   /* 割込管理(ハンドラ管理)           */
+    { CMN_MODULE_TIMERMNG_INIT, "TIM-INIT" },   /* タイマ管理(初期化)               */
+    { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)              */
+    { CMN_MODULE_ITCCTRL_INIT,  "ITC-INIT" },   /* タスク間通信制御(初期化)         */
+    { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(メッセージ制御) */
+    { 0,                        "UNKNOWN " }  };/* 終端                             */
 #endif
 
 /** 数字変換表 */
@@ -187,23 +190,26 @@ void DebugLogInit( void )
  * 
  * @param[in]   moduleId モジュール・サブモジュール識別子
  *                  - CMN_MODULE_INIT_INIT     初期化制御(初期化)
+ *                  - CMN_MODULE_DEBUG_INIT    デバッグ制御(初期化)
+ *                  - CMN_MODULE_DEBUG_LOG     デバッグ制御(ログ管理)
  *                  - CMN_MODULE_MEMMNG_INIT   メモリ管理(初期化)
  *                  - CMN_MODULE_MEMMNG_GDT    メモリ管理(GDT管理)
  *                  - CMN_MODULE_MEMMNG_AREA   メモリ管理(メモリ領域管理)
  *                  - CMN_MODULE_MEMMNG_PAGE   メモリ管理(ページ管理)
  *                  - CMN_MODULE_MEMMNG_CTRL   メモリ管理(メモリ制御)
+ *                  - CMN_MODULE_TASKMNG_INIT  タスク管理(初期化)
+ *                  - CMN_MODULE_TASKMNG_TSS   タスク管理(TSS管理)
+ *                  - CMN_MODULE_TASKMNG_SCHED タスク管理(スケジューラ)
+ *                  - CMN_MODULE_TASKMNG_TASK  タスク管理(タスク管理)
+ *                  - CMN_MODULE_TASKMNG_ELF   タスク管理(ELFローダ)
+ *                  - CMN_MODULE_TASKMNG_PROC  タスク管理(プロセス管理)
  *                  - CMN_MODULE_INTMNG_INIT   割込管理(初期化)
  *                  - CMN_MODULE_INTMNG_PIC    割込管理(PIC管理)
  *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
  *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ管理)
  *                  - CMN_MODULE_TIMERMNG_INIT タイマ管理(初期化)
- *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理)
- *                  - CMN_MODULE_TASKMNG_INIT  タスク管理(初期化)
- *                  - CMN_MODULE_TASKMNG_TSS   タスク管理(TSS管理)
- *                  - CMN_MODULE_TASKMNG_SCHED タスク管理(スケジューラ)
- *                  - CMN_MODULE_TASKMNG_TASK  タスク管理(タスク管理)
- *                  - CMN_MODULE_DEBUG_INIT    デバッグ制御(初期化)
- *                  - CMN_MODULE_DEBUG_LOG     デバッグ制御(ログ管理)
+ *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理) *                  - CMN_MODULE_ITCCTRL_INIT  タスク間通信制御(初期化)
+ *                  - CMN_MODULE_ITCCTRL_MSG   タスク間通信制御(メッセージ制御)
  * @param[in]   lineNum  行番号
  * @param[in]   *pFormat トレースログ
  * 

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2018/05/01 */
+/*                                                                 2018/05/11 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -8,14 +8,17 @@
 /******************************************************************************/
 /* 共通ヘッダ */
 #include <stdarg.h>
-#include <kernel/MochiKernel.h>
 #include <hardware/IA32/IA32Instruction.h>
+#include <kernel/config.h>
+#include <kernel/MochiKernel.h>
+#include <kernel/types.h>
 #include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
+#include <ItcCtrl.h>
 #include <MemMng.h>
 #include <TaskMng.h>
 #include <TimerMng.h>
@@ -89,6 +92,9 @@ void InitCtrlInit( void )
     /* タイマ管理モジュール初期化 */
     TimerMngInit();
     
+    /* タスク間通信制御モジュール初期化 */
+    ItcCtrlInit();
+    
     /* プロセスイメージ読込 */
     InitLoadProcImg();
     
@@ -115,14 +121,14 @@ void InitCtrlInit( void )
 /******************************************************************************/
 /**
  * @brief       プロセスイメージ読込
- * @details     プロセスイメージを読み込み、タスクを追加する。
+ * @details     プロセスイメージを読み込み、プロセスを追加する。
  */
 /******************************************************************************/
 static void InitLoadProcImg( void )
 {
     void                *pAddr;     /* ファイルアドレス */
     uint8_t             type;       /* プロセスタイプ   */
-    uint32_t            taskId;     /* タスクID         */
+    MkPid_t             pid;        /* プロセスID       */
     MochiKernelImgHdr_t *pHeader;   /* ファイルヘッダ   */
     
     /* デバッグトレースログ出力 */
@@ -130,6 +136,8 @@ static void InitLoadProcImg( void )
     
     /* 初期化 */
     pAddr   = ( void * ) MOCHIKERNEL_ADDR_PROCIMG;
+    type    = TASKMNG_PROC_TYPE_USER;
+    pid     = MK_CONFIG_PID_NULL;
     pHeader = ( MochiKernelImgHdr_t * ) pAddr;
     
     /* ファイル毎に繰り返し */
@@ -149,39 +157,39 @@ static void InitLoadProcImg( void )
             /* ドライバ */
             
             /* プロセスタイプ変換 */
-            type = TASKMNG_TASK_TYPE_DRIVER;
+            type = TASKMNG_PROC_TYPE_DRIVER;
             
         } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_SERVER ) {
             /* サーバ */
             
             /* プロセスタイプ変換 */
-            type = TASKMNG_TASK_TYPE_SERVER;
+            type = TASKMNG_PROC_TYPE_SERVER;
             
         } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_USER ) {
             /* ユーザ */
             
             /* プロセスタイプ変換 */
-            type = TASKMNG_TASK_TYPE_USER;
+            type = TASKMNG_PROC_TYPE_USER;
         }
         
-        /* タスク追加 */
-        taskId = TaskMngTaskAdd(
+        /* プロセス追加 */
+        pid = TaskMngProcAdd(
                      type,
                      ( ( void * ) pHeader ) + sizeof ( MochiKernelImgHdr_t ),
                      pHeader->fileSize );
         
-        /* タスク追加結果判定 */
-        if ( taskId == TASKMNG_TASK_ID_NULL ) {
+        /* プロセス追加結果判定 */
+        if ( pid == MK_CONFIG_PID_NULL ) {
             /* 失敗 */
             
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "TaskMngTaskAdd() error." );
+            DEBUG_LOG( "TaskMngProcAdd() error." );
             
         } else {
             /* 成功 */
             
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "TaskMngTaskAdd() OK. taskId=%d", taskId );
+            DEBUG_LOG( "TaskMngProcAdd() OK. pid=%d", pid );
         }
         
         /* アドレス更新 */

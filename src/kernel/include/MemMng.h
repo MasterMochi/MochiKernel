@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2018/05/01 */
+/*                                                                 2018/05/11 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <hardware/IA32/IA32Paging.h>
+#include <kernel/config.h>
 #include <kernel/MochiKernel.h>
 
 /* 外部モジュールヘッダ */
@@ -32,19 +33,15 @@
 /* セグメントセレクタ定義 */
 #define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /** カーネルコードセグメント */
 #define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /** カーネルデータセグメント */
-#define MEMMNG_SEGSEL_DRIVER_CODE ( 3 * 8 + 1 ) /** ドライバコードセグメント */
-#define MEMMNG_SEGSEL_DRIVER_DATA ( 4 * 8 + 1 ) /** ドライバデータセグメント */
-#define MEMMNG_SEGSEL_SERVER_CODE ( 5 * 8 + 2 ) /** サーバコードセグメント   */
-#define MEMMNG_SEGSEL_SERVER_DATA ( 6 * 8 + 2 ) /** サーバデータセグメント   */
-#define MEMMNG_SEGSEL_USER_CODE   ( 7 * 8 + 3 ) /** ユーザコードセグメント   */
-#define MEMMNG_SEGSEL_USER_DATA   ( 8 * 8 + 3 ) /** ユーザデータセグメント   */
+#define MEMMNG_SEGSEL_APL_CODE    ( 3 * 8 + 3 ) /** アプリコードセグメント   */
+#define MEMMNG_SEGSEL_APL_DATA    ( 4 * 8 + 3 ) /** アプリデータセグメント   */
 
 /** ページディレクトリID */
 #define MEMMNG_PAGE_DIR_ID_IDLE   ( 0 )         /** アイドルプロセス用PDID */
 #define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /** PDID最小値             */
 
 /* ページディレクトリ定義 */
-#define MEMMNG_PAGE_DIR_NUM       TASKMNG_TASK_ID_NUM   /** PD管理数   */
+#define MEMMNG_PAGE_DIR_NUM       MK_CONFIG_PID_NUM     /** PD管理数   */
 #define MEMMNG_PAGE_DIR_FULL      MEMMNG_PAGE_DIR_NUM   /** PD空き無し */
 
 /* ページテーブル定義 */

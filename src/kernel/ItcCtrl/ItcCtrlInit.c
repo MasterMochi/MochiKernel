@@ -1,24 +1,19 @@
 /******************************************************************************/
-/* src/kernel/TaskMng/TaskMngInit.c                                           */
-/*                                                                 2018/05/08 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/* src/kernel/ItcCtrl/ItcCtrlInit.c                                           */
+/*                                                                 2018/05/01 */
+/* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
-#include <stdarg.h>
-#include <stdint.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngProc.h"
-#include "TaskMngSched.h"
-#include "TaskMngTask.h"
-#include "TaskMngTss.h"
+#include "ItcCtrlMsg.h"
 
 
 /******************************************************************************/
@@ -27,7 +22,7 @@
 /* デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_TASKMNG_INIT,    \
+    DebugLogOutput( CMN_MODULE_ITCCTRL_INIT,    \
                     __LINE__,                   \
                     __VA_ARGS__ )
 #else
@@ -40,26 +35,17 @@
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       タスク管理初期化
- * @details     タスク管理内サブモジュールの初期化を行う。
+ * @brief       タスク間通信制御初期化
+ * @details     タスク間通信制御内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void TaskMngInit( void )
+void ItcCtrlInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
-    /* TSS管理サブモジュール初期化 */
-    TaskMngTssInit();
-    
-    /* タスク管理サブモジュール初期化 */
-    TaskMngTaskInit();
-    
-    /* プロセス管理サブモジュール初期化 */
-    TaskMngProcInit();
-    
-    /* スケジューラサブモジュール初期化 */
-    TaskMngSchedInit();
+    /* メッセージ制御サブモジュール初期化 */
+    ItcCtrlMsgInit();
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

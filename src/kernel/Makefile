@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2018/05/01 *#
+#*                                                                 2018/05/11 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -14,24 +14,27 @@ KERNEL_NAME  = kernel.bin
 
 # ソースコード
 SRCS = InitCtrl/InitCtrlInit.c \
+       Debug/DebugInit.c       \
+       Debug/DebugLog.c        \
        MemMng/MemMngInit.c     \
        MemMng/MemMngGdt.c      \
        MemMng/MemMngArea.c     \
        MemMng/MemMngPage.c     \
        MemMng/MemMngCtrl.c     \
+       TaskMng/TaskMngInit.c   \
+       TaskMng/TaskMngTss.c    \
+       TaskMng/TaskMngTask.c   \
+       TaskMng/TaskMngSched.c  \
+       TaskMng/TaskMngElf.c    \
+       TaskMng/TaskMngProc.c   \
        IntMng/IntMngInit.c     \
        IntMng/IntMngIdt.c      \
        IntMng/IntMngHdl.c      \
        IntMng/IntMngPic.c      \
        TimerMng/TimerMngInit.c \
        TimerMng/TimerMngPit.c  \
-       TaskMng/TaskMngInit.c   \
-       TaskMng/TaskMngTss.c    \
-       TaskMng/TaskMngTask.c   \
-       TaskMng/TaskMngSched.c  \
-       TaskMng/TaskMngElf.c    \
-       Debug/DebugInit.c       \
-       Debug/DebugLog.c
+       ItcCtrl/ItcCtrlInit.c   \
+       ItcCtrl/ItcCtrlMsg.c
 
 # Cフラグ
 CFLAGS = -O                 \

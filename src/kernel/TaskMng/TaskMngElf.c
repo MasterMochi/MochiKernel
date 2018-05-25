@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2018/05/01 */
+/*                                                                 2018/05/11 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -11,17 +11,14 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <hardware/IA32/IA32Paging.h>
+#include <kernel/config.h>
 #include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
-#include <Config.h>
 #include <Debug.h>
 #include <MemMng.h>
 #include <TaskMng.h>
-
-/* 内部モジュールヘッダ */
-#include "TaskMngTask.h"
 
 
 /******************************************************************************/
@@ -58,17 +55,19 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
  * @brief       ELFファイル読込
  * @details     ELFファイルをメモリを読み込む。
  * 
- * @param[in]   *pAddr     ELFファイルアドレス
- * @param[in]   size       ELFファイルサイズ
- * @param[out]  *pTaskInfo タスク情報
+ * @param[in]   *pAddr         ELFファイルアドレス
+ * @param[in]   size           ELFファイルサイズ
+ * @param[in]   pageDirId      ページディレクトリID
+ * @param[out]  **ppEntryPoint エントリポイント
  * 
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t TaskMngElfLoad( void             *pAddr,
-                         size_t           size,
-                         TaskMngTaskTbl_t *pTaskInfo )
+CmnRet_t TaskMngElfLoad( void     *pAddr,
+                         size_t   size,
+                         uint32_t pageDirId,
+                         void     **ppEntryPoint )
 {
     void       *pPhyAddr;   /* 物理アドレス                     */
     uint32_t   index;       /* インデックス                     */
@@ -79,11 +78,9 @@ CmnRet_t TaskMngElfLoad( void             *pAddr,
     Elf32_Phdr *pEntry;     /* プログラムヘッダテーブルエントリ */
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( " pAddr=%010p, size=%u, pTaskInfo=%010p",
-               pAddr,
-               size,
-               pTaskInfo );
+    DEBUG_LOG( "%s() start.",                       __func__                );
+    DEBUG_LOG( " pAddr=%010p, size=%u",             pAddr,     size         );
+    DEBUG_LOG( " pageDirId=%u, ppEntryPoint=%010p", pageDirId, ppEntryPoint );
     
     /* 初期化 */
     pElfHdr = ( Elf32_Ehdr * ) pAddr;
@@ -152,7 +149,7 @@ CmnRet_t TaskMngElfLoad( void             *pAddr,
         MemMngCtrlCopyVirtToPhys(
             pPhyAddr,
             ( void * ) ( ( uint32_t ) pAddr + pEntry->p_offset ),
-            pEntry->p_filesz );
+            pEntry->p_filesz                                      );
         
         /* フラグ判定 */
         if ( MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
@@ -167,13 +164,13 @@ CmnRet_t TaskMngElfLoad( void             *pAddr,
         }
         
         /* ページマッピング設定 */
-        ret = MemMngPageSet( pTaskInfo->pageDirId,
+        ret = MemMngPageSet( pageDirId,
                              ( void * ) pEntry->p_vaddr,
                              pPhyAddr,
                              size,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_USER,
-                             attrRw );
+                             attrRw                      );
         
         /* 設定結果判定 */
         if ( ret != CMN_SUCCESS ) {
@@ -187,10 +184,12 @@ CmnRet_t TaskMngElfLoad( void             *pAddr,
     }
     
     /* エントリポイント設定 */
-    pTaskInfo->pEntryPoint = ( void * ) pElfHdr->e_entry;
+    *ppEntryPoint = ( void * ) pElfHdr->e_entry;
     
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
+    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS, *ppEntryPoint=%010p",
+               __func__,
+               *ppEntryPoint                                     );
     
     return CMN_SUCCESS;
 }
@@ -326,8 +325,8 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     }
     
     /* エントリポイントチェック */
-    if ( ( pHdr->e_entry <  CONFIG_MEM_TASK_START_ADDR ) &&
-         ( pHdr->e_entry >= CONFIG_MEM_TASK_STACK_ADDR )    ) {
+    if ( ( pHdr->e_entry <  MK_CONFIG_ADDR_APL_START ) &&
+         ( pHdr->e_entry >= MK_CONFIG_ADDR_APL_STACK )    ) {
         /* 不正値 */
         
         /* デバッグトレースログ出力 */
@@ -443,9 +442,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         }
         
         /* 仮想メモリチェック */
-        if ( ( pEntry->p_vaddr < CONFIG_MEM_TASK_START_ADDR     ) ||
+        if ( ( pEntry->p_vaddr < MK_CONFIG_ADDR_APL_START      ) ||
              ( ( pEntry->p_vaddr + pEntry->p_memsz ) >=
-               CONFIG_MEM_TASK_STACK_ADDR                       ) ||
+               MK_CONFIG_ADDR_APL_STACK                        ) ||
              ( ( pEntry->p_vaddr % IA32_PAGING_PAGE_SIZE ) != 0 )    ) {
             /* 不正値 */
             

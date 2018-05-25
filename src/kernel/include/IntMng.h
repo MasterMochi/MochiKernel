@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/IntMng.h                                                */
-/*                                                                 2018/05/02 */
+/*                                                                 2018/05/18 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef INTMNG_H
@@ -11,6 +11,7 @@
 /* 共通ヘッダ */
 #include <stdint.h>
 #include <hardware/IA32/IA32.h>
+#include <hardware/IA32/IA32Descriptor.h>
 
 
 /******************************************************************************/
@@ -24,9 +25,25 @@
 /** PICベクタ番号ベース */
 #define INTMNG_PIC_VCTR_BASE ( 0x20 )
 
+/** セグメントレジスタ情報 */
+typedef struct {
+    uint32_t        ds;         /**< DSレジスタ */
+    uint32_t        es;         /**< ESレジスタ */
+    uint32_t        fs;         /**< FSレジスタ */
+    uint32_t        gs;         /**< GSレジスタ */
+} IntMngSegReg_t;
+
+/** 割込み発生時コンテキスト */
+typedef struct {
+    IA32Pushad_t    genReg;     /**< 汎用レジスタ       */
+    IntMngSegReg_t  segReg;     /**< セグメントレジスタ */
+    IA32ErrCode_t   errCode;    /**< エラーコード       */
+    IA32IretdInfo_t iretdInfo;  /**< 割込みリターン情報 */
+} IntMngContext_t;
+
 /** 割込みハンドラ関数型 */
-typedef void ( *IntMngHdl_t )( uint32_t     intNo,
-                               IA32Pushad_t reg    );
+typedef void ( *IntMngHdl_t )( uint32_t        intNo,
+                               IntMngContext_t context );
 
 
 /******************************************************************************/
@@ -43,7 +60,8 @@ extern void IntMngInit( void );
 /*-------------*/
 /* 割込みハンドラ設定 */
 extern void IntMngHdlSet( uint32_t    intNo,
-                          IntMngHdl_t func   );
+                          IntMngHdl_t func,
+                          uint8_t     level  );
 
 /*-------------*/
 /* IntMngPic.c */

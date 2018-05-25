@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TimerMng/TimerMngPit.c                                          */
-/*                                                                 2018/05/01 */
+/*                                                                 2018/05/19 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -48,15 +48,15 @@
  * @brief       PIT割込みハンドラ
  * @details     PITからの割込み処理を行う。
  * 
- * @param[in]   intNo 割込み番号
- * @param[in]   reg   汎用レジスタ値(未使用)
+ * @param[in]   intNo   割込み番号
+ * @param[in]   context 割込み発生時コンテキスト情報(未使用)
  */
 /******************************************************************************/
-void TimerMngPitHdlInt( uint32_t     intNo,
-                        IA32Pushad_t reg    )
+void TimerMngPitHdlInt( uint32_t        intNo,
+                        IntMngContext_t context )
 {
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() start. intNo=%#x", __func__, intNo );*/
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() start. intNo=%#x", __func__, intNo );*/
     
     /* 割込み処理終了通知 */
     IntMngPicEoi( I8259A_IRQ0 );
@@ -64,8 +64,8 @@ void TimerMngPitHdlInt( uint32_t     intNo,
     /* スケジューラ実行 */
     TaskMngSchedExec();
     
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() end.", __func__ );*/
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() end.", __func__ );*/
     
     return;
 }
@@ -92,7 +92,9 @@ void TimerMngPitInit( void )
     IA32InstructionOutByte( I8254_PORT_CNTR0, I8254_CNTR_HIGH( PIT_CYCLE ) );
     
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( INTMNG_PIC_VCTR_BASE + I8259A_IRQ0, TimerMngPitHdlInt );
+    IntMngHdlSet( INTMNG_PIC_VCTR_BASE + I8259A_IRQ0,       /* 割込み番号     */
+                  TimerMngPitHdlInt,                        /* 割込みハンドラ */
+                  IA32_DESCRIPTOR_DPL_0               );    /* 特権レベル     */
     
     /* 割込み許可設定 */
     IntMngPicAllowIrq( I8259A_IRQ0 );

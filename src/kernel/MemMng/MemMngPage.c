@@ -664,7 +664,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
               ( void * ) VGA_M3_VRAM_ADDR,      /* 物理アドレス            */
               VGA_M3_VRAM_SIZE,                 /* サイズ                  */
               IA32_PAGING_G_YES,                /* グローバルページ属性    */
-              IA32_PAGING_US_SV,                /* ユーザ/スーパバイザ属性 */
+              IA32_PAGING_US_USER,              /* ユーザ/スーパバイザ属性 */
               IA32_PAGING_RW_RW            );   /* 読込/書込許可属性       */
     
     /* マッピング結果判定 */

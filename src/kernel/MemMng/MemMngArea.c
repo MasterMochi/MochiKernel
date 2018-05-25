@@ -257,7 +257,7 @@ CmnRet_t MemMngAreaGetInfo( MemMngAreaInfo_t *pInfo,
             pInfo->size  = pEntry->size;
             
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_SUCCESS, index=%d" );
+            DEBUG_LOG( "%s() end. ret=CMN_SUCCESS, index=%d", __func__ );
             
             return CMN_SUCCESS;
         }

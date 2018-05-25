@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngCtrl.c                                             */
-/*                                                                 2017/06/16 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/05/11 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -12,11 +12,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <hardware/IA32/IA32Paging.h>
+#include <kernel/config.h>
 #include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
-#include <Config.h>
 #include <Debug.h>
 #include <MemMng.h>
 
@@ -72,13 +72,13 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
     pageDirId = MemMngPageGetDirId();
     
     /* 物理マッピング用領域サイズ毎に繰り返し */
-    for ( idx = 0; idx < size; idx += CONFIG_MEM_KERNEL_MAP_SIZE ) {
+    for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
         /* 次コピー有無判定 */
-        if ( ( size - idx ) > CONFIG_MEM_KERNEL_MAP_SIZE ) {
+        if ( ( size - idx ) > MK_CONFIG_SIZE_KERNEL_MAP ) {
             /* 次コピー有 */
             
             /* コピーサイズ設定 */
-            count = CONFIG_MEM_KERNEL_MAP_SIZE;
+            count = MK_CONFIG_SIZE_KERNEL_MAP;
             
         } else {
             /* 次コピー無 */
@@ -90,7 +90,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
         
         /* ページマッピング設定 */
         ret = MemMngPageSet( pageDirId,
-                             ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
+                             ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
                              count,
                              IA32_PAGING_G_NO,
@@ -105,13 +105,13 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
         }
         
         /* コピー */
-        memcpy( ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1, pVAddr + idx, count );
+        memcpy( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, pVAddr + idx, count );
     }
     
     /* ページマッピング解除 */
     MemMngPageUnset( pageDirId,
-                     ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
-                     CONFIG_MEM_KERNEL_MAP_SIZE );
+                     ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
+                     MK_CONFIG_SIZE_KERNEL_MAP );
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -152,13 +152,13 @@ void MemMngCtrlSet( void    *pPAddr,
     pageDirId = MemMngPageGetDirId();
     
     /* 物理マッピング用領域サイズ毎に繰り返し */
-    for ( idx = 0; idx < size; idx += CONFIG_MEM_KERNEL_MAP_SIZE ) {
+    for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
         /* 次設定有無判定 */
-        if ( ( size - idx ) > CONFIG_MEM_KERNEL_MAP_SIZE ) {
+        if ( ( size - idx ) > MK_CONFIG_SIZE_KERNEL_MAP ) {
             /* 次設定有 */
             
             /* サイズ設定 */
-            count = CONFIG_MEM_KERNEL_MAP_SIZE;
+            count = MK_CONFIG_SIZE_KERNEL_MAP;
             
         } else {
             /* 次設定無 */
@@ -170,7 +170,7 @@ void MemMngCtrlSet( void    *pPAddr,
         
         /* ページマッピング設定 */
         ret = MemMngPageSet( pageDirId,
-                             ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
+                             ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
                              count,
                              IA32_PAGING_G_NO,
@@ -185,13 +185,13 @@ void MemMngCtrlSet( void    *pPAddr,
         }
         
         /* メモリ設定 */
-        memset( ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1, value, count );
+        memset( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, value, count );
     }
     
     /* ページマッピング解除 */
     MemMngPageUnset( pageDirId,
-                     ( void * ) CONFIG_MEM_KERNEL_MAP_ADDR1,
-                     CONFIG_MEM_KERNEL_MAP_SIZE );
+                     ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
+                     MK_CONFIG_SIZE_KERNEL_MAP );
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/include/MLib/Basic/MLibBasic.h                                         */
-/*                                                                 2017/06/22 */
-/* Copyright (C) 2017 Mochi                                                   */
+/*                                                                 2018/05/24 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef _MLIB_BASIC_H_
 #define _MLIB_BASIC_H_
@@ -9,12 +9,20 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /** アライメント計算マクロ */
-#define MLIB_BASIC_ALIGN( _VALUE, _ALIGNMENT )                              \
+#define MLIB_BASIC_ALIGN( _VALUE, _ALIGNMENT )                            \
     ( ( ( _VALUE ) + ( ( _ALIGNMENT ) - 1 ) ) & ~( ( _ALIGNMENT ) - 1 ) )
 
 /** フラグ判定マクロ */
 #define MLIB_BASIC_HAVE_FLAG( _VALUE, _FLAG )   \
     ( ( ( _VALUE ) & ( _FLAG ) ) == ( _FLAG ) )
+
+/** 最大値取得 */
+#define MLIB_BASIC_MAX( _VALUE1, _VALUE2 )                    \
+    ( ( _VALUE1 ) > ( _VALUE2 ) ? ( _VALUE1 ) : ( _VALUE2 ) )
+
+/** 最小値取得 */
+#define MLIB_BASIC_MIN( _VALUE1, _VALUE2 )                    \
+    ( ( _VALUE1 ) < ( _VALUE2 ) ? ( _VALUE1 ) : ( _VALUE2 ) )
 
 
 /******************************************************************************/

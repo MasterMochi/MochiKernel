@@ -1,28 +1,29 @@
 /******************************************************************************/
-/* src/kernel/TaskMng/TaskMngElf.h                                            */
-/*                                                                 2018/05/09 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/* src/kernel/TaskMng/TaskMngProc.h                                           */
+/*                                                                 2018/05/11 */
+/* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
-#ifndef TASKMNG_ELF_H
-#define TASKMNG_ELF_H
+#ifndef TASKMNG_PROC_H
+#define TASKMNG_PROC_H
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
-#include <stddef.h>
-
-/* 外部モジュールヘッダ */
-#include <Cmn.h>
+#include <stdint.h>
+#include <kernel/types.h>
 
 
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
-/* ELFファイル読込 */
-extern CmnRet_t TaskMngElfLoad( void     *pAddr,
-                                size_t   size,
-                                uint32_t pageDirId,
-                                void     **ppEntryPoint );
+/* ページディレクトリID取得 */
+extern uint32_t TaskMngProcGetPageDirId( MkPid_t pid );
+
+/* プロセスタイプ取得 */
+extern uint8_t TaskMngProcGetType( MkPid_t pid );
+
+/* プロセス管理初期化 */
+extern void TaskMngProcInit( void );
 
 
 /******************************************************************************/

@@ -1,15 +1,18 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2017/07/07 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/*                                                                 2018/05/05 */
+/* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
 #define IA32_INSTRUCTION_H
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
+/* 共通ヘッダ */
 #include <stddef.h>
 #include <stdint.h>
+
+/* 内部モジュールヘッダ */
 #include "IA32Descriptor.h"
 #include "IA32Paging.h"
 
@@ -789,16 +792,16 @@ static inline void IA32InstructionSwitchTask( IA32PagingPDBR_t pdbr,
     /* タスクスイッチ */
     __asm__ __volatile__ ( "mov eax, %0\n"
                            "mov ebx, %1\n"
-                           "mov esp, %2\n"
-                           "mov ebp, %3\n"
+                           "mov ebp, %2\n"
+                           "mov esp, %3\n"
                            "mov cr3, eax\n"
                            "jmp ebx"
                            :
-                           : "a" ( pdbr ),
+                           : "m" ( pdbr ),
                              "m" ( pEip ),
-                             "m" ( pEsp ),
-                             "m" ( pEbp )
-                           : );
+                             "m" ( pEbp ),
+                             "m" ( pEsp )
+                           : "eax","ebx","ebp","esp"         );
 }
 
 

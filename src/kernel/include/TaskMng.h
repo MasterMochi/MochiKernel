@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/TaskMng.h                                               */
-/*                                                                 2018/05/01 */
+/*                                                                 2018/05/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef TASKMNG_H
@@ -9,24 +9,26 @@
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/types.h>
 
 
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* タスクID */
-#define TASKMNG_TASK_ID_MIN  ( 0 )                      /** タスクID最小値 */
-#define TASKMNG_TASK_ID_MAX  ( 4096 )                   /** タスクID最大値 */
-#define TASKMNG_TASK_ID_NULL ( TASKMNG_TASK_ID_MAX + 1 )/** タスクID無     */
-#define TASKMNG_TASK_ID_NUM  ( TASKMNG_TASK_ID_MAX + 1 )/** タスクID数     */
-#define TASKMNG_TASK_ID_IDLE ( 0 )                      /** アイドルタスク */
+/* PID */
+#define TASKMNG_PID_IDLE         ( 0 )  /** アイドルプロセス */
 
-/* タスクタイプ */
-#define TASKMNG_TASK_TYPE_DRIVER ( 0 )  /** ドライバ */
-#define TASKMNG_TASK_TYPE_SERVER ( 1 )  /** サーバ   */
-#define TASKMNG_TASK_TYPE_USER   ( 2 )  /** ユーザ   */
+/* タスクID */
+#define TASKMNG_TASKID_IDLE      ( 0 )  /** アイドルタスク */
+
+/* プロセスタイプ */
+#define TASKMNG_PROC_TYPE_KERNEL ( 0 )  /** カーネル */
+#define TASKMNG_PROC_TYPE_DRIVER ( 1 )  /** ドライバ */
+#define TASKMNG_PROC_TYPE_SERVER ( 2 )  /** サーバ   */
+#define TASKMNG_PROC_TYPE_USER   ( 3 )  /** ユーザ   */
 
 
 /******************************************************************************/
@@ -38,16 +40,47 @@
 /* タスク管理初期化 */
 extern void TaskMngInit( void );
 
-/*--------------*/
-/* TaskMngSched */
-/*--------------*/
+
+/*----------------*/
+/* TaskMngSched.c */
+/*----------------*/
 /* スケジューラ実行 */
 extern void TaskMngSchedExec( void );
 
+/* タスクID取得 */
+extern MkTaskId_t TaskMngSchedGetTaskId( void );
+
+/* スケジュール開始 */
+extern void TaskMngSchedStart( MkTaskId_t taskId );
+
+/* スケジュール停止 */
+extern void TaskMngSchedStop( MkTaskId_t taskId );
+
+
+/*---------------*/
+/* TaskMngProc.c */
+/*---------------*/
+/* プロセス追加 */
+extern MkPid_t TaskMngProcAdd( uint8_t type,
+                               void    *pAddr,
+                               size_t  size    );
+
+
+/*---------------*/
+/* TaskMngTask.c */
+/*---------------*/
 /* タスク追加 */
-extern uint32_t TaskMngTaskAdd( uint8_t taskType,
-                                void    *pAddr,
-                                size_t  size      );
+extern MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
+                                  MkTid_t  tid,
+                                  uint32_t pageDirId,
+                                  void     *pAddr     );
+
+/* タスク存在確認 */
+extern bool TaskMngTaskCheckExist( MkTaskId_t taskId );
+
+/* プロセス階層差取得 */
+uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
+                                MkTaskId_t taskId2  );
 
 
 /******************************************************************************/

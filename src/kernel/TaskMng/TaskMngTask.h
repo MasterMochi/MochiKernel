@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngTask.h                                           */
-/*                                                                 2018/05/11 */
+/*                                                                 2018/05/28 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef TASKMNG_TASK_H
@@ -40,12 +40,6 @@ extern void *TaskMngTaskGetKernelStack( MkTaskId_t taskId );
 
 /* ページディレクトリID取得 */
 extern uint32_t TaskMngTaskGetPageDirId( MkTaskId_t taskId );
-
-/* プロセスID取得 */
-extern MkPid_t TaskMngTaskGetPid( MkTaskId_t taskId );
-
-/* タスクタイプ取得 */
-extern uint8_t TaskMngTaskGetType( MkTaskId_t taskId );
 
 /* タスク管理初期化 */
 extern void TaskMngTaskInit( void );

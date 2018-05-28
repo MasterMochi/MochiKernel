@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/TaskMng.h                                               */
-/*                                                                 2018/05/24 */
+/*                                                                 2018/05/28 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef TASKMNG_H
@@ -78,10 +78,15 @@ extern MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
 /* タスク存在確認 */
 extern bool TaskMngTaskCheckExist( MkTaskId_t taskId );
 
-/* プロセス階層差取得 */
-uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
-                                MkTaskId_t taskId2  );
+/* プロセスID取得 */
+extern MkPid_t TaskMngTaskGetPid( MkTaskId_t taskId );
 
+/* タスクタイプ取得 */
+extern uint8_t TaskMngTaskGetType( MkTaskId_t taskId );
+
+/* プロセス階層差取得 */
+extern uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
+                                       MkTaskId_t taskId2  );
 
 /******************************************************************************/
 #endif

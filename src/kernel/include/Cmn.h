@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2018/05/12 */
+/*                                                                 2018/05/28 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef CMN_H
@@ -46,9 +46,11 @@
 #define CMN_MODULE_TIMERMNG_PIT  ( 0x0602 ) /** タイマ管理(PIT管理)              */
 #define CMN_MODULE_ITCCTRL_INIT  ( 0x0701 ) /** タスク間通信制御(初期化)         */
 #define CMN_MODULE_ITCCTRL_MSG   ( 0x0702 ) /** タスク間通信制御(メッセージ制御) */
+#define CMN_MODULE_IOCTRL_INIT   ( 0x0801 ) /** 入出力制御(初期化)               */
+#define CMN_MODULE_IOCTRL_PORT   ( 0x0802 ) /** 入出力制御(I/Oポート制御)        */
 
 /** モジュール・サブモジュール数 */
-#define CMN_MODULE_NUM           ( 22 )
+#define CMN_MODULE_NUM           ( 24 )
 
 /* 処理結果構造体 */
 typedef int32_t CmnRet_t;

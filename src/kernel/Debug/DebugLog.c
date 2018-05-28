@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2018/05/02 */
+/*                                                                 2018/05/28 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -105,6 +105,8 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)              */
     { CMN_MODULE_ITCCTRL_INIT,  "ITC-INIT" },   /* タスク間通信制御(初期化)         */
     { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(メッセージ制御) */
+    { CMN_MODULE_IOCTRL_INIT,   "IOC-INIT" },   /* 入出力制御(初期化)               */
+    { CMN_MODULE_IOCTRL_PORT,   "IOC-PORT" },   /* 入出力制御(I/Oポート制御)        */
     { 0,                        "UNKNOWN " }  };/* 終端                             */
 #endif
 

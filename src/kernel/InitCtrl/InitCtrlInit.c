@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2018/05/11 */
+/*                                                                 2018/05/28 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,6 +18,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
+#include <IoCtrl.h>
 #include <ItcCtrl.h>
 #include <MemMng.h>
 #include <TaskMng.h>
@@ -94,6 +95,9 @@ void InitCtrlInit( void )
     
     /* タスク間通信制御モジュール初期化 */
     ItcCtrlInit();
+    
+    /* 入出力制御モジュール初期化 */
+    IoCtrlInit();
     
     /* プロセスイメージ読込 */
     InitLoadProcImg();

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/config.h                                                */
-/*                                                                 2018/05/27 */
+/*                                                                 2018/06/16 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_CONFIG_H_
@@ -52,8 +52,9 @@
 #define MK_CONFIG_SIZE_APL_STACK    ( 0x00002000 )      /** アプリ用スタック領域サイズ         */
 
 /* 割込み番号 */
-#define MK_CONFIG_INTNO_MSGPASSING  ( 0x30 )            /** メッセージパッシング割込み番号 */
-#define MK_CONFIG_INTNO_IOPORT      ( 0x31 )            /** I/Oポート制御割込み番号        */
+#define MK_CONFIG_INTNO_MSGPASSING  ( 0x30 )            /** メッセージパッシング割込み番号   */
+#define MK_CONFIG_INTNO_IOPORT      ( 0x31 )            /** I/Oポート制御割込み番号          */
+#define MK_CONFIG_INTNO_INTERRUPT   ( 0x32 )            /** ハードウェア割込み制御割込み番号 */
 
 
 /******************************************************************************/

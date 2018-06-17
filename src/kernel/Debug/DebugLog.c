@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2018/05/28 */
+/*                                                                 2018/06/16 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -101,6 +101,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC管理)                */
     { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT管理)                */
     { CMN_MODULE_INTMNG_HDL,    "INT-HDL " },   /* 割込管理(ハンドラ管理)           */
+    { CMN_MODULE_INTMNG_CTRL,   "INT-CTRL" },   /* 割込管理(ハードウェア割込み制御) */
     { CMN_MODULE_TIMERMNG_INIT, "TIM-INIT" },   /* タイマ管理(初期化)               */
     { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)              */
     { CMN_MODULE_ITCCTRL_INIT,  "ITC-INIT" },   /* タスク間通信制御(初期化)         */

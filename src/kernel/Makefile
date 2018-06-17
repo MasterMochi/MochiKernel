@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2018/06/12 *#
+#*                                                                 2018/06/13 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -31,6 +31,7 @@ SRCS = InitCtrl/InitCtrlInit.c \
        IntMng/IntMngIdt.c      \
        IntMng/IntMngHdl.c      \
        IntMng/IntMngPic.c      \
+       IntMng/IntMngCtrl.c     \
        TimerMng/TimerMngInit.c \
        TimerMng/TimerMngPit.c  \
        ItcCtrl/ItcCtrlInit.c   \

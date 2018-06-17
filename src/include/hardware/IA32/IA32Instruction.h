@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2018/05/05 */
+/*                                                                 2018/06/17 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
@@ -768,40 +768,6 @@ static inline void IA32InstructionSubEsp( int32_t value )
                            : "a" ( value ) );
     
     return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       タスクスイッチ
- * @details     指定したスタックポインタをespレジスタに、ベースポインタをebpレ
- *              ジスタに、ページディレクトリベースをpdbrレジスタに設定し、jmp命
- *              令を用いて指定したアドレスを実行する。
- * 
- * @param[in]   pdbr   ページディレクトリベースレジスタ
- * @param[in]   *pEip  移動先アドレス
- * @param[in]   *pEsp  スタックポインタ
- * @param[in]   *pEbp  ベースポインタ
- */
-/******************************************************************************/
-static inline void IA32InstructionSwitchTask( IA32PagingPDBR_t pdbr,
-                                              void             *pEip,
-                                              void             *pEsp,
-                                              void             *pEbp  )
-{
-    /* タスクスイッチ */
-    __asm__ __volatile__ ( "mov eax, %0\n"
-                           "mov ebx, %1\n"
-                           "mov ebp, %2\n"
-                           "mov esp, %3\n"
-                           "mov cr3, eax\n"
-                           "jmp ebx"
-                           :
-                           : "m" ( pdbr ),
-                             "m" ( pEip ),
-                             "m" ( pEbp ),
-                             "m" ( pEsp )
-                           : "eax","ebx","ebp","esp"         );
 }
 
 

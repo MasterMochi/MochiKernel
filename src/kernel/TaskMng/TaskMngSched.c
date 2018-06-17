@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2018/05/25 */
+/*                                                                 2018/06/17 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -705,15 +705,15 @@ static __attribute__ ( ( noinline ) )
     /* タスクスイッチ */
     __asm__ __volatile__ ( "mov eax, %0\n"
                            "mov ebx, %1\n"
-                           "mov ebp, %2\n"
-                           "mov esp, %3\n"
+                           "mov esp, %2\n"
+                           "mov ebp, %3\n"
                            "mov cr3, eax\n"
                            "jmp ebx"
                            :
                            : "m" ( pdbr ),
                              "m" ( nextContext.eip ),
-                             "m" ( nextContext.ebp ),
-                             "m" ( nextContext.esp )
+                             "m" ( nextContext.esp ),
+                             "m" ( nextContext.ebp )
                            : "eax",
                              "ebx",
                              "ebp",

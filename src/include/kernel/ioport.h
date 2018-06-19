@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/ioport.h                                                */
-/*                                                                 2018/05/27 */
+/*                                                                 2018/06/18 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_IOPORT_H_
@@ -29,7 +29,7 @@
 /* エラー番号 */
 #define MK_IOPORT_ERR_NONE         ( 0x00000000 )   /** エラー無し */
 #define MK_IOPORT_ERR_PARAM_FUNCID ( 0x00000001 )   /** 機能ID不正 */
-#define MK_IOPORT_ERR_UNAUTHRIZED  ( 0x00000002 )   /** 権限無し   */
+#define MK_IOPORT_ERR_UNAUTHORIZED ( 0x00000002 )   /** 権限無し   */
 
 /* 戻り値 */
 #define MK_IOPORT_RET_FAILURE      ( -1 )           /** 失敗 */

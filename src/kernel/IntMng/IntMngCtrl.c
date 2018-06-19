@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMngCtrl/IntMngCtrl.c                                         */
-/*                                                                 2018/06/16 */
+/*                                                                 2018/06/19 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -49,31 +49,35 @@ typedef struct {
 /** 割込み待ち情報型 */
 typedef struct {
     MkTaskId_t taskId;      /**< タスクID         */
-    uint16_t   monitor;     /**< 監視中IRQ        */
-    uint16_t   flag;        /**< 割込み発生フラグ */
-    uint32_t   state;       /**< 割込み待ち状態   */
+    uint8_t    monitor;     /**< 監視中IRQ        */
+    uint8_t    flag;        /**< 割込み発生フラグ */
+    uint16_t   state;       /**< 割込み待ち状態   */
 } WaitInfo_t;
 
 
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
+/* 割込み待ち情報エントリ割り当て */
+static uint32_t AllocWaitInfo( MkTaskId_t taskId );
+
 /* 制御権限チェック */
 static bool CheckAuthority( MkTaskId_t taskId,
-                            uint32_t   irqNo,
+                            uint8_t    irqNo,
                             uint32_t   *pIndex );
 
 /* ハードウェア割込み完了 */
-static void Complete( MkTaskId_t         taskId,
-                      MkInterruptParam_t *pParam );
+static void Complete( MkTaskId_t   taskId,
+                      MkIntParam_t *pParam );
 
 /* ハードウェア割込み無効化 */
-static void Disable( MkTaskId_t         taskId,
-                     MkInterruptParam_t *pParam );
+static void Disable( MkTaskId_t   taskId,
+                     MkIntParam_t *pParam );
 
 /* ハードウェア割込み有効化 */
-static void Enable( MkTaskId_t         taskId,
-                    MkInterruptParam_t *pParam );
+static void Enable( MkTaskId_t   taskId,
+                    MkIntParam_t *pParam );
+
 /* 割込み待ち情報インデックス取得 */
 static uint32_t getWaitInfoIdx( MkTaskId_t taskId );
 
@@ -86,16 +90,16 @@ static void HdlHwInt( uint32_t        intNo,
                       IntMngContext_t context );
 
 /* ハードウェア割込み監視開始 */
-static void StartMonitoring( MkTaskId_t         taskId,
-                             MkInterruptParam_t *pParam );
+static void StartMonitoring( MkTaskId_t   taskId,
+                             MkIntParam_t *pParam );
 
 /* ハードウェア割込み監視停止 */
-static void StopMonitoring( MkTaskId_t         taskId,
-                            MkInterruptParam_t *pParam );
+static void StopMonitoring( MkTaskId_t   taskId,
+                            MkIntParam_t *pParam );
 
 /* ハードウェア割込み待ち合わせ */
-static void WaitInterrupt( MkTaskId_t         taskId,
-                           MkInterruptParam_t *pParam );
+static void Wait( MkTaskId_t   taskId,
+                  MkIntParam_t *pParam );
 
 
 /******************************************************************************/
@@ -111,6 +115,57 @@ static volatile WaitInfo_t gWaitInfo[ WAITINFO_ENTRY_NUM ];
 /******************************************************************************/
 /* グローバル関数定義                                                         */
 /******************************************************************************/
+/******************************************************************************/
+/**
+ * @brief       割込み待ち情報エントリ割り当て
+ * @details     指定したタスクに割込み待ち情報エントリを割り当て、インデックス
+ *              を返す。既に割り当て済みの場合は割当済みエントリのインデックス
+ *              を返す。
+ * 
+ * @param[in]   taskId タスクID
+ * 
+ * @return      割込み待ち情報インデックス
+ * @retval      WAITINFO_ENTRY_NUM     空きエントリ無し
+ * @retval      WAITINFO_ENTRY_NUM以外 割込み待ち情報インデックス
+ */
+/******************************************************************************/
+static uint32_t AllocWaitInfo( MkTaskId_t taskId )
+{
+    uint32_t index;     /* 割込み待ち情報インデックス */
+    uint32_t free;      /* 空きエントリインデックス   */
+    
+    /* 初期化 */
+    free = WAITINFO_ENTRY_NUM;
+    
+    /* 割込み待ち情報エントリ毎に繰り返し */
+    for ( index = 0; index < WAITINFO_ENTRY_NUM; index++ ) {
+        /* タスクID判定 */
+        if ( gWaitInfo[ index ].taskId == taskId ) {
+            /* 一致 */
+            
+            return index;
+            
+        } else if ( gWaitInfo[ index ].taskId == MK_CONFIG_TASKID_NULL ) {
+            /* 空きエントリ */
+            
+            free = index;
+        }
+    }
+    
+    /* 空きエントリ有無判定 */
+    if ( free != WAITINFO_ENTRY_NUM ) {
+        /* 空きエントリ有り */
+        
+        /* 割当て */
+        gWaitInfo[ free ].taskId = taskId;
+        
+        return free;
+    }
+    
+    return WAITINFO_ENTRY_NUM;
+}
+
+
 /******************************************************************************/
 /**
  * @brief       ハードウェア割込み制御初期化
@@ -184,7 +239,7 @@ void IntMngCtrlInit( void )
  */
 /******************************************************************************/
 static bool CheckAuthority( MkTaskId_t taskId,
-                            uint32_t   irqNo,
+                            uint8_t    irqNo,
                             uint32_t   *pIndex )
 {
     uint32_t index;     /* 割込み待ち情報インデックス */
@@ -226,8 +281,8 @@ static bool CheckAuthority( MkTaskId_t taskId,
  * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-static void Complete( MkTaskId_t         taskId,
-                      MkInterruptParam_t *pParam )
+static void Complete( MkTaskId_t   taskId,
+                      MkIntParam_t *pParam )
 {
     bool authority;     /* 制御権限 */
     
@@ -239,8 +294,8 @@ static void Complete( MkTaskId_t         taskId,
         /* 権限無し */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_UNAUTHORIZED;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
         
         return;
     }
@@ -249,8 +304,8 @@ static void Complete( MkTaskId_t         taskId,
     IntMngPicEoi( pParam->irqNo );
     
     /* 戻り値設定 */
-    pParam->ret   = MK_INTERRUPT_RET_SUCCESS;
-    pParam->errNo = MK_INTERRUPT_ERR_NONE;
+    pParam->ret   = MK_INT_RET_SUCCESS;
+    pParam->errNo = MK_INT_ERR_NONE;
     
     return;
 }
@@ -265,8 +320,8 @@ static void Complete( MkTaskId_t         taskId,
  * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-static void Disable( MkTaskId_t         taskId,
-                     MkInterruptParam_t *pParam )
+static void Disable( MkTaskId_t   taskId,
+                     MkIntParam_t *pParam )
 {
     bool authority;     /* 制御権限 */
     
@@ -278,8 +333,8 @@ static void Disable( MkTaskId_t         taskId,
         /* 権限無し */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_UNAUTHORIZED;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
         
         return;
     }
@@ -288,8 +343,8 @@ static void Disable( MkTaskId_t         taskId,
     IntMngPicDenyIrq( pParam->irqNo );
     
     /* 戻り値設定 */
-    pParam->ret   = MK_INTERRUPT_RET_SUCCESS;
-    pParam->errNo = MK_INTERRUPT_ERR_NONE;
+    pParam->ret   = MK_INT_RET_SUCCESS;
+    pParam->errNo = MK_INT_ERR_NONE;
     
     return;
 }
@@ -304,8 +359,8 @@ static void Disable( MkTaskId_t         taskId,
  * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-static void Enable( MkTaskId_t         taskId,
-                    MkInterruptParam_t *pParam )
+static void Enable( MkTaskId_t   taskId,
+                    MkIntParam_t *pParam )
 {
     bool authority;     /* 制御権限 */
     
@@ -317,8 +372,8 @@ static void Enable( MkTaskId_t         taskId,
         /* 権限無し */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_UNAUTHORIZED;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
         
         return;
     }
@@ -327,8 +382,8 @@ static void Enable( MkTaskId_t         taskId,
     IntMngPicAllowIrq( pParam->irqNo );
     
     /* 戻り値設定 */
-    pParam->ret   = MK_INTERRUPT_RET_SUCCESS;
-    pParam->errNo = MK_INTERRUPT_ERR_NONE;
+    pParam->ret   = MK_INT_RET_SUCCESS;
+    pParam->errNo = MK_INT_ERR_NONE;
     
     return;
 }
@@ -337,24 +392,18 @@ static void Enable( MkTaskId_t         taskId,
 /******************************************************************************/
 /**
  * @brief       割込み待ち情報インデックス取得
- * @details     指定したタスクの割込み待ち情報インデックスを取得する。該当する
- *              割込み待ち情報が無い場合、空きエントリを指定したタスク用に割当
- *              ててそのインデックスを取得する。
+ * @details     指定したタスクの割込み待ち情報インデックスを取得する。
  * 
  * @param[in]   taskId タスクID
  * 
  * @return      割込み待ち情報インデックス
- * @retval      WAITINFO_ENTRY_NUM     空きエントリ無し
+ * @retval      WAITINFO_ENTRY_NUM     エントリ無し
  * @retval      WAITINFO_ENTRY_NUM以外 割込み待ち情報インデックス
  */
 /******************************************************************************/
 static uint32_t getWaitInfoIdx( MkTaskId_t taskId )
 {
-    uint32_t index;     /* 割込み待ち情報インデックス */
-    uint32_t free;      /* 空きエントリインデックス   */
-    
-    /* 初期化 */
-    free = WAITINFO_ENTRY_NUM;
+    uint32_t index; /* 割込み待ち情報インデックス */
     
     /* 割込み待ち情報エントリ毎に繰り返し */
     for ( index = 0; index < WAITINFO_ENTRY_NUM; index++ ) {
@@ -363,22 +412,7 @@ static uint32_t getWaitInfoIdx( MkTaskId_t taskId )
             /* 一致 */
             
             return index;
-            
-        } else if ( gWaitInfo[ index ].taskId == MK_CONFIG_TASKID_NULL ) {
-            /* 空きエントリ */
-            
-            free = index;
         }
-    }
-    
-    /* 空きエントリ有無判定 */
-    if ( free != WAITINFO_ENTRY_NUM ) {
-        /* 空きエントリ有り */
-        
-        /* 割当て */
-        gWaitInfo[ free ].taskId = taskId;
-        
-        return free;
     }
     
     return WAITINFO_ENTRY_NUM;
@@ -397,30 +431,16 @@ static uint32_t getWaitInfoIdx( MkTaskId_t taskId )
 static void HdlSwInt( uint32_t        intNo,
                       IntMngContext_t context )
 {
-    uint8_t            type;        /* プロセスタイプ */
-    MkTaskId_t         taskId;      /* タスクID       */
-    MkInterruptParam_t *pParam;     /* パラメータ     */
+    uint8_t      type;      /* プロセスタイプ */
+    MkTaskId_t   taskId;    /* タスクID       */
+    MkIntParam_t *pParam;   /* パラメータ     */
     
     /* 初期化 */
-    pParam = ( MkInterruptParam_t * ) context.genReg.esi;
+    pParam = ( MkIntParam_t * ) context.genReg.esi;
     
     /* パラメータチェック */
     if ( pParam == NULL ) {
         /* 不正 */
-        
-        return;
-    }
-    
-    /* IRQ番号範囲チェック */
-    if ( ( pParam->irqNo >= I8259A_IRQ_NUM ) ||
-         ( pParam->irqNo == I8259A_IRQ0    ) ||     /* PIT */
-         ( pParam->irqNo == I8259A_IRQ2    ) ||     /* PIC */
-         ( pParam->irqNo == I8259A_IRQ8    )    ) { /* RTC */
-        /* 範囲外 */
-        
-        /* エラー番号 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_PARAM_IRQNO;
         
         return;
     }
@@ -436,39 +456,39 @@ static void HdlSwInt( uint32_t        intNo,
         /* 非ドライバプロセス */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_UNAUTHORIZED;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
         
         return;
     }
     
     /* 機能ID判定 */
-    if ( pParam->funcId == MK_INTERRUPT_FUNCID_START_MONITORING ) {
+    if ( pParam->funcId == MK_INT_FUNCID_START_MONITORING ) {
         /* ハードウェア割込み監視開始 */
         
         StartMonitoring( taskId, pParam );
         
-    } else if ( pParam->funcId == MK_INTERRUPT_FUNCID_STOP_MONITORING ) {
+    } else if ( pParam->funcId == MK_INT_FUNCID_STOP_MONITORING ) {
         /* ハードウェア割込み監視終了 */
         
         StopMonitoring( taskId, pParam );
         
-    } else if ( pParam->funcId == MK_INTERRUPT_FUNCID_WAIT ) {
+    } else if ( pParam->funcId == MK_INT_FUNCID_WAIT ) {
         /* ハードウェア割込み待ち合わせ */
         
-        WaitInterrupt( taskId, pParam );
+        Wait( taskId, pParam );
         
-    } else if ( pParam->funcId == MK_INTERRUPT_FUNCID_COMPLETE ) {
+    } else if ( pParam->funcId == MK_INT_FUNCID_COMPLETE ) {
         /* ハードウェア割込み完了 */
         
         Complete( taskId, pParam );
         
-    } else if ( pParam->funcId == MK_INTERRUPT_FUNCID_ENABLE ) {
+    } else if ( pParam->funcId == MK_INT_FUNCID_ENABLE ) {
         /* ハードウェア割込み有効化 */
         
         Enable( taskId, pParam );
         
-    } else if ( pParam->funcId == MK_INTERRUPT_FUNCID_DISABLE ) {
+    } else if ( pParam->funcId == MK_INT_FUNCID_DISABLE ) {
         /* ハードウェア割込み無効化 */
         
         Disable( taskId, pParam );
@@ -477,8 +497,8 @@ static void HdlSwInt( uint32_t        intNo,
         /* 不明 */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_INTERRUPT_ERR_PARAM_FUNCID; /* エラー番号 */
+        pParam->ret   = MK_INT_RET_FAILURE;      /* 戻り値     */
+        pParam->errNo = MK_INT_ERR_PARAM_FUNCID; /* エラー番号 */
     }
     
     return;
@@ -499,11 +519,11 @@ static void HdlSwInt( uint32_t        intNo,
 static void HdlHwInt( uint32_t        intNo,
                       IntMngContext_t context )
 {
-    uint32_t irqNo;     /* IRQ番号                    */
+    uint8_t  irqNo;     /* IRQ番号                    */
     uint32_t index;     /* 割込み待ち情報インデックス */
-    
+    DEBUG_LOG( "%s() start. intNo=%#X", __func__, intNo );
     /* IRQ番号算出 */
-    irqNo = intNo - INTMNG_PIC_VCTR_BASE;
+    irqNo = ( uint8_t ) ( intNo - INTMNG_PIC_VCTR_BASE );
     
     /* 割込み待ち情報インデックス取得 */
     index = gMonitoringInfo.waitInfoIdx[ irqNo ];
@@ -539,24 +559,38 @@ static void HdlHwInt( uint32_t        intNo,
  * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-static void StartMonitoring( MkTaskId_t         taskId,
-                             MkInterruptParam_t *pParam )
+static void StartMonitoring( MkTaskId_t   taskId,
+                             MkIntParam_t *pParam )
 {
     uint32_t index;     /* 割込み待ち情報インデックス */
+    
+    /* IRQ番号範囲チェック */
+    if ( ( pParam->irqNo >= I8259A_IRQ_NUM ) ||
+         ( pParam->irqNo == I8259A_IRQ0    ) ||     /* PIT */
+         ( pParam->irqNo == I8259A_IRQ2    ) ||     /* PIC */
+         ( pParam->irqNo == I8259A_IRQ8    )    ) { /* RTC */
+        /* 範囲外 */
+        
+        /* エラー番号 */
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_PARAM_IRQNO;
+        
+        return;
+    }
     
     /* 監視開始済みチェック */
     if ( gMonitoringInfo.waitInfoIdx[ pParam->irqNo ] != WAITINFO_ENTRY_NUM ) {
         /* 開始済み */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_ALREADY_START;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_ALREADY_START;
         
         return;
     }
     
-    /* 割込み待ち情報インデックス取得 */
-    index = getWaitInfoIdx( taskId );
+    /* 割込み待ち情報エントリ割り当て */
+    index = AllocWaitInfo( taskId );
     
     /* 割込み監視情報設定 */
     gMonitoringInfo.waitInfoIdx[ pParam->irqNo ] = index;
@@ -565,8 +599,8 @@ static void StartMonitoring( MkTaskId_t         taskId,
     gWaitInfo[ index ].monitor |= ( 1 << pParam->irqNo );
     
     /* 戻り値設定 */
-    pParam->ret   = MK_INTERRUPT_RET_SUCCESS;
-    pParam->errNo = MK_INTERRUPT_ERR_NONE;
+    pParam->ret   = MK_INT_RET_SUCCESS;
+    pParam->errNo = MK_INT_ERR_NONE;
     
     return;
 }
@@ -581,11 +615,25 @@ static void StartMonitoring( MkTaskId_t         taskId,
  * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-static void StopMonitoring( MkTaskId_t         taskId,
-                            MkInterruptParam_t *pParam )
+static void StopMonitoring( MkTaskId_t   taskId,
+                            MkIntParam_t *pParam )
 {
     bool     authority;     /* 制御権限                   */
     uint32_t index;         /* 割込み待ち情報インデックス */
+    
+    /* IRQ番号範囲チェック */
+    if ( ( pParam->irqNo >= I8259A_IRQ_NUM ) ||
+         ( pParam->irqNo == I8259A_IRQ0    ) ||     /* PIT */
+         ( pParam->irqNo == I8259A_IRQ2    ) ||     /* PIC */
+         ( pParam->irqNo == I8259A_IRQ8    )    ) { /* RTC */
+        /* 範囲外 */
+        
+        /* エラー番号 */
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_PARAM_IRQNO;
+        
+        return;
+    }
     
     /* 制御権限チェック */
     authority = CheckAuthority( taskId, pParam->irqNo, &index );
@@ -595,8 +643,8 @@ static void StopMonitoring( MkTaskId_t         taskId,
         /* 権限無し */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_UNAUTHORIZED;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
         
         return;
     }
@@ -617,8 +665,8 @@ static void StopMonitoring( MkTaskId_t         taskId,
     gMonitoringInfo.waitInfoIdx[ pParam->irqNo ] = WAITINFO_ENTRY_NUM;
     
     /* 戻り値設定 */
-    pParam->ret   = MK_INTERRUPT_RET_SUCCESS;
-    pParam->errNo = MK_INTERRUPT_ERR_NONE;
+    pParam->ret   = MK_INT_RET_SUCCESS;
+    pParam->errNo = MK_INT_ERR_NONE;
     
     return;
 }
@@ -634,22 +682,21 @@ static void StopMonitoring( MkTaskId_t         taskId,
  * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-static void WaitInterrupt( MkTaskId_t         taskId,
-                           MkInterruptParam_t *pParam )
+static void Wait( MkTaskId_t   taskId,
+                  MkIntParam_t *pParam )
 {
-    bool     authority;     /* 制御権限                   */
-    uint32_t index;         /* 割込み待ち情報インデックス */
+    uint32_t index; /* 割込み待ち情報インデックス */
     
-    /* 制御権限チェック */
-    authority = CheckAuthority( taskId, pParam->irqNo, &index );
+    /* 割込み待ち情報インデックス取得 */
+    index = getWaitInfoIdx( taskId );
     
-    /* 制御権限チェック結果判定 */
-    if ( authority == false ) {
-        /* 権限無し */
+    /* 取得結果判定 */
+    if ( index == WAITINFO_ENTRY_NUM ) {
+        /* 該当エントリ無し */
         
         /* エラー設定 */
-        pParam->ret   = MK_INTERRUPT_RET_FAILURE;
-        pParam->errNo = MK_INTERRUPT_ERR_UNAUTHORIZED;
+        pParam->ret   = MK_INT_RET_FAILURE;
+        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
         
         return;
     }
@@ -669,8 +716,8 @@ static void WaitInterrupt( MkTaskId_t         taskId,
     }
     
     /* 戻り値設定 */
-    pParam->ret   = MK_INTERRUPT_RET_SUCCESS;
-    pParam->errNo = MK_INTERRUPT_ERR_NONE;
+    pParam->ret   = MK_INT_RET_SUCCESS;
+    pParam->errNo = MK_INT_ERR_NONE;
     pParam->flag  = gWaitInfo[ index ].flag;
     
     /* 割込み待ち情報設定 */

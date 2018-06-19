@@ -184,7 +184,7 @@ static void InByte( MkIoPortParam_t *pParam )
         
         /* エラー設定 */
         pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHRIZED;  /* エラー番号 */
+        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
         
         return;
     }
@@ -230,7 +230,7 @@ static void InWord( MkIoPortParam_t *pParam )
         
         /* エラー設定 */
         pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHRIZED;  /* エラー番号 */
+        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
         
         return;
     }
@@ -276,7 +276,7 @@ static void InDword( MkIoPortParam_t *pParam )
         
         /* エラー設定 */
         pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHRIZED;  /* エラー番号 */
+        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
         
         return;
     }
@@ -322,7 +322,7 @@ static void OutByte( MkIoPortParam_t *pParam )
         
         /* エラー設定 */
         pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHRIZED;  /* エラー番号 */
+        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
         
         return;
     }
@@ -368,7 +368,7 @@ static void OutWord( MkIoPortParam_t *pParam )
         
         /* エラー設定 */
         pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHRIZED;  /* エラー番号 */
+        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
         
         return;
     }
@@ -414,7 +414,7 @@ static void OutDword( MkIoPortParam_t *pParam )
         
         /* エラー設定 */
         pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHRIZED;  /* エラー番号 */
+        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
         
         return;
     }

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2018/05/25 */
+/*                                                                 2018/06/18 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -117,7 +117,7 @@ void ItcCtrlMsgInit( void )
     memset( gMsgBuffer,         0, sizeof ( MsgBuffer_t     ) );
     
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( MK_CONFIG_INTNO_MSGPASSING,   /* 割込み番号     */
+    IntMngHdlSet( MK_CONFIG_INTNO_MESSAGE,      /* 割込み番号     */
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3    );   /* 特権レベル     */
     

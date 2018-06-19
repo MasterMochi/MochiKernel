@@ -1,18 +1,30 @@
 #******************************************************************************#
-#* src/libraries/Makefile                                                     *#
+#* src/libraries/libMk/Makefile                                               *#
 #*                                                                 2018/06/17 *#
-#* Copyright (C) 2016-2018 Mochi.                                             *#
+#* Copyright (C) 2018 Mochi.                                                  *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
 #******************************************************************************#
 # ベースディレクトリsrc/からの相対パス
-CUR_DIR  = libraries
+CUR_DIR   = libraries/libMk
 
-# サブディレクトリ
-SUB_DIRS = libc         \
-           libMLibBasic \
-           libMk
+# バイナリ名
+LIB_NAME  = libMk.a
+
+# ソースコード
+SRCS = MkMsg.c    \
+       MkIoPort.c \
+       MkInt.c
+
+# Cフラグ
+CFLAGS = -O               \
+         -Wall            \
+         -masm=intel      \
+         -m32             \
+         -static          \
+         -ffreestanding   \
+         -I../../include/
 
 
 #******************************************************************************#
@@ -22,30 +34,46 @@ SUB_DIRS = libc         \
 BASE_DIR  = $(shell pwd | sed -e 's/\/src\/$(subst /,\/,$(CUR_DIR))//')
 # 中間ファイル格納先ディレクトリパス
 OBJS_DIR  = $(BASE_DIR)/build/objs/$(CUR_DIR)
+# ディレクトリリスト
+DIR_LIST  = $(sort $(addprefix $(OBJS_DIR)/, $(dir $(SRCS))))
+
+# オブジェクトファイル
+OBJS      = $(addprefix $(OBJS_DIR)/, $(SRCS:.c=.o))
+
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
 # サブディレクトリも含めたコンパイル
 .PHONY: all
-all:
-ifdef SUB_DIRS
-	@for subdir in $(SUB_DIRS); \
-	do \
-	    $(MAKE) -C $$subdir all; \
-	done
-endif
+all: $(DIR_LIST) $(OBJS_DIR)/$(LIB_NAME) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-ifdef SUB_DIRS
-	@for subdir in $(SUB_DIRS); \
-	do \
-	    $(MAKE) -C $$subdir clean; \
-	done
+	-rm -rf $(OBJS_DIR)/../$(LIB_NAME) $(OBJS_DIR)
+
+
+#******************************************************************************#
+#* 生成規則                                                                   *#
+#******************************************************************************#
+ifdef DIR_LIST
+$(DIR_LIST):
+	mkdir -p $@
 endif
-	-rm -rf $(OBJS_DIR)
+
+# バイナリ
+$(OBJS_DIR)/$(LIB_NAME): $(OBJS) Makefile
+	$(AR) rcs $@ $(OBJS)
+	ln -f -s $@ $(OBJS_DIR)/../$(LIB_NAME)
+
+# アセンブラファイルコンパイル
+$(OBJS_DIR)/%.o: %.s Makefile
+	$(AS) -o $@ $<
+
+# Cファイルコンパイル
+$(OBJS_DIR)/%.o: %.c Makefile
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 
 #******************************************************************************#

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/library.h                                               */
-/*                                                                 2018/06/19 */
+/*                                                                 2018/08/22 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_LIBRARY_H_
@@ -50,6 +50,13 @@ extern int32_t MkIntStopMonitoring( uint8_t  irqNo,
 extern int32_t MkIntWait( uint8_t  *pInt,
                           uint32_t *pErrNo );
 
+/*-----------*/
+/* MkIoMem.c */
+/*-----------*/
+/* I/Oメモリ領域割当 */
+extern void *MkIoMemAlloc( void     *pAddr,
+                           size_t   size,
+                           uint32_t *pErrNo );
 
 /*------------*/
 /* MkIoPort.c */

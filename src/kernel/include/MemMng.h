@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2018/05/11 */
+/*                                                                 2018/08/16 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -11,9 +11,11 @@
 /* 共通ヘッダ */
 #include <stddef.h>
 #include <stdint.h>
+#include <firmware/bios/e820.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/config.h>
-#include <kernel/MochiKernel.h>
+#include <kernel/kernel.h>
+#include <kernel/types.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -48,28 +50,22 @@
 #define MEMMNG_PAGE_TBL_NUM       ( 4096 )              /** PT管理数   */
 #define MEMMNG_PAGE_TBL_FULL      MEMMNG_PAGE_TBL_NUM   /** PT空き無し */
 
-/** メモリ領域情報 */
-typedef struct {
-    void   *pAddr;      /**< 先頭アドレス */
-    size_t size;        /**< メモリサイズ */
-} MemMngAreaInfo_t;
-
 
 /******************************************************************************/
 /* グローバル関数宣言                                                         */
 /******************************************************************************/
 /*--------------*/
-/* MemMngArea.c */
+/* MemMngCtrl.c */
 /*--------------*/
-/* メモリ領域割当 */
-extern void *MemMngAreaAlloc( size_t size );
+/* メモリコピー（仮想->物理） */
+extern void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
+                                      void   *pVAddr,
+                                      size_t size     );
 
-/* メモリ領域解放 */
-extern CmnRet_t MemMngAreaFree( void *pAddr );
-
-/* メモリ領域情報取得 */
-extern CmnRet_t MemMngAreaGetInfo( MemMngAreaInfo_t *pInfo,
-                                   uint32_t         type    );
+/* メモリ設定 */
+extern void MemMngCtrlSet( void    *pPAddr,
+                           uint8_t value,
+                           size_t  size     );
 
 
 /*-------------*/
@@ -89,9 +85,28 @@ extern uint16_t MemMngGdtAdd( void    *pBase,
 /* MemMngInit.c */
 /*--------------*/
 /* メモリ管理初期化 */
-extern void MemMngInit( MochiKernelMemoryMap_t *pMap,
-                        size_t                 mapSize );
+extern void MemMngInit( BiosE820Entry_t *pBiosE820,
+                        size_t          biosE820Num,
+                        MkMemMapEntry_t *pMemMap,
+                        size_t          memMapNum    );
 
+
+/*------------*/
+/* MemMngIo.c */
+/*------------*/
+/* I/Oメモリ領域割当 */
+extern void *MemMngIoAlloc( void   *pAddr,
+                            size_t size    );
+
+/* I/Oメモリ領域解放 */
+extern CmnRet_t MemMngIoFree( void *pAddr );
+
+
+/*-------------*/
+/* MemMngMap.c */
+/*-------------*/
+extern CmnRet_t MemMngMapGetInfo( MkMemMapEntry_t *pInfo,
+                                  uint32_t        type    );
 
 /*--------------*/
 /* MemMngPage.c */
@@ -124,17 +139,36 @@ extern void MemMngPageUnset( uint32_t dirId,
 
 
 /*--------------*/
-/* MemMngCtrl.c */
+/* MemMngPhys.c */
 /*--------------*/
-/* メモリコピー（仮想->物理） */
-extern void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
-                                      void   *pVAddr,
-                                      size_t size     );
+/* 物理メモリ領域割当 */
+extern void *MemMngPhysAlloc( size_t size );
 
-/* メモリ設定 */
-extern void MemMngCtrlSet( void    *pPAddr,
-                           uint8_t value,
-                           size_t  size     );
+/* 物理メモリ領域解放 */
+extern CmnRet_t MemMngPhysFree( void *pAddr );
+
+
+/*--------------*/
+/* MemMngVirt.c */
+/*--------------*/
+/* 仮想メモリ領域割当 */
+extern void *MemMngVirtAlloc( MkPid_t pid,
+                              size_t  size );
+
+/* 指定仮想メモリ領域割当 */
+extern void *MemMngVirtAllocSpecified( MkPid_t pid,
+                                       void    *pAddr,
+                                       size_t  size    );
+
+/* 仮想メモリ領域管理終了 */
+extern CmnRet_t MemMngVirtEnd( MkPid_t pid );
+
+/* 仮想メモリ領域解放 */
+extern CmnRet_t MemMngVirtFree( MkPid_t pid,
+                                void    *pAddr );
+
+/* 仮想メモリ領域管理開始 */
+extern CmnRet_t MemMngVirtStart( MkPid_t pid );
 
 
 /******************************************************************************/

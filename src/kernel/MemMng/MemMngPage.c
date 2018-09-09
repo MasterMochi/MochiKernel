@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2017/06/16 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/08/16 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -34,10 +34,6 @@
 #else
 #define DEBUG_LOG( ... )
 #endif
-
-/* テーブル使用フラグ */
-#define PAGE_UNUSED ( 0 )   /** 未使用テーブル */
-#define PAGE_USED   ( 1 )   /** 使用中テーブル */
 
 /** ページ管理テーブル構造体 */
 typedef struct {
@@ -107,7 +103,7 @@ uint32_t MemMngPageAllocDir( void )
     /* 1ページディレクトリ毎に繰り返し */
     for ( id = MEMMNG_PAGE_DIR_ID_MIN; id < MEMMNG_PAGE_DIR_NUM; id++ ) {
         /* 使用中判定 */
-        if ( gPageMngTbl.usedDir[ id ] == PAGE_UNUSED ) {
+        if ( gPageMngTbl.usedDir[ id ] == CMN_UNUSED ) {
             /* 未使用 */
             
             /* ページディレクトリ初期化 */
@@ -116,7 +112,7 @@ uint32_t MemMngPageAllocDir( void )
                     sizeof ( IA32PagingDir_t )            );
             
             /* ページ使用中設定 */
-            gPageMngTbl.usedDir[ id ] = PAGE_USED;
+            gPageMngTbl.usedDir[ id ] = CMN_USED;
             
             break;
         }
@@ -158,7 +154,7 @@ CmnRet_t MemMngPageFreeDir( uint32_t id )
     }
     
     /* 使用中判定 */
-    if ( gPageMngTbl.usedDir[ id ] == PAGE_UNUSED ) {
+    if ( gPageMngTbl.usedDir[ id ] == CMN_UNUSED ) {
         /* 未使用 */
         
         /* デバッグトレースログ出力 */
@@ -257,7 +253,7 @@ void MemMngPageInit( void )
     memset( gPageTbl,     0, sizeof ( gPageTbl    ) );
     
     /* アイドルプロセス用ページディレクトリ設定 */
-    gPageMngTbl.usedDir[ MEMMNG_PAGE_DIR_ID_IDLE ] = PAGE_USED;
+    gPageMngTbl.usedDir[ MEMMNG_PAGE_DIR_ID_IDLE ] = CMN_USED;
     
     /* ページマッピングデフォルト設定 */
     ret = PageSetDefault( MEMMNG_PAGE_DIR_ID_IDLE );
@@ -336,7 +332,7 @@ CmnRet_t MemMngPageSet( uint32_t dirId,
     ret = CMN_FAILURE;
     
     /* 使用中判定 */
-    if ( gPageMngTbl.usedDir[ dirId ] == PAGE_UNUSED ) {
+    if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
         /* 未使用 */
         
         /* デバッグトレースログ出力 */
@@ -396,7 +392,7 @@ void MemMngPageUnset( uint32_t dirId,
                size );
     
     /* 使用中判定 */
-    if ( gPageMngTbl.usedDir[ dirId ] == PAGE_UNUSED ) {
+    if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
         /* 未使用 */
         
         /* デバッグトレースログ出力 */
@@ -446,14 +442,14 @@ static uint32_t PageAllocTbl( void )
     /* 1ページテーブル毎に繰り返し */
     for ( id = 0; id < MEMMNG_PAGE_TBL_NUM; id++ ) {
         /* 使用中判定 */
-        if ( gPageMngTbl.usedTbl[ id ] == PAGE_UNUSED ) {
+        if ( gPageMngTbl.usedTbl[ id ] == CMN_UNUSED ) {
             /* 未使用 */
             
             /* ページテーブル初期化 */
             memset( &gPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );
             
             /* ページ使用中設定 */
-            gPageMngTbl.usedTbl[ id ] = PAGE_USED;
+            gPageMngTbl.usedTbl[ id ] = CMN_USED;
             
             break;
         }
@@ -493,7 +489,7 @@ static CmnRet_t PageFreeTbl( uint32_t id )
     }
     
     /* 使用中判定 */
-    if ( gPageMngTbl.usedTbl[ id ] == PAGE_UNUSED ) {
+    if ( gPageMngTbl.usedTbl[ id ] == CMN_UNUSED ) {
         /* 未使用 */
         
         /* デバッグトレースログ出力 */
@@ -636,18 +632,18 @@ static CmnRet_t PageSet( uint32_t dirId,
 /******************************************************************************/
 static CmnRet_t PageSetDefault( uint32_t dirId )
 {
-    CmnRet_t         ret;       /* 戻り値         */
-    MemMngAreaInfo_t areaInfo;  /* メモリ領域情報 */
+    CmnRet_t        ret;    /* 戻り値               */
+    MkMemMapEntry_t info;   /* メモリマップ領域情報 */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start. dirId=%u", __func__, dirId );
     
     /* 初期化 */
     ret = CMN_FAILURE;
-    memset( &areaInfo, 0, sizeof ( MemMngAreaInfo_t ) );
+    memset( &info, 0, sizeof ( MkMemMapEntry_t ) );
     
     /* ページテーブル存在チェック */
-    if ( gPageMngTbl.usedDir[ dirId ] == PAGE_UNUSED ) {
+    if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
         /* 存在しない */
         
         /* デバッグトレースログ出力 */
@@ -679,7 +675,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
 #endif
     
     /* カーネル領域情報取得 */
-    ret = MemMngAreaGetInfo( &areaInfo, MOCHIKERNEL_MEMORY_TYPE_KERNEL );
+    ret = MemMngMapGetInfo( &info, MK_MEM_TYPE_KERNEL );
     
     /* 取得結果判定 */
     if ( ret != CMN_SUCCESS ) {
@@ -693,9 +689,41 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     
     /* カーネル領域マッピング */
     ret = MemMngPageSet( dirId,                 /* ページディレクトリID    */
-                         areaInfo.pAddr,        /* 仮想アドレス            */
-                         areaInfo.pAddr,        /* 物理アドレス            */
-                         areaInfo.size,         /* サイズ                  */
+                         info.pAddr,            /* 仮想アドレス            */
+                         info.pAddr,            /* 物理アドレス            */
+                         info.size,             /* サイズ                  */
+                         IA32_PAGING_G_YES,     /* グローバルページ属性    */
+                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
+                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
+    
+    /* マッピング結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        
+        return CMN_FAILURE;
+    }
+    
+    /* プロセスイメージ領域情報取得 */
+    ret = MemMngMapGetInfo( &info, MK_MEM_TYPE_PROCIMG );
+    
+    /* 取得結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        
+        return CMN_FAILURE;
+    }
+    
+    /* プロセスイメージ領域マッピング */
+    ret = MemMngPageSet( dirId,                 /* ページディレクトリID    */
+                         info.pAddr,            /* 仮想アドレス            */
+                         info.pAddr,            /* 物理アドレス            */
+                         info.size,             /* サイズ                  */
                          IA32_PAGING_G_YES,     /* グローバルページ属性    */
                          IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
                          IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */

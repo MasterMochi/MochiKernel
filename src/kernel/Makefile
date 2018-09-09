@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2018/06/13 *#
+#*                                                                 2018/08/22 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -21,6 +21,10 @@ SRCS = InitCtrl/InitCtrlInit.c \
        MemMng/MemMngArea.c     \
        MemMng/MemMngPage.c     \
        MemMng/MemMngCtrl.c     \
+       MemMng/MemMngMap.c      \
+       MemMng/MemMngPhys.c     \
+       MemMng/MemMngIo.c       \
+       MemMng/MemMngVirt.c     \
        TaskMng/TaskMngInit.c   \
        TaskMng/TaskMngTss.c    \
        TaskMng/TaskMngTask.c   \
@@ -37,7 +41,8 @@ SRCS = InitCtrl/InitCtrlInit.c \
        ItcCtrl/ItcCtrlInit.c   \
        ItcCtrl/ItcCtrlMsg.c    \
        IoCtrl/IoCtrlInit.c     \
-       IoCtrl/IoCtrlPort.c
+       IoCtrl/IoCtrlPort.c     \
+       IoCtrl/IoCtrlMem.c
 
 # Cフラグ
 CFLAGS = -O                 \

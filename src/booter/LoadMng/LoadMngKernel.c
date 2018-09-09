@@ -1,14 +1,14 @@
 /******************************************************************************/
 /* src/booter/LoadMng/LoadMngKernel.c                                         */
-/*                                                                 2017/07/16 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/07/28 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
 #include <stdarg.h>
-#include <kernel/MochiKernel.h>
+#include <kernel/kernel.h>
 #include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
@@ -16,6 +16,7 @@
 #include <Debug.h>
 #include <Driver.h>
 #include <LoadMng.h>
+#include <MemMng.h>
 
 /* 内部モジュールヘッダ */
 #include "LoadMngInit.h"
@@ -46,14 +47,15 @@
 /******************************************************************************/
 void LoadMngKernelLoad( void )
 {
-    uint32_t            size;   /* LBAサイズ              */
-    MochiKernelImgHdr_t header; /* カーネルイメージヘッダ */
+    CmnRet_t   ret;     /* 戻り値                 */
+    uint32_t   size;    /* LBAサイズ              */
+    MkImgHdr_t header;  /* カーネルイメージヘッダ */
     
     /* トレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
     /* 初期化 */
-    size = sizeof ( MochiKernelImgHdr_t ) / 512;
+    size = sizeof ( MkImgHdr_t ) / 512;
     
     /* カーネルイメージヘッダ読込み */
     DriverAtaRead( &header,
@@ -61,9 +63,25 @@ void LoadMngKernelLoad( void )
                    size );
     
     /* カーネル読込み */
-    DriverAtaRead( ( void * ) MOCHIKERNEL_ADDR_ENTRY,
+    DriverAtaRead( ( void * ) MK_ADDR_ENTRY,
                    gLoadMngInitPt[ 1 ].lbaFirstAddr + size,
-                   MLIB_BASIC_ALIGN( header.fileSize, 512 ) / 512);
+                   MLIB_BASIC_ALIGN( header.fileSize, 512 ) / 512 );
+    
+    /* メモリマップリスト設定 */
+    ret = MemMngMapSetList( ( void * ) MK_ADDR_ENTRY,
+                            0x03F00000,
+                            MK_MEM_TYPE_KERNEL        );
+    
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "MemMngMapSetList() failed." );
+        
+        /* アボート */
+        CmnAbort();
+    }
     
     /* トレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

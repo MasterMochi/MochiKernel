@@ -112,6 +112,18 @@ MkPid_t TaskMngProcAdd( uint8_t type,
         if ( gProcTbl[ pid ].used == CMN_UNUSED ) {
             /* 未使用 */
             
+            /* 仮想メモリ領域管理開始 */
+            ret = MemMngVirtStart( pid );
+            
+            /* 管理開始結果判定 */
+            if ( ret == CMN_FAILURE ) {
+                /* 失敗 */
+                
+                /* [TODO] */
+                
+                return MK_CONFIG_TASKID_NULL;
+            }
+            
             /* ページディレクトリ割当 */
             pageDirId = MemMngPageAllocDir();
             
@@ -126,6 +138,17 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                 
                 return MK_CONFIG_PID_NULL;
             }
+            
+            /* 仮想メモリ領域設定 */
+            MemMngVirtAllocSpecified( pid,
+                                      ( void * ) MK_CONFIG_ADDR_BOOTDATA,
+                                      MK_CONFIG_SIZE_BOOTDATA                 );
+            MemMngVirtAllocSpecified( pid,
+                                      ( void * ) MK_CONFIG_ADDR_KERNEL_START,
+                                      MK_CONFIG_SIZE_KERNEL                   );
+            MemMngVirtAllocSpecified( pid,
+                                      ( void * ) MK_CONFIG_ADDR_APL_START,
+                                      MK_CONFIG_SIZE_APL                      );
             
             /* ELFファイル読込 */
             ret = TaskMngElfLoad( pAddr, size, pageDirId, &pEntryPoint );
@@ -315,17 +338,22 @@ void TaskMngProcStart( void )
     }
     
     /* iretd命令用スタック設定 */
-    IA32InstructionPush( dataSegSel );              /* ss     */
-    IA32InstructionPush( ( uint32_t ) pStack - 16 );/* esp    */
-    IA32InstructionPush( 0x00003202 );              /* eflags */
-    IA32InstructionPush( codeSegSel );              /* cs     */
-    IA32InstructionPush( ( uint32_t ) pEntryPoint );/* eip    */
+    __asm__ __volatile__ ( "push %0\n"              /* ss     */
+                           "push %1\n"              /* esp    */
+                           "push 0x00003202\n"      /* eflags */
+                           "push %2\n"              /* cs     */
+                           "push %3\n"              /* eip    */
+                           :
+                           : "a" ( dataSegSel ),
+                             "b" ( ( uint32_t ) pStack - 16 ),
+                             "c" ( codeSegSel ),
+                             "d" ( ( uint32_t ) pEntryPoint )  );
     
     /* セグメントレジスタ設定用スタック設定 */
-    IA32InstructionPush( dataSegSel );              /* gs */
-    IA32InstructionPush( dataSegSel );              /* fs */
-    IA32InstructionPush( dataSegSel );              /* es */
-    IA32InstructionPush( dataSegSel );              /* ds */
+    __asm__ __volatile__ ( "push eax\n"             /* gs */
+                           "push eax\n"             /* fs */
+                           "push eax\n"             /* es */
+                           "push eax\n" );          /* ds */
     
     /* 汎用レジスタ設定用スタック設定 */
     IA32InstructionPush( 0 );                       /* eax           */

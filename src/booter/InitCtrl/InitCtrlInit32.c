@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/booter/InitCtrl/InitCtrlInit32.c                                       */
-/*                                                                 2017/07/27 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/07/18 */
+/* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -9,7 +9,7 @@
 /* 共通ヘッダ */
 #include <stddef.h>
 #include <hardware/IA32/IA32Instruction.h>
-#include <kernel/MochiKernel.h>
+#include <kernel/kernel.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -17,6 +17,7 @@
 #include <Driver.h>
 #include <IntMng.h>
 #include <LoadMng.h>
+#include <MemMng.h>
 
 
 /******************************************************************************/
@@ -37,7 +38,7 @@
 /* 変数定義                                                                   */
 /******************************************************************************/
 /* カーネルメイン関数 */
-void ( *MochiKernelMain )( void ) = ( void * ) MOCHIKERNEL_ADDR_ENTRY;
+void ( *MochiKernelMain )( void ) = ( void * ) MK_ADDR_ENTRY;
 
 
 /******************************************************************************/
@@ -73,6 +74,9 @@ void InitCtrlInit32( void )
         CmnAbort();
     }
     
+    /* メモリ管理初期化 */
+    MemMngInit();
+    
     /* 割り込み管理初期化 */
     IntMngInit();
     
@@ -96,8 +100,25 @@ void InitCtrlInit32( void )
     IA32InstructionCli();
     IntMngPicDisable();
     
+    /* ブートデータ領域設定 */
+    ret = MemMngMapSetList( 0, 4096, MK_MEM_TYPE_BOOTDATA );
+    
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "MemMngMapSetList() failed." );
+        
+        /* アボート */
+        CmnAbort();
+    }
+    
+    /* メモリマップ設定 */
+    MemMngMapSet();
+    
     /* スタックポインタ再設定 */
-    IA32InstructionSetEsp( MOCHIKERNEL_ADDR_STACK );
+    IA32InstructionSetEsp( MK_ADDR_STACK + MK_SIZE_STACK );
     
     MochiKernelMain();
     

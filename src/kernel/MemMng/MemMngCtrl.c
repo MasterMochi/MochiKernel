@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngCtrl.c                                             */
-/*                                                                 2018/05/11 */
+/*                                                                 2018/09/11 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -56,7 +56,8 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
                                void   *pVAddr,
                                size_t size     )
 {
-    size_t   count;     /* コピーサイズ         */
+    size_t   mapSize;   /* マッピングサイズ     */
+    size_t   copySize;  /* コピーサイズ         */
     uint32_t pageDirId; /* ページディレクトリID */
     uint32_t idx;       /* インデックス         */
     CmnRet_t ret;       /* 関数戻り値           */
@@ -78,21 +79,27 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
             /* 次コピー有 */
             
             /* コピーサイズ設定 */
-            count = MK_CONFIG_SIZE_KERNEL_MAP;
+            copySize = MK_CONFIG_SIZE_KERNEL_MAP;
+            
+            /* マッピングサイズ設定 */
+            mapSize = copySize;
             
         } else {
             /* 次コピー無 */
             
             /* コピーサイズ設定 */
-            count = MLIB_BASIC_ALIGN( size - idx,
-                                      IA32_PAGING_PAGE_SIZE );
+            copySize = size - idx;
+            
+            /* マッピングサイズ設定 */
+            mapSize = MLIB_BASIC_ALIGN( copySize,
+                                        IA32_PAGING_PAGE_SIZE );
         }
         
         /* ページマッピング設定 */
         ret = MemMngPageSet( pageDirId,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
-                             count,
+                             mapSize,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW );
@@ -105,7 +112,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
         }
         
         /* コピー */
-        memcpy( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, pVAddr + idx, count );
+        memcpy( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, pVAddr + idx, copySize );
     }
     
     /* ページマッピング解除 */
@@ -136,7 +143,8 @@ void MemMngCtrlSet( void    *pPAddr,
                     uint8_t value,
                     size_t  size     )
 {
-    size_t   count;     /* コピーサイズ         */
+    size_t   mapSize;   /* マッピングサイズ     */
+    size_t   setSize;   /* 設定サイズ           */
     uint32_t pageDirId; /* ページディレクトリID */
     uint32_t idx;       /* インデックス         */
     CmnRet_t ret;       /* 関数戻り値           */
@@ -158,21 +166,26 @@ void MemMngCtrlSet( void    *pPAddr,
             /* 次設定有 */
             
             /* サイズ設定 */
-            count = MK_CONFIG_SIZE_KERNEL_MAP;
+            setSize = MK_CONFIG_SIZE_KERNEL_MAP;
+            /* マッピングサイズ設定 */
+            mapSize = setSize;
             
         } else {
             /* 次設定無 */
             
             /* サイズ設定 */
-            count = MLIB_BASIC_ALIGN( size - idx,
-                                      IA32_PAGING_PAGE_SIZE );
+            setSize = size - idx;
+            
+            /* マッピングサイズ設定 */
+            mapSize = MLIB_BASIC_ALIGN( setSize,
+                                        IA32_PAGING_PAGE_SIZE );
         }
         
         /* ページマッピング設定 */
         ret = MemMngPageSet( pageDirId,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
-                             count,
+                             mapSize,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW );
@@ -185,7 +198,7 @@ void MemMngCtrlSet( void    *pPAddr,
         }
         
         /* メモリ設定 */
-        memset( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, value, count );
+        memset( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, value, setSize );
     }
     
     /* ページマッピング解除 */

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngHdl.c                                              */
-/*                                                                 2018/05/19 */
+/*                                                                 2018/09/11 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -804,20 +804,25 @@ static void HdlIgnore( uint32_t        intNo,
     DEBUG_LOG( "%s() intNo=%d", __func__, intNo );
     
     /* [TODO]デバッグ用 */
-    DEBUG_LOG( " edi    = %0#10x", context.genReg.edi                      );
-    DEBUG_LOG( " esi    = %0#10x", context.genReg.esi                      );
-    DEBUG_LOG( " ebp    = %0#10x", context.genReg.ebp                      );
-    DEBUG_LOG( " esp    = %0#10x", context.genReg.esp                      );
-    DEBUG_LOG( " ebx    = %0#10x", context.genReg.ebx                      );
-    DEBUG_LOG( " edx    = %0#10x", context.genReg.edx                      );
-    DEBUG_LOG( " ecx    = %0#10x", context.genReg.ecx                      );
-    DEBUG_LOG( " eax    = %0#10x", context.genReg.eax                      );
-    DEBUG_LOG( " err    = %0#10x", *( ( uint32_t * )( &context.errCode ) ) );
-    DEBUG_LOG( " eip    = %0#10x", context.iretdInfo.eip                   );
-    DEBUG_LOG( " cs     = %0#10x", context.iretdInfo.cs                    );
-    DEBUG_LOG( " eflags = %0#10x", context.iretdInfo.eflags                );
-    DEBUG_LOG( " esp    = %0#10x", context.iretdInfo.esp                   );
-    DEBUG_LOG( " ss     = %0#10x", context.iretdInfo.ss                    );
+    DEBUG_LOG( " edi    = %0#10x, esi    = %0#10x, ebp    = %0#10x",
+               context.genReg.edi,
+               context.genReg.esi,
+               context.genReg.ebp                                    );
+    DEBUG_LOG( " esp    = %0#10x, ebx    = %0#10x, edx    = %0#10x",
+               context.genReg.esp,
+               context.genReg.ebx,
+               context.genReg.edx                                    );
+    DEBUG_LOG( " ecx    = %0#10x, eax    = %0#10x, err    = %0#10x",
+               context.genReg.ecx,
+               context.genReg.eax,
+               *( ( uint32_t * )( &context.errCode ) )               );
+    DEBUG_LOG( " eip    = %0#10x, cs     = %0#10x, eflags = %0#10x",
+               context.iretdInfo.eip,
+               context.iretdInfo.cs,
+               context.iretdInfo.eflags                              );
+    DEBUG_LOG( " esp    = %0#10x, ss     = %0#10x",
+               context.iretdInfo.esp,
+               context.iretdInfo.ss                                  );
     while( 1 );
     
     /* 処理無し */

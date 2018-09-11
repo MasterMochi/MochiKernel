@@ -118,7 +118,7 @@ void LoadMngProcLoad( void )
     
     /* メモリマップリスト設定 */
     ret = MemMngMapSetList( ( void * ) MK_ADDR_PROCIMG,
-                            4096*5,//MLIB_BASIC_ALIGN( size * 512, 4096 ),
+                            MLIB_BASIC_ALIGN( size * 512, 4096 ),
                             MK_MEM_TYPE_PROCIMG                   );
     
     /* 設定結果判定 */

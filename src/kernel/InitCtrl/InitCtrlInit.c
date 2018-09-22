@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2018/08/15 */
+/*                                                                 2018/09/23 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -163,10 +163,9 @@ static void InitLoadProcImg( void )
         }
         
         /* プロセス追加 */
-        pid = TaskMngProcAdd(
-                     type,
-                     ( ( void * ) pHeader ) + sizeof ( MkImgHdr_t ),
-                     pHeader->fileSize );
+        pid = TaskMngProcAdd( type,
+                              pAddr,
+                              pHeader->fileSize );
         
         /* プロセス追加結果判定 */
         if ( pid == MK_CONFIG_PID_NULL ) {

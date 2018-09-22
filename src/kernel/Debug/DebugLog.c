@@ -112,12 +112,13 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(ﾒｯｾｰｼﾞ) */
     { CMN_MODULE_IOCTRL_INIT,   "IOC-INIT" },   /* 入出力制御(初期化)       */
     { CMN_MODULE_IOCTRL_PORT,   "IOC-PORT" },   /* 入出力制御(I/Oポート)    */
+    { CMN_MODULE_IOCTRL_MEM,    "IOC-MEM"  },   /* 入出力制御(I/Oメモリ)    */
     { 0,                        "UNKNOWN " }  };/* 終端                     */
-#endif
 
 /** 数字変換表 */
 static char gNumTransTbl[ 2 ][ 17 ] = { "0123456789abcdef",
                                         "0123456789ABCDEF"  };
+#endif
 
 /** ログ管理テーブル */
 static logTbl_t gLogTbl;
@@ -200,6 +201,7 @@ void DebugLogInit( void )
 }
 
 
+#ifdef DEBUG_LOG_ENABLE
 /******************************************************************************/
 /**
  * @brief       トレースログ出力
@@ -226,7 +228,8 @@ void DebugLogInit( void )
  *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
  *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ管理)
  *                  - CMN_MODULE_TIMERMNG_INIT タイマ管理(初期化)
- *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理) *                  - CMN_MODULE_ITCCTRL_INIT  タスク間通信制御(初期化)
+ *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理)
+ *                  - CMN_MODULE_ITCCTRL_INIT  タスク間通信制御(初期化)
  *                  - CMN_MODULE_ITCCTRL_MSG   タスク間通信制御(メッセージ制御)
  * @param[in]   lineNum  行番号
  * @param[in]   *pFormat トレースログ
@@ -240,7 +243,6 @@ void DebugLogOutput( uint32_t moduleId,
                      char     *pFormat,
                      ...                )
 {
-#ifdef DEBUG_LOG_ENABLE
     va_list  vaList;    /* 可変長引数リスト         */
     uint32_t row;       /* カーソル行               */
     uint32_t column;    /* カーソル列               */
@@ -301,9 +303,9 @@ void DebugLogOutput( uint32_t moduleId,
     /* 可変長引数リスト解放 */
     va_end( vaList );
     
-#endif
     return;
 }
+#endif
 
 
 /******************************************************************************/

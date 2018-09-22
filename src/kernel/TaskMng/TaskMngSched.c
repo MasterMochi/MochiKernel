@@ -663,11 +663,11 @@ static __attribute__ ( ( noinline ) )
     void SchedSwitchTask( MkTaskId_t nowTaskId,
                           MkTaskId_t nextTaskId )
 {
-    volatile void                 *pKernelStack;    /* カーネルスタック     */
-    volatile uint32_t             pageDirId;        /* ページディレクトリID */
-    volatile IA32PagingPDBR_t     pdbr;             /* PDBR                 */
-    volatile TaskMngTaskContext_t nowContext;       /* 現タスクコンテキスト */
-    volatile TaskMngTaskContext_t nextContext;      /* 次タスクコンテキスト */
+    void                 *pKernelStack;    /* カーネルスタック     */
+    uint32_t             pageDirId;        /* ページディレクトリID */
+    IA32PagingPDBR_t     pdbr;             /* PDBR                 */
+    TaskMngTaskContext_t nowContext;       /* 現タスクコンテキスト */
+    TaskMngTaskContext_t nextContext;      /* 次タスクコンテキスト */
     
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
@@ -692,15 +692,7 @@ static __attribute__ ( ( noinline ) )
     nowContext.eip = ( uint32_t ) SchedSwitchTaskEnd;
     nowContext.esp = IA32InstructionGetEsp();
     nowContext.ebp = IA32InstructionGetEbp();
-    
-    /* TaskMngTaskSetContext( nowTaskId, &nowContext ); */
-    IA32InstructionPush( ( uint32_t ) &nowContext );
-    IA32InstructionPush( nowTaskId );
-    IA32InstructionCall( &TaskMngTaskSetContext );
-    IA32InstructionAddEsp( 2 * 4 );
-    /* [MEMO]                                                                 */
-    /* コンパイラによって、スタックアドレスがズレて本関数呼び出し元へリターン */
-    /* 戻ってこれなくなる為、C言語による関数呼出しは行わずに直接行う。        */
+    TaskMngTaskSetContext( nowTaskId, &nowContext );
     
     /* タスクスイッチ */
     __asm__ __volatile__ ( "mov eax, %0\n"

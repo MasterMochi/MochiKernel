@@ -823,7 +823,10 @@ static void HdlIgnore( uint32_t        intNo,
     DEBUG_LOG( " esp    = %0#10x, ss     = %0#10x",
                context.iretdInfo.esp,
                context.iretdInfo.ss                                  );
-    while( 1 );
+    
+    while( 1 ) {
+        IA32InstructionHlt();
+    }
     
     /* 処理無し */
     

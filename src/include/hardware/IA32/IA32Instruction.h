@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2018/06/17 */
+/*                                                                 2018/09/22 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
@@ -171,6 +171,27 @@ static inline void IA32InstructionInDWord( uint32_t *pValue,
     __asm__ __volatile__ ( "in %0, %1"
                            : "=a" ( *pValue )
                            : "d"  ( portNo  ) );
+    
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       invlpg命令実行
+ * @details     invlpg命令を実行して、指定した仮想アドレスが含まれるページのTLB
+ *              エントリをフラッシュする。
+ * 
+ * @param[in]   *pAddr 仮想アドレス
+ */
+/******************************************************************************/
+static inline void IA32InstructionInvlpg( void *pAddr )
+{
+    /* invlpg命令実行 */
+    __asm__ __volatile__ ( "invlpg [%0]"
+                           :
+                           : "r" ( pAddr )
+                           : "memory"      );
     
     return;
 }

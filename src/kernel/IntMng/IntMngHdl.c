@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMng/IntMngHdl.c                                              */
-/*                                                                 2018/09/11 */
+/*                                                                 2018/10/05 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -17,6 +17,7 @@
 #include <Debug.h>
 #include <MemMng.h>
 #include <IntMng.h>
+#include <TaskMng.h>
 
 /* 内部モジュールヘッダ */
 #include "IntMngIdt.h"
@@ -820,9 +821,10 @@ static void HdlIgnore( uint32_t        intNo,
                context.iretdInfo.eip,
                context.iretdInfo.cs,
                context.iretdInfo.eflags                              );
-    DEBUG_LOG( " esp    = %0#10x, ss     = %0#10x",
+    DEBUG_LOG( " esp    = %0#10x, ss     = %0#10x, taskId = %d",
                context.iretdInfo.esp,
-               context.iretdInfo.ss                                  );
+               context.iretdInfo.ss,
+               TaskMngSchedGetTaskId()                               );
     
     while( 1 ) {
         IA32InstructionHlt();

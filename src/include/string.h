@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/string.h                                                       */
-/*                                                                 2017/03/09 */
+/*                                                                 2018/10/05 */
 /* Copyright (C) 2016-2017 Mochi                                              */
 /******************************************************************************/
 #ifndef _STRING_H_
@@ -17,9 +17,15 @@
 extern void *memcpy( void       *s1,
                      const void *s2,
                      size_t     n    );
+
 extern void *memset( void   *s,
                      int    c,
                      size_t n   );
+
+extern char *strcpy( char       *s1,
+                     const char *s2  );
+
+extern size_t strlen( const char *s );
 
 
 /******************************************************************************/

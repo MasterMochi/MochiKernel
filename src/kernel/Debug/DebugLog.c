@@ -115,10 +115,10 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
 static char gNumTransTbl[ 2 ][ 17 ] = { "0123456789abcdef",
                                         "0123456789ABCDEF"  };
 
+#endif
+
 /** ログ管理テーブル */
 static logTbl_t gLogTbl;
-
-#endif
 
 
 /******************************************************************************/

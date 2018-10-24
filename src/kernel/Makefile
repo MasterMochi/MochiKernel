@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2018/06/13 *#
+#*                                                                 2018/10/20 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -33,6 +33,7 @@ SRCS = InitCtrl/InitCtrlInit.c \
        IntMng/IntMngPic.c      \
        IntMng/IntMngCtrl.c     \
        TimerMng/TimerMngInit.c \
+       TimerMng/TimerMngCtrl.c \
        TimerMng/TimerMngPit.c  \
        ItcCtrl/ItcCtrlInit.c   \
        ItcCtrl/ItcCtrlMsg.c    \
@@ -47,8 +48,7 @@ CFLAGS = -O                 \
          -fno-pic           \
          -ffreestanding     \
          -Iinclude/         \
-         -I../include       \
-         -DDEBUG_LOG_ENABLE
+         -I../include       
 
 # LDフラグ
 LDFLAGS = -melf_i386    \

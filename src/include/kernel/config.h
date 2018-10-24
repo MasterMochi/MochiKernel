@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/config.h                                                */
-/*                                                                 2018/06/18 */
+/*                                                                 2018/10/20 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_CONFIG_H_
@@ -38,23 +38,49 @@
 #define MK_CONFIG_TASKID_NULL                           \
     ( MK_CONFIG_TASKID_MAX + 1 )                        /** 無効タスクID       */
 
-/* 仮想メモリマップ定義 */
-#define MK_CONFIG_ADDR_KERNEL_START ( 0x00100000 )      /** カーネル領域先頭アドレス           */
-#define MK_CONFIG_ADDR_KERNEL_STACK ( 0x3EFFE000 )      /** カーネル用スタック領域先頭アドレス */
-#define MK_CONFIG_SIZE_KERNEL_STACK ( 0x00002000 )      /** カーネル用スタック領域サイズ       */
-#define MK_CONFIG_ADDR_KERNEL_MAP1  ( 0x3F000000 )      /** メモリ制御用領域1先頭アドレス      */
-#define MK_CONFIG_SIZE_KERNEL_MAP1  ( 0x00800000 )      /** メモリ制御用領域1サイズ            */
-#define MK_CONFIG_ADDR_KERNEL_MAP2  ( 0x3F800000 )      /** メモリ制御用領域2先頭アドレス      */
-#define MK_CONFIG_SIZE_KERNEL_MAP2  ( 0x00800000 )      /** メモリ制御用領域2サイズ            */
-#define MK_CONFIG_SIZE_KERNEL_MAP   ( 0x01000000 )      /** メモリ制御用領域全サイズ           */
-#define MK_CONFIG_ADDR_APL_START    ( 0x40000000 )      /** アプリ領域先頭アドレス             */
-#define MK_CONFIG_ADDR_APL_STACK    ( 0xFFFFE000 )      /** アプリ用スタック領域先頭アドレス   */
-#define MK_CONFIG_SIZE_APL_STACK    ( 0x00002000 )      /** アプリ用スタック領域サイズ         */
+/*------*/
+/* tick */
+/*------*/
+/** tick間隔(hz) */
+#define MK_CONFIG_TICK_HZ ( 100 )
 
+/*----------------------*/
+/* 仮想メモリマップ定義 */
+/*----------------------*/
+/** カーネル領域先頭アドレス */
+#define MK_CONFIG_ADDR_KERNEL_START ( MK_ADDR_ENTRY )
+/** カーネル用スタック領域先頭アドレス */
+#define MK_CONFIG_ADDR_KERNEL_STACK ( 0x3EFFE000 )
+/** カーネル用スタック領域サイズ */
+#define MK_CONFIG_SIZE_KERNEL_STACK ( 0x00002000 )
+/** メモリ制御用領域1先頭アドレス */
+#define MK_CONFIG_ADDR_KERNEL_MAP1  ( 0x3F000000 )
+/** メモリ制御用領域1サイズ */
+#define MK_CONFIG_SIZE_KERNEL_MAP1  ( 0x00800000 )
+/** メモリ制御用領域2先頭アドレス */
+#define MK_CONFIG_ADDR_KERNEL_MAP2  ( 0x3F800000 )
+/** メモリ制御用領域2サイズ */
+#define MK_CONFIG_SIZE_KERNEL_MAP2  ( 0x00800000 )
+/** メモリ制御用領域全サイズ */
+#define MK_CONFIG_SIZE_KERNEL_MAP   ( 0x01000000 )
+/** アプリ領域先頭アドレス */
+#define MK_CONFIG_ADDR_APL_START    ( 0x40000000 )
+/** アプリ用スタック領域先頭アドレス */
+#define MK_CONFIG_ADDR_APL_STACK    ( 0xBFFFE000 )
+/** アプリ用スタック領域サイズ */
+#define MK_CONFIG_SIZE_APL_STACK    ( 0x00008000 )
+
+/*------------*/
 /* 割込み番号 */
-#define MK_CONFIG_INTNO_MESSAGE     ( 0x30 )            /** メッセージパッシング割込み番号   */
-#define MK_CONFIG_INTNO_IOPORT      ( 0x31 )            /** I/Oポート制御割込み番号          */
-#define MK_CONFIG_INTNO_INTERRUPT   ( 0x32 )            /** ハードウェア割込み制御割込み番号 */
+/*------------*/
+/** メッセージパッシング割込み番号 */
+#define MK_CONFIG_INTNO_MESSAGE   ( 0x30 )
+/** I/Oポート制御割込み番号 */
+#define MK_CONFIG_INTNO_IOPORT    ( 0x31 )
+/** ハードウェア割込み制御割込み番号 */
+#define MK_CONFIG_INTNO_INTERRUPT ( 0x33 )
+/** タイマ割込み番号 */
+#define MK_CONFIG_INTNO_TIMER     ( 0x34 )
 
 
 /******************************************************************************/

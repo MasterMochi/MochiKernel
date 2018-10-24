@@ -1,6 +1,10 @@
 /******************************************************************************/
 /* src/include/kernel/library.h                                               */
+<<<<<<< Updated upstream
 /*                                                                 2018/06/19 */
+=======
+/*                                                                 2018/10/22 */
+>>>>>>> Stashed changes
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_LIBRARY_H_
@@ -14,6 +18,7 @@
 #include <kernel/interrupt.h>
 #include <kernel/ioport.h>
 #include <kernel/message.h>
+#include <kernel/timer.h>
 #include <kernel/types.h>
 
 
@@ -104,6 +109,13 @@ extern int32_t MkMsgSend( MkTaskId_t dst,
                           void       *pMsg,
                           size_t     size,
                           uint32_t   *pErrNo );
+
+/*-----------*/
+/* MkTimer.c */
+/*-----------*/
+/* スリープ */
+extern int32_t MkTimerSleep( uint32_t usec,
+                             uint32_t *pErrNo );
 
 
 /******************************************************************************/

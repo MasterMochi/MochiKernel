@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/MemMng/MemMngMap.c                                              */
-/*                                                                 2018/08/17 */
+/*                                                                 2018/10/28 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -67,34 +67,34 @@ static MLibBasicList_t gMemMapList;
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
 /* BIOS-E820メモリマップエントリアライメント */
-void AlignBiosE820Entry( BiosE820Entry_t *pInfo );
-
-/* メモリマップ初期化 */
-void InitMemMap( void );
+static void AlignBiosE820Entry( BiosE820Entry_t *pInfo );
 
 /* メモリマップリスト初期化 */
-void InitMemMapList( void );
+static void InitMemMapList( void );
 
 /* BIOS-E820メモリマップデバッグログ出力 */
-void OutputBiosE820( void );
+static void OutputBiosE820( void );
+
+/* メモリマップリストデバッグログ出力 */
+static void OutputMemMapList( void );
 
 /* メモリマップリストエントリ設定(指定エントリ後方) */
-CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
-                            void              *pAddr,
-                            size_t            size,
-                            uint32_t          type     );
+static CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
+                                   void              *pAddr,
+                                   size_t            size,
+                                   uint32_t          type     );
 
 /* メモリマップリストエントリ設定(指定エントリ中間) */
-CmnRet_t SetMemMapListCenter( MemMapListEntry_t *pEntry,
-                              void              *pAddr,
-                              size_t            size,
-                              uint32_t          type     );
+static CmnRet_t SetMemMapListCenter( MemMapListEntry_t *pEntry,
+                                     void              *pAddr,
+                                     size_t            size,
+                                     uint32_t          type     );
 
 /* メモリマップリストエントリ設定(指定エントリ前方) */
-CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
-                             void              *pAddr,
-                             size_t            size,
-                             uint32_t          type     );
+static CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
+                                    void              *pAddr,
+                                    size_t            size,
+                                    uint32_t          type     );
 
 
 /******************************************************************************/
@@ -116,6 +116,9 @@ void MemMngMapInit( void )
     
     /* メモリマップリスト初期化 */
     InitMemMapList();
+    
+    /* メモリマップリストデバッグ出力 */
+    OutputMemMapList();
     
     /* デバッグログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -202,6 +205,12 @@ CmnRet_t MemMngMapSetList( void     *pAddr,
     
     /* エントリ毎に繰り返し */
     while ( pEntry != NULL ) {
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( " pEntry:pAddr=%p, size=%x, type=%d",
+                   pEntry->entry.pAddr,
+                   pEntry->entry.size,
+                   pEntry->entry.type                    );
+        
         /* メモリ領域比較用アドレス計算 */
         pAddr1 = END_ADDR( pEntry->entry.pAddr, pEntry->entry.size );
         pAddr2 = END_ADDR( pAddr              , size               );
@@ -303,7 +312,7 @@ CmnRet_t MemMngMapSetList( void     *pAddr,
  * @param[in]   *pEntry BIOS-E820メモリマップエントリ
  */
 /******************************************************************************/
-void AlignBiosE820Entry( BiosE820Entry_t *pEntry )
+static void AlignBiosE820Entry( BiosE820Entry_t *pEntry )
 {
     uint32_t base;      /* 先頭アドレス */
     uint32_t length;    /* サイズ       */
@@ -354,7 +363,7 @@ void AlignBiosE820Entry( BiosE820Entry_t *pEntry )
  * @details     BIOS-E820メモリマップを基にメモリマップリストを初期化する。
  */
 /******************************************************************************/
-void InitMemMapList( void )
+static void InitMemMapList( void )
 {
     uint32_t          start;    /* メモリ領域アドレス                */
     uint32_t          index;    /* BIOS-E820メモリマップインデックス */
@@ -370,8 +379,9 @@ void InitMemMapList( void )
     /* メモリマップリストエントリ初期化 */
     memset( &gListEntry, 0, sizeof ( gListEntry ) );
     
-    /* 空リスト初期化 */
-    MLibBasicListInit( &gEmptyList );
+    /* リスト初期化 */
+    MLibBasicListInit( &gEmptyList  );
+    MLibBasicListInit( &gMemMapList );
     
     /* 全エントリ毎に繰り返し */
     for ( index = 0; index < MEMMAPLIST_ENTRY_NUM; index++ ) {
@@ -524,7 +534,7 @@ void InitMemMapList( void )
  *              グ出力する。
  */
 /******************************************************************************/
-void OutputBiosE820( void )
+static void OutputBiosE820( void )
 {
     uint32_t index; /* エントリインデックス */
     
@@ -549,6 +559,39 @@ void OutputBiosE820( void )
 
 /******************************************************************************/
 /**
+ * @brief       メモリマップリストデバッグログ出力
+ * @details     メモリマップリストが示すメモリ領域を1エントリ毎にデバッグロ
+ *              グ出力する。
+ */
+/******************************************************************************/
+static void OutputMemMapList( void )
+{
+    MemMapListEntry_t *pEntry;
+    
+    /* 先頭エントリ取得 */
+    pEntry = ( MemMapListEntry_t * )
+        MLibBasicListGetNextNode( &gMemMapList, NULL );
+    
+    /* エントリ毎繰り返し */
+    while ( pEntry != NULL ) {
+        /* デバッグログ出力 */
+        DEBUG_LOG( "MemMapList: base=%010p, size=%#010X, type=%u",
+                   pEntry->entry.pAddr,
+                   pEntry->entry.size,
+                   pEntry->entry.type                              );
+        
+        /* 次エントリ取得 */
+        pEntry = ( MemMapListEntry_t * )
+            MLibBasicListGetNextNode( &gMemMapList,
+                                      ( MLibBasicListNode_t * ) pEntry );
+    }
+    
+    return;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       メモリマップリストエントリ設定(指定エントリ後方)
  * @details     指定したメモリマップリストエントリが示す利用可能メモリ領域の後
  *              方を分割してメモリマップリストエントリを設定する。
@@ -563,10 +606,10 @@ void OutputBiosE820( void )
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
-                            void              *pAddr,
-                            size_t            size,
-                            uint32_t          type     )
+static CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
+                                   void              *pAddr,
+                                   size_t            size,
+                                   uint32_t          type     )
 {
     MLibRet_t         retMLib;  /* MLib関数戻り値               */
     MemMapListEntry_t *pEmpty;  /* 空メモリマップリストエントリ */
@@ -624,10 +667,10 @@ CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-CmnRet_t SetMemMapListCenter( MemMapListEntry_t *pEntry,
-                              void              *pAddr,
-                              size_t            size,
-                              uint32_t          type     )
+static CmnRet_t SetMemMapListCenter( MemMapListEntry_t *pEntry,
+                                     void              *pAddr,
+                                     size_t            size,
+                                     uint32_t          type     )
 {
     size_t   size1;     /* 前方メモリ領域サイズ */
     CmnRet_t ret;       /* 戻り値               */
@@ -674,10 +717,10 @@ CmnRet_t SetMemMapListCenter( MemMapListEntry_t *pEntry,
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
-                             void              *pAddr,
-                             size_t            size,
-                             uint32_t          type     )
+static CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
+                                    void              *pAddr,
+                                    size_t            size,
+                                    uint32_t          type     )
 {
     MLibRet_t         retMLib;  /* MLib関数戻り値               */
     MemMapListEntry_t *pEmpty;  /* 空メモリマップリストエントリ */

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngInit.c                                             */
-/*                                                                 2017/03/26 */
-/* Copyright (C) 2016-2017 Mochi.                                             */
+/*                                                                 2018/08/15 */
+/* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -16,7 +16,11 @@
 /* 内部モジュールヘッダ */
 #include "MemMngArea.h"
 #include "MemMngGdt.h"
+#include "MemMngIo.h"
+#include "MemMngMap.h"
 #include "MemMngPage.h"
+#include "MemMngPhys.h"
+#include "MemMngVirt.h"
 
 
 /******************************************************************************/
@@ -39,24 +43,39 @@
 /******************************************************************************/
 /**
  * @brief       メモリ管理初期化
- * @details     GDT管理サブモジュールの初期化を呼び出し、メモリ管理機能を初期化
- *              する。
+ * @details     各サブモジュールの初期化を行う。
  * 
- * @param[in]   *pMap   メモリマップ
- * @param[in]   mapSize メモリマップサイズ
+ * @param[in]   *pBiosE820  BIOS-E820メモリマップ
+ * @param[in]   biosE820Num BIOS-E820メモリマップエントリ数
+ * @param[in]   *pMemMap    メモリマップ
+ * @param[in]   memMapNum   メモリマップエントリ数
  */
 /******************************************************************************/
-void MemMngInit( MochiKernelMemoryMap_t *pMap,
-                 size_t                 mapSize )
+void MemMngInit( BiosE820Entry_t *pBiosE820,
+                 size_t          biosE820Num,
+                 MkMemMapEntry_t *pMemMap,
+                 size_t          memMapNum    )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
+    
+    /* メモリマップ管理サブモジュール初期化 */
+    MapInit( pBiosE820, biosE820Num, pMemMap, memMapNum );
     
     /* GDT管理サブモジュール初期化 */
     MemMngGdtInit();
     
     /* メモリ領域管理サブモジュール初期化 */
-    MemMngAreaInit( pMap, mapSize );
+    AreaInit();
+    
+    /* 物理メモリ領域管理サブモジュール初期化 */
+    PhysInit( pMemMap, memMapNum );
+    
+    /* I/Oメモリ領域管理サブモジュール初期化 */
+    IoInit( pMemMap, memMapNum );
+    
+    /* 仮想メモリ領域管理サブモジュール初期化 */
+    VirtInit();
     
     /* ページ管理サブモジュール初期化 */
     MemMngPageInit();

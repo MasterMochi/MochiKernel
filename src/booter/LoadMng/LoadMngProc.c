@@ -1,14 +1,14 @@
 /******************************************************************************/
 /* src/booter/LoadMng/LoadMngProc.c                                           */
-/*                                                                 2017/07/27 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/08/17 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
 #include <stdarg.h>
-#include <kernel/MochiKernel.h>
+#include <kernel/kernel.h>
 #include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
@@ -16,6 +16,7 @@
 #include <Debug.h>
 #include <Driver.h>
 #include <LoadMng.h>
+#include <MemMng.h>
 
 /* 内部モジュールヘッダ */
 #include "LoadMngInit.h"
@@ -46,21 +47,24 @@
 /******************************************************************************/
 void LoadMngProcLoad( void )
 {
-    void                *pDstAddr;      /* 読込み先アドレス       */
-    uint32_t            srcLbaAddr;     /* 読込元LBAアドレス      */
-    uint32_t            srcLbaSize;     /* 読込元LBAサイズ        */
-    MochiKernelImgHdr_t *pHeader;       /* ファイルヘッダ         */
-    MochiKernelImgHdr_t kernelHeader;   /* カーネルバイナリヘッダ */
+    void       *pDstAddr;       /* 読込み先アドレス       */
+    size_t     size;            /* プロセスイメージサイズ */
+    CmnRet_t   ret;             /* 戻り値                 */
+    uint32_t   srcLbaAddr;      /* 読込元LBAアドレス      */
+    uint32_t   srcLbaSize;      /* 読込元LBAサイズ        */
+    MkImgHdr_t *pHeader;        /* ファイルヘッダ         */
+    MkImgHdr_t kernelHeader;    /* カーネルバイナリヘッダ */
     
     /* トレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
     /* 初期化 */
-    pDstAddr   = ( void * ) MOCHIKERNEL_ADDR_PROCIMG;
+    pDstAddr   = ( void * ) MK_ADDR_PROCIMG;
     srcLbaAddr = gLoadMngInitPt[ 1 ].lbaFirstAddr;
-    srcLbaSize = MLIB_BASIC_ALIGN( sizeof ( MochiKernelImgHdr_t ), 512 ) / 512;
+    srcLbaSize = MLIB_BASIC_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
+    size       = srcLbaSize;
     
-    /* カーネルバイナリヘッダ読込み */
+    /* カーネルイメージヘッダ読込み */
     DriverAtaRead( &kernelHeader,
                    srcLbaAddr,
                    srcLbaSize );
@@ -72,7 +76,7 @@ void LoadMngProcLoad( void )
     /* ファイル毎に繰り返し */
     do {
         /* アドレス設定 */
-        pHeader = ( MochiKernelImgHdr_t * ) pDstAddr;
+        pHeader = ( MkImgHdr_t * ) pDstAddr;
         
         /* ヘッダ読込み */
         DriverAtaRead( pHeader,
@@ -97,6 +101,7 @@ void LoadMngProcLoad( void )
         pDstAddr   += srcLbaSize * 512;
         srcLbaAddr += srcLbaSize;
         srcLbaSize  = MLIB_BASIC_ALIGN( pHeader->fileSize, 512 ) / 512;
+        size       += srcLbaSize;
         
         /* ファイル読込み */
         DriverAtaRead( pDstAddr,
@@ -106,10 +111,26 @@ void LoadMngProcLoad( void )
         /* アドレス・サイズ設定 */
         pDstAddr   += srcLbaSize * 512;
         srcLbaAddr += srcLbaSize;
-        srcLbaSize  = MLIB_BASIC_ALIGN( sizeof ( MochiKernelImgHdr_t ), 512 ) /
-                      512;
+        srcLbaSize  = MLIB_BASIC_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
+        size       += srcLbaSize;
         
     } while ( true );
+    
+    /* メモリマップリスト設定 */
+    ret = MemMngMapSetList( ( void * ) MK_ADDR_PROCIMG,
+                            MLIB_BASIC_ALIGN( size * 512, 4096 ),
+                            MK_MEM_TYPE_PROCIMG                   );
+    
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+        
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "MemMngMapSetList() failed." );
+        
+        /* アボート */
+        CmnAbort();
+    }
     
     /* トレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

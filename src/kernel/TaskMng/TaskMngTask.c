@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngTask.c                                           */
-/*                                                                 2018/05/24 */
+/*                                                                 2018/08/15 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -151,7 +151,7 @@ MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
             pStackInfo->size        = MK_CONFIG_SIZE_APL_STACK;
             
             /* カーネルスタック領域割り当て */
-            pKernelStack = MemMngAreaAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
+            pKernelStack = MemMngPhysAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
             
             /* 割り当て結果判定 */
             if ( pKernelStack == NULL ) {
@@ -163,7 +163,7 @@ MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
             }
             
             /* アプリスタック領域割り当て */
-            pAplStack = MemMngAreaAlloc( MK_CONFIG_SIZE_APL_STACK );
+            pAplStack = MemMngPhysAlloc( MK_CONFIG_SIZE_APL_STACK );
             
             /* 割り当て結果判定 */
             if ( pAplStack == NULL ) {

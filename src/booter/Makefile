@@ -1,6 +1,6 @@
 #******************************************************************************#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2018/06/12 *#
+#*                                                                 2018/07/18 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
@@ -23,6 +23,8 @@ MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
             IntMng/IntMngIdt.c        \
             IntMng/IntMngHdl.c        \
             IntMng/IntMngPic.c        \
+            MemMng/MemMngInit.c       \
+            MemMng/MemMngMap.c        \
             Driver/DriverInit.c       \
             Driver/DriverA20.c        \
             Driver/DriverAta.c        \
@@ -47,8 +49,9 @@ CFLAGS = -O                 \
          -DDEBUG_LOG_ENABLE
 
 # LDフラグ
-LDFLAGS = -melf_i386 \
-          -lc
+LDFLAGS = -melf_i386    \
+          -lc           \
+          -lMLibBasic
 
 
 #******************************************************************************#

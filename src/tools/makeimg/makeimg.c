@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/tools/makeimg/makeimg.c                                                */
-/*                                                                 2017/07/20 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/07/18 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "../../include/kernel/kernel.h"
+#include "../../include/MLib/Basic/MLibBasic.h"
 
 
 /******************************************************************************/
@@ -83,19 +85,19 @@ uint8_t gFileType;      /* 入力ファイルタイプ         */
 int main( int  argNum,
           char *pArg[] )
 {
-    int                 imgFd;      /* イメージファイルディスクリプタ */
-    int                 flags;      /* オープンフラグ                 */
-    ssize_t             writeSize;  /* 書込みサイズ                   */
-    MochiKernelImgHdr_t header;     /* 空ヘッダ                       */
+    int        imgFd;       /* イメージファイルディスクリプタ */
+    int        flags;       /* オープンフラグ                 */
+    ssize_t    writeSize;   /* 書込みサイズ                   */
+    MkImgHdr_t header;      /* 空ヘッダ                       */
     
     /* 初期化 */
-    memset( &header, 0, sizeof ( MochiKernelImgHdr_t ) );
+    memset( &header, 0, sizeof ( MkImgHdr_t ) );
     
     /* オプションチェック */
     checkOptions( argNum, pArg );
     
     /* ファイルタイプチェック */
-    if ( gFileType == MOCHIKERNEL_PROCESS_TYPE_KERNEL ) {
+    if ( gFileType == MK_PROC_TYPE_KERNEL ) {
         /* カーネル */
         
         /* オープンフラグ設定 */
@@ -125,14 +127,14 @@ int main( int  argNum,
     }
     
     /* 書込みタイプチェック */
-    if ( gFileType == MOCHIKERNEL_PROCESS_TYPE_KERNEL ) {
+    if ( gFileType == MK_PROC_TYPE_KERNEL ) {
         /* カーネル */
         
         /* 空ヘッダ書込み */
-        writeSize = write( imgFd, &header, sizeof ( MochiKernelImgHdr_t ) );
+        writeSize = write( imgFd, &header, sizeof ( MkImgHdr_t ) );
         
         /* 書込み結果判定 */
-        if ( writeSize != sizeof ( MochiKernelImgHdr_t ) ) {
+        if ( writeSize != sizeof ( MkImgHdr_t ) ) {
             /* 失敗 */
             
             /* アボート */
@@ -172,18 +174,18 @@ int main( int  argNum,
 static void addFile( int  imgFd,
                      char *pPath )
 {
-    int                 fd;                     /* ファイルディスクリプタ */
-    off_t               offset;                 /* ファイルオフセット     */
-    off_t               headerOffset;           /* ヘッダオフセット       */
-    ssize_t             readSize;               /* 読込みサイズ           */
-    ssize_t             writeSize;              /* 書込みサイズ           */
-    uint8_t             buffer[ BUFFER_SIZE ];  /* バッファ               */
-    uint32_t            size;                   /* ファイルサイズ         */
-    MochiKernelImgHdr_t header;                 /* ファイルヘッダ         */
+    int        fd;                      /* ファイルディスクリプタ */
+    off_t      offset;                  /* ファイルオフセット     */
+    off_t      headerOffset;            /* ヘッダオフセット       */
+    ssize_t    readSize;                /* 読込みサイズ           */
+    ssize_t    writeSize;               /* 書込みサイズ           */
+    uint8_t    buffer[ BUFFER_SIZE ];   /* バッファ               */
+    uint32_t   size;                    /* ファイルサイズ         */
+    MkImgHdr_t header;                  /* ファイルヘッダ         */
     
     /* 初期化 */
     size = 0;
-    memset( &header, 0, sizeof ( MochiKernelImgHdr_t ) );
+    memset( &header, 0, sizeof ( MkImgHdr_t ) );
     
     /* イメージファイルシーク */
     offset = lseek( imgFd, 0, SEEK_END );
@@ -201,7 +203,7 @@ static void addFile( int  imgFd,
     }
     
     /* ヘッダオフセット設定 */
-    headerOffset = offset - ( off_t ) sizeof ( MochiKernelImgHdr_t );
+    headerOffset = offset - ( off_t ) sizeof ( MkImgHdr_t );
     
     /* ファイルオープン */
     fd = open( pPath, O_RDONLY );
@@ -262,10 +264,10 @@ static void addFile( int  imgFd,
     } while ( readSize == BUFFER_SIZE );
     
     /* 空ヘッダ書込み */
-    writeSize = write( imgFd, &header, sizeof ( MochiKernelImgHdr_t ) );
+    writeSize = write( imgFd, &header, sizeof ( MkImgHdr_t ) );
     
     /* 書込み結果判定 */
-    if ( writeSize != sizeof ( MochiKernelImgHdr_t ) ) {
+    if ( writeSize != sizeof ( MkImgHdr_t ) ) {
         /* 失敗 */
         
         /* アボート */
@@ -297,10 +299,10 @@ static void addFile( int  imgFd,
     }
     
     /* ファイルヘッダ書込み */
-    writeSize = write( imgFd, &header, sizeof ( MochiKernelImgHdr_t ) );
+    writeSize = write( imgFd, &header, sizeof ( MkImgHdr_t ) );
     
     /* 書込み結果判定 */
-    if ( writeSize != sizeof ( MochiKernelImgHdr_t ) ) {
+    if ( writeSize != sizeof ( MkImgHdr_t ) ) {
         /* 失敗 */
         
         /* アボート */
@@ -334,7 +336,7 @@ static void checkOptions( int32_t argNum,
     
     /* 初期化 */
     gpImgPath = NULL;
-    gFileType = MOCHIKERNEL_PROCESS_TYPE_NONE;
+    gFileType = MK_PROC_TYPE_NONE;
     
     /* オプションが無くなるまで繰り返し */
     while ( true ) {
@@ -352,19 +354,19 @@ static void checkOptions( int32_t argNum,
             
         } else if ( opt == 'K' ) {
             /* カーネルファイル入力 */
-            gFileType = MOCHIKERNEL_PROCESS_TYPE_KERNEL;
+            gFileType = MK_PROC_TYPE_KERNEL;
             
         } else if ( opt == 'D' ) {
             /* ドライバファイル入力 */
-            gFileType = MOCHIKERNEL_PROCESS_TYPE_DRIVER;
+            gFileType = MK_PROC_TYPE_DRIVER;
             
         } else if ( opt == 'S' ) {
             /* サーバファイル入力 */
-            gFileType = MOCHIKERNEL_PROCESS_TYPE_SERVER;
+            gFileType = MK_PROC_TYPE_SERVER;
             
         } else if ( opt == 'U' ) {
             /* ユーザファイル入力 */
-            gFileType = MOCHIKERNEL_PROCESS_TYPE_USER;
+            gFileType = MK_PROC_TYPE_USER;
             
         } else if ( opt == 'h' ) {
             /* ヘルプ */
@@ -389,7 +391,7 @@ static void checkOptions( int32_t argNum,
     }
     
     /* 入力ファイルタイプ設定チェック */
-    if ( gFileType == MOCHIKERNEL_PROCESS_TYPE_NONE ) {
+    if ( gFileType == MK_PROC_TYPE_NONE ) {
         /* 未設定 */
         
         /* アボート */

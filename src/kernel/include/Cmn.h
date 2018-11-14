@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2018/10/20 */
+/*                                                                 2018/11/14 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef CMN_H
@@ -32,6 +32,10 @@
 #define CMN_MODULE_MEMMNG_AREA   ( 0x0303 ) /** メモリ管理(領域)             */
 #define CMN_MODULE_MEMMNG_PAGE   ( 0x0304 ) /** メモリ管理(ページ)           */
 #define CMN_MODULE_MEMMNG_CTRL   ( 0x0305 ) /** メモリ管理(制御)             */
+#define CMN_MODULE_MEMMNG_MAP    ( 0x0306 ) /** メモリ管理(マップ)           */
+#define CMN_MODULE_MEMMNG_PHYS   ( 0x0307 ) /** メモリ管理(物理)             */
+#define CMN_MODULE_MEMMNG_IO     ( 0x0308 ) /** メモリ管理(I/O)              */
+#define CMN_MODULE_MEMMNG_VIRT   ( 0x0309 ) /** メモリ管理(仮想)             */
 #define CMN_MODULE_TASKMNG_INIT  ( 0x0401 ) /** タスク管理(初期化)           */
 #define CMN_MODULE_TASKMNG_TSS   ( 0x0402 ) /** タスク管理(TSS)              */
 #define CMN_MODULE_TASKMNG_SCHED ( 0x0403 ) /** タスク管理(スケジューラ)     */
@@ -50,9 +54,10 @@
 #define CMN_MODULE_ITCCTRL_MSG   ( 0x0702 ) /** タスク間通信制御(メッセージ) */
 #define CMN_MODULE_IOCTRL_INIT   ( 0x0801 ) /** 入出力制御(初期化)           */
 #define CMN_MODULE_IOCTRL_PORT   ( 0x0802 ) /** 入出力制御(ポート)           */
+#define CMN_MODULE_IOCTRL_MEM    ( 0x0803 ) /** 入出力制御(I/Oメモリ)        */
 
 /** モジュール・サブモジュール数 */
-#define CMN_MODULE_NUM           ( 26 )
+#define CMN_MODULE_NUM           ( 31 )
 
 /* 処理結果構造体 */
 typedef int32_t CmnRet_t;

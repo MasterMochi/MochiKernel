@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/booter/Debug/DebugLog.c                                                */
-/*                                                                 2017/07/19 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/07/23 */
+/* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -88,6 +88,8 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_INTMNG_PIC,     "INT-PIC " },    /* 割込管理(PIC管理)      */
     { CMN_MODULE_INTMNG_IDT,     "INT-IDT " },    /* 割込管理(IDT管理)      */
     { CMN_MODULE_INTMNG_HDL,     "INT-HDL " },    /* 割込管理(ハンドラ管理) */
+    { CMN_MODULE_MEMMNG_INIT,    "MEM-INIT" },    /* メモリ管理(初期化)     */
+    { CMN_MODULE_MEMMNG_MAP,     "MEM-MAP " },    /* メモリ管理(マップ管理) */
     { CMN_MODULE_DRIVER_INIT,    "DRV-INIT" },    /* ドライバ(初期化)       */
     { CMN_MODULE_DRIVER_A20,     "DRV-A20 " },    /* ドライバ(A20)          */
     { CMN_MODULE_DRIVER_ATA,     "DRV-ATA " },    /* ドライバ(ATA)          */

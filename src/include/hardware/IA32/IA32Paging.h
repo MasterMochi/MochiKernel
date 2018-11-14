@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Paging.h                              */
-/*                                                                 2017/06/16 */
+/*                                                                 2018/09/22 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_PAGING_H
@@ -109,7 +109,8 @@ typedef struct {
 /** ページディレクトリ */
 typedef struct {
     IA32PagingPDE_t entry[ IA32_PAGING_PDE_NUM ];   /**< エントリ */
-} __attribute__( ( aligned( 4096 ) ) ) IA32PagingDir_t;
+} IA32PagingDir_t;
+/* [memo] 4096byteアライメントで配置する必要がある。 */
 
 /** ページテーブルエントリ */
 typedef struct {
@@ -129,7 +130,8 @@ typedef struct {
 /** ページテーブル */
 typedef struct {
     IA32PagingPTE_t entry[ IA32_PAGING_PTE_NUM ];   /**< エントリ */
-} __attribute__( ( aligned( 4096 ) ) ) IA32PagingTbl_t;
+} IA32PagingTbl_t;
+/* [memo] 4096byteアライメントで配置する必要がある。 */
 
 
 /******************************************************************************/

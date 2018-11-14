@@ -91,6 +91,10 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_MEMMNG_AREA,   "MEM-AREA" },   /* メモリ管理(領域)         */
     { CMN_MODULE_MEMMNG_PAGE,   "MEM-PAGE" },   /* メモリ管理(ページ)       */
     { CMN_MODULE_MEMMNG_CTRL,   "MEM-CTRL" },   /* メモリ管理(制御)         */
+    { CMN_MODULE_MEMMNG_MAP,    "MEM-MAP " },   /* メモリ管理(マップ)       */
+    { CMN_MODULE_MEMMNG_PHYS,   "MEM-PHYS" },   /* メモリ管理(物理)         */
+    { CMN_MODULE_MEMMNG_IO,     "MEM-I/O " },   /* メモリ管理(I/O)          */
+    { CMN_MODULE_MEMMNG_VIRT,   "MEM-VIRT" },   /* メモリ管理(仮想)         */
     { CMN_MODULE_TASKMNG_INIT,  "TSK-INIT" },   /* タスク管理(初期化)       */
     { CMN_MODULE_TASKMNG_TSS,   "TSK-TSS " },   /* タスク管理(TSS)          */
     { CMN_MODULE_TASKMNG_SCHED, "TSK-SCHD" },   /* タスク管理(スケジューラ) */
@@ -109,6 +113,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(ﾒｯｾｰｼﾞ) */
     { CMN_MODULE_IOCTRL_INIT,   "IOC-INIT" },   /* 入出力制御(初期化)       */
     { CMN_MODULE_IOCTRL_PORT,   "IOC-PORT" },   /* 入出力制御(I/Oポート)    */
+    { CMN_MODULE_IOCTRL_MEM,    "IOC-MEM"  },   /* 入出力制御(I/Oメモリ)    */
     { 0,                        "UNKNOWN " }  };/* 終端                     */
 
 /** 数字変換表 */
@@ -175,6 +180,9 @@ static uint32_t LogProcFormat( char    *pFormat,
 /******************************************************************************/
 void DebugLogInit( void )
 {
+    uint32_t row;       /* 行 */
+    uint32_t column;    /* 列 */
+    
     /* ログ管理テーブル初期化 */
     memset( &gLogTbl, 0, sizeof ( logTbl_t ) );
     
@@ -183,10 +191,19 @@ void DebugLogInit( void )
                    VGA_M3_ATTR_FG_BRIGHT |  /* 明色文字属性 */
                    VGA_M3_ATTR_BG_BLACK;    /* 黒色背景属性 */
     
+    /* 画面初期化 */
+    for ( row = 0; row < VGA_M3_ROW; row++ ) {
+        for ( column = 0; column < VGA_M3_COLUMN; column++ ) {
+            /* 1文字出力 */
+            LOG_CURSOR_ADDR( row, column )[ 0 ] = ' ';
+        }
+    }
+    
     return;
 }
 
 
+#ifdef DEBUG_LOG_ENABLE
 /******************************************************************************/
 /**
  * @brief       トレースログ出力
@@ -213,7 +230,8 @@ void DebugLogInit( void )
  *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
  *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ管理)
  *                  - CMN_MODULE_TIMERMNG_INIT タイマ管理(初期化)
- *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理) *                  - CMN_MODULE_ITCCTRL_INIT  タスク間通信制御(初期化)
+ *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理)
+ *                  - CMN_MODULE_ITCCTRL_INIT  タスク間通信制御(初期化)
  *                  - CMN_MODULE_ITCCTRL_MSG   タスク間通信制御(メッセージ制御)
  * @param[in]   lineNum  行番号
  * @param[in]   *pFormat トレースログ
@@ -227,7 +245,6 @@ void DebugLogOutput( uint32_t moduleId,
                      char     *pFormat,
                      ...                )
 {
-#ifdef DEBUG_LOG_ENABLE
     va_list  vaList;    /* 可変長引数リスト         */
     uint32_t row;       /* カーソル行               */
     uint32_t column;    /* カーソル列               */
@@ -288,9 +305,9 @@ void DebugLogOutput( uint32_t moduleId,
     /* 可変長引数リスト解放 */
     va_end( vaList );
     
-#endif
     return;
 }
+#endif
 
 
 /******************************************************************************/

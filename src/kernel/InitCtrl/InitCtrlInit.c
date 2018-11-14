@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2018/05/28 */
+/*                                                                 2018/09/23 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -10,7 +10,7 @@
 #include <stdarg.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
-#include <kernel/MochiKernel.h>
+#include <kernel/kernel.h>
 #include <kernel/types.h>
 #include <MLib/Basic/MLibBasic.h>
 
@@ -58,23 +58,6 @@ static void InitLoadProcImg( void );
 /******************************************************************************/
 void InitCtrlInit( void )
 {
-    /* [TODO]カーネル起動引数対応まで仮 */
-    MochiKernelMemoryMap_t map[] =
-        {
-            /* カーネル領域 */
-            {
-                ( void * ) 0x00100000,              /* 先頭アドレス */
-                0x04F00000,                         /* メモリサイズ */
-                MOCHIKERNEL_MEMORY_TYPE_KERNEL      /* メモリタイプ */
-            },
-            /* 利用可能領域 */
-            {
-                ( void * ) 0x05000000,              /* 先頭アドレス */
-                0x03000000,                         /* メモリサイズ */
-                MOCHIKERNEL_MEMORY_TYPE_AVAILABLE   /* メモリタイプ */
-            }
-        };
-    
     /* デバッグ制御初期化 */
     DebugInit();
     
@@ -82,7 +65,10 @@ void InitCtrlInit( void )
     DEBUG_LOG( "Mochi Kernel start!!!" );
     
     /* メモリ管理モジュール初期化 */
-    MemMngInit( map, 2 );
+    MemMngInit( ( BiosE820Entry_t * ) 0x00000504,
+                *( ( size_t * )       0x00000500 ),
+                ( MkMemMapEntry_t * ) 0x00000CD8,
+                *( ( size_t * )       0x00000CD4 )  );
     
     /* タスク管理モジュール初期化 */
     TaskMngInit();
@@ -130,25 +116,25 @@ void InitCtrlInit( void )
 /******************************************************************************/
 static void InitLoadProcImg( void )
 {
-    void                *pAddr;     /* ファイルアドレス */
-    uint8_t             type;       /* プロセスタイプ   */
-    MkPid_t             pid;        /* プロセスID       */
-    MochiKernelImgHdr_t *pHeader;   /* ファイルヘッダ   */
+    void       *pAddr;      /* ファイルアドレス */
+    uint8_t    type;        /* プロセスタイプ   */
+    MkPid_t    pid;         /* プロセスID       */
+    MkImgHdr_t *pHeader;    /* ファイルヘッダ   */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     
     /* 初期化 */
-    pAddr   = ( void * ) MOCHIKERNEL_ADDR_PROCIMG;
+    pAddr   = ( void * ) MK_ADDR_PROCIMG;
     type    = TASKMNG_PROC_TYPE_USER;
     pid     = MK_CONFIG_PID_NULL;
-    pHeader = ( MochiKernelImgHdr_t * ) pAddr;
+    pHeader = ( MkImgHdr_t * ) pAddr;
     
     /* ファイル毎に繰り返し */
     while ( pHeader->fileSize != 0 ) {
         
         /* ファイルヘッダアドレス設定 */
-        pAddr = pAddr + sizeof ( MochiKernelImgHdr_t );
+        pAddr = pAddr + sizeof ( MkImgHdr_t );
         
         /* デバッグトレースログ出力 */
         DEBUG_LOG( "Header:" );
@@ -157,19 +143,19 @@ static void InitLoadProcImg( void )
         DEBUG_LOG( " Type=%d", pHeader->fileType );
         
         /* プロセスタイプ判定 */
-        if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_DRIVER ) {
+        if ( pHeader->fileType == MK_PROC_TYPE_DRIVER ) {
             /* ドライバ */
             
             /* プロセスタイプ変換 */
             type = TASKMNG_PROC_TYPE_DRIVER;
             
-        } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_SERVER ) {
+        } else if ( pHeader->fileType == MK_PROC_TYPE_SERVER ) {
             /* サーバ */
             
             /* プロセスタイプ変換 */
             type = TASKMNG_PROC_TYPE_SERVER;
             
-        } else if ( pHeader->fileType == MOCHIKERNEL_PROCESS_TYPE_USER ) {
+        } else if ( pHeader->fileType == MK_PROC_TYPE_USER ) {
             /* ユーザ */
             
             /* プロセスタイプ変換 */
@@ -177,10 +163,9 @@ static void InitLoadProcImg( void )
         }
         
         /* プロセス追加 */
-        pid = TaskMngProcAdd(
-                     type,
-                     ( ( void * ) pHeader ) + sizeof ( MochiKernelImgHdr_t ),
-                     pHeader->fileSize );
+        pid = TaskMngProcAdd( type,
+                              pAddr,
+                              pHeader->fileSize );
         
         /* プロセス追加結果判定 */
         if ( pid == MK_CONFIG_PID_NULL ) {
@@ -198,7 +183,7 @@ static void InitLoadProcImg( void )
         
         /* アドレス更新 */
         pAddr   = pAddr + MLIB_BASIC_ALIGN( pHeader->fileSize, 512 );
-        pHeader = ( MochiKernelImgHdr_t * ) pAddr;
+        pHeader = ( MkImgHdr_t * ) pAddr;
     }
     
     /* デバッグトレースログ出力 */

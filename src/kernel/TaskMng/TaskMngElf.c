@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2018/05/11 */
+/*                                                                 2018/08/15 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -130,7 +130,7 @@ CmnRet_t TaskMngElfLoad( void     *pAddr,
         size = MLIB_BASIC_ALIGN( pEntry->p_memsz, IA32_PAGING_PAGE_SIZE );
         
         /* メモリ領域割当 */
-        pPhyAddr = MemMngAreaAlloc( size );
+        pPhyAddr = MemMngPhysAlloc( size );
         
         /* メモリ領域割当結果判定 */
         if ( pPhyAddr == NULL ) {

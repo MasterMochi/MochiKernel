@@ -21,6 +21,10 @@ SRCS = InitCtrl/InitCtrlInit.c \
        MemMng/MemMngArea.c     \
        MemMng/MemMngPage.c     \
        MemMng/MemMngCtrl.c     \
+       MemMng/MemMngMap.c      \
+       MemMng/MemMngPhys.c     \
+       MemMng/MemMngIo.c       \
+       MemMng/MemMngVirt.c     \
        TaskMng/TaskMngInit.c   \
        TaskMng/TaskMngTss.c    \
        TaskMng/TaskMngTask.c   \
@@ -38,7 +42,8 @@ SRCS = InitCtrl/InitCtrlInit.c \
        ItcCtrl/ItcCtrlInit.c   \
        ItcCtrl/ItcCtrlMsg.c    \
        IoCtrl/IoCtrlInit.c     \
-       IoCtrl/IoCtrlPort.c
+       IoCtrl/IoCtrlPort.c     \
+       IoCtrl/IoCtrlMem.c
 
 # Cフラグ
 CFLAGS = -O                 \
@@ -48,7 +53,8 @@ CFLAGS = -O                 \
          -fno-pic           \
          -ffreestanding     \
          -Iinclude/         \
-         -I../include       
+         -I../include
+#         -DDEBUG_LOG_ENABLE
 
 # LDフラグ
 LDFLAGS = -melf_i386    \

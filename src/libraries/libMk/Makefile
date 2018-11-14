@@ -15,6 +15,7 @@ LIB_NAME  = libMk.a
 # ソースコード
 SRCS = MkMsg.c    \
        MkInt.c    \
+       MkIoMem.c  \
        MkIoPort.c \
        MkTimer.c
 

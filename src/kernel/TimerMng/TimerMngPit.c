@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TimerMng/TimerMngPit.c                                          */
-/*                                                                 2018/05/19 */
+/*                                                                 2018/10/22 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -9,6 +9,7 @@
 /* 共通ヘッダ */
 #include <stdarg.h>
 #include <stdint.h>
+#include <kernel/config.h>
 #include <hardware/I8254/I8254.h>
 #include <hardware/I8259A/I8259A.h>
 #include <hardware/IA32/IA32Instruction.h>
@@ -21,6 +22,7 @@
 #include <TimerMng.h>
 
 /* 内部モジュールヘッダ */
+#include "TimerMngCtrl.h"
 
 
 /******************************************************************************/
@@ -37,7 +39,7 @@
 #endif
 
 /** PIT（カウンタ0）カウンタ設定値 */
-#define PIT_CYCLE ( 11932 )
+#define PIT_CYCLE ( I8254_CLOCK / MK_CONFIG_TICK_HZ )
 
 
 /******************************************************************************/
@@ -60,6 +62,9 @@ void TimerMngPitHdlInt( uint32_t        intNo,
     
     /* 割込み処理終了通知 */
     IntMngPicEoi( I8259A_IRQ0 );
+    
+    /* タイマ制御実行 */
+    CtrlRun();
     
     /* スケジューラ実行 */
     TaskMngSchedExec();

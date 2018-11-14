@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2018/06/16 */
+/*                                                                 2018/10/20 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -83,37 +83,39 @@ typedef struct {
 #ifdef DEBUG_LOG_ENABLE
 /** 識別子変換テーブル */
 const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
-    { CMN_MODULE_INIT_INIT,     "INI-INIT" },   /* 初期化制御(初期化)               */
-    { CMN_MODULE_DEBUG_INIT,    "DBG-INIT" },   /* デバッグ制御(初期化)             */
-    { CMN_MODULE_DEBUG_LOG,     "DBG-LOG " },   /* デバッグ制御(ログ管理)           */
-    { CMN_MODULE_MEMMNG_INIT,   "MEM-INIT" },   /* メモリ管理(初期化)               */
-    { CMN_MODULE_MEMMNG_GDT,    "MEM-GDT " },   /* メモリ管理(GDT管理)              */
-    { CMN_MODULE_MEMMNG_AREA,   "MEM-AREA" },   /* メモリ管理(メモリ領域管理)       */
-    { CMN_MODULE_MEMMNG_PAGE,   "MEM-PAGE" },   /* メモリ管理(ページ管理)           */
-    { CMN_MODULE_MEMMNG_CTRL,   "MEM-CTRL" },   /* メモリ管理(メモリ制御)           */
-    { CMN_MODULE_TASKMNG_INIT,  "TSK-INIT" },   /* タスク管理(初期化)               */
-    { CMN_MODULE_TASKMNG_TSS,   "TSK-TSS " },   /* タスク管理(TSS管理)              */
-    { CMN_MODULE_TASKMNG_SCHED, "TSK-SCHD" },   /* タスク管理(スケジューラ)         */
-    { CMN_MODULE_TASKMNG_TASK,  "TSK-TASK" },   /* タスク管理(タスク管理)           */
-    { CMN_MODULE_TASKMNG_ELF,   "TSK-ELF " },   /* タスク管理(ELFローダ)            */
-    { CMN_MODULE_TASKMNG_PROC,  "TSK-PROC" },   /* タスク管理(プロセス管理)         */
-    { CMN_MODULE_INTMNG_INIT,   "INT-INIT" },   /* 割込管理(初期化)                 */
-    { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC管理)                */
-    { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT管理)                */
-    { CMN_MODULE_INTMNG_HDL,    "INT-HDL " },   /* 割込管理(ハンドラ管理)           */
-    { CMN_MODULE_INTMNG_CTRL,   "INT-CTRL" },   /* 割込管理(ハードウェア割込み制御) */
-    { CMN_MODULE_TIMERMNG_INIT, "TIM-INIT" },   /* タイマ管理(初期化)               */
-    { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT管理)              */
-    { CMN_MODULE_ITCCTRL_INIT,  "ITC-INIT" },   /* タスク間通信制御(初期化)         */
-    { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(メッセージ制御) */
-    { CMN_MODULE_IOCTRL_INIT,   "IOC-INIT" },   /* 入出力制御(初期化)               */
-    { CMN_MODULE_IOCTRL_PORT,   "IOC-PORT" },   /* 入出力制御(I/Oポート制御)        */
-    { 0,                        "UNKNOWN " }  };/* 終端                             */
-#endif
+    { CMN_MODULE_INIT_INIT,     "INI-INIT" },   /* 初期化制御(初期化)       */
+    { CMN_MODULE_DEBUG_INIT,    "DBG-INIT" },   /* デバッグ制御(初期化)     */
+    { CMN_MODULE_DEBUG_LOG,     "DBG-LOG " },   /* デバッグ制御(ログ)       */
+    { CMN_MODULE_MEMMNG_INIT,   "MEM-INIT" },   /* メモリ管理(初期化)       */
+    { CMN_MODULE_MEMMNG_GDT,    "MEM-GDT " },   /* メモリ管理(GDT)          */
+    { CMN_MODULE_MEMMNG_AREA,   "MEM-AREA" },   /* メモリ管理(領域)         */
+    { CMN_MODULE_MEMMNG_PAGE,   "MEM-PAGE" },   /* メモリ管理(ページ)       */
+    { CMN_MODULE_MEMMNG_CTRL,   "MEM-CTRL" },   /* メモリ管理(制御)         */
+    { CMN_MODULE_TASKMNG_INIT,  "TSK-INIT" },   /* タスク管理(初期化)       */
+    { CMN_MODULE_TASKMNG_TSS,   "TSK-TSS " },   /* タスク管理(TSS)          */
+    { CMN_MODULE_TASKMNG_SCHED, "TSK-SCHD" },   /* タスク管理(スケジューラ) */
+    { CMN_MODULE_TASKMNG_TASK,  "TSK-TASK" },   /* タスク管理(タスク)       */
+    { CMN_MODULE_TASKMNG_ELF,   "TSK-ELF " },   /* タスク管理(ELFローダ)    */
+    { CMN_MODULE_TASKMNG_PROC,  "TSK-PROC" },   /* タスク管理(プロセス)     */
+    { CMN_MODULE_INTMNG_INIT,   "INT-INIT" },   /* 割込管理(初期化)         */
+    { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC)            */
+    { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT)            */
+    { CMN_MODULE_INTMNG_HDL,    "INT-HDL " },   /* 割込管理(ハンドラ)       */
+    { CMN_MODULE_INTMNG_CTRL,   "INT-CTRL" },   /* 割込管理(ハードウェア)   */
+    { CMN_MODULE_TIMERMNG_INIT, "TIM-INIT" },   /* タイマ管理(初期化)       */
+    { CMN_MODULE_TIMERMNG_CTRL, "TIM-CTRL" },   /* タイマ管理(制御)         */
+    { CMN_MODULE_TIMERMNG_PIT,  "TIM-PIT " },   /* タイマ管理(PIT)          */
+    { CMN_MODULE_ITCCTRL_INIT,  "ITC-INIT" },   /* タスク間通信制御(初期化) */
+    { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(ﾒｯｾｰｼﾞ) */
+    { CMN_MODULE_IOCTRL_INIT,   "IOC-INIT" },   /* 入出力制御(初期化)       */
+    { CMN_MODULE_IOCTRL_PORT,   "IOC-PORT" },   /* 入出力制御(I/Oポート)    */
+    { 0,                        "UNKNOWN " }  };/* 終端                     */
 
 /** 数字変換表 */
 static char gNumTransTbl[ 2 ][ 17 ] = { "0123456789abcdef",
                                         "0123456789ABCDEF"  };
+
+#endif
 
 /** ログ管理テーブル */
 static logTbl_t gLogTbl;

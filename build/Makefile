@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* build/Makefile                                                             *#
-#*                                                                 2017/07/27 *#
-#* Copyright (C) 2016-2017 Mochi                                              *#
+#*                                                                 2018/11/23 *#
+#* Copyright (C) 2016-2018 Mochi                                              *#
 #******************************************************************************#
 #******************************************************************************#
 #* マクロ設定                                                                 *#
@@ -14,8 +14,10 @@ BOOTER_IPL  = objs/booter/booter-ipl.bin
 BOOTER_MAIN = objs/booter/booter-main.bin
 
 # kernel
-KERNEL      = objs/kernel/kernel.bin
-KERNEL_IMG  = kernel.img
+KERNEL      = objs/kernel/kernel
+
+# OS
+OS_IMG      = os.img
 
 
 #******************************************************************************#
@@ -31,7 +33,7 @@ all:
 clean:
 	make -C ../src/ clean
 	-rm -f $(DISK_IMG)
-	-rm -f $(KERNEL_IMG)
+	-rm -f $(OS_IMG)
 	-rm -rf objs
 
 # ディスクイメージの作成
@@ -43,8 +45,8 @@ image: $(DISK_IMG)
 #* イメージファイル作成                                                       *#
 #******************************************************************************#
 $(DISK_IMG): all
-	tools/makeimg  -o $(KERNEL_IMG) -K $(KERNEL)
-	tools/makedisk -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(KERNEL_IMG)
+	tools/makeimg  -o $(OS_IMG) -K $(KERNEL)
+	tools/makedisk -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(OS_IMG)
 	sync
 
 #******************************************************************************#

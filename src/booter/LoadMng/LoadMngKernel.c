@@ -1,18 +1,21 @@
 /******************************************************************************/
 /* src/booter/LoadMng/LoadMngKernel.c                                         */
-/*                                                                 2018/07/28 */
+/*                                                                 2018/11/23 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 共通ヘッダ */
+#include <elf.h>
 #include <stdarg.h>
+#include <string.h>
 #include <kernel/kernel.h>
 #include <MLib/Basic/MLibBasic.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
+#include <config.h>
 #include <Debug.h>
 #include <Driver.h>
 #include <LoadMng.h>
@@ -47,9 +50,13 @@
 /******************************************************************************/
 void LoadMngKernelLoad( void )
 {
-    CmnRet_t   ret;     /* 戻り値                 */
-    uint32_t   size;    /* LBAサイズ              */
-    MkImgHdr_t header;  /* カーネルイメージヘッダ */
+    CmnRet_t   ret;         /* 戻り値                           */
+    uint32_t   index;       /* インデックス                     */
+    uint32_t   size;        /* LBAサイズ                        */
+    MkImgHdr_t header;      /* カーネルイメージヘッダ           */
+    Elf32_Ehdr *pElfHdr;    /* プログラムヘッダテーブル         */
+    Elf32_Phdr *pPrgHdr;    /* プログラムヘッダテーブル         */
+    Elf32_Phdr *pEntry;     /* プログラムヘッダテーブルエントリ */
     
     /* トレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
@@ -63,24 +70,56 @@ void LoadMngKernelLoad( void )
                    size );
     
     /* カーネル読込み */
-    DriverAtaRead( ( void * ) MK_ADDR_ENTRY,
+    DriverAtaRead( ( void * ) MB_CONFIG_ADDR_KERNEL,
                    gLoadMngInitPt[ 1 ].lbaFirstAddr + size,
                    MLIB_BASIC_ALIGN( header.fileSize, 512 ) / 512 );
     
-    /* メモリマップリスト設定 */
-    ret = MemMngMapSetList( ( void * ) MK_ADDR_ENTRY,
-                            0x03F00000,
-                            MK_MEM_TYPE_KERNEL        );
+    /* ELF操作用変数設定 */
+    pElfHdr = ( Elf32_Ehdr * ) MB_CONFIG_ADDR_KERNEL;
+    pPrgHdr = ( Elf32_Phdr * ) ( ( uint32_t ) pElfHdr + pElfHdr->e_phoff );
     
-    /* 設定結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
+    /* プログラムヘッダテーブルエントリ毎に繰り返し */
+    for ( index = 0; index < pElfHdr->e_phnum; index++ ) {
+        /* プログラムヘッダ参照アドレス設定 */
+        pEntry = ( Elf32_Phdr * ) ( ( uint32_t ) pPrgHdr +
+                                    pElfHdr->e_phentsize * index );
         
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "MemMngMapSetList() failed." );
+        /* セグメントタイプ判定 */
+        if ( pEntry->p_type != PT_LOAD ) {
+            /* ロード可能セグメントでない */
+            
+            /* 次エントリ */
+            continue;
+        }
         
-        /* アボート */
-        CmnAbort();
+        /* セグメント初期化 */
+        memset( ( void * ) pEntry->p_vaddr,
+                0,
+                pEntry->p_memsz             );
+        
+        /* セグメントコピー */
+        memcpy( ( void * ) pEntry->p_vaddr,
+                ( void * ) ( uint32_t ) pElfHdr + pEntry->p_offset,
+                pEntry->p_filesz                                    );
+        
+        /* メモリマップリスト設定 */
+        ret = MemMngMapSetList( ( void * ) pEntry->p_vaddr,
+                                MK_SIZE_KERNEL,
+                                MK_MEM_TYPE_KERNEL          );
+        
+        /* 設定結果判定 */
+        if ( ret != CMN_SUCCESS ) {
+            /* 失敗 */
+            
+            /* デバッグトレースログ出力 */
+            DEBUG_LOG( "MemMngMapSetList() failed." );
+            
+            /* アボート */
+            CmnAbort();
+        }
+        
+        /* 現状は1つのロード可能セグメントだけに対応 */
+        break;
     }
     
     /* トレースログ出力 */

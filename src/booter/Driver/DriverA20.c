@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/booter/Driver/DriverA20.c                                              */
-/*                                                                 2017/07/10 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/11/24 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -15,15 +15,16 @@
 #include <Cmn.h>
 #include <Debug.h>
 
+
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                   \
-    DebugLogOutput( CMN_MODULE_DRIVER_A20, \
-                    __LINE__,              \
-                    __VA_ARGS__ )
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_DRIVER_A20,  \
+                    __LINE__,               \
+                    __VA_ARGS__            )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -50,6 +51,7 @@ static void A20EnableByKbc( void );
  * @brief       A20ライン有効化
  * @details     A20ラインを有効化し、1MiB以上のメモリをアクセス可能にする。
  * 
+ * @return      有効化結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
@@ -121,6 +123,7 @@ CmnRet_t DriverA20Enable( void )
  * @brief       A20ライン有効化チェック
  * @details     A20ラインが有効でメモリが1MiB以上アクセス可能かチェックする。
  * 
+ * @return      チェック結果を返す。
  * @retval      CMN_SUCCESS 有効
  * @retval      CMN_FAILURE 無効
  */

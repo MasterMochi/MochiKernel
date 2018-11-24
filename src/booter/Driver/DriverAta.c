@@ -24,12 +24,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                   \
-    DebugLogOutput( CMN_MODULE_DRIVER_ATA, \
-                    __LINE__,              \
-                    __VA_ARGS__ )
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_DRIVER_ATA,  \
+                    __LINE__,               \
+                    __VA_ARGS__            )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -38,8 +38,8 @@
 #define ATA_RETRY        ( 50000 )
 
 /* 割込みフラグ */
-#define ATA_INT_FLAG_ON  ( 1 )      /** 割込みフラグON  */
-#define ATA_INT_FLAG_OFF ( 0 )      /** 割込みフラグOFF */
+#define ATA_INT_FLAG_ON  ( 1 )      /**< 割込みフラグON  */
+#define ATA_INT_FLAG_OFF ( 0 )      /**< 割込みフラグOFF */
 
 
 /******************************************************************************/

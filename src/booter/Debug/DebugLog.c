@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/Debug/DebugLog.c                                                */
-/*                                                                 2018/07/23 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -23,8 +23,8 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 長さ定義 */
-#define LOG_LENGTH_ID      (  8 )   /** 識別子文字数 */
-#define LOG_LENGTH_LINENUM (  4 )   /** 行番号文字数 */
+#define LOG_LENGTH_ID      (  8 )   /**< 識別子文字数 */
+#define LOG_LENGTH_LINENUM (  4 )   /**< 行番号文字数 */
 
 /** カーソル位置アドレス計算 */
 #define LOG_CURSOR_ADDR( __ROW, __COLUMN )                  \
@@ -34,31 +34,28 @@
 
 /** 文字色取得マクロ */
 #define LOG_ATTR_FG( __BASE )           ( __BASE & 0x0F )
-
 /** 背景色取得マクロ */
 #define LOG_ATTR_BG( __BASE )           ( __BASE & 0xF0 )
-
 /** 文字色変更マクロ */
 #define LOG_ATTR_FG_CHG( __BASE, __FG ) ( LOG_ATTR_BG( __BASE ) | ( __FG ) )
-
 /** 背景色変更マクロ */
 #define LOG_ATTR_BG_CHG( __BASE, __BG ) ( LOG_ATTR_FG( __BASE ) | ( __BG ) )
 
 /* 変換指定子フラグ */
-#define LOG_FLAG_LEFT      ( 0x01 ) /* 左寄せ       */
-#define LOG_FLAG_SIGN      ( 0x02 ) /* 符号表示     */
-#define LOG_FLAG_SPACE     ( 0x04 ) /* 正数符号空白 */
-#define LOG_FLAG_ALTERNATE ( 0x08 ) /* 代替形式     */
-#define LOG_FLAG_ZERO      ( 0x10 ) /* 0埋め        */
-#define LOG_FLAG_UPPERCASE ( 0x20 ) /* 大文字       */
-#define LOG_FLAG_UNSIGNED  ( 0x40 ) /* 符号無       */
+#define LOG_FLAG_LEFT      ( 0x01 ) /**< 左寄せ       */
+#define LOG_FLAG_SIGN      ( 0x02 ) /**< 符号表示     */
+#define LOG_FLAG_SPACE     ( 0x04 ) /**< 正数符号空白 */
+#define LOG_FLAG_ALTERNATE ( 0x08 ) /**< 代替形式     */
+#define LOG_FLAG_ZERO      ( 0x10 ) /**< 0埋め        */
+#define LOG_FLAG_UPPERCASE ( 0x20 ) /**< 大文字       */
+#define LOG_FLAG_UNSIGNED  ( 0x40 ) /**< 符号無       */
 
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                \
     DebugLogOutput( CMN_MODULE_DBG_LOG, \
                     __LINE__,           \
-                    __VA_ARGS__ )
+                    __VA_ARGS__         )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -182,24 +179,21 @@ void DebugLogInit( void )
  *              力を行う。
  * 
  * @param[in]   moduleId モジュール・サブモジュール識別子
- *                  - CMN_MODULE_INIT_INIT     初期化制御(初期化)
- *                  - CMN_MODULE_MEMMNG_INIT   メモリ管理(初期化)
- *                  - CMN_MODULE_MEMMNG_GDT    メモリ管理(GDT管理)
- *                  - CMN_MODULE_MEMMNG_AREA   メモリ管理(メモリ領域管理)
- *                  - CMN_MODULE_MEMMNG_PAGE   メモリ管理(ページ管理)
- *                  - CMN_MODULE_MEMMNG_CTRL   メモリ管理(メモリ制御)
- *                  - CMN_MODULE_INTMNG_INIT   割込管理(初期化)
- *                  - CMN_MODULE_INTMNG_PIC    割込管理(PIC管理)
- *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
- *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ管理)
- *                  - CMN_MODULE_TIMERMNG_INIT タイマ管理(初期化)
- *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理)
- *                  - CMN_MODULE_PROCMNG_INIT  プロセス管理(初期化)
- *                  - CMN_MODULE_PROCMNG_TSS   プロセス管理(TSS管理)
- *                  - CMN_MODULE_PROCMNG_SCHED プロセス管理(スケジューラ)
- *                  - CMN_MODULE_PROCMNG_TASK  プロセス管理(タスク管理)
- *                  - CMN_MODULE_DEBUG_INIT    デバッグ制御(初期化)
- *                  - CMN_MODULE_DEBUG_LOG     デバッグ制御(ログ管理)
+ *                  - CMN_MODULE_INIT_INIT      初期化制御(初期化)
+ *                  - CMN_MODULE_INTMNG_INIT    割込管理(初期化)
+ *                  - CMN_MODULE_INTMNG_PIC     割込管理(PIC管理)
+ *                  - CMN_MODULE_INTMNG_IDT     割込管理(IDT管理)
+ *                  - CMN_MODULE_INTMNG_HDL     割込管理(ハンドラ管理)
+ *                  - CMN_MODULE_MEMMNG_INIT    メモリ管理(初期化)
+ *                  - CMN_MODULE_MEMMNG_MAP     メモリ管理(マップ管理)
+ *                  - CMN_MODULE_DRIVER_INIT    ドライバ(初期化)
+ *                  - CMN_MODULE_DRIVER_A20     ドライバ(A20)
+ *                  - CMN_MODULE_DRIVER_ATA     ドライバ(ATA)
+ *                  - CMN_MODULE_LOADMNG_INIT   読込管理
+ *                  - CMN_MODULE_LOADMNG_KERNEL 読込管理(カーネル)
+ *                  - CMN_MODULE_LOADMNG_PROC   読込管理(プロセス)
+ *                  - CMN_MODULE_DEBUG_INIT     デバッグ制御(初期化)
+ *                  - CMN_MODULE_DEBUG_LOG      デバッグ制御(ログ管理)
  * @param[in]   lineNum  行番号
  * @param[in]   *pFormat トレースログ
  * 

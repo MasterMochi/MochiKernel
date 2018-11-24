@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/timer.h                                                 */
-/*                                                                 2018/10/22 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_TIMER_H_
@@ -19,16 +19,16 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 機能ID */
-#define MK_TIMER_FUNCID_SLEEP     ( 0x00000001 )   /** スリープ */
+#define MK_TIMER_FUNCID_SLEEP     ( 0x00000001 )    /**< スリープ */
 
 /* エラー番号 */
-#define MK_TIMER_ERR_NONE         ( 0x00000000 )    /** エラー無し   */
-#define MK_TIMER_ERR_PARAM_FUNCID ( 0x00000001 )    /** 機能ID不正   */
-#define MK_TIMER_ERR_NO_RESOURCE  ( 0x00000002 )    /** リソース不足 */
+#define MK_TIMER_ERR_NONE         ( 0x00000000 )    /**< エラー無し   */
+#define MK_TIMER_ERR_PARAM_FUNCID ( 0x00000001 )    /**< 機能ID不正   */
+#define MK_TIMER_ERR_NO_RESOURCE  ( 0x00000002 )    /**< リソース不足 */
 
 /* 戻り値 */
-#define MK_TIMER_RET_FAILURE      ( -1 )           /** 失敗 */
-#define MK_TIMER_RET_SUCCESS      (  0 )           /** 成功 */
+#define MK_TIMER_RET_FAILURE      ( -1 )            /**< 失敗 */
+#define MK_TIMER_RET_SUCCESS      (  0 )            /**< 成功 */
 
 /** タイマパラメータ */
 typedef struct {

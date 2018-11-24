@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/libraries/libMk/MkIoMem.c                                              */
-/*                                                                 2018/08/22 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -28,9 +28,9 @@
  * @param[out]  *pErrNo エラー番号
  *                  - MK_IOMEM_ERR_NONE         エラー無し
  *                  - MK_IOMEM_ERR_UNAUTHORIZED 権限無し
- *                  - MK_IOMEM_ERR_IO_ALLOC     I/Oメモリ領域割当失敗 
+ *                  - MK_IOMEM_ERR_IO_ALLOC     I/Oメモリ領域割当失敗
  *                  - MK_IOMEM_ERR_VIRT_ALLOC   仮想メモリ領域割当失敗
- *                  - MK_IOMEM_ERR_PAGE_SET     ページ設定失敗        
+ *                  - MK_IOMEM_ERR_PAGE_SET     ページ設定失敗
  * 
  * @return      割当結果を返す。
  * @retval      NULL     失敗

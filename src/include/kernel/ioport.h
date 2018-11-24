@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/ioport.h                                                */
-/*                                                                 2018/06/18 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_IOPORT_H_
@@ -19,21 +19,21 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 機能ID */
-#define MK_IOPORT_FUNCID_IN_BYTE   ( 0x00000001 )   /** I/Oポート入力(1バイト単位) */
-#define MK_IOPORT_FUNCID_IN_WORD   ( 0x00000002 )   /** I/Oポート入力(2バイト単位) */
-#define MK_IOPORT_FUNCID_IN_DWORD  ( 0x00000003 )   /** I/Oポート入力(4バイト単位) */
-#define MK_IOPORT_FUNCID_OUT_BYTE  ( 0x00000004 )   /** I/Oポート出力(1バイト単位) */
-#define MK_IOPORT_FUNCID_OUT_WORD  ( 0x00000005 )   /** I/Oポート出力(2バイト単位) */
-#define MK_IOPORT_FUNCID_OUT_DWORD ( 0x00000006 )   /** I/Oポート出力(4バイト単位) */
+#define MK_IOPORT_FUNCID_IN_BYTE   ( 0x00000001 )   /**< I/Oポート入力(1バイト単位) */
+#define MK_IOPORT_FUNCID_IN_WORD   ( 0x00000002 )   /**< I/Oポート入力(2バイト単位) */
+#define MK_IOPORT_FUNCID_IN_DWORD  ( 0x00000003 )   /**< I/Oポート入力(4バイト単位) */
+#define MK_IOPORT_FUNCID_OUT_BYTE  ( 0x00000004 )   /**< I/Oポート出力(1バイト単位) */
+#define MK_IOPORT_FUNCID_OUT_WORD  ( 0x00000005 )   /**< I/Oポート出力(2バイト単位) */
+#define MK_IOPORT_FUNCID_OUT_DWORD ( 0x00000006 )   /**< I/Oポート出力(4バイト単位) */
 
 /* エラー番号 */
-#define MK_IOPORT_ERR_NONE         ( 0x00000000 )   /** エラー無し */
-#define MK_IOPORT_ERR_PARAM_FUNCID ( 0x00000001 )   /** 機能ID不正 */
-#define MK_IOPORT_ERR_UNAUTHORIZED ( 0x00000002 )   /** 権限無し   */
+#define MK_IOPORT_ERR_NONE         ( 0x00000000 )   /**< エラー無し */
+#define MK_IOPORT_ERR_PARAM_FUNCID ( 0x00000001 )   /**< 機能ID不正 */
+#define MK_IOPORT_ERR_UNAUTHORIZED ( 0x00000002 )   /**< 権限無し   */
 
 /* 戻り値 */
-#define MK_IOPORT_RET_FAILURE      ( -1 )           /** 失敗 */
-#define MK_IOPORT_RET_SUCCESS      (  0 )           /** 成功 */
+#define MK_IOPORT_RET_FAILURE      ( -1 )           /**< 失敗 */
+#define MK_IOPORT_RET_SUCCESS      (  0 )           /**< 成功 */
 
 /** メッセージパッシングパラメータ */
 typedef struct {

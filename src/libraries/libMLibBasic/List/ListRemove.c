@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/libraries/libMLibBasic/List/ListRemove.c                               */
-/*                                                                 2017/02/05 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/11/24 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -22,6 +22,7 @@
  * @param[in]   *pList 連結リスト
  * @param[in]   *pNode ノード
  * 
+ * @return      処理結果を返す。
  * @retval      MLIB_SUCCESS 正常終了
  * @retval      MLIB_FAILURE 異常終了
  */
@@ -102,6 +103,7 @@ MLibRet_t MLibBasicListRemove( MLibBasicList_t     *pList,
  * 
  * @param[in]   *pList 連結リスト
  * 
+ * @return      処理結果を返す。
  * @retval      NULL     正常終了（先頭ノード）
  * @retval      NULL以外 異常終了
  */
@@ -172,6 +174,7 @@ MLibBasicListNode_t *MLibBasicListRemoveHead( MLibBasicList_t *pList )
  * 
  * @param[in]   *pList 連結リスト
  * 
+ * @return      処理結果を返す。
  * @retval      NULL     正常終了（先頭ノード）
  * @retval      NULL以外 異常終了
  */

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/libraries/libMLibBasic/List/ListInsert.c                               */
-/*                                                                 2017/02/17 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/11/24 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -24,6 +24,7 @@
  * @param[in]   *pList      連結リスト
  * @param[in]   *pNewNode   挿入ノード
  * 
+ * @return      処理結果を返す。
  * @retval      MLIB_SUCCESS 正常終了
  * @retval      MLIB_FAILURE 異常終了
  */
@@ -97,6 +98,7 @@ MLibRet_t MLibBasicListInsertHead( MLibBasicList_t     *pList,
  * @param[in]   *pNode      挿入先ノード
  * @param[in]   *pNewNode   挿入ノード
  * 
+ * @return      処理結果を返す。
  * @retval      MLIB_SUCCESS 正常終了
  * @retval      MLIB_FAILURE 異常終了
  */
@@ -178,6 +180,7 @@ MLibRet_t MLibBasicListInsertNext( MLibBasicList_t     *pList,
  * @param[in]   *pNode      挿入先ノード
  * @param[in]   *pNewNode   挿入ノード
  * 
+ * @return      処理結果を返す。
  * @retval      MLIB_SUCCESS 正常終了
  * @retval      MLIB_FAILURE 異常終了
  */
@@ -258,6 +261,7 @@ MLibRet_t MLibBasicListInsertPrev( MLibBasicList_t     *pList,
  * @param[in]   *pList      連結リスト
  * @param[in]   *pNewNode   挿入ノード
  * 
+ * @return      処理結果を返す。
  * @retval      MLIB_SUCCESS 正常終了
  * @retval      MLIB_FAILURE 異常終了
  */

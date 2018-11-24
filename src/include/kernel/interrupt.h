@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/interrupt.h                                             */
-/*                                                                 2018/06/17 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_INT_H_
@@ -19,23 +19,23 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 機能ID */
-#define MK_INT_FUNCID_START_MONITORING ( 0x00000001 )   /** 割込み監視開始   */
-#define MK_INT_FUNCID_STOP_MONITORING  ( 0x00000002 )   /** 割込み監視停止   */
-#define MK_INT_FUNCID_WAIT             ( 0x00000003 )   /** 割込み待ち合わせ */
-#define MK_INT_FUNCID_COMPLETE         ( 0x00000004 )   /** 割込み完了       */
-#define MK_INT_FUNCID_ENABLE           ( 0x00000005 )   /** 割込み有効化     */
-#define MK_INT_FUNCID_DISABLE          ( 0x00000006 )   /** 割込み無効化     */
+#define MK_INT_FUNCID_START_MONITORING ( 0x00000001 )   /**< 割込み監視開始   */
+#define MK_INT_FUNCID_STOP_MONITORING  ( 0x00000002 )   /**< 割込み監視停止   */
+#define MK_INT_FUNCID_WAIT             ( 0x00000003 )   /**< 割込み待ち合わせ */
+#define MK_INT_FUNCID_COMPLETE         ( 0x00000004 )   /**< 割込み完了       */
+#define MK_INT_FUNCID_ENABLE           ( 0x00000005 )   /**< 割込み有効化     */
+#define MK_INT_FUNCID_DISABLE          ( 0x00000006 )   /**< 割込み無効化     */
 
 /* エラー番号 */
-#define MK_INT_ERR_NONE                ( 0x00000000 )   /** エラー無し   */
-#define MK_INT_ERR_PARAM_FUNCID        ( 0x00000001 )   /** 機能ID不正   */
-#define MK_INT_ERR_PARAM_IRQNO         ( 0x00000002 )   /** IRQ番号不正  */
-#define MK_INT_ERR_UNAUTHORIZED        ( 0x00000003 )   /** 権限無し     */
-#define MK_INT_ERR_ALREADY_START       ( 0x00000004 )   /** 監視開始済み */
+#define MK_INT_ERR_NONE                ( 0x00000000 )   /**< エラー無し   */
+#define MK_INT_ERR_PARAM_FUNCID        ( 0x00000001 )   /**< 機能ID不正   */
+#define MK_INT_ERR_PARAM_IRQNO         ( 0x00000002 )   /**< IRQ番号不正  */
+#define MK_INT_ERR_UNAUTHORIZED        ( 0x00000003 )   /**< 権限無し     */
+#define MK_INT_ERR_ALREADY_START       ( 0x00000004 )   /**< 監視開始済み */
 
 /* 戻り値 */
-#define MK_INT_RET_FAILURE             ( -1 )           /** 失敗 */
-#define MK_INT_RET_SUCCESS             (  0 )           /** 成功 */
+#define MK_INT_RET_FAILURE             ( -1 )           /**< 失敗 */
+#define MK_INT_RET_SUCCESS             (  0 )           /**< 成功 */
 
 /** ハードウェア割込み制御パラメータ */
 typedef struct {

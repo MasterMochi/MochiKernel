@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Paging.h                              */
-/*                                                                 2018/09/22 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017 Mochi.                                                  */
 /******************************************************************************/
 #ifndef IA32_PAGING_H
@@ -40,44 +40,44 @@
     ( ( void * ) ( *( ( uint32_t * ) ( _PENTRY ) ) & 0xFFFFF000 ) )
 
 /* ページテーブル・ページ存在フラグ */
-#define IA32_PAGING_P_NO        ( 0 )       /** ページテーブル・ページ無し */
-#define IA32_PAGING_P_YES       ( 1 )       /** ページテーブル・ページ有り */
+#define IA32_PAGING_P_NO        ( 0 )       /**< ページテーブル・ページ無し */
+#define IA32_PAGING_P_YES       ( 1 )       /**< ページテーブル・ページ有り */
 
 /* 読込/書込フラグ */
-#define IA32_PAGING_RW_R        ( 0 )       /** 読込専用ページ    */
-#define IA32_PAGING_RW_RW       ( 1 )       /** 読込/書込可ページ */
+#define IA32_PAGING_RW_R        ( 0 )       /**< 読込専用ページ    */
+#define IA32_PAGING_RW_RW       ( 1 )       /**< 読込/書込可ページ */
 
 /* ユーザ/スーパバイザフラグ */
-#define IA32_PAGING_US_SV       ( 0 )       /** スーパバイザ特権レベル */
-#define IA32_PAGING_US_USER     ( 1 )       /** ユーザ特権レベル       */
+#define IA32_PAGING_US_SV       ( 0 )       /**< スーパバイザ特権レベル */
+#define IA32_PAGING_US_USER     ( 1 )       /**< ユーザ特権レベル       */
 
 /* ページレベルライトスルーフラグ */
-#define IA32_PAGING_PWT_WB      ( 0 )       /** ライトバックキャッシング */
-#define IA32_PAGING_PWT_WT      ( 1 )       /** ライトスルーキャッシング */
+#define IA32_PAGING_PWT_WB      ( 0 )       /**< ライトバックキャッシング */
+#define IA32_PAGING_PWT_WT      ( 1 )       /**< ライトスルーキャッシング */
 
 /* ページレベルキャッシュディスエーブルフラグ */
-#define IA32_PAGING_PCD_ENABLE  ( 0 )       /** キャッシング有効 */
-#define IA32_PAGING_PCD_DISABLE ( 1 )       /** キャッシング無効 */
+#define IA32_PAGING_PCD_ENABLE  ( 0 )       /**< キャッシング有効 */
+#define IA32_PAGING_PCD_DISABLE ( 1 )       /**< キャッシング無効 */
 
 /* アクセス済みフラグ */
-#define IA32_PAGING_A_NO        ( 0 )       /** 未アクセス   */
-#define IA32_PAGING_A_YES       ( 1 )       /** アクセス済み */
+#define IA32_PAGING_A_NO        ( 0 )       /**< 未アクセス   */
+#define IA32_PAGING_A_YES       ( 1 )       /**< アクセス済み */
 
 /* ダーティフラグ */
-#define IA32_PAGING_D_NO        ( 0 )       /** 未書込み   */
-#define IA32_PAGING_D_YES       ( 1 )       /** 書込み済み */
+#define IA32_PAGING_D_NO        ( 0 )       /**< 未書込み   */
+#define IA32_PAGING_D_YES       ( 1 )       /**< 書込み済み */
 
 /* ページサイズフラグ */
-#define IA32_PAGING_PS_4K       ( 0 )       /** 4KiBページサイズ           */
-#define IA32_PAGING_PS_4M2M     ( 1 )       /** 4MiBまたは2MiBページサイズ */
+#define IA32_PAGING_PS_4K       ( 0 )       /**< 4KiBページサイズ           */
+#define IA32_PAGING_PS_4M2M     ( 1 )       /**< 4MiBまたは2MiBページサイズ */
 
 /* グローバルフラグ */
-#define IA32_PAGING_G_NO        ( 0 )       /** 非グローバルページ */
-#define IA32_PAGING_G_YES       ( 1 )       /** グローバルページ   */
+#define IA32_PAGING_G_NO        ( 0 )       /**< 非グローバルページ */
+#define IA32_PAGING_G_YES       ( 1 )       /**< グローバルページ   */
 
 /* エントリ数 */
-#define IA32_PAGING_PDE_NUM     ( 1024 )    /** ページディレクトリエントリ数 */
-#define IA32_PAGING_PTE_NUM     ( 1024 )    /** ページテーブルエントリ数     */
+#define IA32_PAGING_PDE_NUM     ( 1024 )    /**< ページディレクトリエントリ数 */
+#define IA32_PAGING_PTE_NUM     ( 1024 )    /**< ページテーブルエントリ数     */
 
 /** ページサイズ */
 #define IA32_PAGING_PAGE_SIZE   ( 4096 )

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/hardware/IA32/IA32Descriptors.h                         */
-/*                                                                 2016/12/16 */
-/* Copyright (C) 2016 Mochi.                                                  */
+/*                                                                 2018/11/24 */
+/* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef IA32_DESCRIPTOR_H
 #define IA32_DESCRIPTOR_H
@@ -95,63 +95,63 @@
 #define IA32_DESCRIPTOR_OFFSET_HIGH( _POFFSET ) \
     ( ( uint16_t ) ( ( ( uint32_t ) ( _POFFSET ) & 0xFFFF0000 ) >> 16 ) )
 
-/* セグメントディスクリプタ */
+/** セグメントディスクリプタ */
 typedef struct {
-    uint16_t limit_low;         /* セグメントリミット(0-15)        */
-    uint16_t base_low;          /* セグメントベースアドレス(0-15)  */
-    uint8_t  base_middle;       /* セグメントベースアドレス(16-23) */
-    uint8_t  attr_type: 4;      /* セグメントタイプ                */
-    uint8_t  attr_s   : 1;      /* システムフラグ                  */
-    uint8_t  attr_dpl : 2;      /* ディスクリプタ特権レベル        */
-    uint8_t  attr_p   : 1;      /* ディスクリプタ存在フラグ        */
-    uint8_t  limit_high   : 4;  /* セグメントリミット(16-19)       */
-    uint8_t  attr_avl     : 1;  /* 未使用                          */
-    uint8_t  attr_reserved: 1;  /* 予約(0)                         */
-    uint8_t  attr_opSize  : 1;  /* デフォルトオペレーションサイズ  */
-    uint8_t  attr_g       : 1;  /* リミット粒度                    */
-    uint8_t  base_high;         /* セグメントベースアドレス(24-31) */
+    uint16_t limit_low;         /**< セグメントリミット(0-15)        */
+    uint16_t base_low;          /**< セグメントベースアドレス(0-15)  */
+    uint8_t  base_middle;       /**< セグメントベースアドレス(16-23) */
+    uint8_t  attr_type: 4;      /**< セグメントタイプ                */
+    uint8_t  attr_s   : 1;      /**< システムフラグ                  */
+    uint8_t  attr_dpl : 2;      /**< ディスクリプタ特権レベル        */
+    uint8_t  attr_p   : 1;      /**< ディスクリプタ存在フラグ        */
+    uint8_t  limit_high   : 4;  /**< セグメントリミット(16-19)       */
+    uint8_t  attr_avl     : 1;  /**< 未使用                          */
+    uint8_t  attr_reserved: 1;  /**< 予約(0)                         */
+    uint8_t  attr_opSize  : 1;  /**< デフォルトオペレーションサイズ  */
+    uint8_t  attr_g       : 1;  /**< リミット粒度                    */
+    uint8_t  base_high;         /**< セグメントベースアドレス(24-31) */
 } __attribute__( ( aligned( 8 ) ) ) IA32DescriptorSeg_t;
 
-/* TSSディスクリプタ */
+/** TSSディスクリプタ */
 typedef struct {
-    uint16_t limit_low;         /* セグメントリミット(0-15)        */
-    uint16_t base_low;          /* セグメントベースアドレス(0-15)  */
-    uint8_t  base_middle;       /* セグメントベースアドレス(16-23) */
-    uint8_t  attr_type: 4;      /* セグメントタイプ                */
-    uint8_t  attr_s   : 1;      /* システムフラグ                  */
-    uint8_t  attr_dpl : 2;      /* ディスクリプタ特権レベル        */
-    uint8_t  attr_p   : 1;      /* ディスクリプタ存在フラグ        */
-    uint8_t  limit_high   : 4;  /* セグメントリミット(16-19)       */
-    uint8_t  attr_avl     : 1;  /* 未使用                          */
-    uint8_t  attr_reserved: 2;  /* 予約(0)                         */
-    uint8_t  attr_g       : 1;  /* リミット粒度                    */
-    uint8_t  base_high;         /* セグメントベースアドレス(24-31) */
+    uint16_t limit_low;         /**< セグメントリミット(0-15)        */
+    uint16_t base_low;          /**< セグメントベースアドレス(0-15)  */
+    uint8_t  base_middle;       /**< セグメントベースアドレス(16-23) */
+    uint8_t  attr_type: 4;      /**< セグメントタイプ                */
+    uint8_t  attr_s   : 1;      /**< システムフラグ                  */
+    uint8_t  attr_dpl : 2;      /**< ディスクリプタ特権レベル        */
+    uint8_t  attr_p   : 1;      /**< ディスクリプタ存在フラグ        */
+    uint8_t  limit_high   : 4;  /**< セグメントリミット(16-19)       */
+    uint8_t  attr_avl     : 1;  /**< 未使用                          */
+    uint8_t  attr_reserved: 2;  /**< 予約(0)                         */
+    uint8_t  attr_g       : 1;  /**< リミット粒度                    */
+    uint8_t  base_high;         /**< セグメントベースアドレス(24-31) */
 } __attribute__( ( aligned( 8 ) ) ) IA32DescriptorTSS_t;
 
-/* ゲートディスクリプタ */
+/** ゲートディスクリプタ */
 typedef struct {
-    uint16_t offset_low;        /* オフセット(0-15)         */
-    uint16_t selector;          /* セグメントセレクタ       */
-    uint8_t  reserved: 5;       /* 予約(0)                  */
-    uint8_t  count   : 3;       /* 引数カウント             */
-    uint8_t  attr_type: 4;      /* ディスクリプタタイプ     */
-    uint8_t  attr_s   : 1;      /* システムフラグ(0)        */
-    uint8_t  attr_dpl : 2;      /* ディスクリプタ特権レベル */
-    uint8_t  attr_p   : 1;      /* ディスクリプタ存在フラグ */
-    uint16_t offset_high;       /* オフセット(16-31)        */
+    uint16_t offset_low;        /**< オフセット(0-15)         */
+    uint16_t selector;          /**< セグメントセレクタ       */
+    uint8_t  reserved: 5;       /**< 予約(0)                  */
+    uint8_t  count   : 3;       /**< 引数カウント             */
+    uint8_t  attr_type: 4;      /**< ディスクリプタタイプ     */
+    uint8_t  attr_s   : 1;      /**< システムフラグ(0)        */
+    uint8_t  attr_dpl : 2;      /**< ディスクリプタ特権レベル */
+    uint8_t  attr_p   : 1;      /**< ディスクリプタ存在フラグ */
+    uint16_t offset_high;       /**< オフセット(16-31)        */
 } __attribute__( ( aligned( 8 ) ) ) IA32DescriptorGate_t;
 
-/* ディスクリプタ */
+/** ディスクリプタ */
 typedef union {
-    IA32DescriptorSeg_t  seg;   /* セグメントディスクリプタ */
-    IA32DescriptorTSS_t  tss;   /* TSSディスクリプタ        */
-    IA32DescriptorGate_t gate;  /* ゲートディスクリプタ     */
+    IA32DescriptorSeg_t  seg;   /**< セグメントディスクリプタ */
+    IA32DescriptorTSS_t  tss;   /**< TSSディスクリプタ        */
+    IA32DescriptorGate_t gate;  /**< ゲートディスクリプタ     */
 } IA32Descriptor_t;
 
-/* 疑似ディスクリプタ */
+/** 疑似ディスクリプタ */
 typedef struct {
-    uint16_t         limit;     /* リミット       */
-    IA32Descriptor_t *pBase;    /* ベースアドレス */
+    uint16_t         limit;     /**< リミット       */
+    IA32Descriptor_t *pBase;    /**< ベースアドレス */
 } __attribute__( ( packed ) ) IA32DescriptorPseudo_t;
 
 

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/message.h                                               */
-/*                                                                 2018/10/20 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_MESSAGE_H_
@@ -22,20 +22,20 @@
 #define MK_MSG_SIZE_MAX         ( 24576 )
 
 /* 機能ID */
-#define MK_MSG_FUNCID_RECEIVE   ( 0x00000001 )  /** メッセージ受信 */
-#define MK_MSG_FUNCID_SEND      ( 0x00000002 )  /** メッセージ送信 */
+#define MK_MSG_FUNCID_RECEIVE   ( 0x00000001 )  /**< メッセージ受信 */
+#define MK_MSG_FUNCID_SEND      ( 0x00000002 )  /**< メッセージ送信 */
 
 /* エラー番号 */
-#define MK_MSG_ERR_NONE         ( 0x00000000 )  /** エラー無し           */
-#define MK_MSG_ERR_PARAM_FUNCID ( 0x00000001 )  /** 機能ID不正           */
-#define MK_MSG_ERR_SIZE_OVER    ( 0x00000002 )  /** 送信サイズ超過       */
-#define MK_MSG_ERR_NO_EXIST     ( 0x00000003 )  /** タスクが存在しない   */
-#define MK_MSG_ERR_PROC_TYPE    ( 0x00000004 )  /** 非隣接プロセスタイプ */
-#define MK_MSG_ERR_NO_MEMORY    ( 0x00000005 )  /** メモリ不足           */
+#define MK_MSG_ERR_NONE         ( 0x00000000 )  /**< エラー無し           */
+#define MK_MSG_ERR_PARAM_FUNCID ( 0x00000001 )  /**< 機能ID不正           */
+#define MK_MSG_ERR_SIZE_OVER    ( 0x00000002 )  /**< 送信サイズ超過       */
+#define MK_MSG_ERR_NO_EXIST     ( 0x00000003 )  /**< タスクが存在しない   */
+#define MK_MSG_ERR_PROC_TYPE    ( 0x00000004 )  /**< 非隣接プロセスタイプ */
+#define MK_MSG_ERR_NO_MEMORY    ( 0x00000005 )  /**< メモリ不足           */
 
 /* 戻り値 */
-#define MK_MSG_RET_FAILURE      ( -1 )          /** 失敗 */
-#define MK_MSG_RET_SUCCESS      (  0 )          /** 成功 */
+#define MK_MSG_RET_FAILURE      ( -1 )          /**< 失敗 */
+#define MK_MSG_RET_SUCCESS      (  0 )          /**< 成功 */
 
 
 /** メッセージ受信パラメータ */

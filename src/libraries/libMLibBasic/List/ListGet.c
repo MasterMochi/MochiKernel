@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/libraries/libMLibBasic/List/ListGet.c                                  */
-/*                                                                 2018/07/21 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -23,6 +23,7 @@
  * @param[in]   *pList 連結リスト
  * @param[in]   *pNode ノード
  * 
+ * @return      次ノードを返す。
  * @retval      NULL     ノード無
  * @retval      NULL以外 ノード有
  */
@@ -69,6 +70,7 @@ MLibBasicListNode_t *MLibBasicListGetNextNode( MLibBasicList_t     *pList,
  * @param[in]   *pList 連結リスト
  * @param[in]   *pNode ノード
  * 
+ * @return      前ノードを返す。
  * @retval      NULL     ノード無
  * @retval      NULL以外 ノード有
  */

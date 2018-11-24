@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2018/08/14 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -115,8 +115,9 @@ static CmnRet_t FreeTail( MLibBasicList_t *pAllocList,
  * @param[in]   *pFreeList  未割当メモリ領域情報リスト
  * @param[in]   size        割当メモリ領域サイズ
  * 
- * @return      
- * @retval      
+ * @return      メモリ領域の割り当て結果を返す。
+ * @retval      NULL     失敗
+ * @retval      NULL以外 成功(割当領域へのアドレス)
  */
 /******************************************************************************/
 void *AreaAlloc( MLibBasicList_t *pAllocList,
@@ -177,8 +178,9 @@ void *AreaAlloc( MLibBasicList_t *pAllocList,
  * @param[in]   *pAddr      割当メモリ領域アドレス
  * @param[in]   size        割当メモリ領域サイズ
  * 
- * @return      
- * @retval      
+ * @return      メモリ領域の割り当て結果を返す。
+ * @retval      NULL     失敗
+ * @retval      NULL以外 成功(割当領域へのアドレス)
  */
 /******************************************************************************/
 void *AreaAllocSpecified( MLibBasicList_t *pAllocList,

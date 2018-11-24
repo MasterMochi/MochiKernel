@@ -3,6 +3,8 @@ build/kernel.img
 build/objs/booter
 build/objs/kernel
 build/tools/*
+doxygen/output
+doxygen/log
 vm/vmware/*
 *.o
 *.a

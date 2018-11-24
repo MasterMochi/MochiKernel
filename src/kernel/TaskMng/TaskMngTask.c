@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngTask.c                                           */
-/*                                                                 2018/08/15 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -32,12 +32,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
     DebugLogOutput( CMN_MODULE_TASKMNG_TASK,    \
                     __LINE__,                   \
-                    __VA_ARGS__ )
+                    __VA_ARGS__              )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -82,7 +82,7 @@ static TaskTbl_t gTaskTbl[ MK_CONFIG_TASKID_NUM ];
  * @param[in]   pageDirId ページディレクトリID
  * @param[in]   *pAddr    実行アドレス
  * 
- * @return      タスクID
+ * @return      追加時に割り当てたタスクIDを返す。
  * @retval      MK_CONFIG_TASKID_NULL 失敗
  * @retval      MK_CONFIG_TASKID_MIN  タスクID最小値
  * @retval      MK_CONFIG_TASKID_MAX  タスクID最大値
@@ -231,7 +231,7 @@ MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
  * 
  * @param[in]   taskId タスクID
  * 
- * @return      タスク有無
+ * @return      タスク有無を返す。
  * @retval      true  タスク有
  * @retval      false タスク無
  */
@@ -245,13 +245,13 @@ bool TaskMngTaskCheckExist( MkTaskId_t taskId )
 /******************************************************************************/
 /**
  * @brief       アプリスタックアドレス取得
- * @details     指定したタスクIDの終端アプリスタックアドレスを取得する。
+ * @details     指定したタスクIDのアプリスタックの終端アドレスを取得する。
  * 
  * @param[in]   taskId タスクID
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
- * @return      終端アプリスタックアドレス
+ * @return      終端アドレスを返す。
  */
 /******************************************************************************/
 void *TaskMngTaskGetAplStack( MkTaskId_t taskId )
@@ -270,7 +270,7 @@ void *TaskMngTaskGetAplStack( MkTaskId_t taskId )
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
- * @return      コンテキスト
+ * @return      コンテキストを返す。
  */
 /******************************************************************************/
 TaskMngTaskContext_t TaskMngTaskGetContext( MkTaskId_t taskId )
@@ -283,13 +283,13 @@ TaskMngTaskContext_t TaskMngTaskGetContext( MkTaskId_t taskId )
 /******************************************************************************/
 /**
  * @brief       カーネルスタックアドレス取得
- * @details     指定したタスクIDの終端カーネルスタックアドレスを取得する。
+ * @details     指定したタスクIDのカーネルスタックの終端アドレスを取得する。
  * 
  * @param[in]   taskId タスクID
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
- * @return      終端カーネルスタックアドレス
+ * @return      終端アドレスを返す。
  */
 /******************************************************************************/
 void *TaskMngTaskGetKernelStack( MkTaskId_t taskId )
@@ -308,7 +308,7 @@ void *TaskMngTaskGetKernelStack( MkTaskId_t taskId )
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
- * @return      ページディレクトリID
+ * @return      ページディレクトリIDを返す。
  */
 /******************************************************************************/
 uint32_t TaskMngTaskGetPageDirId( MkTaskId_t taskId )
@@ -327,7 +327,7 @@ uint32_t TaskMngTaskGetPageDirId( MkTaskId_t taskId )
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
- * @return      プロセスID
+ * @return      プロセスIDを返す。
  * @retval      MK_CONFIG_PID_MIN プロセスID最小値
  * @retval      MK_CONFIG_PID_MAX プロセスID最大値
  */
@@ -348,7 +348,7 @@ MkPid_t TaskMngTaskGetPid( MkTaskId_t taskId )
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
- * @return      プロセスタイプ
+ * @return      プロセスタイプを返す。
  * @retval      TASKMNG_PROC_TYPE_KERNEL カーネル
  * @retval      TASKMNG_PROC_TYPE_DRIVER ドライバ
  * @retval      TASKMNG_PROC_TYPE_SERVER サーバ
@@ -370,7 +370,7 @@ uint8_t TaskMngTaskGetType( MkTaskId_t taskId )
  * @param[in]   taskId1 タスクID
  * @param[in]   taskId2 タスクID
  * 
- * @return      プロセスタイプ差
+ * @return      プロセスタイプ差を返す。
  * @retval      0 差0
  * @retval      1 差1
  * @retval      2 差2

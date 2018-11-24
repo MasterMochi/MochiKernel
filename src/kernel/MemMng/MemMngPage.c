@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2018/09/22 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -26,12 +26,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
     DebugLogOutput( CMN_MODULE_MEMMNG_PAGE, \
                     __LINE__,               \
-                    __VA_ARGS__ )
+                    __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -96,6 +96,7 @@ static void PageUnset( uint32_t dirId,
  * @brief       ページディレクトリ割当
  * @details     未使用のページディレクトリを割り当てる。
  * 
+ * @return      割り当てたページディレクトリIDを返す。
  * @retval      MEMMNG_PAGE_DIR_FULL以外 正常終了
  * @retval      MEMMNG_PAGE_DIR_FULL     異常終了
  */
@@ -139,6 +140,7 @@ uint32_t MemMngPageAllocDir( void )
  * 
  * @param[in]   id ページディレクトリID
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
@@ -195,7 +197,7 @@ CmnRet_t MemMngPageFreeDir( uint32_t id )
  * @brief       ページディレクトリID取得
  * @details     現在設定されているページディレクトリのIDを取得する。
  * 
- * @return      ページディレクトリID
+ * @return      ページディレクトリIDを返す。
  */
 /******************************************************************************/
 uint32_t MemMngPageGetDirId( void )
@@ -211,7 +213,7 @@ uint32_t MemMngPageGetDirId( void )
  * 
  * @param[in]   pageDirId ページディレクトリID
  * 
- * @return      ページディレクトリベースレジスタ
+ * @return      ページディレクトリベースレジスタを返す。
  */
 /******************************************************************************/
 IA32PagingPDBR_t MemMngPageSwitchDir( uint32_t pageDirId )
@@ -337,6 +339,7 @@ void MemMngPageInit( void )
  *                  - IA32_PAGING_RW_R  読込専用
  *                  - IA32_PAGING_RW_RW 読込/書込可
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  * 
@@ -465,6 +468,7 @@ void MemMngPageUnset( uint32_t dirId,
  * @brief       ページテーブル割当
  * @details     未使用のページテーブルを割り当てる。
  * 
+ * @return      ページテーブルIDを返す。
  * @retval      MEMMNG_PAGE_TBL_FULL以外 正常終了
  * @retval      MEMMNG_PAGE_TBL_FULL     異常終了
  */
@@ -504,8 +508,9 @@ static uint32_t PageAllocTbl( void )
  * @brief       ページテーブル解放
  * @details     指定したページテーブルを解放する。
  * 
- * @param[in]   id ページテーブル識別子
+ * @param[in]   id ページテーブルID
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
@@ -563,6 +568,7 @@ static CmnRet_t PageFreeTbl( uint32_t id )
  *                  - IA32_PAGING_RW_R  読込専用
  *                  - IA32_PAGING_RW_RW 読込/書込可
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  * 
@@ -666,6 +672,7 @@ static CmnRet_t PageSet( uint32_t dirId,
  * 
  * @param[in]   dirId ページディレクトリID
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */

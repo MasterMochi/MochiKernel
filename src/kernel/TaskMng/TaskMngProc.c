@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2018/05/14 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -29,12 +29,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
     DebugLogOutput( CMN_MODULE_TASKMNG_PROC,    \
                     __LINE__,                   \
-                    __VA_ARGS__ )
+                    __VA_ARGS__              )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -79,7 +79,7 @@ static void TaskMngProcStart( void );
  * @param[in]   *pAddr 実行ファイルアドレス
  * @param[in]   size   実行ファイルサイズ
  * 
- * @return      タスクID
+ * @return      追加時に割り当てたタスクIDを返す。
  * @retval      MK_CONFIG_PID_NULL 失敗
  * @retval      MK_CONFIG_PID_MIN  タスクID最小値
  * @retval      MK_CONFIG_PID_MAX  タスクID最大値
@@ -223,7 +223,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
  *                  - MK_CONFIG_PID_MIN プロセスID最小値
  *                  - MK_CONFIG_PID_MAX プロセスID最大値
  * 
- * @return      ページディレクトリID
+ * @return      ページディレクトリIDを返す。
  */
 /******************************************************************************/
 uint32_t TaskMngProcGetPageDirId( MkPid_t pid )
@@ -242,7 +242,7 @@ uint32_t TaskMngProcGetPageDirId( MkPid_t pid )
  *                  - MK_CONFIG_PID_MIN プロセスID最小値
  *                  - MK_CONFIG_PID_MAX プロセスID最大値
  * 
- * @return      プロセスタイプ
+ * @return      プロセスタイプを返す。
  * @retval      TASKMNG_PROC_TYPE_KERNEL カーネル
  * @retval      TASKMNG_PROC_TYPE_DRIVER ドライバ
  * @retval      TASKMNG_PROC_TYPE_SERVER サーバ

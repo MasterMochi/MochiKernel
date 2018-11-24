@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/IntMngCtrl/IntMngCtrl.c                                         */
-/*                                                                 2018/06/19 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,12 +24,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_INTMNG_CTRL,     \
-                    __LINE__,                   \
-                    __VA_ARGS__ )
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_INTMNG_CTRL, \
+                    __LINE__,               \
+                    __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -38,8 +38,8 @@
 #define WAITINFO_ENTRY_NUM I8259A_IRQ_NUM
 
 /* 割込み待ち状態 */
-#define STATE_INIT ( 0 )
-#define STATE_WAIT ( 1 )
+#define STATE_INIT ( 0 )    /**< 初期状態       */
+#define STATE_WAIT ( 1 )    /**< 割込み待ち状態 */
 
 /** 割込み監視情報型 */
 typedef struct {
@@ -124,7 +124,7 @@ static volatile WaitInfo_t gWaitInfo[ WAITINFO_ENTRY_NUM ];
  * 
  * @param[in]   taskId タスクID
  * 
- * @return      割込み待ち情報インデックス
+ * @return      割込み待ち情報エントリのインデックスを返す。
  * @retval      WAITINFO_ENTRY_NUM     空きエントリ無し
  * @retval      WAITINFO_ENTRY_NUM以外 割込み待ち情報インデックス
  */
@@ -396,7 +396,7 @@ static void Enable( MkTaskId_t   taskId,
  * 
  * @param[in]   taskId タスクID
  * 
- * @return      割込み待ち情報インデックス
+ * @return      割込み待ち情報インデックスを返す。
  * @retval      WAITINFO_ENTRY_NUM     エントリ無し
  * @retval      WAITINFO_ENTRY_NUM以外 割込み待ち情報インデックス
  */

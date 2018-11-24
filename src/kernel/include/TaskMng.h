@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/TaskMng.h                                               */
-/*                                                                 2018/05/28 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef TASKMNG_H
@@ -19,16 +19,16 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* PID */
-#define TASKMNG_PID_IDLE         ( 0 )  /** アイドルプロセス */
+#define TASKMNG_PID_IDLE         ( 0 )  /**< アイドルプロセス */
 
 /* タスクID */
-#define TASKMNG_TASKID_IDLE      ( 0 )  /** アイドルタスク */
+#define TASKMNG_TASKID_IDLE      ( 0 )  /**< アイドルタスク */
 
 /* プロセスタイプ */
-#define TASKMNG_PROC_TYPE_KERNEL ( 0 )  /** カーネル */
-#define TASKMNG_PROC_TYPE_DRIVER ( 1 )  /** ドライバ */
-#define TASKMNG_PROC_TYPE_SERVER ( 2 )  /** サーバ   */
-#define TASKMNG_PROC_TYPE_USER   ( 3 )  /** ユーザ   */
+#define TASKMNG_PROC_TYPE_KERNEL ( 0 )  /**< カーネル */
+#define TASKMNG_PROC_TYPE_DRIVER ( 1 )  /**< ドライバ */
+#define TASKMNG_PROC_TYPE_SERVER ( 2 )  /**< サーバ   */
+#define TASKMNG_PROC_TYPE_USER   ( 3 )  /**< ユーザ   */
 
 
 /******************************************************************************/

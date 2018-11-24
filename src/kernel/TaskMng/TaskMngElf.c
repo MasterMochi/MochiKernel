@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2018/08/15 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,12 +24,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
     DebugLogOutput( CMN_MODULE_TASKMNG_ELF, \
                     __LINE__,               \
-                    __VA_ARGS__ )
+                    __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -60,6 +60,7 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
  * @param[in]   pageDirId      ページディレクトリID
  * @param[out]  **ppEntryPoint エントリポイント
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
@@ -206,6 +207,7 @@ CmnRet_t TaskMngElfLoad( void     *pAddr,
  * @param[in]   *pAddr ELFファイルアドレス
  * @param[in]   size   ELFファイルサイズ
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
@@ -393,6 +395,7 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
  * @param[in]   *pAddr ELFファイルアドレス
  * @param[in]   size   ELFファイルサイズ
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */

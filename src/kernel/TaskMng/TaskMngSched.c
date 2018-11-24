@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2018/06/17 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -30,12 +30,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
     DebugLogOutput( CMN_MODULE_TASKMNG_SCHED,   \
                     __LINE__,                   \
-                    __VA_ARGS__ )
+                    __VA_ARGS__               )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -47,18 +47,18 @@
 #define SCHED_IDLE_IDX         ( 0 )
 
 /* タスク情報使用フラグ */
-#define SCHED_TASK_INFO_UNUSED ( 0 )    /** 未使用 */
-#define SCHED_TASK_INFO_USED   ( 1 )    /** 使用中 */
+#define SCHED_TASK_INFO_UNUSED ( 0 )    /**< 未使用 */
+#define SCHED_TASK_INFO_USED   ( 1 )    /**< 使用中 */
 
 /* スケジューラ実行中レベル */
-#define SCHED_LEVEL_KERNEL     ( 0 )    /** カーネルレベル */
-#define SCHED_LEVEL_DRIVER     ( 1 )    /** ドライバレベル */
-#define SCHED_LEVEL_SERVER     ( 2 )    /** サーバレベル   */
-#define SCHED_LEVEL_USER       ( 3 )    /** ユーザレベル   */
+#define SCHED_LEVEL_KERNEL     ( 0 )    /**< カーネルレベル */
+#define SCHED_LEVEL_DRIVER     ( 1 )    /**< ドライバレベル */
+#define SCHED_LEVEL_SERVER     ( 2 )    /**< サーバレベル   */
+#define SCHED_LEVEL_USER       ( 3 )    /**< ユーザレベル   */
 
 /* 実行状態 */
-#define STATE_RUN              ( 0 )    /** 実行状態 */
-#define STATE_WAIT             ( 1 )    /** 待ち状態 */
+#define STATE_RUN              ( 0 )    /**< 実行状態 */
+#define STATE_WAIT             ( 1 )    /**< 待ち状態 */
 
 /** タスク情報構造体 */
 typedef struct {
@@ -131,6 +131,7 @@ static schedTbl_t gSchedTbl;
  *                  - MK_CONFIG_TASKID_MIN タスクID最小値
  *                  - MK_CONFIG_TASKID_MAX タスクID最大値
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 成功
  * @retval      CMN_FAILURE 失敗
  */
@@ -312,7 +313,7 @@ void TaskMngSchedExec( void )
  * @brief       タスクID取得
  * @details     現在実行中タスクのタスクIDを取得する。
  * 
- * @return      タスクID
+ * @return      タスクIDを返す。
  * @retval      MK_CONFIG_TASKID_MIN タスクID最小値
  * @retval      MK_CONFIG_TASKID_MAX タスクID最大値
  */

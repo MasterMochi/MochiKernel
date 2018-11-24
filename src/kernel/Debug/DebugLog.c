@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2018/10/20 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -23,8 +23,8 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 長さ定義 */
-#define LOG_LENGTH_ID      (  8 )   /** 識別子文字数 */
-#define LOG_LENGTH_LINENUM (  4 )   /** 行番号文字数 */
+#define LOG_LENGTH_ID      (  8 )   /**< 識別子文字数 */
+#define LOG_LENGTH_LINENUM (  4 )   /**< 行番号文字数 */
 
 /** カーソル位置アドレス計算 */
 #define LOG_CURSOR_ADDR( __ROW, __COLUMN )                  \
@@ -34,31 +34,28 @@
 
 /** 文字色取得マクロ */
 #define LOG_ATTR_FG( __BASE )           ( __BASE & 0x0F )
-
 /** 背景色取得マクロ */
 #define LOG_ATTR_BG( __BASE )           ( __BASE & 0xF0 )
-
 /** 文字色変更マクロ */
 #define LOG_ATTR_FG_CHG( __BASE, __FG ) ( LOG_ATTR_BG( __BASE ) | ( __FG ) )
-
 /** 背景色変更マクロ */
 #define LOG_ATTR_BG_CHG( __BASE, __BG ) ( LOG_ATTR_FG( __BASE ) | ( __BG ) )
 
 /* 変換指定子フラグ */
-#define LOG_FLAG_LEFT      ( 0x01 ) /* 左寄せ       */
-#define LOG_FLAG_SIGN      ( 0x02 ) /* 符号表示     */
-#define LOG_FLAG_SPACE     ( 0x04 ) /* 正数符号空白 */
-#define LOG_FLAG_ALTERNATE ( 0x08 ) /* 代替形式     */
-#define LOG_FLAG_ZERO      ( 0x10 ) /* 0埋め        */
-#define LOG_FLAG_UPPERCASE ( 0x20 ) /* 大文字       */
-#define LOG_FLAG_UNSIGNED  ( 0x40 ) /* 符号無       */
+#define LOG_FLAG_LEFT      ( 0x01 ) /**< 左寄せ       */
+#define LOG_FLAG_SIGN      ( 0x02 ) /**< 符号表示     */
+#define LOG_FLAG_SPACE     ( 0x04 ) /**< 正数符号空白 */
+#define LOG_FLAG_ALTERNATE ( 0x08 ) /**< 代替形式     */
+#define LOG_FLAG_ZERO      ( 0x10 ) /**< 0埋め        */
+#define LOG_FLAG_UPPERCASE ( 0x20 ) /**< 大文字       */
+#define LOG_FLAG_UNSIGNED  ( 0x40 ) /**< 符号無       */
 
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                \
     DebugLogOutput( CMN_MODULE_DBG_LOG, \
                     __LINE__,           \
-                    __VA_ARGS__ )
+                    __VA_ARGS__         )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -213,26 +210,35 @@ void DebugLogInit( void )
  * @param[in]   moduleId モジュール・サブモジュール識別子
  *                  - CMN_MODULE_INIT_INIT     初期化制御(初期化)
  *                  - CMN_MODULE_DEBUG_INIT    デバッグ制御(初期化)
- *                  - CMN_MODULE_DEBUG_LOG     デバッグ制御(ログ管理)
+ *                  - CMN_MODULE_DEBUG_LOG     デバッグ制御(ログ)
  *                  - CMN_MODULE_MEMMNG_INIT   メモリ管理(初期化)
- *                  - CMN_MODULE_MEMMNG_GDT    メモリ管理(GDT管理)
- *                  - CMN_MODULE_MEMMNG_AREA   メモリ管理(メモリ領域管理)
- *                  - CMN_MODULE_MEMMNG_PAGE   メモリ管理(ページ管理)
- *                  - CMN_MODULE_MEMMNG_CTRL   メモリ管理(メモリ制御)
+ *                  - CMN_MODULE_MEMMNG_GDT    メモリ管理(GDT)
+ *                  - CMN_MODULE_MEMMNG_AREA   メモリ管理(領域)
+ *                  - CMN_MODULE_MEMMNG_PAGE   メモリ管理(ページ)
+ *                  - CMN_MODULE_MEMMNG_CTRL   メモリ管理(制御)
+ *                  - CMN_MODULE_MEMMNG_MAP    メモリ管理(マップ)
+ *                  - CMN_MODULE_MEMMNG_PHYS   メモリ管理(物理)
+ *                  - CMN_MODULE_MEMMNG_IO     メモリ管理(I/O)
+ *                  - CMN_MODULE_MEMMNG_VIRT   メモリ管理(仮想)
  *                  - CMN_MODULE_TASKMNG_INIT  タスク管理(初期化)
- *                  - CMN_MODULE_TASKMNG_TSS   タスク管理(TSS管理)
+ *                  - CMN_MODULE_TASKMNG_TSS   タスク管理(TSS)
  *                  - CMN_MODULE_TASKMNG_SCHED タスク管理(スケジューラ)
- *                  - CMN_MODULE_TASKMNG_TASK  タスク管理(タスク管理)
+ *                  - CMN_MODULE_TASKMNG_TASK  タスク管理(タスク)
  *                  - CMN_MODULE_TASKMNG_ELF   タスク管理(ELFローダ)
- *                  - CMN_MODULE_TASKMNG_PROC  タスク管理(プロセス管理)
+ *                  - CMN_MODULE_TASKMNG_PROC  タスク管理(プロセス)
  *                  - CMN_MODULE_INTMNG_INIT   割込管理(初期化)
- *                  - CMN_MODULE_INTMNG_PIC    割込管理(PIC管理)
- *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT管理)
- *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ管理)
+ *                  - CMN_MODULE_INTMNG_PIC    割込管理(PIC)
+ *                  - CMN_MODULE_INTMNG_IDT    割込管理(IDT)
+ *                  - CMN_MODULE_INTMNG_HDL    割込管理(ハンドラ)
+ *                  - CMN_MODULE_INTMNG_CTRL   割込管理(ハードウェア)
  *                  - CMN_MODULE_TIMERMNG_INIT タイマ管理(初期化)
- *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT管理)
+ *                  - CMN_MODULE_TIMERMNG_CTRL タイマ管理(制御)
+ *                  - CMN_MODULE_TIMERMNG_PIT  タイマ管理(PIT)
  *                  - CMN_MODULE_ITCCTRL_INIT  タスク間通信制御(初期化)
- *                  - CMN_MODULE_ITCCTRL_MSG   タスク間通信制御(メッセージ制御)
+ *                  - CMN_MODULE_ITCCTRL_MSG   タスク間通信制御(ﾒｯｾｰｼﾞ)
+ *                  - CMN_MODULE_IOCTRL_INIT   入出力制御(初期化)
+ *                  - CMN_MODULE_IOCTRL_PORT   入出力制御(I/Oポート)
+ *                  - CMN_MODULE_IOCTRL_MEM    入出力制御(I/Oメモリ)
  * @param[in]   lineNum  行番号
  * @param[in]   *pFormat トレースログ
  * 
@@ -323,6 +329,7 @@ void DebugLogOutput( uint32_t moduleId,
  * @param[out]  *pVaule  数値
  * @param[out]  *pLength 数字文字列長
  * 
+ * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了（数字文字列無し）
  * 
@@ -771,7 +778,7 @@ static void LogOutputString( char *pStr )
  * 
  * @param[in]   *pStr エスケープシーケンス
  * 
- * @return      エスケープシーケンス文字数
+ * @return      エスケープシーケンス文字数を返す。
  * 
  * @note        - 「DEBUG_LOG_ENABLE」マクロが定義されている場合に有効となる。
  *              - 画面制御エスケープシーケンスには対応しない。

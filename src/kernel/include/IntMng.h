@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/IntMng.h                                                */
-/*                                                                 2018/05/18 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef INTMNG_H
@@ -18,9 +18,9 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* 割込み番号定義 */
-#define INTMNG_INT_NO_MIN    (   0 )                    /** 割込み番号最小値 */
-#define INTMNG_INT_NO_MAX    ( 255 )                    /** 割込み番号最大値 */
-#define INTMNG_INT_NO_NUM    ( INTMNG_INT_NO_MAX + 1 )  /** 割込み番号数     */
+#define INTMNG_INT_NO_MIN    (   0 )                    /**< 割込み番号最小値 */
+#define INTMNG_INT_NO_MAX    ( 255 )                    /**< 割込み番号最大値 */
+#define INTMNG_INT_NO_NUM    ( INTMNG_INT_NO_MAX + 1 )  /**< 割込み番号数     */
 
 /** PICベクタ番号ベース */
 #define INTMNG_PIC_VCTR_BASE ( 0x20 )

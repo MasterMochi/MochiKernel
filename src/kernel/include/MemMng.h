@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2018/08/16 */
+/*                                                                 2018/11/24 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -26,29 +26,29 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* GDT定義 */
-#define MEMMNG_GDT_ENTRY_FULL     (  0 )        /** GDTエントリ空き無し   */
-#define MEMMNG_GDT_ENTRY_MIN      (  1 )        /** GDTエントリ番号最小値 */
-#define MEMMNG_GDT_ENTRY_MAX      (  9 )        /** GDTエントリ番号最大値 */
+#define MEMMNG_GDT_ENTRY_FULL     (  0 )        /**< GDTエントリ空き無し   */
+#define MEMMNG_GDT_ENTRY_MIN      (  1 )        /**< GDTエントリ番号最小値 */
+#define MEMMNG_GDT_ENTRY_MAX      (  9 )        /**< GDTエントリ番号最大値 */
 #define MEMMNG_GDT_ENTRY_NUM        \
-    ( MEMMNG_GDT_ENTRY_MAX + 1 )                /** GDTエントリ数         */
+    ( MEMMNG_GDT_ENTRY_MAX + 1 )                /**< GDTエントリ数         */
 
 /* セグメントセレクタ定義 */
-#define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /** カーネルコードセグメント */
-#define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /** カーネルデータセグメント */
-#define MEMMNG_SEGSEL_APL_CODE    ( 3 * 8 + 3 ) /** アプリコードセグメント   */
-#define MEMMNG_SEGSEL_APL_DATA    ( 4 * 8 + 3 ) /** アプリデータセグメント   */
+#define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /**< カーネルコードセグメント */
+#define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /**< カーネルデータセグメント */
+#define MEMMNG_SEGSEL_APL_CODE    ( 3 * 8 + 3 ) /**< アプリコードセグメント   */
+#define MEMMNG_SEGSEL_APL_DATA    ( 4 * 8 + 3 ) /**< アプリデータセグメント   */
 
 /** ページディレクトリID */
-#define MEMMNG_PAGE_DIR_ID_IDLE   ( 0 )         /** アイドルプロセス用PDID */
-#define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /** PDID最小値             */
+#define MEMMNG_PAGE_DIR_ID_IDLE   ( 0 )         /**< アイドルプロセス用PDID */
+#define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /**< PDID最小値             */
 
 /* ページディレクトリ定義 */
-#define MEMMNG_PAGE_DIR_NUM       MK_CONFIG_PID_NUM     /** PD管理数   */
-#define MEMMNG_PAGE_DIR_FULL      MEMMNG_PAGE_DIR_NUM   /** PD空き無し */
+#define MEMMNG_PAGE_DIR_NUM       MK_CONFIG_PID_NUM     /**< PD管理数   */
+#define MEMMNG_PAGE_DIR_FULL      MEMMNG_PAGE_DIR_NUM   /**< PD空き無し */
 
 /* ページテーブル定義 */
-#define MEMMNG_PAGE_TBL_NUM       ( 4096 )              /** PT管理数   */
-#define MEMMNG_PAGE_TBL_FULL      MEMMNG_PAGE_TBL_NUM   /** PT空き無し */
+#define MEMMNG_PAGE_TBL_NUM       ( 4096 )              /**< PT管理数   */
+#define MEMMNG_PAGE_TBL_FULL      MEMMNG_PAGE_TBL_NUM   /**< PT空き無し */
 
 
 /******************************************************************************/

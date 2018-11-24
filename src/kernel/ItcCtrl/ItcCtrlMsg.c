@@ -27,12 +27,12 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/* デバッグトレースログ出力マクロ */
+/** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_ITCCTRL_MSG,     \
-                    __LINE__,                   \
-                    __VA_ARGS__ )
+#define DEBUG_LOG( ... )                    \
+    DebugLogOutput( CMN_MODULE_ITCCTRL_MSG, \
+                    __LINE__,               \
+                    __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -363,7 +363,7 @@ static void Receive( MkMsgParam_t *pParam )
  * 
  * @param[in]   taskId タスクID
  * 
- * @return      先頭エントリのタスクID
+ * @return      先頭エントリのタスクIDを返す。
  * @retval      MK_CONFIG_TASKID_NULL 先頭エントリ無し
  * @retval      MK_CONFIG_TASKID_MIN  タスクID最小値
  * @retval      MK_CONFIG_TASKID_MAX  タスクID最大値
@@ -398,7 +398,7 @@ static MkTaskId_t RemoveSndWaitListTop( MkTaskId_t taskId )
  * @param[in]   taskId    タスクID
  * @param[in]   rmvTaskId 削除タスクID
  * 
- * @return      削除タスクID
+ * @return      削除タスクIDを返す。
  * @retval      MK_CONFIG_TASKID_NULL 該当エントリ無し
  * @retval      引数rmvTaskId         削除エントリのタスクID
  */

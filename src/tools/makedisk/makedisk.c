@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/tools/makedisk/makedisk.c                                              */
-/*                                                                 2017/07/11 */
-/* Copyright (C) 2017 Mochi.                                                  */
+/*                                                                 2018/11/24 */
+/* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -23,29 +23,29 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* パーティションテーブル定義 */
-#define PT_STATUS_BOOT          ( 0x80 )    /** ブート可能 */
-#define PT_TYPE_MOCHI_BOOTER    ( 0x30 )    /** MochiBooter用パーティション */
-#define PT_TYPE_MOCHI_KERNEL    ( 0x31 )    /** MochiKernel用パーティション */
+#define PT_STATUS_BOOT          ( 0x80 )    /**< ブート可能 */
+#define PT_TYPE_MOCHI_BOOTER    ( 0x30 )    /**< MochiBooter用パーティション */
+#define PT_TYPE_MOCHI_KERNEL    ( 0x31 )    /**< MochiKernel用パーティション */
 
 /* 引数定義 */
-#define OPTION_CYLINDER_DEFAULT ( 10 )      /** 引数シリンダ数デフォルト値 */
-#define OPTION_HEAD_DEFAULT     ( 16 )      /** 引数ヘッド数デフォルト値   */
-#define OPTION_SECTOR_DEFAULT   ( 63 )      /** 引数セクタ数デフォルト値   */
+#define OPTION_CYLINDER_DEFAULT ( 10 )      /**< 引数シリンダ数デフォルト値 */
+#define OPTION_HEAD_DEFAULT     ( 16 )      /**< 引数ヘッド数デフォルト値   */
+#define OPTION_SECTOR_DEFAULT   ( 63 )      /**< 引数セクタ数デフォルト値   */
 
 /* シリンダ定義 */
-#define CYLINDER_MIN            (    0 )    /** シリンダ最小値 */
-#define CYLINDER_MAX            ( 1023 )    /** シリンダ最大値 */
+#define CYLINDER_MIN            (    0 )    /**< シリンダ最小値 */
+#define CYLINDER_MAX            ( 1023 )    /**< シリンダ最大値 */
 
 /* ヘッド定義 */
-#define HEAD_MIN                (   0 )     /** セクタ最小値 */
-#define HEAD_MAX                ( 254 )     /** セクタ最大値 */
+#define HEAD_MIN                (   0 )     /**< セクタ最小値 */
+#define HEAD_MAX                ( 254 )     /**< セクタ最大値 */
 
 /* セクタ定義 */
-#define SECTOR_MIN              (  1 )      /** セクタ最小値 */
-#define SECTOR_MAX              ( 63 )      /** セクタ最大値 */
+#define SECTOR_MIN              (  1 )      /**< セクタ最小値 */
+#define SECTOR_MAX              ( 63 )      /**< セクタ最大値 */
 
 /** バッファサイズ */
-#define BUFFER_SIZE             ( 512 )     /** 読込みバッファサイズ */
+#define BUFFER_SIZE             ( 512 )     /**< 読込みバッファサイズ */
 
 /** アボートマクロ */
 #define ABORT( ... )                    \
@@ -134,9 +134,9 @@ static void writePartitionEntry( int      diskFd,
 /******************************************************************************/
 /* グローバル変数定義                                                         */
 /******************************************************************************/
-uint32_t cylinder;  /* 仮想ディスクのシリンダ数 */
-uint32_t head;      /* 仮想ディスクのヘッド数   */
-uint32_t sector;    /* 仮想ディスクのセクタ数   */
+uint32_t cylinder;  /**< 仮想ディスクのシリンダ数 */
+uint32_t head;      /**< 仮想ディスクのヘッド数   */
+uint32_t sector;    /**< 仮想ディスクのセクタ数   */
 
 
 /******************************************************************************/
@@ -147,11 +147,12 @@ uint32_t sector;    /* 仮想ディスクのセクタ数   */
  * @brief       makedisk
  * @details     仮想マシン用ディスクイメージを作成する。
  * 
- * param[in]    argNum  引数の数
- * param[in]    *pArg[] 引数
+ * @param[in]   argNum  引数の数
+ * @param[in]   *pArg[] 引数
  * 
- * retval       EXIT_SUCCESS 正常終了
- * retval       EXIT_FAILURE 異常終了
+ * @return      処理結果を返す。
+ * @retval      EXIT_SUCCESS 正常終了
+ * @retval      EXIT_FAILURE 異常終了
  */
 /******************************************************************************/
 int main( int  argNum,
@@ -431,7 +432,7 @@ static void checkOptions( int32_t argNum,
  * 
  * @param[in]   lba LBAアドレス
  * 
- * @return      CHSアドレス
+ * @return      CHSアドレスを返す。
  */
 /******************************************************************************/
 static chs_t getChs( uint32_t lba )
@@ -554,7 +555,7 @@ static void writeIpl( int  diskFd,
  * @param[in]   *pBootPath   ブートローダバイナリのファイルパス
  * @param[in]   chsFirstAddr 書込み先先頭CHSアドレス
  * 
- * @return      書込み先最後尾CHSアドレス
+ * @return      書込み先最後尾CHSアドレスを返す。
  */
 /******************************************************************************/
 static chs_t writeBoot( int   diskFd,
@@ -675,7 +676,7 @@ static chs_t writeBoot( int   diskFd,
  * @param[in]   *pKernelPath カーネルバイナリのファイルパス
  * @param[in]   chsFirstAddr 書込み先先頭CHSアドレス
  * 
- * @return      書込み先最後尾CHSアドレス
+ * @return      書込み先最後尾CHSアドレスを返す。
  */
 /******************************************************************************/
 static chs_t writeKernel( int   diskFd,

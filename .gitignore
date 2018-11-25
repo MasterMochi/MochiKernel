@@ -1,9 +1,12 @@
 build/mochi.img
-build/kernel.img
+build/os.img
 build/objs/booter
 build/objs/kernel
 build/tools/*
-doxygen/output
+doxygen/booter
+doxygen/kernel
+doxygen/libraries
+doxygen/tools
 doxygen/log
 vm/vmware/*
 *.o

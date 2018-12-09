@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -13,7 +13,7 @@
 #include <hardware/IA32/IA32Instruction.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <hardware/Vga/Vga.h>
-#include <MLib/Basic/MLibBasic.h>
+#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -258,7 +258,7 @@ void MemMngPageInit( void )
     
     /* ページディレクトリ管理テーブルサイズ設定 */
     gPageDirSize = MEMMNG_PAGE_DIR_NUM * sizeof ( IA32PagingDir_t );
-    gPageDirSize = MLIB_BASIC_ALIGN( gPageDirSize, IA32_PAGING_PAGE_SIZE );
+    gPageDirSize = MLIB_ALIGN( gPageDirSize, IA32_PAGING_PAGE_SIZE );
     
     /* ページディレクトリ管理テーブル割当て */
     pgPageDir = ( IA32PagingDir_t * ) MemMngPhysAlloc( gPageDirSize );
@@ -272,7 +272,7 @@ void MemMngPageInit( void )
     
     /* ページテーブル管理テーブルサイズ設定 */
     gPageTblSize = MEMMNG_PAGE_TBL_NUM * sizeof ( IA32PagingTbl_t );
-    gPageTblSize = MLIB_BASIC_ALIGN( gPageTblSize, IA32_PAGING_PAGE_SIZE );
+    gPageTblSize = MLIB_ALIGN( gPageTblSize, IA32_PAGING_PAGE_SIZE );
     
     /* ページテーブル管理テーブル割当て */
     pgPageTbl = ( IA32PagingTbl_t * ) MemMngPhysAlloc( gPageTblSize );

@@ -1,16 +1,13 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2018/11/23 *#
+#*                                                                 2018/12/09 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
-#* マクロ設定                                                                 *#
+#* 設定                                                                       *#
 #******************************************************************************#
-# ベースディレクトリsrc/からの相対パス
-CUR_DIR      = kernel
-
-# バイナリ名
-KERNEL_NAME  = kernel
+# 実行ファイル名
+PROG = kernel
 
 # ソースコード
 SRCS = InitCtrl/InitCtrlInit.c \
@@ -45,72 +42,84 @@ SRCS = InitCtrl/InitCtrlInit.c \
        IoCtrl/IoCtrlPort.c     \
        IoCtrl/IoCtrlMem.c
 
+# ビルドディレクトリ
+BUILD_DIR = ../../build
+# オブジェクトディレクトリ
+OBJ_DIR   = $(BUILD_DIR)/obj/kernel
+
 # Cフラグ
-CFLAGS = -O                 \
-         -Wall              \
-         -masm=intel        \
-         -m32               \
-         -fno-pic           \
-         -ffreestanding     \
-         -Iinclude/         \
-         -I../include
-#         -DDEBUG_LOG_ENABLE
-
+CFLAGS  = -O                 \
+          -Wall              \
+          -masm=intel        \
+          -m32               \
+          -fno-pic           \
+          -ffreestanding     \
+          -Iinclude/         \
+          -I../include
+#          -DDEBUG_LOG_ENABLE
 # LDフラグ
-LDFLAGS = -melf_i386    \
-          -lc           \
-          -lMLibBasic
+LDFLAGS = -T kernel.lds \
+          -melf_i386
+# LDライブラリフラグ
+LDLIBS  = -lc    \
+          -lMLib
 
 
 #******************************************************************************#
-#* 自動設定マクロ                                                             *#
+#* 定義                                                                       *#
 #******************************************************************************#
-# ベースディレクトリパス
-BASE_DIR  = $(shell pwd | sed -e 's/\/src\/$(subst /,\/,$(CUR_DIR))//')
-# 中間ファイル格納先ディレクトリパス
-OBJS_DIR  = $(BASE_DIR)/build/objs/$(CUR_DIR)
-# ディレクトリリスト
-DIR_LIST  = $(sort $(addprefix $(OBJS_DIR)/, $(dir $(SRCS))))
+# オブジェクトサブディレクトリ
+OBJ_SUBDIRS = $(sort $(addprefix $(OBJ_DIR)/, $(dir $(SRCS))))
 
 # オブジェクトファイル
-OBJS  = $(addprefix $(OBJS_DIR)/, $(SRCS:.c=.o))
+OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 
+# 依存関係ファイル
+DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
+
+# インクルードディレクトリ
+CFLAGS  += -I$(BUILD_DIR)/include
 # ライブラリディレクトリ
-LDFLAGS += -L$(BASE_DIR)/build/objs/libraries
+LDFLAGS += -L$(BUILD_DIR)/lib           \
+           -L$(BUILD_DIR)/obj/libraries
 
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
-# サブディレクトリも含めたコンパイル
+# コンパイル
 .PHONY: all
-all: $(DIR_LIST) $(OBJS_DIR)/$(KERNEL_NAME) Makefile
+all: $(OBJ_SUBDIRS) $(OBJ_DIR)/$(PROG) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(OBJS_DIR)
+	-rm -rf $(OBJ_DIR)
 
 
 #******************************************************************************#
 #* 生成規則                                                                   *#
 #******************************************************************************#
-ifdef DIR_LIST
-$(DIR_LIST):
+# 依存関係
+-include $(DEPS)
+
+# オブジェクトサブディレクトリ
+ifdef OBJ_SUBDIRS
+$(OBJ_SUBDIRS):
 	mkdir -p $@
 endif
 
-# バイナリ
-$(OBJS_DIR)/$(KERNEL_NAME): $(OBJS) Makefile
-	$(LD) -T kernel.lds -o $@ $(OBJS) $(LDFLAGS)
+# 実行ファイル
+$(OBJ_DIR)/$(PROG): $(OBJS) Makefile
+	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
 # アセンブラファイルコンパイル
-$(OBJS_DIR)/%.o: %.s Makefile
+$(OBJ_DIR)/%.o: %.s Makefile
 	$(AS) -o $@ $<
 
 # Cファイルコンパイル
-$(OBJS_DIR)/%.o: %.c Makefile
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(OBJ_DIR)/%.o: %.c Makefile
+	$(CC) $(CFLAGS) -o $@ -c $< -MD -MP
 
 
 #******************************************************************************#

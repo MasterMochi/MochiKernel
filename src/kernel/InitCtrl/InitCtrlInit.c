@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2016-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <kernel/config.h>
 #include <kernel/kernel.h>
 #include <kernel/types.h>
-#include <MLib/Basic/MLibBasic.h>
+#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -182,7 +182,7 @@ static void InitLoadProcImg( void )
         }
         
         /* アドレス更新 */
-        pAddr   = pAddr + MLIB_BASIC_ALIGN( pHeader->fileSize, 512 );
+        pAddr   = pAddr + MLIB_ALIGN( pHeader->fileSize, 512 );
         pHeader = ( MkImgHdr_t * ) pAddr;
     }
     

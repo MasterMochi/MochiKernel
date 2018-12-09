@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <MLib/MLib.h>
-#include <MLib/Basic/MLibBasicList.h>
+#include <MLib/MLibList.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
 #include <kernel/types.h>
@@ -62,24 +62,24 @@
 
 /** タスク情報構造体 */
 typedef struct {
-    MLibBasicListNode_t node;           /**< 連結リスト情報 */
-    uint8_t             used;           /**< 使用フラグ     */
-    uint8_t             state;          /**< 実行状態       */
-    uint8_t             reserved[ 2 ];  /**< 予約           */
-    MkTaskId_t          taskId;         /**< タスクID       */
+    MLibListNode_t node;            /**< 連結リスト情報 */
+    uint8_t        used;            /**< 使用フラグ     */
+    uint8_t        state;           /**< 実行状態       */
+    uint8_t        reserved[ 2 ];   /**< 予約           */
+    MkTaskId_t     taskId;          /**< タスクID       */
 } schedTaskInfo_t;
 
 /** 実行可能タスクグループ構造体 */
 typedef struct {
-    MLibBasicList_t kernelQ;            /**< カーネルタスクキュー */
-    MLibBasicList_t driverQ;            /**< ドライバタスクキュー */
-    MLibBasicList_t serverQ;            /**< サーバタスクキュー   */
-    MLibBasicList_t userQ;              /**< ユーザタスクキュー   */
+    MLibList_t kernelQ;             /**< カーネルタスクキュー */
+    MLibList_t driverQ;             /**< ドライバタスクキュー */
+    MLibList_t serverQ;             /**< サーバタスクキュー   */
+    MLibList_t userQ;               /**< ユーザタスクキュー   */
 } schedRunGrp_t;
 
 /** 待ちタスクグループ構造体 */
 typedef struct {
-    MLibBasicList_t waitQ;              /**< 待ちキュー */
+    MLibList_t waitQ;               /**< 待ちキュー */
 } schedWaitGrp_t;
 
 /** スケジューラテーブル構造体 */
@@ -90,7 +90,7 @@ typedef struct {
     uint32_t        reservedGrpIdx;                     /**< 予約タスクグループIDX   */
     schedRunGrp_t   runGrp[ SCHED_RUNGRP_NUM ];         /**< 実行可能タスクグループ  */
     schedWaitGrp_t  waitGrp;                            /**< 待ちタスクグループ      */
-    MLibBasicList_t freeQ;                              /**< 空タスクキュー          */
+    MLibList_t      freeQ;                              /**< 空タスクキュー          */
     schedTaskInfo_t taskInfo[ MK_CONFIG_TASKID_NUM ];   /**< タスク情報              */
 } schedTbl_t;
 
@@ -145,7 +145,7 @@ CmnRet_t TaskMngSchedAdd( MkTaskId_t taskId )
     
     /* 空タスクキューから空タスク情報取得 */
     pTaskInfo =
-        ( schedTaskInfo_t * ) MLibBasicListRemoveTail( &( gSchedTbl.freeQ ) );
+        ( schedTaskInfo_t * ) MLibListRemoveTail( &( gSchedTbl.freeQ ) );
     
     /* 取得結果判定 */
     if ( pTaskInfo == NULL ) {
@@ -232,28 +232,28 @@ void TaskMngSchedExec( void )
             
             /* カーネルキューからデキュー */
             pTaskInfo = ( schedTaskInfo_t * )
-                MLibBasicListRemoveTail( &( pRunningGrp->kernelQ ) );
+                MLibListRemoveTail( &( pRunningGrp->kernelQ ) );
             
         } else if ( level == SCHED_LEVEL_DRIVER ) {
             /* ドライバレベル */
             
             /* ドライバキューからデキュー */
             pTaskInfo = ( schedTaskInfo_t * )
-                MLibBasicListRemoveTail( &( pRunningGrp->driverQ ) );
+                MLibListRemoveTail( &( pRunningGrp->driverQ ) );
             
         } else if ( level == SCHED_LEVEL_SERVER ) {
             /* サーバレベル */
             
             /* サーバキューからデキュー */
             pTaskInfo = ( schedTaskInfo_t * )
-                MLibBasicListRemoveTail( &( pRunningGrp->serverQ ) );
+                MLibListRemoveTail( &( pRunningGrp->serverQ ) );
             
         } else if ( level == SCHED_LEVEL_USER ) {
             /* ユーザレベル */
             
             /* ユーザキューからデキュー */
             pTaskInfo = ( schedTaskInfo_t * )
-                MLibBasicListRemoveTail( &( pRunningGrp->userQ ) );
+                MLibListRemoveTail( &( pRunningGrp->userQ ) );
             
         } else {
             /* 他 */
@@ -362,8 +362,8 @@ void TaskMngSchedInit( void )
           taskId++                       ) {
         /* エンキュー */
         retMLib = 
-            MLibBasicListInsertHead( &( gSchedTbl.freeQ ),
-                                     &( gSchedTbl.taskInfo[ taskId ].node ) );
+            MLibListInsertHead( &( gSchedTbl.freeQ ),
+                                &( gSchedTbl.taskInfo[ taskId ].node ) );
         
         /* エンキュー結果判定 */
         if ( retMLib != MLIB_SUCCESS ) {
@@ -399,8 +399,8 @@ void TaskMngSchedStart( MkTaskId_t taskId )
     do {
         /* 次タスク情報取得 */
         pTaskInfo = ( schedTaskInfo_t * )
-            MLibBasicListGetNextNode( &gSchedTbl.waitGrp.waitQ,
-                                      &pTaskInfo->node          );
+            MLibListGetNextNode( &gSchedTbl.waitGrp.waitQ,
+                                 &pTaskInfo->node          );
         
         /* 取得結果判定 */
         if ( pTaskInfo == NULL ) {
@@ -412,8 +412,8 @@ void TaskMngSchedStart( MkTaskId_t taskId )
     } while ( pTaskInfo->taskId != taskId );
     
     /* 待ちキューから削除 */
-    MLibBasicListRemove( &gSchedTbl.waitGrp.waitQ,
-                         &pTaskInfo->node          );
+    MLibListRemove( &gSchedTbl.waitGrp.waitQ,
+                    &pTaskInfo->node          );
     
     /* 実行予約タスクグループにエンキュー */
     SchedEnqueueToReservedGrp( pTaskInfo );
@@ -433,8 +433,8 @@ void TaskMngSchedStart( MkTaskId_t taskId )
 void TaskMngSchedStop( MkTaskId_t taskId )
 {
     uint8_t         type;       /* プロセスタイプ */
-    MLibBasicList_t *pTaskQ0;   /* タスクキュー   */
-    MLibBasicList_t *pTaskQ1;   /* タスクキュー   */
+    MLibList_t      *pTaskQ0;   /* タスクキュー   */
+    MLibList_t      *pTaskQ1;   /* タスクキュー   */
     schedTaskInfo_t *pTaskInfo; /* タスク情報     */
     
     /* 初期化 */
@@ -448,8 +448,8 @@ void TaskMngSchedStop( MkTaskId_t taskId )
         /* 実行中タスク */
         
         /* 待ちキューにエンキュー */
-        MLibBasicListInsertHead( &gSchedTbl.waitGrp.waitQ,
-                                 &( gSchedTbl.pRunningTaskInfo->node ) );
+        MLibListInsertHead( &gSchedTbl.waitGrp.waitQ,
+                            &( gSchedTbl.pRunningTaskInfo->node ) );
         
         /* 実行状態設定 */
         gSchedTbl.pRunningTaskInfo->state = STATE_WAIT;
@@ -490,7 +490,7 @@ void TaskMngSchedStop( MkTaskId_t taskId )
     
     /* 先頭タスク情報取得 */
     pTaskInfo = ( schedTaskInfo_t * )
-        MLibBasicListGetNextNode( pTaskQ0, NULL );
+        MLibListGetNextNode( pTaskQ0, NULL );
     
     /* タスク検索 */
     while ( pTaskInfo != NULL ) {
@@ -499,11 +499,11 @@ void TaskMngSchedStop( MkTaskId_t taskId )
             /* 対象 */
             
             /* タスクキューから削除 */
-            MLibBasicListRemove( pTaskQ0, &pTaskInfo->node );
+            MLibListRemove( pTaskQ0, &pTaskInfo->node );
             
             /* 待ちキューにエンキュー */
-            MLibBasicListInsertHead( &gSchedTbl.waitGrp.waitQ,
-                                     &( pTaskInfo->node )      );
+            MLibListInsertHead( &gSchedTbl.waitGrp.waitQ,
+                                &( pTaskInfo->node )      );
             
             /* 実行状態設定 */
             pTaskInfo->state = STATE_WAIT;
@@ -513,12 +513,12 @@ void TaskMngSchedStop( MkTaskId_t taskId )
         
         /* 次タスク情報取得 */
         pTaskInfo = ( schedTaskInfo_t * )
-            MLibBasicListGetNextNode( pTaskQ0, &pTaskInfo->node );
+            MLibListGetNextNode( pTaskQ0, &pTaskInfo->node );
     }
     
     /* 先頭タスク情報取得 */
     pTaskInfo = ( schedTaskInfo_t * )
-        MLibBasicListGetNextNode( pTaskQ1, NULL );
+        MLibListGetNextNode( pTaskQ1, NULL );
     
     /* タスク検索 */
     while ( pTaskInfo != NULL ) {
@@ -527,11 +527,11 @@ void TaskMngSchedStop( MkTaskId_t taskId )
             /* 対象 */
             
             /* タスクキューから削除 */
-            MLibBasicListRemove( pTaskQ1, &pTaskInfo->node );
+            MLibListRemove( pTaskQ1, &pTaskInfo->node );
             
             /* 待ちキューにエンキュー */
-            MLibBasicListInsertHead( &gSchedTbl.waitGrp.waitQ,
-                                     &( pTaskInfo->node )      );
+            MLibListInsertHead( &gSchedTbl.waitGrp.waitQ,
+                                &( pTaskInfo->node )      );
             
             /* 実行状態設定 */
             pTaskInfo->state = STATE_WAIT;
@@ -541,7 +541,7 @@ void TaskMngSchedStop( MkTaskId_t taskId )
         
         /* 次タスク情報取得 */
         pTaskInfo = ( schedTaskInfo_t * )
-            MLibBasicListGetNextNode( pTaskQ1, &pTaskInfo->node );
+            MLibListGetNextNode( pTaskQ1, &pTaskInfo->node );
     }
     
     return;
@@ -564,7 +564,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     uint8_t         taskType;         /* タスクタイプ           */
     MLibRet_t       retMLib;          /* MLib関数戻り値         */
     schedRunGrp_t   *pReservedGrp;    /* 実行予約タスクグループ */
-    MLibBasicList_t *pTaskQ;          /* タスクキュー           */
+    MLibList_t      *pTaskQ;          /* タスクキュー           */
     
     /* 初期化 */
     taskType     = TASKMNG_PROC_TYPE_USER;
@@ -605,8 +605,8 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     }
     
     /* エンキュー */
-    retMLib =  MLibBasicListInsertHead( pTaskQ,
-                                        &( pTaskInfo->node ) );
+    retMLib =  MLibListInsertHead( pTaskQ,
+                                   &( pTaskInfo->node ) );
     
     /* エンキュー結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,8 +12,8 @@
 #include <string.h>
 #include <hardware/IA32/IA32.h>
 #include <kernel/message.h>
-#include <MLib/Basic/MLibBasic.h>
-#include <MLib/Basic/MLibBasicList.h>
+#include <MLib/MLib.h>
+#include <MLib/MLibList.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -47,9 +47,9 @@
 
 /** メッセージバッファ */
 typedef struct {
-    MLibBasicListNode_t node;                   /**< 連結リスト情報   */
-    size_t              size;                   /**< メッセージサイズ */
-    uint8_t             msg[ MK_MSG_SIZE_MAX ]; /**< メッセージ       */
+    MLibListNode_t node;                    /**< 連結リスト情報   */
+    size_t         size;                    /**< メッセージサイズ */
+    uint8_t        msg[ MK_MSG_SIZE_MAX ];  /**< メッセージ       */
 } MsgBuffer_t;
 
 /** 管理情報型 */
@@ -92,7 +92,7 @@ static MngTbl_t gMngTbl[ MK_CONFIG_TASKID_NUM ];
 static MsgBuffer_t gMsgBuffer[ MSG_BUFFER_NUM ];
 
 /** 未使用メッセージバッファリスト */
-MLibBasicList_t gUnusedBufferList;
+MLibList_t gUnusedBufferList;
 
 
 /******************************************************************************/
@@ -113,8 +113,8 @@ void ItcCtrlMsgInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
     
     /* 初期化 */
-    memset( &gUnusedBufferList, 0, sizeof ( MLibBasicList_t ) );
-    memset( gMsgBuffer,         0, sizeof ( MsgBuffer_t     ) );
+    memset( &gUnusedBufferList, 0, sizeof ( MLibList_t  ) );
+    memset( gMsgBuffer,         0, sizeof ( MsgBuffer_t ) );
     
     /* 割込みハンドラ設定 */
     IntMngHdlSet( MK_CONFIG_INTNO_MESSAGE,      /* 割込み番号     */
@@ -135,8 +135,8 @@ void ItcCtrlMsgInit( void )
     /* メッセージバッファリスト初期化 */
     for ( i = 0; i < MSG_BUFFER_NUM; i++ ) {
         /* 未使用メッセージバッファリスト挿入 */
-        MLibBasicListInsertHead( &gUnusedBufferList,
-                                 &gMsgBuffer[ i ].node );
+        MLibListInsertHead( &gUnusedBufferList,
+                            &gMsgBuffer[ i ].node );
     }
     
     /* デバッグトレースログ出力 */
@@ -313,8 +313,8 @@ static void Receive( MkMsgParam_t *pParam )
             /* 該当エントリ有 */
             
             /* コピーサイズ設定 */
-            size = MLIB_BASIC_MIN( gMngTbl[ src ].pBuffer->size,
-                                   pParam->rcv.size              );
+            size = MLIB_MIN( gMngTbl[ src ].pBuffer->size,
+                             pParam->rcv.size              );
             
             /* メッセージコピー */
             memcpy( pParam->rcv.pBuffer,
@@ -323,8 +323,8 @@ static void Receive( MkMsgParam_t *pParam )
             
             /* メッセージバッファ解放 */
             memset( gMngTbl[ src ].pBuffer, 0, sizeof ( MsgBuffer_t ) );
-            MLibBasicListInsertHead( &gUnusedBufferList,
-                                     &gMngTbl[ src ].pBuffer->node );
+            MLibListInsertHead( &gUnusedBufferList,
+                                &gMngTbl[ src ].pBuffer->node );
             gMngTbl[ src ].pBuffer = NULL;
             
             /* 送信元タスクスケジュール開始 */
@@ -503,7 +503,7 @@ static void Send( MkMsgParam_t *pParam )
     
     /* メッセージバッファ割当 */
     gMngTbl[ taskId ].pBuffer =
-        ( MsgBuffer_t * ) MLibBasicListRemoveHead( &gUnusedBufferList );
+        ( MsgBuffer_t * ) MLibListRemoveHead( &gUnusedBufferList );
     
     /* メッセージ割当結果判定 */
     if ( gMngTbl[ taskId ].pBuffer == NULL ) {

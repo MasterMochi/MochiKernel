@@ -1,22 +1,24 @@
 #******************************************************************************#
 #* src/libraries/libc/Makefile                                                *#
-#*                                                                 2018/10/05 *#
+#*                                                                 2018/12/09 *#
 #* Copyright (C) 2016-2017 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
-#* マクロ設定                                                                 *#
+#* 設定                                                                       *#
 #******************************************************************************#
-# ベースディレクトリsrc/からの相対パス
-CUR_DIR   = libraries/libc
-
 # バイナリ名
-LIB_NAME  = libc.a
+LIB = libc.a
 
 # ソースコード
 SRCS = string/memcpy.c \
        string/memset.c \
        string/strcpy.c \
        string/strlen.c
+
+# ビルドディレクトリ
+BUILD_DIR = ../../../build
+# オブジェクトディレクトリ
+OBJ_DIR   = $(BUILD_DIR)/obj/libraries/libc
 
 # Cフラグ
 CFLAGS = -O               \
@@ -28,52 +30,56 @@ CFLAGS = -O               \
 
 
 #******************************************************************************#
-#* 自動設定マクロ                                                             *#
+#* 定義                                                                       *#
 #******************************************************************************#
-# ベースディレクトリパス
-BASE_DIR  = $(shell pwd | sed -e 's/\/src\/$(subst /,\/,$(CUR_DIR))//')
-# 中間ファイル格納先ディレクトリパス
-OBJS_DIR  = $(BASE_DIR)/build/objs/$(CUR_DIR)
-# ディレクトリリスト
-DIR_LIST  = $(sort $(addprefix $(OBJS_DIR)/, $(dir $(SRCS))))
+# オブジェクトサブディレクトリ
+OBJ_SUBDIRS = $(sort $(addprefix $(OBJ_DIR)/, $(dir $(SRCS))))
 
 # オブジェクトファイル
-OBJS      = $(addprefix $(OBJS_DIR)/, $(SRCS:.c=.o))
+OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
+
+# 依存関係ファイル
+DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
 
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
-# サブディレクトリも含めたコンパイル
+# コンパイル
 .PHONY: all
-all: $(DIR_LIST) $(OBJS_DIR)/$(LIB_NAME) Makefile
+all: $(OBJ_SUBDIRS) $(OBJ_DIR)/$(LIB) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(OBJS_DIR)/../$(LIB_NAME) $(OBJS_DIR)
+	-rm -rf $(OBJ_DIR)/../$(LIB)
+	-rm -rf $(OBJ_DIR)
 
 
 #******************************************************************************#
 #* 生成規則                                                                   *#
 #******************************************************************************#
-ifdef DIR_LIST
-$(DIR_LIST):
+# 依存関係
+-include $(DEPS)
+
+# オブジェクトサブディレクトリ
+ifdef OBJ_SUBDIRS
+$(OBJ_SUBDIRS):
 	mkdir -p $@
 endif
 
-# バイナリ
-$(OBJS_DIR)/$(LIB_NAME): $(OBJS) Makefile
+# ライブラリ
+$(OBJ_DIR)/$(LIB): $(OBJS) Makefile
 	$(AR) rcs $@ $(OBJS)
-	ln -f -s $@ $(OBJS_DIR)/../$(LIB_NAME)
+	ln -f -s $@ $(OBJ_DIR)/../$(LIB)
 
 # アセンブラファイルコンパイル
-$(OBJS_DIR)/%.o: %.s Makefile
+$(OBJ_DIR)/%.o: %.s Makefile
 	$(AS) -o $@ $<
 
 # Cファイルコンパイル
-$(OBJS_DIR)/%.o: %.c Makefile
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(OBJ_DIR)/%.o: %.c Makefile
+	$(CC) $(CFLAGS) -o $@ -c $< -MD -MP
 
 
 #******************************************************************************#

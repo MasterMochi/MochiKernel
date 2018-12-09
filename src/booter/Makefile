@@ -1,21 +1,18 @@
 #******************************************************************************#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2018/07/18 *#
+#*                                                                 2018/12/09 *#
 #* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
-#* マクロ設定                                                                 *#
+#* 設定                                                                       *#
 #******************************************************************************#
-# ベースディレクトリsrc/からの相対パス
-CUR_DIR   = booter
-
 # IPL部バイナリ名
-IPL_NAME  = booter-ipl.bin
+IPL_NAME = booter-ipl.bin
+# IPL部ソースコード
+IPL_SRCS = Ipl/IplMain.s
+
 # メイン部バイナリ名
 MAIN_NAME = booter-main.bin
-
-# IPL部ソースコード
-IPL_SRCS  = Ipl/IplMain.s
 # メイン部ソースコード
 MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
             InitCtrl/InitCtrlInit32.s \
@@ -34,81 +31,94 @@ MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
             Debug/DebugInit.c         \
             Debug/DebugLog.c
 
+# ビルドディレクトリ
+BUILD_DIR = ../../build
+# オブジェクトディレクトリ
+OBJ_DIR   = $(BUILD_DIR)/obj/booter
+
 # ASフラグ
 ASFLAGS = --32
-
 # Cフラグ
-CFLAGS = -O                 \
-         -Wall              \
-         -masm=intel        \
-         -m32               \
-         -fno-pic           \
-         -ffreestanding     \
-         -Iinclude/         \
-         -I../include       \
-         -DDEBUG_LOG_ENABLE
-
+CFLAGS  = -O                 \
+          -Wall              \
+          -masm=intel        \
+          -m32               \
+          -fno-pic           \
+          -ffreestanding     \
+          -Iinclude/         \
+          -I../include       \
+          -DDEBUG_LOG_ENABLE
 # LDフラグ
-LDFLAGS = -melf_i386    \
-          -lc           \
-          -lMLibBasic
+LDFLAGS = -melf_i386
+# LDライブラリフラグ
+LDLIBS  = -lc    \
+          -lMLib
 
 
 #******************************************************************************#
-#* 自動設定マクロ                                                             *#
+#* 定義                                                                       *#
 #******************************************************************************#
-# ベースディレクトリパス
-BASE_DIR  = $(shell pwd | sed -e 's/\/src\/$(subst /,\/,$(CUR_DIR))//')
-# 中間ファイル格納先ディレクトリパス
-OBJS_DIR  = $(BASE_DIR)/build/objs/$(CUR_DIR)
-# ディレクトリリスト
-DIR_LIST  = $(sort $(addprefix $(OBJS_DIR)/, $(dir $(IPL_SRCS) $(MAIN_SRCS))))
+# オブジェクトサブディレクトリ
+OBJ_SUBDIRS = $(sort $(addprefix $(OBJ_DIR)/, $(dir $(IPL_SRCS) $(MAIN_SRCS))))
 
 # IPL部オブジェクトファイル
-IPL_OBJS  = $(addprefix $(OBJS_DIR)/, $(IPL_SRCS:.s=.o))
+IPL_OBJS  = $(addprefix $(OBJ_DIR)/, $(IPL_SRCS:.s=.o))
 # メイン部オブジェクトファイル
-MAIN_OBJS = $(addprefix $(OBJS_DIR)/,                           \
-              $(patsubst %.s,%.o,$(filter %.s, $(MAIN_SRCS)))   \
+MAIN_OBJS = $(addprefix $(OBJ_DIR)/,                           \
+              $(patsubst %.s,%.o,$(filter %.s, $(MAIN_SRCS)))  \
               $(patsubst %.c,%.o,$(filter %.c, $(MAIN_SRCS))))
 
+# メイン部依存関係ファイル
+MAIN_DEPS = $(addprefix $(OBJ_DIR)/, $(MAIN_SRCS:.c=.d))
+
+# インクルードディレクトリ
+CFLAGS  += -I$(BUILD_DIR)/include
+
 # ライブラリディレクトリ
-LDFLAGS += -L$(BASE_DIR)/build/objs/libraries
+LDFLAGS += -L$(BUILD_DIR)/lib           \
+           -L$(BUILD_DIR)/obj/libraries
 
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
-# サブディレクトリも含めたコンパイル
+# コンパイル
 .PHONY: all
-all: $(DIR_LIST) $(OBJS_DIR)/$(IPL_NAME) $(OBJS_DIR)/$(MAIN_NAME) Makefile
+all: $(OBJ_SUBDIRS) $(OBJ_DIR)/$(IPL_NAME) $(OBJ_DIR)/$(MAIN_NAME) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(OBJS_DIR)
+	-rm -rf $(OBJ_DIR)
 
 
 #******************************************************************************#
 #* 生成規則                                                                   *#
 #******************************************************************************#
-$(DIR_LIST):
+# メイン部依存関係
+-include $(MAIN_DEPS)
+
+# オブジェクトサブディレクトリ
+ifdef OBJ_SUBDIRS
+$(OBJ_SUBDIRS):
 	mkdir -p $@
+endif
 
 # IPL部バイナリ
-$(OBJS_DIR)/$(IPL_NAME): $(IPL_OBJS) Makefile
-	$(LD) -T booter-ipl.lds -o $@ $(IPL_OBJS) $(LDFLAGS)
+$(OBJ_DIR)/$(IPL_NAME): $(IPL_OBJS) Makefile
+	$(LD) -T booter-ipl.lds $(LDFLAGS) -o $@ $(IPL_OBJS) $(LDLIBS)
 
 # メイン部バイナリ
-$(OBJS_DIR)/$(MAIN_NAME): $(MAIN_OBJS) Makefile
-	$(LD) -T booter-main.lds -o $@ $(MAIN_OBJS) $(LDFLAGS)
+$(OBJ_DIR)/$(MAIN_NAME): $(MAIN_OBJS) Makefile
+	$(LD) -T booter-main.lds $(LDFLAGS) -o $@ $(MAIN_OBJS) $(LDLIBS)
 
 # アセンブラファイルコンパイル
-$(OBJS_DIR)/%.o: %.s Makefile
+$(OBJ_DIR)/%.o: %.s Makefile
 	$(AS) $(ASFLAGS) -o $@ $<
 
 # Cファイルコンパイル
-$(OBJS_DIR)/%.o: %.c Makefile
-	$(CC) $(CFLAGS) -o $@ -c $<
+$(OBJ_DIR)/%.o: %.c Makefile
+	$(CC) $(CFLAGS) -o $@ -c $< -MD -MP
 
 
 #******************************************************************************#

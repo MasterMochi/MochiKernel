@@ -1,7 +1,6 @@
 build/mochi.img
 build/os.img
-build/objs/booter
-build/objs/kernel
+build/obj
 build/tools/*
 doxygen/booter
 doxygen/kernel

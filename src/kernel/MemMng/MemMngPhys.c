@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngPhys.c                                             */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -10,8 +10,8 @@
 #include <stdarg.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/kernel.h>
-#include <MLib/Basic/MLibBasic.h>
-#include <MLib/Basic/MLibBasicList.h>
+#include <MLib/MLib.h>
+#include <MLib/MLibList.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -36,8 +36,8 @@
 
 /** 物理メモリ領域管理テーブル構造体 */
 typedef struct {
-    MLibBasicList_t allocList;  /**< 割当中物理メモリ領域情報リスト */
-    MLibBasicList_t freeList;   /**< 未割当物理メモリ領域情報リスト */
+    MLibList_t allocList;   /**< 割当中物理メモリ領域情報リスト */
+    MLibList_t freeList;    /**< 未割当物理メモリ領域情報リスト */
 } PhysTbl_t;
 
 
@@ -83,7 +83,7 @@ void *MemMngPhysAlloc( size_t size )
         /* 正常 */
         
         /* アライメント計算 */
-        size = MLIB_BASIC_ALIGN( size, IA32_PAGING_PAGE_SIZE );
+        size = MLIB_ALIGN( size, IA32_PAGING_PAGE_SIZE );
     }
     
     /* メモリ領域割当 */
@@ -136,10 +136,10 @@ void PhysInit( MkMemMapEntry_t *pMemMap,
     MkMemMapEntry_t *pEntry;    /* メモリマップエントリ             */
     
     /* 未割当物理メモリ領域情報リスト初期化 */
-    MLibBasicListInit( &( gPhysTbl.freeList ) );
+    MLibListInit( &( gPhysTbl.freeList ) );
     
     /* 割当中物理メモリ領域情報リスト初期化 */
-    MLibBasicListInit( &( gPhysTbl.allocList ) );
+    MLibListInit( &( gPhysTbl.allocList ) );
     
     /* メモリマップエントリ毎に繰り返し */
     for ( index = 0; index < entryNum; index++ ) {

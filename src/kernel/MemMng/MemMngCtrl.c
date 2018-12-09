@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngCtrl.c                                             */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -13,7 +13,7 @@
 #include <string.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/config.h>
-#include <MLib/Basic/MLibBasic.h>
+#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -91,8 +91,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
             copySize = size - idx;
             
             /* マッピングサイズ設定 */
-            mapSize = MLIB_BASIC_ALIGN( copySize,
-                                        IA32_PAGING_PAGE_SIZE );
+            mapSize = MLIB_ALIGN( copySize, IA32_PAGING_PAGE_SIZE );
         }
         
         /* ページマッピング設定 */
@@ -177,8 +176,7 @@ void MemMngCtrlSet( void    *pPAddr,
             setSize = size - idx;
             
             /* マッピングサイズ設定 */
-            mapSize = MLIB_BASIC_ALIGN( setSize,
-                                        IA32_PAGING_PAGE_SIZE );
+            mapSize = MLIB_ALIGN( setSize, IA32_PAGING_PAGE_SIZE );
         }
         
         /* ページマッピング設定 */

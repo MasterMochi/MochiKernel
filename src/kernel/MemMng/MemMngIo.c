@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngIo  .c                                             */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -9,8 +9,8 @@
 /* 共通ヘッダ */
 #include <stdarg.h>
 #include <kernel/kernel.h>
-#include <MLib/Basic/MLibBasic.h>
-#include <MLib/Basic/MLibBasicList.h>
+#include <MLib/MLib.h>
+#include <MLib/MLibList.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -35,8 +35,8 @@
 
 /** I/Oメモリ領域管理テーブル構造体 */
 typedef struct {
-    MLibBasicList_t allocList;  /**< 割当中I/Oメモリ領域情報リスト */
-    MLibBasicList_t freeList;   /**< 未割当I/Oメモリ領域情報リスト */
+    MLibList_t allocList;   /**< 割当中I/Oメモリ領域情報リスト */
+    MLibList_t freeList;    /**< 未割当I/Oメモリ領域情報リスト */
 } IoTbl_t;
 
 
@@ -135,10 +135,10 @@ void IoInit( MkMemMapEntry_t *pMemMap,
     MkMemMapEntry_t *pEntry;    /* メモリマップエントリ             */
     
     /* 未割当I/Oメモリ領域情報リスト初期化 */
-    MLibBasicListInit( &( gIoTbl.freeList ) );
+    MLibListInit( &( gIoTbl.freeList ) );
     
     /* 割当中I/Oメモリ領域情報リスト初期化 */
-    MLibBasicListInit( &( gIoTbl.allocList ) );
+    MLibListInit( &( gIoTbl.allocList ) );
     
     /* メモリマップエントリ毎に繰り返し */
     for ( index = 0; index < entryNum; index++ ) {

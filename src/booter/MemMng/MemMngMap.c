@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/MemMng/MemMngMap.c                                              */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -13,7 +13,7 @@
 #include <firmware/bios/e820.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/kernel.h>
-#include <MLib/Basic/MLibBasicList.h>
+#include <MLib/MLibList.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -45,8 +45,8 @@
 
 /** メモリマップリストエントリ型 */
 typedef struct {
-    MLibBasicListNode_t node;   /**< 連結リストノード情報 */
-    MkMemMapEntry_t     entry;  /**< メモリマップエントリ */
+    MLibListNode_t  node;   /**< 連結リストノード情報 */
+    MkMemMapEntry_t entry;  /**< メモリマップエントリ */
 } MemMapListEntry_t;
 
 
@@ -57,10 +57,10 @@ typedef struct {
 static MemMapListEntry_t gListEntry[ MEMMAPLIST_ENTRY_NUM ];
 
 /** 空エントリリスト */
-static MLibBasicList_t gEmptyList;
+static MLibList_t gEmptyList;
 
 /** メモリマップリスト */
-static MLibBasicList_t gMemMapList;
+static MLibList_t gMemMapList;
 
 
 /******************************************************************************/
@@ -143,7 +143,7 @@ void MemMngMapSet( void )
     
     /* 先頭エントリ取得 */
     pEntry = ( MemMapListEntry_t * )
-        MLibBasicListGetNextNode( &gMemMapList, NULL );
+        MLibListGetNextNode( &gMemMapList, NULL );
     
     /* エントリ毎に繰り返し */
     while ( pEntry != NULL ) {
@@ -158,8 +158,8 @@ void MemMngMapSet( void )
         
         /* 次エントリ取得 */
         pEntry = ( MemMapListEntry_t * )
-            MLibBasicListGetNextNode( &gMemMapList,
-                                      ( MLibBasicListNode_t * ) pEntry );
+            MLibListGetNextNode( &gMemMapList,
+                                 ( MLibListNode_t * ) pEntry );
     }
     
     /* メモリマップエントリ数設定 */
@@ -201,7 +201,7 @@ CmnRet_t MemMngMapSetList( void     *pAddr,
     
     /* 先頭エントリ取得 */
     pEntry = ( MemMapListEntry_t * )
-        MLibBasicListGetNextNode( &gMemMapList, NULL );
+        MLibListGetNextNode( &gMemMapList, NULL );
     
     /* エントリ毎に繰り返し */
     while ( pEntry != NULL ) {
@@ -228,8 +228,8 @@ CmnRet_t MemMngMapSetList( void     *pAddr,
             
             /* 次エントリ取得 */
             pEntry = ( MemMapListEntry_t * )
-                MLibBasicListGetNextNode( &gMemMapList,
-                                          ( MLibBasicListNode_t * ) pEntry );
+                MLibListGetNextNode( &gMemMapList,
+                                     ( MLibListNode_t * ) pEntry );
             continue;
         }
         
@@ -287,8 +287,8 @@ CmnRet_t MemMngMapSetList( void     *pAddr,
         
         /* 次エントリ取得 */
         pEntry = ( MemMapListEntry_t * )
-            MLibBasicListGetNextNode( &gMemMapList,
-                                      ( MLibBasicListNode_t * ) pEntry );
+            MLibListGetNextNode( &gMemMapList,
+                                 ( MLibListNode_t * ) pEntry );
     }
     
     /* デバッグトレースログ出力 */
@@ -380,15 +380,15 @@ static void InitMemMapList( void )
     memset( &gListEntry, 0, sizeof ( gListEntry ) );
     
     /* リスト初期化 */
-    MLibBasicListInit( &gEmptyList  );
-    MLibBasicListInit( &gMemMapList );
+    MLibListInit( &gEmptyList  );
+    MLibListInit( &gMemMapList );
     
     /* 全エントリ毎に繰り返し */
     for ( index = 0; index < MEMMAPLIST_ENTRY_NUM; index++ ) {
         /* 空リストにメモリマップリストエントリ挿入 */
-        MLibBasicListInsertTail(
+        MLibListInsertTail(
             &gEmptyList,
-            ( MLibBasicListNode_t * ) &gListEntry[ index ] );
+            ( MLibListNode_t * ) &gListEntry[ index ] );
     }
     
     /* エントリ毎に繰り返し */
@@ -443,14 +443,14 @@ static void InitMemMapList( void )
         }
         
         /* 空メモリマップリストエントリ取得 */
-        pEmpty = ( MemMapListEntry_t * ) MLibBasicListRemoveTail( &gEmptyList );
+        pEmpty = ( MemMapListEntry_t * ) MLibListRemoveTail( &gEmptyList );
         
         /* 取得結果判定 */
         if ( pEmpty == NULL ) {
             /* 失敗 */
             
             /* デバッグログ出力 */
-            DEBUG_LOG( "MLibBasicListRemoveTail() failed." );
+            DEBUG_LOG( "MLibListRemoveTail() failed." );
             break;
         }
         
@@ -476,8 +476,8 @@ static void InitMemMapList( void )
         }
         
         /* メモリマップリスト挿入 */
-        MLibBasicListInsertTail( &gMemMapList,
-                                 ( MLibBasicListNode_t * ) pEmpty );
+        MLibListInsertTail( &gMemMapList,
+                            ( MLibListNode_t * ) pEmpty );
         
         /* 開始アドレス更新 */
         start = ( uint32_t ) pEmpty->entry.pAddr + pEmpty->entry.size;
@@ -501,14 +501,14 @@ static void InitMemMapList( void )
             /* 使用不可以外 */
             
             /* 空メモリマップリストエントリ取得 */
-            pEmpty = ( MemMapListEntry_t * ) MLibBasicListRemoveTail( &gEmptyList );
+            pEmpty = ( MemMapListEntry_t * ) MLibListRemoveTail( &gEmptyList );
             
             /* 取得結果判定 */
             if ( pEmpty == NULL ) {
                 /* 失敗 */
                 
                 /* デバッグログ出力 */
-                DEBUG_LOG( "MLibBasicListRemoveTail() failed." );
+                DEBUG_LOG( "MLibListRemoveTail() failed." );
                 return;
             }
             
@@ -518,8 +518,8 @@ static void InitMemMapList( void )
             pEmpty->entry.type  = MK_MEM_TYPE_RESERVED;
             
             /* メモリマップリスト挿入 */
-            MLibBasicListInsertTail( &gMemMapList,
-                                     ( MLibBasicListNode_t * ) pEmpty );
+            MLibListInsertTail( &gMemMapList,
+                                ( MLibListNode_t * ) pEmpty );
         }
     }
     
@@ -570,7 +570,7 @@ static void OutputMemMapList( void )
     
     /* 先頭エントリ取得 */
     pEntry = ( MemMapListEntry_t * )
-        MLibBasicListGetNextNode( &gMemMapList, NULL );
+        MLibListGetNextNode( &gMemMapList, NULL );
     
     /* エントリ毎繰り返し */
     while ( pEntry != NULL ) {
@@ -582,8 +582,8 @@ static void OutputMemMapList( void )
         
         /* 次エントリ取得 */
         pEntry = ( MemMapListEntry_t * )
-            MLibBasicListGetNextNode( &gMemMapList,
-                                      ( MLibBasicListNode_t * ) pEntry );
+            MLibListGetNextNode( &gMemMapList,
+                                 ( MLibListNode_t * ) pEntry );
     }
     
     return;
@@ -615,14 +615,14 @@ static CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
     MemMapListEntry_t *pEmpty;  /* 空メモリマップリストエントリ */
     
     /* 空メモリマップリストエントリ取得 */
-    pEmpty = ( MemMapListEntry_t * ) MLibBasicListRemoveTail( &gEmptyList );
+    pEmpty = ( MemMapListEntry_t * ) MLibListRemoveTail( &gEmptyList );
     
     /* 取得結果判定 */
     if ( pEmpty == NULL ) {
         /* 失敗 */
         
         /* デバッグログ出力 */
-        DEBUG_LOG( "MLibBasicListRemoveTail() failed." );
+        DEBUG_LOG( "MLibListRemoveTail() failed." );
         
         return CMN_FAILURE;
     }
@@ -634,16 +634,16 @@ static CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
     pEmpty->entry.type   = type;
     
     /* メモリマップリスト挿入 */
-    retMLib = MLibBasicListInsertNext( &gMemMapList,
-                                       ( MLibBasicListNode_t * ) pEntry,
-                                       ( MLibBasicListNode_t * ) pEmpty  );
+    retMLib = MLibListInsertNext( &gMemMapList,
+                                  ( MLibListNode_t * ) pEntry,
+                                  ( MLibListNode_t * ) pEmpty  );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
         /* デバッグログ出力 */
-        DEBUG_LOG( "MLibBasicListInsertPrev() failed." );
+        DEBUG_LOG( "MLibListInsertPrev() failed." );
         return CMN_FAILURE;
     }
     
@@ -726,14 +726,14 @@ static CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
     MemMapListEntry_t *pEmpty;  /* 空メモリマップリストエントリ */
     
     /* 空メモリマップリストエントリ取得 */
-    pEmpty = ( MemMapListEntry_t * ) MLibBasicListRemoveTail( &gEmptyList );
+    pEmpty = ( MemMapListEntry_t * ) MLibListRemoveTail( &gEmptyList );
     
     /* 取得結果判定 */
     if ( pEmpty == NULL ) {
         /* 失敗 */
         
         /* デバッグログ出力 */
-        DEBUG_LOG( "MLibBasicListRemoveTail() failed." );
+        DEBUG_LOG( "MLibListRemoveTail() failed." );
         
         return CMN_FAILURE;
     }
@@ -746,16 +746,16 @@ static CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
     pEntry->entry.size  -= size;
     
     /* メモリマップリスト挿入 */
-    retMLib = MLibBasicListInsertPrev( &gMemMapList,
-                                       ( MLibBasicListNode_t * ) pEntry,
-                                       ( MLibBasicListNode_t * ) pEmpty  );
+    retMLib = MLibListInsertPrev( &gMemMapList,
+                                  ( MLibListNode_t * ) pEntry,
+                                  ( MLibListNode_t * ) pEmpty  );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
         /* デバッグログ出力 */
-        DEBUG_LOG( "MLibBasicListInsertPrev() failed." );
+        DEBUG_LOG( "MLibListInsertPrev() failed." );
         return CMN_FAILURE;
     }
     

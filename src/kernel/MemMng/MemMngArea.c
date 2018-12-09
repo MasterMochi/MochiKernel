@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -45,8 +45,8 @@
 
 /** メモリ領域管理テーブル構造体 */
 typedef struct {
-    MLibBasicList_t emptyList;                  /**< 空メモリ領域情報リスト */
-    AreaInfo_t      areaInfo[ AREA_INFO_NUM ];  /**< メモリ領域情報         */
+    MLibList_t emptyList;                   /**< 空メモリ領域情報リスト */
+    AreaInfo_t areaInfo[ AREA_INFO_NUM ];   /**< メモリ領域情報         */
 } AreaTbl_t;
 
 
@@ -61,45 +61,45 @@ static AreaTbl_t gAreaTbl;
 /* ローカル関数プロトタイプ宣言                                               */
 /******************************************************************************/
 /* メモリ領域割当（指定未割当メモリ領域全て） */
-static void *AllocAll( MLibBasicList_t *pAllocList,
-                       MLibBasicList_t *pFreeList,
-                       AreaInfo_t      *pFree       );
+static void *AllocAll( MLibList_t *pAllocList,
+                       MLibList_t *pFreeList,
+                       AreaInfo_t *pFree       );
 
 /* メモリ領域割当（指定未割当メモリ領域後方） */
-static void *AllocBack( MLibBasicList_t *pAllocList,
-                        AreaInfo_t      *pFree,
-                        void            *pAddr,
-                        size_t          size         );
+static void *AllocBack( MLibList_t *pAllocList,
+                        AreaInfo_t *pFree,
+                        void       *pAddr,
+                        size_t     size         );
 
 /* メモリ領域割当（指定未割当メモリ領域中間） */
-static void *AllocCenter( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          AreaInfo_t      *pFree,
-                          void            *pAddr,
-                          size_t          size         );
+static void *AllocCenter( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          AreaInfo_t *pFree,
+                          void       *pAddr,
+                          size_t     size         );
 
 /* メモリ領域割当（指定未割当メモリ領域前方） */
-static void *AllocFront( MLibBasicList_t *pAllocList,
-                         AreaInfo_t      *pFree,
-                         void            *pAddr,
-                         size_t          size         );
+static void *AllocFront( MLibList_t *pAllocList,
+                         AreaInfo_t *pFree,
+                         void       *pAddr,
+                         size_t     size         );
 
 /* メモリ領域解放（指定未割当メモリ領域結合） */
-static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
-                           MLibBasicList_t *pFreeList,
-                           AreaInfo_t      *pAlloc,
-                           AreaInfo_t      *pFree       );
+static CmnRet_t FreeMerge( MLibList_t *pAllocList,
+                           MLibList_t *pFreeList,
+                           AreaInfo_t *pAlloc,
+                           AreaInfo_t *pFree       );
 
 /* メモリ領域解放（指定未割当メモリ領域前挿入） */
-static CmnRet_t FreePrev( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          AreaInfo_t      *pAlloc,
-                          AreaInfo_t      *pFree       );
+static CmnRet_t FreePrev( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          AreaInfo_t *pAlloc,
+                          AreaInfo_t *pFree       );
 
 /* メモリ領域解放（最後尾挿入） */
-static CmnRet_t FreeTail( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          AreaInfo_t      *pAlloc      );
+static CmnRet_t FreeTail( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          AreaInfo_t *pAlloc      );
 
 
 
@@ -120,9 +120,9 @@ static CmnRet_t FreeTail( MLibBasicList_t *pAllocList,
  * @retval      NULL以外 成功(割当領域へのアドレス)
  */
 /******************************************************************************/
-void *AreaAlloc( MLibBasicList_t *pAllocList,
-                 MLibBasicList_t *pFreeList,
-                 size_t          size         )
+void *AreaAlloc( MLibList_t *pAllocList,
+                 MLibList_t *pFreeList,
+                 size_t     size         )
 {
     void       *pRet;   /* 戻り値               */
     AreaInfo_t *pFree;  /* 未割当メモリ領域情報 */
@@ -135,14 +135,14 @@ void *AreaAlloc( MLibBasicList_t *pAllocList,
     do {
         /* 未割当メモリ領域情報取得 */
         pFree = ( AreaInfo_t * )
-            MLibBasicListGetNextNode( pFreeList,
-                                      ( MLibBasicListNode_t * ) pFree );
+            MLibListGetNextNode( pFreeList,
+                                 ( MLibListNode_t * ) pFree );
         
         /* 取得結果判定 */
         if ( pFree == NULL ) {
             /* 未割当メモリ領域情報無し */
             
-            DEBUG_LOG( "%s(): MLibBasicListGetNextNode() error.", __func__ );
+            DEBUG_LOG( "%s(): MLibListGetNextNode() error.", __func__ );
             
             return NULL;
         }
@@ -183,10 +183,10 @@ void *AreaAlloc( MLibBasicList_t *pAllocList,
  * @retval      NULL以外 成功(割当領域へのアドレス)
  */
 /******************************************************************************/
-void *AreaAllocSpecified( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          void            *pAddr,
-                          size_t          size         )
+void *AreaAllocSpecified( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          void       *pAddr,
+                          size_t     size         )
 {
 
     void       *pRet;       /* 戻り値                       */
@@ -210,7 +210,7 @@ void *AreaAllocSpecified( MLibBasicList_t *pAllocList,
     }
     
     /* 未割当メモリ領域情報取得 */
-    pFree = ( AreaInfo_t * ) MLibBasicListGetNextNode( pFreeList, NULL );
+    pFree = ( AreaInfo_t * ) MLibListGetNextNode( pFreeList, NULL );
     
     /* 未割当メモリ領域情報毎に繰り返し */
     while ( pFree != NULL ) {
@@ -231,8 +231,8 @@ void *AreaAllocSpecified( MLibBasicList_t *pAllocList,
             
             /* 次メモリ領域情報取得 */
             pFree = ( AreaInfo_t * )
-                MLibBasicListGetNextNode( pFreeList,
-                                          ( MLibBasicListNode_t * ) pFree );
+                MLibListGetNextNode( pFreeList,
+                                     ( MLibListNode_t * ) pFree );
             continue;
         }
         
@@ -278,8 +278,8 @@ void *AreaAllocSpecified( MLibBasicList_t *pAllocList,
         
         /* 次メモリ領域情報取得 */
         pFree = ( AreaInfo_t * )
-            MLibBasicListGetNextNode( pFreeList,
-                                      ( MLibBasicListNode_t * ) pFree );
+            MLibListGetNextNode( pFreeList,
+                                 ( MLibListNode_t * ) pFree );
     }
     
     return pRet;
@@ -302,9 +302,9 @@ void *AreaAllocSpecified( MLibBasicList_t *pAllocList,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t AreaFree( MLibBasicList_t *pAllocList,
-                   MLibBasicList_t *pFreeList,
-                   void            *pAddr       )
+CmnRet_t AreaFree( MLibList_t *pAllocList,
+                   MLibList_t *pFreeList,
+                   void       *pAddr       )
 {
     CmnRet_t   ret;         /* 関数戻り値           */
     MLibRet_t  retMLib;     /* MLib関数戻り値       */
@@ -321,8 +321,8 @@ CmnRet_t AreaFree( MLibBasicList_t *pAllocList,
     do {
         /* 割当中メモリ領域情報取得 */
         pInfo = ( AreaInfo_t * )
-            MLibBasicListGetPrevNode( pAllocList,
-                                      ( MLibBasicListNode_t * ) pInfo );
+            MLibListGetPrevNode( pAllocList,
+                                 ( MLibListNode_t * ) pInfo );
         
         /* 取得結果判定 */
         if ( pInfo == NULL ) {
@@ -335,8 +335,8 @@ CmnRet_t AreaFree( MLibBasicList_t *pAllocList,
     } while ( pInfo->pAddr != pAddr );
     
     /* 割当中メモリ領域リストから削除 */
-    retMLib = MLibBasicListRemove( pAllocList,
-                                   ( MLibBasicListNode_t * ) pInfo );
+    retMLib = MLibListRemove( pAllocList,
+                              ( MLibListNode_t * ) pInfo );
     
     /* 削除結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -348,8 +348,8 @@ CmnRet_t AreaFree( MLibBasicList_t *pAllocList,
     while ( true ) {
         /* 未割当メモリ領域情報取得 */
         pFree = ( AreaInfo_t * )
-            MLibBasicListGetNextNode( pFreeList,
-                                      ( MLibBasicListNode_t * ) pFree );
+            MLibListGetNextNode( pFreeList,
+                                 ( MLibListNode_t * ) pFree );
         
         /* メモリ領域位置関係比較 */
         if ( pFree == NULL ) {
@@ -392,12 +392,12 @@ CmnRet_t AreaFree( MLibBasicList_t *pAllocList,
 /******************************************************************************/
 void AreaInit( void )
 {
-    uint32_t            index;      /* メモリ領域情報リストインデックス */
-    MLibRet_t           retMLib;    /* MLIB関数戻り値                   */
-    MLibBasicListNode_t *pEmpty;    /* 空メモリ領域情報ノード           */
+    uint32_t       index;   /* メモリ領域情報リストインデックス */
+    MLibRet_t      retMLib; /* MLIB関数戻り値                   */
+    MLibListNode_t *pEmpty; /* 空メモリ領域情報ノード           */
     
     /* 空メモリ領域情報リスト初期化 */
-    retMLib = MLibBasicListInit( &( gAreaTbl.emptyList ) );
+    retMLib = MLibListInit( &( gAreaTbl.emptyList ) );
     
     /* 初期化結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -414,10 +414,10 @@ void AreaInit( void )
         gAreaTbl.areaInfo[ index ].taskId = MK_CONFIG_TASKID_NULL;
         
         /* 空メモリ領域情報参照変数設定 */
-        pEmpty = ( MLibBasicListNode_t * ) &( gAreaTbl.areaInfo[ index ] );
+        pEmpty = ( MLibListNode_t * ) &( gAreaTbl.areaInfo[ index ] );
         
         /* 空メモリ領域情報リスト挿入 */
-        retMLib = MLibBasicListInsertTail( &( gAreaTbl.emptyList ),
+        retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ),
                                            pEmpty );
         
         /* 挿入結果判定 */
@@ -447,15 +447,15 @@ void AreaInit( void )
  * @retval      NULL以外 成功（メモリ領域情報の先頭アドレス）
  */
 /******************************************************************************/
-AreaInfo_t *AreaSet( MLibBasicList_t *pFreeList,
-                     void            *pAddr,
-                     size_t          size        )
+AreaInfo_t *AreaSet( MLibList_t *pFreeList,
+                     void       *pAddr,
+                     size_t     size        )
 {
     MLibRet_t  retMLib; /* MLIB関数戻り値 */
     AreaInfo_t *pRet;   /* 戻り値         */
     
     /* 空メモリ領域情報リストから取得 */
-    pRet = ( AreaInfo_t * ) MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
+    pRet = ( AreaInfo_t * ) MLibListRemoveTail( &( gAreaTbl.emptyList ) );
     
     /* 取得結果判定 */
     if ( pRet != NULL ) {
@@ -466,8 +466,8 @@ AreaInfo_t *AreaSet( MLibBasicList_t *pFreeList,
         pRet->size  = size;
         
         /* 未割当メモリ領域情報リストの最後尾に挿入 */
-        retMLib = MLibBasicListInsertTail( pFreeList,
-                                           ( MLibBasicListNode_t * ) pRet );
+        retMLib = MLibListInsertTail( pFreeList,
+                                      ( MLibListNode_t * ) pRet );
         
         /* 挿入結果判定 */
         if ( retMLib != MLIB_SUCCESS ) {
@@ -499,34 +499,34 @@ AreaInfo_t *AreaSet( MLibBasicList_t *pFreeList,
  * @retval      NULL以外 割り当てたメモリ領域の先頭アドレス
  */
 /******************************************************************************/
-static void *AllocAll( MLibBasicList_t *pAllocList,
-                       MLibBasicList_t *pFreeList,
-                       AreaInfo_t      *pFree       )
+static void *AllocAll( MLibList_t *pAllocList,
+                       MLibList_t *pFreeList,
+                       AreaInfo_t *pFree       )
 {
     MLibRet_t retMLib;  /* 関数戻り値 */
     
     /* メモリ領域情報リスト削除 */
-    retMLib = MLibBasicListRemove( pFreeList,
-                                   ( MLibBasicListNode_t * ) pFree );
+    retMLib = MLibListRemove( pFreeList,
+                              ( MLibListNode_t * ) pFree );
     
     /* 削除結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListRemove() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListRemove() error.", __func__ );
         
         return NULL;
     }
     
     /* メモリ領域情報リスト挿入 */
-    retMLib = MLibBasicListInsertTail( pAllocList,
-                                       ( MLibBasicListNode_t * ) pFree );
+    retMLib = MLibListInsertTail( pAllocList,
+                                  ( MLibListNode_t * ) pFree );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListInsertTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
         
         return NULL;
     }
@@ -551,23 +551,23 @@ static void *AllocAll( MLibBasicList_t *pAllocList,
  * @retval      NULL以外 割り当てたメモリ領域の先頭アドレス
  */
 /******************************************************************************/
-static void *AllocBack( MLibBasicList_t *pAllocList,
-                        AreaInfo_t      *pFree,
-                        void            *pAddr,
-                        size_t          size         )
+static void *AllocBack( MLibList_t *pAllocList,
+                        AreaInfo_t *pFree,
+                        void       *pAddr,
+                        size_t     size         )
 {
     MLibRet_t  retMLib; /* MLib関数戻り値   */
     AreaInfo_t *pEmpty; /* 空メモリ領域情報 */
     
     /* 空メモリ領域情報取得 */
     pEmpty = ( AreaInfo_t * )
-        MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
+        MLibListRemoveTail( &( gAreaTbl.emptyList ) );
     
     /* 取得結果判定 */
     if ( pEmpty == NULL ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListRemoveTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListRemoveTail() error.", __func__ );
         
         return NULL;
     }
@@ -578,14 +578,14 @@ static void *AllocBack( MLibBasicList_t *pAllocList,
     pEmpty->size   = size;
     
     /* 割当中メモリ領域情報挿入 */
-    retMLib = MLibBasicListInsertTail( pAllocList,
-                                       ( MLibBasicListNode_t * ) pEmpty );
+    retMLib = MLibListInsertTail( pAllocList,
+                                  ( MLibListNode_t * ) pEmpty );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListInsertTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
         
         return NULL;
     }
@@ -611,11 +611,11 @@ static void *AllocBack( MLibBasicList_t *pAllocList,
  * @retval      NULL以外 割り当てたメモリ領域の先頭アドレス
  */
 /******************************************************************************/
-static void *AllocCenter( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          AreaInfo_t      *pFree,
-                          void            *pAddr,
-                          size_t          size         )
+static void *AllocCenter( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          AreaInfo_t *pFree,
+                          void       *pAddr,
+                          size_t     size         )
 {
     size_t     allSize; /* 未割当メモリ領域サイズ */
     MLibRet_t  retMLib; /* MLib関数戻り値         */
@@ -629,26 +629,26 @@ static void *AllocCenter( MLibBasicList_t *pAllocList,
     
     /* 割当メモリ領域情報取得 */
     pAlloc = ( AreaInfo_t * )
-        MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
+        MLibListRemoveTail( &( gAreaTbl.emptyList ) );
     
     /* 取得結果判定 */
     if ( pPrev == NULL ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListRemoveTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListRemoveTail() error.", __func__ );
         
         return NULL;
     }
     
     /* 後未割当メモリ領域情報取得 */
     pNext = ( AreaInfo_t * )
-        MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
+        MLibListRemoveTail( &( gAreaTbl.emptyList ) );
     
     /* 取得結果判定 */
     if ( pPrev == NULL ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListRemoveTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListRemoveTail() error.", __func__ );
         
         return NULL;
     }
@@ -665,27 +665,27 @@ static void *AllocCenter( MLibBasicList_t *pAllocList,
     pNext->size  = allSize - pPrev->size - pAlloc->size;
     
     /* 後未割当メモリ領域情報を前未割当メモリ領域情報の後に挿入 */
-    retMLib = MLibBasicListInsertNext( pFreeList,
-                                       ( MLibBasicListNode_t * ) pPrev,
-                                       ( MLibBasicListNode_t * ) pNext  );
+    retMLib = MLibListInsertNext( pFreeList,
+                                  ( MLibListNode_t * ) pPrev,
+                                  ( MLibListNode_t * ) pNext  );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
         /* [TODO] */
-        DEBUG_LOG( "%s(): MLibBasicListInsertNext() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListInsertNext() error.", __func__ );
     }
     
     /* 割当中メモリ領域情報リスト挿入 */
-    retMLib = MLibBasicListInsertTail( pAllocList,
-                                       ( MLibBasicListNode_t * ) pAlloc );
+    retMLib = MLibListInsertTail( pAllocList,
+                                  ( MLibListNode_t * ) pAlloc );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListInsertTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
         
         return NULL;
     }
@@ -710,23 +710,23 @@ static void *AllocCenter( MLibBasicList_t *pAllocList,
  * @retval      NULL以外 割り当てたメモリ領域の先頭アドレス
  */
 /******************************************************************************/
-static void *AllocFront( MLibBasicList_t *pAllocList,
-                         AreaInfo_t      *pFree,
-                         void            *pAddr,
-                         size_t          size         )
+static void *AllocFront( MLibList_t *pAllocList,
+                         AreaInfo_t *pFree,
+                         void       *pAddr,
+                         size_t     size         )
 {
     MLibRet_t  retMLib;     /* MLib関数戻り値   */
     AreaInfo_t *pEmpty;     /* 空メモリ領域情報 */
     
     /* 空メモリ領域情報取得 */
     pEmpty = ( AreaInfo_t * )
-        MLibBasicListRemoveTail( &( gAreaTbl.emptyList ) );
+        MLibListRemoveTail( &( gAreaTbl.emptyList ) );
     
     /* 取得結果判定 */
     if ( pEmpty == NULL ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListRemoveTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListRemoveTail() error.", __func__ );
         
         return NULL;
     }
@@ -738,14 +738,14 @@ static void *AllocFront( MLibBasicList_t *pAllocList,
     pFree->size   -= size;
     
     /* 割当中メモリ領域情報リスト挿入 */
-    retMLib = MLibBasicListInsertTail( pAllocList,
-                                       ( MLibBasicListNode_t * ) pEmpty );
+    retMLib = MLibListInsertTail( pAllocList,
+                                  ( MLibListNode_t * ) pEmpty );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
         /* 失敗 */
         
-        DEBUG_LOG( "%s(): MLibBasicListInsertTail() error.", __func__ );
+        DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
         
         return NULL;
     }
@@ -773,10 +773,10 @@ static void *AllocFront( MLibBasicList_t *pAllocList,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
-                           MLibBasicList_t *pFreeList,
-                           AreaInfo_t      *pAlloc,
-                           AreaInfo_t      *pFree       )
+static CmnRet_t FreeMerge( MLibList_t *pAllocList,
+                           MLibList_t *pFreeList,
+                           AreaInfo_t *pAlloc,
+                           AreaInfo_t *pFree       )
 {
     MLibRet_t  retMLib; /* MLib関数戻り値                     */
     AreaInfo_t *pNext;  /* 結合先メモリ領域の次メモリ領域情報 */
@@ -800,8 +800,8 @@ static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
     memset( pAlloc, 0, sizeof ( AreaInfo_t ) );
     
     /* 空メモリ領域情報リストに挿入 */
-    retMLib = MLibBasicListInsertTail( &( gAreaTbl.emptyList ),
-                                       ( MLibBasicListNode_t * ) pAlloc );
+    retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ),
+                                  ( MLibListNode_t * ) pAlloc );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -812,7 +812,7 @@ static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
     
     /* 次未割当メモリ領域情報取得 */
     pNext = ( AreaInfo_t * )
-        MLibBasicListGetNextNode( pFreeList, ( MLibBasicListNode_t * ) pFree );
+        MLibListGetNextNode( pFreeList, ( MLibListNode_t * ) pFree );
     
     /* 取得結果判定 */
     if ( pNext == NULL ) {
@@ -829,8 +829,8 @@ static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
         pFree->size += pNext->size;
         
         /* 未割当メモリ領域情報リストから削除 */
-        retMLib = MLibBasicListRemove( pFreeList,
-                                       ( MLibBasicListNode_t * ) pNext );
+        retMLib = MLibListRemove( pFreeList,
+                                  ( MLibListNode_t * ) pNext );
         
         /* 削除結果判定 */
         if ( retMLib != MLIB_SUCCESS ) {
@@ -843,8 +843,8 @@ static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
         memset( pNext, 0, sizeof ( AreaInfo_t ) );
         
         /* 空メモリ領域情報リストに挿入 */
-        retMLib = MLibBasicListInsertTail( &( gAreaTbl.emptyList ),
-                                           ( MLibBasicListNode_t * ) pNext );
+        retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ),
+                                      ( MLibListNode_t * ) pNext );
         
         /* 挿入結果判定 */
         if ( retMLib != MLIB_SUCCESS ) {
@@ -875,16 +875,16 @@ static CmnRet_t FreeMerge( MLibBasicList_t *pAllocList,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-static CmnRet_t FreePrev( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          AreaInfo_t      *pAlloc,
-                          AreaInfo_t      *pFree       )
+static CmnRet_t FreePrev( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          AreaInfo_t *pAlloc,
+                          AreaInfo_t *pFree       )
 {
     MLibRet_t retMLib;  /* MLib関数戻り値 */
     
     /* 割当中メモリ領域情報リストから削除 */
-    retMLib = MLibBasicListRemove( pAllocList,
-                                   ( MLibBasicListNode_t * ) pAlloc );
+    retMLib = MLibListRemove( pAllocList,
+                              ( MLibListNode_t * ) pAlloc );
     
     /* 削除結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -894,9 +894,9 @@ static CmnRet_t FreePrev( MLibBasicList_t *pAllocList,
     }
     
     /* 未割当メモリ領域情報リスト挿入 */
-    retMLib = MLibBasicListInsertPrev( pAllocList,
-                                       ( MLibBasicListNode_t * ) pFree,
-                                       ( MLibBasicListNode_t * ) pAlloc );
+    retMLib = MLibListInsertPrev( pAllocList,
+                                  ( MLibListNode_t * ) pFree,
+                                  ( MLibListNode_t * ) pAlloc );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -924,15 +924,15 @@ static CmnRet_t FreePrev( MLibBasicList_t *pAllocList,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-static CmnRet_t FreeTail( MLibBasicList_t *pAllocList,
-                          MLibBasicList_t *pFreeList,
-                          AreaInfo_t      *pAlloc      )
+static CmnRet_t FreeTail( MLibList_t *pAllocList,
+                          MLibList_t *pFreeList,
+                          AreaInfo_t *pAlloc      )
 {
     MLibRet_t retMLib;  /* MLib関数戻り値 */
     
     /* 割当中メモリ領域情報リストから削除 */
-    retMLib = MLibBasicListRemove( pAllocList,
-                                   ( MLibBasicListNode_t * ) pAlloc );
+    retMLib = MLibListRemove( pAllocList,
+                              ( MLibListNode_t * ) pAlloc );
     
     /* 削除結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -942,8 +942,8 @@ static CmnRet_t FreeTail( MLibBasicList_t *pAllocList,
     }
     
     /* 未割当メモリ領域情報リスト最後尾挿入 */
-    retMLib = MLibBasicListInsertTail( pFreeList,
-                                       ( MLibBasicListNode_t * ) pAlloc );
+    retMLib = MLibListInsertTail( pFreeList,
+                                  ( MLibListNode_t * ) pAlloc );
     
     /* 挿入結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {

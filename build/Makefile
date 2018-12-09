@@ -1,20 +1,20 @@
 #******************************************************************************#
 #* build/Makefile                                                             *#
-#*                                                                 2018/11/23 *#
+#*                                                                 2018/12/09 *#
 #* Copyright (C) 2016-2018 Mochi                                              *#
 #******************************************************************************#
 #******************************************************************************#
-#* マクロ設定                                                                 *#
+#* 設定                                                                       *#
 #******************************************************************************#
 # ディスクイメージファイル
 DISK_IMG    = mochi.img
 
 # booter
-BOOTER_IPL  = objs/booter/booter-ipl.bin
-BOOTER_MAIN = objs/booter/booter-main.bin
+BOOTER_IPL  = obj/booter/booter-ipl.bin
+BOOTER_MAIN = obj/booter/booter-main.bin
 
 # kernel
-KERNEL      = objs/kernel/kernel
+KERNEL      = obj/kernel/kernel
 
 # OS
 OS_IMG      = os.img
@@ -23,7 +23,7 @@ OS_IMG      = os.img
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
-# サブディレクトリも含めたコンパイル
+# コンパイル
 .PHONY: all
 all:
 	make -C ../src/ all
@@ -34,7 +34,7 @@ clean:
 	make -C ../src/ clean
 	-rm -f $(DISK_IMG)
 	-rm -f $(OS_IMG)
-	-rm -rf objs
+	-rm -rf obj
 
 # ディスクイメージの作成
 .PHONY: image

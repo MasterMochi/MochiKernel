@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/config.h>
-#include <MLib/Basic/MLibBasic.h>
+#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -128,7 +128,7 @@ CmnRet_t TaskMngElfLoad( void     *pAddr,
         }
         
         /* セグメントサイズ取得 */
-        size = MLIB_BASIC_ALIGN( pEntry->p_memsz, IA32_PAGING_PAGE_SIZE );
+        size = MLIB_ALIGN( pEntry->p_memsz, IA32_PAGING_PAGE_SIZE );
         
         /* メモリ領域割当 */
         pPhyAddr = MemMngPhysAlloc( size );
@@ -153,7 +153,7 @@ CmnRet_t TaskMngElfLoad( void     *pAddr,
             pEntry->p_filesz                                      );
         
         /* フラグ判定 */
-        if ( MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
+        if ( MLIB_HAVE_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
             /* 読書可能セグメント */
             
             attrRw = IA32_PAGING_RW_RW;
@@ -461,9 +461,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         }
         
         /* フラグチェック */
-        if ( !( MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_X ) ||
-                MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_W ) ||
-                MLIB_BASIC_HAVE_FLAG( pEntry->p_flags, PF_R )    ) ) {
+        if ( !( MLIB_HAVE_FLAG( pEntry->p_flags, PF_X ) ||
+                MLIB_HAVE_FLAG( pEntry->p_flags, PF_W ) ||
+                MLIB_HAVE_FLAG( pEntry->p_flags, PF_R )    ) ) {
             /* 不正値 */
             
             /* デバッグトレースログ出力 */

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/Driver/DriverAta.c                                              */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <hardware/ATA/ATA.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <hardware/I8259A/I8259A.h>
-#include <MLib/Basic/MLibBasic.h>
+#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -211,7 +211,7 @@ CmnRet_t DriverAtaRead( void     *pAddr,
             gInterruptFlag = ATA_INT_FLAG_OFF;
             
             /* データ転送要求有無判定 */
-            if ( MLIB_BASIC_HAVE_FLAG( status, ATA_STATUS_DRQ ) ) {
+            if ( MLIB_HAVE_FLAG( status, ATA_STATUS_DRQ ) ) {
                 /* データ転送要求有 */
                 
                 /* デバッグトレースログ出力 */

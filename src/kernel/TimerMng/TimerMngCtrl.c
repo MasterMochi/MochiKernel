@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TimerMng/TimerMngCtrl.c                                         */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/09 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <kernel/config.h>
 #include <kernel/timer.h>
-#include <MLib/Basic/MLibBasicList.h>
+#include <MLib/MLibList.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -39,14 +39,14 @@
 
 /** タイマ情報型 */
 typedef struct {
-    MLibBasicListNode_t listInfo;   /**< リンクリスト情報     */
-    uint32_t            timerId;    /**< タイマID             */
-    uint32_t            remain;     /**< 残タイマ値           */
-    uint32_t            tick;       /**< 設定タイマ値         */
-    uint32_t            type;       /**< タイマ種別           */
-    TimerMngFunc_t      pFunc;      /**< コールバック関数     */
-    void                *pArg;      /**< コールバック関数引数 */
-    MkTaskId_t          taskId;     /**< タスクID             */
+    MLibListNode_t listInfo;    /**< リンクリスト情報     */
+    uint32_t       timerId;     /**< タイマID             */
+    uint32_t       remain;      /**< 残タイマ値           */
+    uint32_t       tick;        /**< 設定タイマ値         */
+    uint32_t       type;        /**< タイマ種別           */
+    TimerMngFunc_t pFunc;       /**< コールバック関数     */
+    void           *pArg;       /**< コールバック関数引数 */
+    MkTaskId_t     taskId;      /**< タスクID             */
 } TimerInfo_t;
 
 
@@ -75,10 +75,10 @@ static void Unset( TimerInfo_t *pTimerInfo );
 /* グローバル変数宣言                                                         */
 /******************************************************************************/
 /** 未使用タイマ情報リスト */
-static MLibBasicList_t gUnusedList;
+static MLibList_t gUnusedList;
 
 /** 使用中タイマ情報リスト */
-static MLibBasicList_t gUsedList;
+static MLibList_t gUsedList;
 
 /** タイマ情報テーブル */
 static TimerInfo_t gTimerInfoTbl[ TIMERMNG_TIMERID_NUM ];
@@ -127,7 +127,7 @@ uint32_t TimerMngCtrlSet( uint32_t       tick,
     }
     
     /* 未使用タイマ情報取得 */
-    pTimerInfo = ( TimerInfo_t * ) MLibBasicListRemoveTail( &gUnusedList );
+    pTimerInfo = ( TimerInfo_t * ) MLibListRemoveTail( &gUnusedList );
     
     /* 取得結果判定 */
     if ( pTimerInfo == NULL ) {
@@ -180,8 +180,8 @@ void TimerMngCtrlUnset( uint32_t timerId )
     
     /* 次タイマ情報取得 */
     pNext = ( TimerInfo_t * )
-        MLibBasicListGetNextNode( &gUsedList,
-                                  ( MLibBasicListNode_t * ) pTimerInfo );
+        MLibListGetNextNode( &gUsedList,
+                             ( MLibListNode_t * ) pTimerInfo );
     
     /* 取得結果判定 */
     if ( pNext != NULL ) {
@@ -192,8 +192,8 @@ void TimerMngCtrlUnset( uint32_t timerId )
     }
     
     /* 使用中タイマ情報リストから削除 */
-    ( void ) MLibBasicListRemove( &gUsedList,
-                                  ( MLibBasicListNode_t * ) pTimerInfo );
+    ( void ) MLibListRemove( &gUsedList,
+                             ( MLibListNode_t * ) pTimerInfo );
     
     /* 未使用タイマ情報リスト設定 */
     Unset( pTimerInfo );
@@ -216,8 +216,8 @@ void CtrlInit( void )
     uint32_t index;
     
     /* タイマ情報リスト初期化 */
-    ( void ) MLibBasicListInit( &gUnusedList );
-    ( void ) MLibBasicListInit( &gUsedList   );
+    ( void ) MLibListInit( &gUnusedList );
+    ( void ) MLibListInit( &gUsedList   );
     
     /* タイマ情報テーブルエントリ毎に繰り返し */
     for ( index  = TIMERMNG_TIMERID_MIN;
@@ -252,7 +252,7 @@ void CtrlRun( void )
     TimerInfo_t *pTimerInfo; /* タイマ情報 */
     
     /* 先頭エントリ取得 */
-    pTimerInfo = ( TimerInfo_t * ) MLibBasicListGetNextNode( &gUsedList, NULL );
+    pTimerInfo = ( TimerInfo_t * ) MLibListGetNextNode( &gUsedList, NULL );
     
     /* 取得結果判定 */
     if ( pTimerInfo == NULL ) {
@@ -272,7 +272,7 @@ void CtrlRun( void )
     }
     
     /* 使用中タイマ情報リストから削除 */
-    ( void ) MLibBasicListRemoveHead( &gUsedList );
+    ( void ) MLibListRemoveHead( &gUsedList );
     
     /* タイマ種別判定 */
     if ( pTimerInfo->type == TIMERMNG_TYPE_ONESHOT ) {
@@ -368,8 +368,8 @@ static void Set( TimerInfo_t *pTimerInfo )
     while ( true ) {
         /* タイマ情報エントリ取得 */
         pNext = ( TimerInfo_t * )
-            MLibBasicListGetNextNode( &gUsedList,
-                                      ( MLibBasicListNode_t * ) pPrev );
+            MLibListGetNextNode( &gUsedList,
+                                 ( MLibListNode_t * ) pPrev );
         
         /* 取得結果判定 */
         if ( pNext == NULL ) {
@@ -383,10 +383,10 @@ static void Set( TimerInfo_t *pTimerInfo )
             /* 次エントリより短い */
             
             /* 挿入 */
-            ( void ) MLibBasicListInsertNext(
+            ( void ) MLibListInsertNext(
                         &gUsedList,
-                        ( MLibBasicListNode_t * ) pPrev,
-                        ( MLibBasicListNode_t * ) pTimerInfo );
+                        ( MLibListNode_t * ) pPrev,
+                        ( MLibListNode_t * ) pTimerInfo );
             
             /* 次エントリ残タイマ値減算 */
             pNext->remain -= pTimerInfo->remain;
@@ -408,18 +408,18 @@ static void Set( TimerInfo_t *pTimerInfo )
         /* 前エントリ無し */
         
         /* 先頭に挿入 */
-        ( void ) MLibBasicListInsertHead(
+        ( void ) MLibListInsertHead(
                     &gUsedList,
-                    ( MLibBasicListNode_t * ) pTimerInfo );
+                    ( MLibListNode_t * ) pTimerInfo );
         
     } else {
         /* 前エントリ有り */
         
         /* 挿入 */
-        ( void ) MLibBasicListInsertNext(
+        ( void ) MLibListInsertNext(
                     &gUsedList,
-                    ( MLibBasicListNode_t * ) pPrev,
-                    ( MLibBasicListNode_t * ) pTimerInfo );
+                    ( MLibListNode_t * ) pPrev,
+                    ( MLibListNode_t * ) pTimerInfo );
     }
     
     return;
@@ -512,8 +512,8 @@ static void Unset( TimerInfo_t *pTimerInfo )
     pTimerInfo->taskId = MK_CONFIG_TASKID_NULL;
     
     /* 未使用タイマ情報リスト追加 */
-    ( void ) MLibBasicListInsertTail( &gUnusedList,
-                                      ( MLibBasicListNode_t * ) pTimerInfo );
+    ( void ) MLibListInsertTail( &gUnusedList,
+                                 ( MLibListNode_t * ) pTimerInfo );
     
     return;
 }

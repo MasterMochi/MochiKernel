@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2018/12/09 */
+/*                                                                 2018/12/15 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -59,6 +59,7 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
  * @param[in]   size           ELFファイルサイズ
  * @param[in]   pageDirId      ページディレクトリID
  * @param[out]  **ppEntryPoint エントリポイント
+ * @param[out]  **ppEndPoint エンドポイント
  * 
  * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
@@ -68,7 +69,8 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
 CmnRet_t TaskMngElfLoad( void     *pAddr,
                          size_t   size,
                          uint32_t pageDirId,
-                         void     **ppEntryPoint )
+                         void     **ppEntryPoint,
+                         void     **ppEndPoint    )
 {
     void       *pPhyAddr;   /* 物理アドレス                     */
     uint32_t   index;       /* インデックス                     */
@@ -182,6 +184,9 @@ CmnRet_t TaskMngElfLoad( void     *pAddr,
             
             return CMN_FAILURE;
         }
+
+        /* エンドポイント更新 */
+        *ppEndPoint = ( void * ) ( pEntry->p_vaddr + size );
     }
     
     /* エントリポイント設定 */

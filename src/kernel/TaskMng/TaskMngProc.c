@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/31 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,11 +12,14 @@
 #include <string.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
+#include <kernel/proc.h>
 #include <kernel/types.h>
+#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
+#include <IntMng.h>
 #include <MemMng.h>
 #include <TaskMng.h>
 
@@ -46,6 +49,8 @@ typedef struct {
     uint8_t    reserved[ 2 ];               /**< 予約                 */
     uint32_t   pageDirId;                   /**< ページディレクトリID */
     void       *pEntryPoint;                /**< エントリポイント     */
+    void       *pEndPoint;                  /**< エンドポイント       */
+    void       *pBreakPoint;                /**< ブレイクポイント     */
     MkTaskId_t taskId[ MK_CONFIG_TID_NUM ]; /**< タスクIDリスト       */
 } ProcTbl_t;
 
@@ -62,6 +67,11 @@ static ProcTbl_t gProcTbl[ MK_CONFIG_PID_NUM ];
 /******************************************************************************/
 /* プロセス開始 */
 static void TaskMngProcStart( void );
+/* 割込みハンドラ */
+static void HdlInt( uint32_t        intNo,
+                    IntMngContext_t context );
+/* ブレイクポイント設定 */
+static void SetBreakPoint( MkProcParam_t *pParam );
 
 
 /******************************************************************************/
@@ -90,6 +100,8 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                         size_t  size    )
 {
     void       *pEntryPoint;    /* エントリポイント     */
+    void       *pEndPoint;      /* エンドポイント       */
+    void       *pBreakPoint;    /* ブレイクポイント     */
     uint32_t   pageDirId;       /* ページディレクトリID */
     CmnRet_t   ret;             /* 関数戻り値           */
     MkPid_t    pid;             /* PID                  */
@@ -97,6 +109,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     
     /* 初期化 */
     pEntryPoint = NULL;
+    pBreakPoint = NULL;
     pageDirId   = MEMMNG_PAGE_DIR_FULL;
     ret         = CMN_FAILURE;
     pid         = MK_CONFIG_PID_NULL;
@@ -151,7 +164,11 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                                       MK_CONFIG_SIZE_APL                      );
             
             /* ELFファイル読込 */
-            ret = TaskMngElfLoad( pAddr, size, pageDirId, &pEntryPoint );
+            ret = TaskMngElfLoad( pAddr,
+                                  size,
+                                  pageDirId,
+                                  &pEntryPoint,
+                                  &pEndPoint    );
             
             /* 読込結果判定 */
             if ( ret != CMN_SUCCESS ) {
@@ -181,11 +198,17 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                 return MK_CONFIG_PID_NULL;
             }
             
+            /* ブレイクポイント設定 */
+            pBreakPoint = ( void * ) MLIB_ALIGN( ( uint32_t ) pEndPoint - 1,
+                                                 IA32_PAGING_PAGE_SIZE       );
+            
             /* プロセス情報設定 */
             gProcTbl[ pid ].used        = CMN_USED;     /* 使用フラグ           */
             gProcTbl[ pid ].type        = type;         /* プロセスタイプ       */
             gProcTbl[ pid ].pageDirId   = pageDirId;    /* ページディレクトリID */
             gProcTbl[ pid ].pEntryPoint = pEntryPoint;  /* エントリポイント     */
+            gProcTbl[ pid ].pEndPoint   = pEndPoint;    /* エンドポイント       */
+            gProcTbl[ pid ].pBreakPoint = pBreakPoint;  /* ブレイクポイント     */
             gProcTbl[ pid ].taskId[ 0 ] = taskId;       /* タスクID             */
             
             /* スケジューラ追加 */
@@ -276,6 +299,11 @@ void TaskMngProcInit( void )
     gProcTbl[ TASKMNG_PID_IDLE ].pageDirId   = MEMMNG_PAGE_DIR_ID_IDLE;
     gProcTbl[ TASKMNG_PID_IDLE ].pEntryPoint = NULL;
     gProcTbl[ TASKMNG_PID_IDLE ].taskId[ 0 ] = TASKMNG_TASKID_IDLE;
+    
+    /* 割込みハンドラ設定 */
+    IntMngHdlSet( MK_CONFIG_INTNO_PROC,     /* 割込み番号     */
+                  HdlInt,                   /* 割込みハンドラ */
+                  IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
     
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -378,6 +406,183 @@ void TaskMngProcStart( void )
     IA32InstructionIretd();
     
     /* not return */
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       割込みハンドラ
+ * @details     機能IDから該当する機能を呼び出す。
+ * 
+ * @param[in]   intNo   割込み番号
+ * @param[in]   context 割込み発生時コンテキスト
+ */
+/******************************************************************************/
+static void HdlInt( uint32_t        intNo,
+                    IntMngContext_t context )
+{
+    MkProcParam_t *pParam;  /* パラメータ */
+
+    /* 初期化 */
+    pParam = ( MkProcParam_t * ) context.genReg.esi;
+
+    /* パラメータチェック */
+    if ( pParam == NULL ) {
+        /* 不正 */
+
+        return;
+    }
+
+    /* 機能ID判定 */
+    switch ( pParam->funcId ) {
+        case MK_PROC_FUNCID_SET_BREAKPOINT:
+            /* ブレイクポイント設定 */
+            SetBreakPoint( pParam );
+            break;
+
+        default:
+            /* 不正 */
+
+            /* アウトプットパラメータ設定 */
+            pParam->ret   = MK_PROC_RET_FAILURE;
+            pParam->errNo = MK_PROC_ERR_PARAM_FUNCID;
+    }
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ブレイクポイント設定
+ * @details     ブレイクポイントを設定する。必要があれば、仮想メモリの割り当て
+ *              または解放を行う。
+ * 
+ * @param[in]   *pParam パラメータ
+ */
+/******************************************************************************/
+static void SetBreakPoint( MkProcParam_t *pParam )
+{
+    void       *pPhyAddr;       /* 物理アドレス             */
+    void       *pVirtAddr;      /* ページ先頭アドレス       */
+    int32_t    remain;          /* 残増減量                 */
+    int32_t    quantity;        /* 増減量(ページサイズ以下) */
+    MkPid_t    pid;             /* プロセスID               */
+    uint32_t   breakPoint;      /* ブレイクポイント         */
+    uint32_t   oldPageNum;      /* 旧ページ数               */
+    uint32_t   newPageNum;      /* 新ページ数               */
+    CmnRet_t   ret;             /* 呼出し関数戻り値         */
+    MkTaskId_t taskId;          /* タスクID                 */
+
+    /* 初期化 */
+    taskId     = TaskMngSchedGetTaskId();
+    pid        = TaskMngTaskGetPid( taskId );
+    breakPoint = ( uint32_t ) gProcTbl[ pid ].pBreakPoint;
+    remain     = pParam->quantity;
+
+    while ( remain != 0 ) {
+        /* 残増減量比較 */
+        if ( ( ( - IA32_PAGING_PAGE_SIZE ) <= remain                ) &&
+             ( remain                      <= IA32_PAGING_PAGE_SIZE )    ) {
+            /* ページサイズ以内の増減量 */
+
+            quantity = remain;
+            remain   = 0;
+
+        } else if ( remain < ( - IA32_PAGING_PAGE_SIZE ) ) {
+            /* ページサイズを超えた減量 */
+
+            quantity  = ( - IA32_PAGING_PAGE_SIZE );
+            remain   += IA32_PAGING_PAGE_SIZE;
+
+        } else {
+            /* ページサイズを超えた増量 */
+
+            quantity  = IA32_PAGING_PAGE_SIZE;
+            remain   -= IA32_PAGING_PAGE_SIZE;
+        }
+
+        /* ブレイクポイント増減前後のページ数計算 */
+        oldPageNum = ( breakPoint - 1            ) / IA32_PAGING_PAGE_SIZE;
+        newPageNum = ( breakPoint - 1 + quantity ) / IA32_PAGING_PAGE_SIZE;
+
+        /* 新旧ページ数比較 */
+        if ( oldPageNum < newPageNum ) {
+            /* ページ数増加 */
+
+            /* 物理メモリ領域割当 */
+            pPhyAddr = MemMngPhysAlloc( IA32_PAGING_PAGE_SIZE );
+
+            /* 割当結果判定 */
+            if ( pPhyAddr == NULL ) {
+                /* 失敗 */
+
+                DEBUG_LOG( "%s(): MemMngPhysAlloc() error.", __func__ );
+
+                /* 戻り値設定 */
+                pParam->errNo       = MK_PROC_ERR_NO_MEMORY;
+                pParam->ret         = MK_PROC_RET_FAILURE;
+                pParam->pBreakPoint = ( void * ) breakPoint;
+
+                return;
+            }
+
+            /* 0初期化 */
+            MemMngCtrlSet( pPhyAddr, 0, IA32_PAGING_PAGE_SIZE );
+
+            /* ページ先頭アドレス計算 */
+            pVirtAddr = ( void * ) ( MLIB_ALIGN( breakPoint - 1,
+                                                 IA32_PAGING_PAGE_SIZE ) );
+
+            /* ページングマッピング設定 */
+            ret = MemMngPageSet( gProcTbl[ pid ].pageDirId,
+                                 pVirtAddr,
+                                 pPhyAddr,
+                                 IA32_PAGING_PAGE_SIZE,
+                                 IA32_PAGING_G_NO,
+                                 IA32_PAGING_US_USER,
+                                 IA32_PAGING_RW_RW          );
+
+            /* 設定結果判定 */
+            if ( ret != CMN_SUCCESS ) {
+                /* 失敗 */
+
+                DEBUG_LOG( "%s(): MemMngPageSet() error(%d).", __func__, ret );
+
+                /* 戻り値設定 */
+                pParam->errNo       = MK_PROC_ERR_NO_MEMORY;
+                pParam->ret         = MK_PROC_RET_FAILURE;
+                pParam->pBreakPoint = ( void * ) breakPoint;
+
+                return;
+            }
+
+        } else if ( oldPageNum > newPageNum ) {
+            /* ページ数減少 */
+
+            /* ページ先頭アドレス計算 */
+            pVirtAddr = ( void * ) ( MLIB_ALIGN( breakPoint - 1 + quantity,
+                                                 IA32_PAGING_PAGE_SIZE      ) );
+
+            /* ページングマッピング解除 */
+            MemMngPageUnset( gProcTbl[ pid ].pageDirId,
+                             pVirtAddr,
+                             IA32_PAGING_PAGE_SIZE      );
+        }
+
+        /* ブレイクポイント更新 */
+        breakPoint += quantity;
+    }
+
+    /* ブレイクポイント設定 */
+    gProcTbl[ pid ].pBreakPoint = ( void * ) breakPoint;
+
+    /* 戻り値設定 */
+    pParam->errNo       = MK_PROC_ERR_NONE;
+    pParam->ret         = MK_PROC_RET_SUCCESS;
+    pParam->pBreakPoint = ( void * ) breakPoint;
+
+    return;
 }
 
 

@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/booter/IntMng/IntMngHdl.c                                              */
-/*                                                                 2018/11/24 */
+/*                                                                 2018/12/24 */
 /* Copyright (C) 2017-2018 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
@@ -129,6 +129,8 @@ typedef void ( *hdlCmnProc_t )( void );
 HDL_CMN_PROC_PROTOTYPE_16X( 0x0 )
 HDL_CMN_PROC_PROTOTYPE_16X( 0x1 )
 HDL_CMN_PROC_PROTOTYPE_16X( 0x2 )
+HDL_CMN_PROC_PROTOTYPE_16X( 0x3 )
+HDL_CMN_PROC_PROTOTYPE_16X( 0x4 )
 
 /* 無視割込みハンドラ */
 static void HdlIgnore( uint32_t intNo );
@@ -141,7 +143,9 @@ static void HdlIgnore( uint32_t intNo );
 const hdlCmnProc_t gHdlCmnProcTbl[ INTMNG_INT_NO_NUM ] = {
     HDL_CMN_PROC_LIST_16X( 0x0 ),
     HDL_CMN_PROC_LIST_16X( 0x1 ),
-    HDL_CMN_PROC_LIST_16X( 0x2 )  };
+    HDL_CMN_PROC_LIST_16X( 0x2 ),
+    HDL_CMN_PROC_LIST_16X( 0x3 ),
+    HDL_CMN_PROC_LIST_16X( 0x4 )  };
 
 /** 割込みハンドラ管理テーブル */
 static IntMngHdl_t gHdlIntProcTbl[ INTMNG_INT_NO_NUM ];
@@ -221,6 +225,8 @@ void IntMngHdlSet( uint32_t    intNo,
 HDL_CMN_PROC_16X( 0x0 )
 HDL_CMN_PROC_16X( 0x1 )
 HDL_CMN_PROC_16X( 0x2 )
+HDL_CMN_PROC_16X( 0x3 )
+HDL_CMN_PROC_16X( 0x4 )
 
 
 /******************************************************************************/

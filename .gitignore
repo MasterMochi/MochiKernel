@@ -10,3 +10,4 @@ doxygen/log
 vm/vmware/*
 *.o
 *.a
+tags

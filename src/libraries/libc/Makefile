@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/libraries/libc/Makefile                                                *#
-#*                                                                 2018/12/09 *#
-#* Copyright (C) 2016-2017 Mochi.                                             *#
+#*                                                                 2018/12/23 *#
+#* Copyright (C) 2016-2018 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
 #* 設定                                                                       *#
@@ -10,7 +10,9 @@
 LIB = libc.a
 
 # ソースコード
-SRCS = string/memcpy.c \
+SRCS = stdlib/malloc.c \
+       stdlib/free.c   \
+       string/memcpy.c \
        string/memset.c \
        string/strcpy.c \
        string/strlen.c
@@ -41,6 +43,8 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 # 依存関係ファイル
 DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
 
+# インクルードディレクトリ
+CFLAGS  += -I$(BUILD_DIR)/include
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#

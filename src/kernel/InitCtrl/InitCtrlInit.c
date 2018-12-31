@@ -70,11 +70,11 @@ void InitCtrlInit( void )
                 ( MkMemMapEntry_t * ) 0x00000CD8,
                 *( ( size_t * )       0x00000CD4 )  );
     
-    /* タスク管理モジュール初期化 */
-    TaskMngInit();
-    
     /* 割込み管理モジュール初期化 */
     IntMngInit();
+    
+    /* タスク管理モジュール初期化 */
+    TaskMngInit();
     
     /* タイマ管理モジュール初期化 */
     TimerMngInit();

@@ -334,7 +334,8 @@ static void Receive( MkMsgParam_t *pParam )
             gMngTbl[ taskId ].state = STATE_INIT;
             
             /* 戻り値設定 */
-            pParam->ret = size;
+            pParam->ret     = size;
+            pParam->rcv.src = src;
             
             break;
         }
@@ -535,7 +536,7 @@ static void Send( MkMsgParam_t *pParam )
         if ( ( gMngTbl[ pParam->snd.dst ].src == taskId                ) ||
              ( gMngTbl[ pParam->snd.dst ].src == MK_CONFIG_TASKID_NULL )    ) {
             /* 自タスクIDまたはANY */
-            
+
             /* 送信先タスクスケジュール開始 */
             TaskMngSchedStart( pParam->snd.dst );
         }

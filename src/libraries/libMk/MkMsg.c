@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/libraries/libMk/MkMsg.c                                                */
-/*                                                                 2018/06/18 */
+/*                                                                 2018/12/31 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,12 +24,13 @@
  * @details     指定したタスクからのメッセージまたは全てのタスクからのメッセー
  *              ジの受信を待ち合わせる。
  * 
- * @param[in]   src      送信元タスク
+ * @param[in]   rcvTaskId   受信待ちタスクID
  *                  - MK_CONFIG_TASKID_NULL     全てのタスク
  *                  - MK_CONFIG_TASKID_NULL以外 タスク指定
- * @param[out]  *pBuffer メッセージバッファ
- * @param[in]   size     メッセージバッファサイズ
- * @param[out]  *pErrNo  エラー番号
+ * @param[out]  *pBuffer    メッセージバッファ
+ * @param[in]   size        メッセージバッファサイズ
+ * @param[out]  *pSrcTaskId 送信元タスクID
+ * @param[out]  *pErrNo     エラー番号
  *                  - MK_MSG_ERR_NONE      エラー無し
  *                  - MK_MSG_ERR_NO_EXIST  存在しないタスクID指定
  *                  - MK_MSG_ERR_PROC_TYPE 非隣接プロセスタイプ
@@ -40,10 +41,11 @@
  * @retval      MK_MSG_RET_FAILURE以外 受信メッセージサイズ
  */
 /******************************************************************************/
-int32_t MkMsgReceive( MkTaskId_t src,
+int32_t MkMsgReceive( MkTaskId_t rcvTaskId,
                       void       *pBuffer,
                       size_t     size,
-                      uint32_t   *pErrNo   )
+                      MkTaskId_t *pSrcTaskId,
+                      uint32_t   *pErrNo      )
 {
     volatile MkMsgParam_t param;
     
@@ -51,7 +53,7 @@ int32_t MkMsgReceive( MkTaskId_t src,
     param.funcId      = MK_MSG_FUNCID_RECEIVE;
     param.errNo       = MK_MSG_ERR_NONE;
     param.ret         = MK_MSG_RET_FAILURE;
-    param.rcv.src     = src;
+    param.rcv.src     = rcvTaskId;
     param.rcv.pBuffer = pBuffer;
     param.rcv.size    = size;
     
@@ -70,6 +72,13 @@ int32_t MkMsgReceive( MkTaskId_t src,
         *pErrNo = param.errNo;
     }
     
+    /* 送信元タスクID設定要否判定 */
+    if ( pSrcTaskId != NULL ) {
+        /* 必要 */
+
+        *pSrcTaskId = param.rcv.src;
+    }
+
     return param.ret;
 }
 

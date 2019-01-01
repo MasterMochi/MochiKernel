@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/library.h                                               */
-/*                                                                 2018/10/22 */
+/*                                                                 2018/12/31 */
 /* Copyright (C) 2018 Mochi.                                                  */
 /******************************************************************************/
 #ifndef _MK_LIBRARY_H_
@@ -102,10 +102,11 @@ extern int32_t MkIoPortOutWord( uint16_t portNo,
 /* MkMsg.c */
 /*---------*/
 /* メッセージ受信 */
-extern int32_t MkMsgReceive( MkTaskId_t src,
+extern int32_t MkMsgReceive( MkTaskId_t rcvTaskId,
                              void       *pBuffer,
                              size_t     size,
-                             uint32_t   *pErrNo   );
+                             MkTaskId_t *pSrcTaskId,
+                             uint32_t   *pErrNo      );
 
 /* メッセージ送信 */
 extern int32_t MkMsgSend( MkTaskId_t dst,

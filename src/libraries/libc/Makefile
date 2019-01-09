@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/libraries/libc/Makefile                                                *#
-#*                                                                 2018/12/23 *#
-#* Copyright (C) 2016-2018 Mochi.                                             *#
+#*                                                                 2019/01/09 *#
+#* Copyright (C) 2016-2019 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
 #* 設定                                                                       *#
@@ -10,11 +10,12 @@
 LIB = libc.a
 
 # ソースコード
-SRCS = stdlib/malloc.c \
-       stdlib/free.c   \
-       string/memcpy.c \
-       string/memset.c \
-       string/strcpy.c \
+SRCS = stdlib/malloc.c  \
+       stdlib/free.c    \
+       string/memcpy.c  \
+       string/memset.c  \
+       string/strcpy.c  \
+       string/strncpy.c \
        string/strlen.c
 
 # ビルドディレクトリ

@@ -98,6 +98,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_TASKMNG_TASK,  "TSK-TASK" },   /* タスク管理(タスク)       */
     { CMN_MODULE_TASKMNG_ELF,   "TSK-ELF " },   /* タスク管理(ELFローダ)    */
     { CMN_MODULE_TASKMNG_PROC,  "TSK-PROC" },   /* タスク管理(プロセス)     */
+    { CMN_MODULE_TASKMNG_NAME,  "TSK-NAME" },   /* タスク管理(名前管理)     */
     { CMN_MODULE_INTMNG_INIT,   "INT-INIT" },   /* 割込管理(初期化)         */
     { CMN_MODULE_INTMNG_PIC,    "INT-PIC " },   /* 割込管理(PIC)            */
     { CMN_MODULE_INTMNG_IDT,    "INT-IDT " },   /* 割込管理(IDT)            */

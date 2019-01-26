@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/TaskMng/TaskMngInit.c                                           */
-/*                                                                 2018/11/24 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                 2019/01/26 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -15,6 +15,7 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
+#include "TaskMngName.h"
 #include "TaskMngProc.h"
 #include "TaskMngSched.h"
 #include "TaskMngTask.h"
@@ -48,22 +49,25 @@ void TaskMngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* TSS管理サブモジュール初期化 */
     TaskMngTssInit();
-    
+
     /* タスク管理サブモジュール初期化 */
     TaskMngTaskInit();
-    
+
     /* プロセス管理サブモジュール初期化 */
     TaskMngProcInit();
-    
+
+    /* タスク名管理サブモジュール初期化 */
+    TaskMngNameInit();
+
     /* スケジューラサブモジュール初期化 */
     TaskMngSchedInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

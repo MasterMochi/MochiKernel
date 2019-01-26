@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2018/11/24 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                 2019/01/25 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
 /******************************************************************************/
 #ifndef CMN_H
 #define CMN_H
@@ -42,6 +42,7 @@
 #define CMN_MODULE_TASKMNG_TASK  ( 0x0404 ) /**< タスク管理(タスク)           */
 #define CMN_MODULE_TASKMNG_ELF   ( 0x0405 ) /**< タスク管理(ELFローダ)        */
 #define CMN_MODULE_TASKMNG_PROC  ( 0x0406 ) /**< タスク管理(プロセス)         */
+#define CMN_MODULE_TASKMNG_NAME  ( 0x0407 ) /**< タスク管理(名前管理)         */
 #define CMN_MODULE_INTMNG_INIT   ( 0x0501 ) /**< 割込み管理(初期化)           */
 #define CMN_MODULE_INTMNG_PIC    ( 0x0502 ) /**< 割込み管理(PIC)              */
 #define CMN_MODULE_INTMNG_IDT    ( 0x0503 ) /**< 割込み管理(IDT)              */
@@ -57,7 +58,7 @@
 #define CMN_MODULE_IOCTRL_MEM    ( 0x0803 ) /**< 入出力制御(I/Oメモリ)        */
 
 /** モジュール・サブモジュール数 */
-#define CMN_MODULE_NUM           ( 31 )
+#define CMN_MODULE_NUM           ( 32 )
 
 /** 処理結果構造体 */
 typedef int32_t CmnRet_t;

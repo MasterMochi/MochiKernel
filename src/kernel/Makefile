@@ -1,7 +1,7 @@
 #******************************************************************************#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2018/12/09 *#
-#* Copyright (C) 2016-2018 Mochi.                                             *#
+#*                                                                 2019/01/26 *#
+#* Copyright (C) 2016-2019 Mochi.                                             *#
 #******************************************************************************#
 #******************************************************************************#
 #* 設定                                                                       *#
@@ -28,6 +28,7 @@ SRCS = InitCtrl/InitCtrlInit.c \
        TaskMng/TaskMngSched.c  \
        TaskMng/TaskMngElf.c    \
        TaskMng/TaskMngProc.c   \
+       TaskMng/TaskMngName.c   \
        IntMng/IntMngInit.c     \
        IntMng/IntMngIdt.c      \
        IntMng/IntMngHdl.c      \

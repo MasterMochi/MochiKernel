@@ -80,7 +80,7 @@ static inline void CmnAbort( void )
 {
     /* 割込み禁止 */
     IA32InstructionCli();
-    
+
     /* 無限ループ */
     while ( true ) {
         IA32InstructionHlt();

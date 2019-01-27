@@ -43,13 +43,13 @@ void ItcCtrlInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* メッセージ制御サブモジュール初期化 */
     ItcCtrlMsgInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

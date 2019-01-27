@@ -43,13 +43,13 @@ void MemMngInit( void )
 {
     /* デバッグログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* メモリマップ管理初期化 */
     MemMngMapInit();
-    
+
     /* デバッグログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

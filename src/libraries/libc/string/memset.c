@@ -17,13 +17,13 @@
 /**
  * @brief       memset
  * @details     標準Cライブラリのmemset関数。
- * 
+ *
  * @param[in]   *s メモリアドレス
  * @param[in]   c  コピー値
  * @param[in]   n  コピーカウント
- * 
+ *
  * @return      メモリアドレス
- * 
+ *
  * @attention   引数cはunsigned char型に変換し使用する。
  */
 /******************************************************************************/
@@ -35,12 +35,12 @@ void *memset( void   *s,
     while ( n > 0 ) {
         /* コピーカウント更新 */
         n--;
-        
+
         /* コピー値代入 */
         *( ( uint8_t * ) s + n ) = ( uint8_t ) c;
-        
+
     }
-    
+
     return s;
 }
 

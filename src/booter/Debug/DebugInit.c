@@ -43,7 +43,7 @@ void DebugInit( void )
 {
     /* ログ管理サブモジュール初期化 */
     DebugLogInit();
-    
+
     return;
 }
 

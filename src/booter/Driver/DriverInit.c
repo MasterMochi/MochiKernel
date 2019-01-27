@@ -41,13 +41,13 @@ void DriverInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* ATAドライバ初期化 */
     DriverAtaInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

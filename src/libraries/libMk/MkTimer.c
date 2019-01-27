@@ -22,12 +22,12 @@
 /**
  * @brief       スリープ
  * @details     指定した時間スリープする。
- * 
+ *
  * @param[in]   usec スリープ時間(マイクロ秒)
  * @param[out]  *pErrNo エラー番号
  *                  - MK_TIMER_ERR_NONE        エラー無し
  *                  - MK_TIMER_ERR_NO_RESOURCE リソース不足
- * 
+ *
  * @return      処理結果を返す。
  * @retval      MK_TIMER_RET_SUCCESS 成功
  * @retval      MK_TIMER_RET_FAILURE 失敗（エラー番号を参照）
@@ -40,28 +40,28 @@ int32_t MkTimerSleep( uint32_t usec,
                       uint32_t *pErrNo )
 {
     volatile MkTimerParam_t param;
-    
+
     /* パラメータ設定 */
     param.funcId = MK_TIMER_FUNCID_SLEEP;
     param.errNo  = MK_TIMER_ERR_NONE;
     param.ret    = MK_TIMER_RET_FAILURE;
     param.usec   = usec;
-    
+
     /* カーネルコール */
     __asm__ __volatile__ ( "mov esi, %0\n"
                            "int %1"
                            :
                            : "a" ( &param                ),
                              "i" ( MK_CONFIG_INTNO_TIMER )  );
-    
+
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
         /* 必要 */
-        
+
         /* エラー番号設定 */
         *pErrNo = param.errNo;
     }
-    
+
     return param.ret;
 }
 

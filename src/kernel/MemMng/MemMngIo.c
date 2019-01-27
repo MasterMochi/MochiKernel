@@ -54,14 +54,14 @@ static IoTbl_t gIoTbl;
 /**
  * @brief       I/Oメモリ領域割当
  * @details     指定I/Oメモリ領域を割り当てる。
- * 
+ *
  * @param[in]   *pAddr I/Oメモリ領域先頭アドレス
  * @param[in]   size   I/Oメモリ領域サイズ
- * 
+ *
  * @return      割当結果を返す。
  * @retval      NULL     失敗
  * @retval      NULL以外 割り当てたI/Oメモリ領域の先頭アドレス
- * 
+ *
  * @note        先頭アドレスと割当サイズが4Kバイトアライメントでない場合は、割
  *              り当てを行わない。
  */
@@ -70,24 +70,24 @@ void *MemMngIoAlloc( void   *pAddr,
                      size_t size    )
 {
     void *pRet; /* 戻り値 */
-    
+
     /* 初期化 */
     pRet = NULL;
-    
+
     /* サイズチェック */
     if ( size == 0 ) {
         /* 不正 */
-        
+
         return NULL;
-        
+
     }
-    
+
     /* メモリ領域割当 */
     pRet = AreaAllocSpecified( &( gIoTbl.allocList ),
                                &( gIoTbl.freeList  ),
                                pAddr,
                                size                   );
-    
+
     return pRet;
 }
 
@@ -96,9 +96,9 @@ void *MemMngIoAlloc( void   *pAddr,
 /**
  * @brief       I/Oメモリ領域解放
  * @details     割当中のI/Oメモリ領域を解放する。
- * 
+ *
  * @param[in]   *pAddr 解放するメモリアドレス
- * 
+ *
  * @return      解放結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
@@ -107,10 +107,10 @@ void *MemMngIoAlloc( void   *pAddr,
 CmnRet_t MemMngIoFree( void *pAddr )
 {
     CmnRet_t ret;   /* 戻り値 */
-    
+
     /* メモリ領域解放 */
     ret = AreaFree( &( gIoTbl.allocList ), &( gIoTbl.freeList ), pAddr );
-    
+
     return ret;
 }
 
@@ -122,7 +122,7 @@ CmnRet_t MemMngIoFree( void *pAddr )
 /**
  * @brief       I/Oメモリ領域管理初期化
  * @details     I/Oメモリ領域管理テーブルを初期化する。
- * 
+ *
  * @param[in]   *pMemMap メモリマップ
  * @param[in]   entryNum メモリマップエントリ数
  */
@@ -133,38 +133,38 @@ void IoInit( MkMemMapEntry_t *pMemMap,
     uint32_t        index;      /* メモリマップエントリインデックス */
     AreaInfo_t      *pMemInfo;  /* 未割当メモリ領域情報             */
     MkMemMapEntry_t *pEntry;    /* メモリマップエントリ             */
-    
+
     /* 未割当I/Oメモリ領域情報リスト初期化 */
     MLibListInit( &( gIoTbl.freeList ) );
-    
+
     /* 割当中I/Oメモリ領域情報リスト初期化 */
     MLibListInit( &( gIoTbl.allocList ) );
-    
+
     /* メモリマップエントリ毎に繰り返し */
     for ( index = 0; index < entryNum; index++ ) {
         /* メモリマップ参照設定 */
         pEntry = &( pMemMap[ index ] );
-        
+
         /* メモリ領域タイプ判定 */
         if ( pEntry->type != MK_MEM_TYPE_RESERVED ) {
             /* 予約済み領域でない */
-            
+
             continue;
         }
-        
+
         /* 未割当I/Oメモリ領域情報リスト設定 */
         pMemInfo = AreaSet( &( gIoTbl.freeList ),
                             pEntry->pAddr,
                             pEntry->size          );
-        
+
         /* 設定結果判定 */
         if ( pMemInfo == NULL ) {
             /* 失敗 */
-            
+
             /* [TODO] */
         }
     }
-    
+
     return;
 }
 

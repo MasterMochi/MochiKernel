@@ -74,10 +74,10 @@ uint8_t gFileType;      /**< 入力ファイルタイプ         */
 /**
  * @brief       makeimg
  * @details     カーネルイメージを作成する。
- * 
+ *
  * @param[in]   argNum  引数の数
  * @param[in]   *pArg[] 引数
- * 
+ *
  * @return      処理結果を返す。
  * @retval      EXIT_SUCCESS 正常終了
  * @retval      EXIT_FAILURE 異常終了
@@ -90,54 +90,54 @@ int main( int  argNum,
     int        flags;       /* オープンフラグ                 */
     ssize_t    writeSize;   /* 書込みサイズ                   */
     MkImgHdr_t header;      /* 空ヘッダ                       */
-    
+
     /* 初期化 */
     memset( &header, 0, sizeof ( MkImgHdr_t ) );
-    
+
     /* オプションチェック */
     checkOptions( argNum, pArg );
-    
+
     /* ファイルタイプチェック */
     if ( gFileType == MK_PROC_TYPE_KERNEL ) {
         /* カーネル */
-        
+
         /* オープンフラグ設定 */
         flags = O_RDWR | O_CREAT | O_TRUNC;
-        
+
     } else {
         /* カーネル以外 */
-        
+
         /* オープンフラグ設定 */
         flags = O_RDWR;
     }
-    
+
     /* イメージオープン */
     imgFd = open( gpImgPath,
                   flags,
                   S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH );
-    
+
     /* オープン結果判定 */
     if ( imgFd == -1 ) {
         /* 失敗 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
                __LINE__,
                gpImgPath,
                errno );
     }
-    
+
     /* 書込みタイプチェック */
     if ( gFileType == MK_PROC_TYPE_KERNEL ) {
         /* カーネル */
-        
+
         /* 空ヘッダ書込み */
         writeSize = write( imgFd, &header, sizeof ( MkImgHdr_t ) );
-        
+
         /* 書込み結果判定 */
         if ( writeSize != sizeof ( MkImgHdr_t ) ) {
             /* 失敗 */
-            
+
             /* アボート */
             ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
                    __LINE__,
@@ -146,15 +146,15 @@ int main( int  argNum,
                    errno );
         }
     }
-    
+
     /* ファイル書込み */
     for ( ; optind < argNum; optind++ ) {
         addFile( imgFd, pArg[ optind ] );
     }
-    
+
     /* 仮想ディスククローズ */
     close( imgFd );
-    
+
     /* 正常終了 */
     return EXIT_SUCCESS;
 }
@@ -167,7 +167,7 @@ int main( int  argNum,
 /**
  * @brief       ファイル追加
  * @details     イメージファイルにファイルを追加する
- * 
+ *
  * @param[in]   imgFd  イメージファイルディスクリプタ
  * @param[in]   *pPath ファイルパス
  */
@@ -183,77 +183,77 @@ static void addFile( int  imgFd,
     uint8_t    buffer[ BUFFER_SIZE ];   /* バッファ               */
     uint32_t   size;                    /* ファイルサイズ         */
     MkImgHdr_t header;                  /* ファイルヘッダ         */
-    
+
     /* 初期化 */
     size = 0;
     memset( &header, 0, sizeof ( MkImgHdr_t ) );
-    
+
     /* イメージファイルシーク */
     offset = lseek( imgFd, 0, SEEK_END );
-    
+
     /* シーク結果判定 */
     if ( ( ( ( int32_t ) offset       ) <  0 ) &&
          ( ( ( int32_t ) offset % 512 ) != 0 )    ) {
         /* 失敗または異常 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't seek at the image. ret=%d, errno=%d.\n",
                __LINE__,
                ( int32_t ) offset,
                errno );
     }
-    
+
     /* ヘッダオフセット設定 */
     headerOffset = offset - ( off_t ) sizeof ( MkImgHdr_t );
-    
+
     /* ファイルオープン */
     fd = open( pPath, O_RDONLY );
-    
+
     /* オープン結果判定 */
     if ( fd == -1 ) {
         /* 失敗 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
                __LINE__,
                pPath,
                errno );
     }
-    
+
     /* バッファサイズ毎に繰り返し */
     do {
         /* バッファ初期化 */
         memset( buffer, 0, BUFFER_SIZE );
-        
+
         /* ファイル読込 */
         readSize = read( fd, buffer, BUFFER_SIZE );
-        
+
         /* 読込結果判定 */
         if ( readSize == -1 ) {
             /* 失敗 */
-            
+
             /* アボート */
             ABORT( "ERROR(%04u): Can't read from %s. errno=%d.\n",
                    __LINE__,
                    pPath,
                    errno );
-            
+
         } else if ( readSize == 0 ) {
             /* EOF */
-            
+
             break;
         }
-        
+
         /* ファイルサイズ更新 */
         size += ( uint32_t ) readSize;
-        
+
         /* 書込み */
         writeSize = write( imgFd, buffer, MLIB_ALIGN( readSize, 512 ) );
-        
+
         /* 書込み結果判定 */
         if ( writeSize != MLIB_ALIGN( readSize, 512 ) ) {
             /* 失敗 */
-            
+
             /* アボート */
             ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
                    __LINE__,
@@ -261,16 +261,16 @@ static void addFile( int  imgFd,
                    ( int32_t ) writeSize,
                    errno );
         }
-        
+
     } while ( readSize == BUFFER_SIZE );
-    
+
     /* 空ヘッダ書込み */
     writeSize = write( imgFd, &header, sizeof ( MkImgHdr_t ) );
-    
+
     /* 書込み結果判定 */
     if ( writeSize != sizeof ( MkImgHdr_t ) ) {
         /* 失敗 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
                __LINE__,
@@ -278,34 +278,34 @@ static void addFile( int  imgFd,
                ( int32_t ) writeSize,
                errno );
     }
-    
+
     /* ファイルヘッダ設定 */
     getFileName( header.fileName, pPath, sizeof ( header.fileName ) - 1 );
     header.fileSize = size;
     header.fileType = gFileType;
-    
-    
+
+
     /* イメージファイルシーク */
     offset = lseek( imgFd, headerOffset, SEEK_SET );
-    
+
     /* シーク結果判定 */
     if ( offset != headerOffset ) {
         /* 失敗または異常 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't seek at the image. ret=%d, errno%d.\n",
                __LINE__,
                ( int32_t ) offset,
                errno );
     }
-    
+
     /* ファイルヘッダ書込み */
     writeSize = write( imgFd, &header, sizeof ( MkImgHdr_t ) );
-    
+
     /* 書込み結果判定 */
     if ( writeSize != sizeof ( MkImgHdr_t ) ) {
         /* 失敗 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
                __LINE__,
@@ -313,10 +313,10 @@ static void addFile( int  imgFd,
                ( int32_t ) writeSize,
                errno );
     }
-    
+
     /* ファイルクローズ */
     close( fd );
-    
+
     return;
 }
 
@@ -325,7 +325,7 @@ static void addFile( int  imgFd,
 /**
  * @brief       オプションチェック
  * @details     オプションが許容可能な値かチェックする。
- * 
+ *
  * @param[in]   argNum  引数の数
  * @param[in]   *pArg[] 引数
  */
@@ -334,72 +334,72 @@ static void checkOptions( int32_t argNum,
                           char    *pArg[] )
 {
     char opt;   /* オプション文字 */
-    
+
     /* 初期化 */
     gpImgPath = NULL;
     gFileType = MK_PROC_TYPE_NONE;
-    
+
     /* オプションが無くなるまで繰り返し */
     while ( true ) {
         /* オプション取得 */
         opt = getopt( argNum, pArg, "o:KDSUh" );
-        
+
         /* 取得結果判定 */
         if ( opt == -1 ) {
             /* オプション無し */
             break;
-            
+
         } else if ( opt == 'o' ) {
             /* 出力先ファイルパス */
             gpImgPath = optarg;
-            
+
         } else if ( opt == 'K' ) {
             /* カーネルファイル入力 */
             gFileType = MK_PROC_TYPE_KERNEL;
-            
+
         } else if ( opt == 'D' ) {
             /* ドライバファイル入力 */
             gFileType = MK_PROC_TYPE_DRIVER;
-            
+
         } else if ( opt == 'S' ) {
             /* サーバファイル入力 */
             gFileType = MK_PROC_TYPE_SERVER;
-            
+
         } else if ( opt == 'U' ) {
             /* ユーザファイル入力 */
             gFileType = MK_PROC_TYPE_USER;
-            
+
         } else if ( opt == 'h' ) {
             /* ヘルプ */
-            
+
             /* USAGE出力して終了 */
             printUsage( EXIT_SUCCESS );
-            
+
         } else {
             /* 他 */
-            
+
             /* アボート */
             ABORT( "ERROR(%04u): Unknown option!\n", __LINE__ );
         }
     }
-    
+
     /* 出力先ファイルパス設定チェック */
     if ( gpImgPath == NULL ) {
         /* 未設定 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): No '-o' option!\n", __LINE__ );
     }
-    
+
     /* 入力ファイルタイプ設定チェック */
     if ( gFileType == MK_PROC_TYPE_NONE ) {
         /* 未設定 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): No set file type! ( '-K', '-D', '-S' or '-U' )\n",
                __LINE__ );
     }
-    
+
     return;
 }
 
@@ -408,7 +408,7 @@ static void checkOptions( int32_t argNum,
 /**
  * @brief       ファイル名取得
  * @details     ファイルパスからファイル名を取得する。
- * 
+ *
  * @param[out]  *pFileName ファイル名
  * @param[in]   *pFilePath ファイルパス
  * @param[in]   length     ファイル名長
@@ -420,33 +420,33 @@ static void getFileName( char     *pFileName,
 {
     char *pStr1;
     char *pStr2;
-    
+
     /* 初期化 */
     pStr1 = pFilePath;
     pStr2 = NULL;
-    
+
     /* 最終分離符検索 */
     do {
         /* 分離符位置バックアップ */
         pStr2 = pStr1;
         pStr2++;
-        
+
         /* 分離符検索 */
         pStr1 = strstr( pStr2, "/" );
-        
+
     } while ( pStr1 != NULL );
-    
+
     /* 検索結果判定 */
     if ( pStr2 == NULL ) {
         /* 失敗 */
-        
+
         /* アボート */
         ABORT( "ERROR(%04u): Can't search!", __LINE__ );
     }
-    
+
     /* ファイル名格納 */
     strncpy( pFileName, pStr2, length );
-    
+
     return;
 }
 
@@ -455,7 +455,7 @@ static void getFileName( char     *pFileName,
 /**
  * @brief       USAGE出力
  * @details     USAGEを出力しプログラムを終了する。
- * 
+ *
  * @param[in]   status 終了ステータス
  */
 /******************************************************************************/
@@ -471,7 +471,7 @@ static void printUsage( int status )
     fprintf( stderr, "  -S FILE specify the input FILE type that is a server process binary.\n" );
     fprintf( stderr, "  -U FILE specify the input FILE type that is a user process binary.\n"   );
     fprintf( stderr, "  -h      print help.\n"                                                  );
-    
+
     /* 終了 */
     exit( status );
 }

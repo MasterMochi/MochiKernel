@@ -46,22 +46,22 @@ void IntMngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* IDT管理サブモジュール初期化 */
     IntMngIdtInit();
-    
+
     /* ハンドラ管理サブモジュール初期化 */
     IntMngHdlInit();
-    
+
     /* PIC管理サブモジュール初期化 */
     IntMngPicInit();
-    
+
     /* ハードウェア割込み制御サブモジュール初期化 */
     IntMngCtrlInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

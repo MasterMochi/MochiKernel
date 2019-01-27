@@ -69,29 +69,29 @@ void IntMngPicInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* PIC2（スレーブ）設定 */
     IA32InstructionOutByte( I8259A_S_PORT_ICW1, 0x11 );
     IA32InstructionOutByte( I8259A_S_PORT_ICW2, 0x28 );
     IA32InstructionOutByte( I8259A_S_PORT_ICW3, 0x02 );
     IA32InstructionOutByte( I8259A_S_PORT_ICW4, 0x01 );
-    
+
     /* PIC1（マスタ）設定 */
     IA32InstructionOutByte( I8259A_M_PORT_ICW1, 0x11 );
     IA32InstructionOutByte( I8259A_M_PORT_ICW2, 0x20 );
     IA32InstructionOutByte( I8259A_M_PORT_ICW3, 0x04 );
     IA32InstructionOutByte( I8259A_M_PORT_ICW4, 0x01 );
-    
+
     /* PIC管理テーブル初期化 */
     gPicTbl.mask[ PIC_MASTER ] = 0xFF;
     gPicTbl.mask[ PIC_SLAVE  ] = 0xFF;
-    
+
     /* 割込み無効化 */
     IntMngPicDisable();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -100,7 +100,7 @@ void IntMngPicInit( void )
 /**
  * @brief       PIC割込み許可
  * @details     PICに指定したIRQ番号の割込み許可設定を行う。
- * 
+ *
  * @param[in]   irqNo IRQ番号
  *                  - I8259A_IRQ0  IRQ0
  *                  - I8259A_IRQ1  IRQ1
@@ -124,36 +124,36 @@ void IntMngPicAllowIrq( uint8_t irqNo )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start. irqNo=%#X", __func__, irqNo );
-    
+
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
          ( irqNo <= I8259A_IRQ7 )    ) {
         /* PIC1（マスタ）向け割込み番号 */
-        
+
         /* PIC1（マスタ）用マスク設定 */
         gPicTbl.mask[ PIC_MASTER ] &= ~( 0x01 << irqNo );
-        
+
     } else {
         /* PIC2（スレーブ）向け割込み番号 */
-        
+
         /* PIC1（マスタ）用マスク設定 */
         gPicTbl.mask[ PIC_MASTER ] &= ~I8259A_OCW1_M2;
-        
+
         /* PIC2（スレーブ）用マスク設定 */
         gPicTbl.mask[ PIC_SLAVE ]  &= ~( 0x01 << ( irqNo - I8259A_IRQ8 ) );
     }
-    
+
     /* PIC割込みマスク状態判定 */
     if ( gPicTbl.maskState == PIC_MASK_STATE_ENABLE ) {
         /* 割込み有効 */
-        
+
         /* PIC割込みマスク設定 */
         IntMngPicEnable();
     }
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -162,7 +162,7 @@ void IntMngPicAllowIrq( uint8_t irqNo )
 /**
  * @brief       PIC割込み拒否
  * @details     PICに指定したIRQ番号の割込み拒否設定を行う。
- * 
+ *
  * @param[in]   irqNo IRQ番号
  *                  - I8259A_IRQ0 IRQ0
  *                  - I8259A_IRQ1 IRQ1
@@ -186,41 +186,41 @@ void IntMngPicDenyIrq( uint8_t irqNo )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start. irqNo=%#X", __func__, irqNo );
-    
+
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
          ( irqNo <= I8259A_IRQ7 )    ) {
         /* PIC1（マスタ）向け割込み番号 */
-        
+
         /* PIC1（マスタ）用マスク設定 */
         gPicTbl.mask[ PIC_MASTER ] |= 0x01 << irqNo;
-        
+
     } else {
         /* PIC2（スレーブ）向け割込み番号 */
-        
+
         /* PIC2（スレーブ）用マスク設定 */
         gPicTbl.mask[ PIC_SLAVE ]  |= ( 0x01 << ( irqNo - I8259A_IRQ8 ) );
-        
+
         /* PIC2（スレーブ）の全マスク判定 */
         if ( gPicTbl.mask[ PIC_SLAVE ] == 0xFF ) {
             /* 全マスク */
-            
+
             /* PIC1（マスタ）用マスク設定 */
             gPicTbl.mask[ PIC_MASTER ] |= I8259A_OCW1_M2;
         }
     }
-    
+
     /* PIC割込みマスク状態判定 */
     if ( gPicTbl.maskState == PIC_MASK_STATE_ENABLE ) {
         /* 割込み有効 */
-        
+
         /* PIC割込みマスク設定 */
         IntMngPicEnable();
     }
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -235,19 +235,19 @@ void IntMngPicDisable( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* 割込みマスク状態変更 */
     gPicTbl.maskState = PIC_MASK_STATE_DISABLE;
-    
+
     /* PIC1（マスタ）割込みマスク設定 */
     IA32InstructionOutByte( I8259A_M_PORT_OCW1, 0xFF );
-    
+
     /* PIC2（スレーブ）割込みマスク設定 */
     IA32InstructionOutByte( I8259A_S_PORT_OCW1, 0xFF );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -262,19 +262,19 @@ void IntMngPicEnable( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* 割込みマスク状態変更 */
     gPicTbl.maskState = PIC_MASK_STATE_ENABLE;
-    
+
     /* PIC1（マスタ）割込みマスク設定 */
     IA32InstructionOutByte( I8259A_M_PORT_OCW1, gPicTbl.mask[ PIC_MASTER ] );
-    
+
     /* PIC2（スレーブ）割込みマスク設定 */
     IA32InstructionOutByte( I8259A_S_PORT_OCW1, gPicTbl.mask[ PIC_SLAVE  ] );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -283,7 +283,7 @@ void IntMngPicEnable( void )
 /**
  * @brief       PIC割込みEOI通知
  * @details     PICに指定したIRQ番号のEOI通知を行う。
- * 
+ *
  * @param[in]   irqNo IRQ番号
  *                  - I8259A_IRQ0 IRQ0
  *                  - I8259A_IRQ1 IRQ1
@@ -307,40 +307,40 @@ void IntMngPicEoi( uint8_t irqNo )
 {
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. irqNo=%#X", __func__, irqNo );*/
-    
+
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
          ( irqNo <= I8259A_IRQ7 )    ) {
         /* PIC1（マスタ）向け割込み番号 */
-        
+
         /* PIC1（マスタ）EOI通知 */
         IA32InstructionOutByte( I8259A_M_PORT_OCW2,
-                                I8259A_OCW2_SL  | 
+                                I8259A_OCW2_SL  |
                                 I8259A_OCW2_EOI |
                                 irqNo               );
-        
+
     } else {
         /* PIC2（スレーブ）向け割込み番号 */
-        
+
         /* IRQ番号変換 */
         irqNo -= I8259A_IRQ8;
-        
+
         /* PIC2（スレーブ）EOI通知 */
         IA32InstructionOutByte( I8259A_S_PORT_OCW2,
                                 I8259A_OCW2_SL  |
                                 I8259A_OCW2_EOI |
                                 irqNo               );
-        
+
         /* PIC2（スレーブ）EOI通知 */
         IA32InstructionOutByte( I8259A_M_PORT_OCW2,
                                 I8259A_OCW2_SL  |
                                 I8259A_OCW2_EOI |
                                 I8259A_IRQ2         );
     }
-    
+
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() end.", __func__ );*/
-    
+
     return;
 }
 

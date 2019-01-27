@@ -163,17 +163,17 @@ static IntMngHdl_t gHdlIntProcTbl[ INTMNG_INT_NO_NUM ];
 void IntMngHdlInit( void )
 {
     uint32_t intNo;     /* 割込み番号 */
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* 全割込み番号毎に繰り返し */
     for ( intNo =  INTMNG_INT_NO_MIN;
           intNo <= INTMNG_INT_NO_MAX;
           intNo++ ) {
         /* 割込みハンドラ管理テーブル設定 */
         gHdlIntProcTbl[ intNo ] = HdlIgnore;
-        
+
         /* IDT登録 */
         IntMngIdtSet(
             intNo,                              /* IDTエントリ番号    */
@@ -183,10 +183,10 @@ void IntMngHdlInit( void )
             IA32_DESCRIPTOR_TYPE_GATE32_INT,    /* タイプ             */
             IA32_DESCRIPTOR_DPL_0            ); /* 特権レベル         */
     }
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -195,7 +195,7 @@ void IntMngHdlInit( void )
 /**
  * @brief       割込みハンドラ登録
  * @details     割込みハンドラを登録する。
- * 
+ *
  * @param[in]   intNo 割込み番号
  *                  - INTMNG_INT_NO_MIN 割込み番号最小値
  *                  - INTMNG_INT_NO_MAX 割込み番号最大値
@@ -207,13 +207,13 @@ void IntMngHdlSet( uint32_t    intNo,
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start. intNo=%#X, func=%p", __func__, intNo, func );
-    
+
     /* 割込みハンドラ管理テーブル設定 */
     gHdlIntProcTbl[ intNo ] = func;
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -233,7 +233,7 @@ HDL_CMN_PROC_16X( 0x4 )
 /**
  * @brief       無視割込みハンドラ
  * @details     割込み処理として何もしない割込みハンドラ。
- * 
+ *
  * @param[in]   intNo 割込み番号
  */
 /******************************************************************************/
@@ -241,11 +241,11 @@ static void HdlIgnore( uint32_t intNo )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() intNo=%#X", __func__, intNo );
-    
+
     while ( true ) {
         IA32InstructionHlt();
     }
-    
+
     /* 何もしない */
     return;
 }

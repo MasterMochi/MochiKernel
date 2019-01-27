@@ -56,16 +56,16 @@ void TaskMngTssInit( void )
 {
     uint16_t index;     /* GDTエントリ番号    */
     uint16_t selector;  /* セグメントセレクタ */
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* TSS初期化 */
     memset( &gTss, 0, sizeof ( IA32Tss_t ) );
-    
+
     /* TSS設定 */
     gTss.ss0 = MEMMNG_SEGSEL_KERNEL_DATA;
-    
+
     /* TSSディスクリプタ設定 */
     index = MemMngGdtAdd(
                 &gTss,                          /* セグメントベース     */
@@ -75,18 +75,18 @@ void TaskMngTssInit( void )
                 IA32_DESCRIPTOR_TYPE_TSS32,     /* セグメントタイプ     */
                 IA32_DESCRIPTOR_DPL_0,          /* セグメント特権レベル */
                 IA32_DESCRIPTOR_DB_UNUSED   );  /* オペレーションサイズ */
-    
+
     /* セグメントセレクタ設定 */
     selector = IA32_SEGMENT_SELECTOR( index,            /* インデックス */
                                       IA32_TI_GDT,      /* TI           */
                                       IA32_RPL_0   );   /* RPL          */
-    
+
     /* TR設定 */
     IA32InstructionLtr( selector );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -95,7 +95,7 @@ void TaskMngTssInit( void )
 /**
  * @brief       ESP0設定
  * @details     TSSのESP0フィールドを設定する。
- * 
+ *
  * @param[in]   esp0 ESP0設定値
  */
 /******************************************************************************/
@@ -103,7 +103,7 @@ void TaskMngTssSetEsp0( uint32_t esp0 )
 {
     /* esp0設定 */
     gTss.esp0 = esp0;
-    
+
     return;
 }
 

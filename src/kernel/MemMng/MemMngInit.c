@@ -44,7 +44,7 @@
 /**
  * @brief       メモリ管理初期化
  * @details     各サブモジュールの初期化を行う。
- * 
+ *
  * @param[in]   *pBiosE820  BIOS-E820メモリマップ
  * @param[in]   biosE820Num BIOS-E820メモリマップエントリ数
  * @param[in]   *pMemMap    メモリマップ
@@ -58,31 +58,31 @@ void MemMngInit( BiosE820Entry_t *pBiosE820,
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* メモリマップ管理サブモジュール初期化 */
     MapInit( pBiosE820, biosE820Num, pMemMap, memMapNum );
-    
+
     /* GDT管理サブモジュール初期化 */
     MemMngGdtInit();
-    
+
     /* メモリ領域管理サブモジュール初期化 */
     AreaInit();
-    
+
     /* 物理メモリ領域管理サブモジュール初期化 */
     PhysInit( pMemMap, memMapNum );
-    
+
     /* I/Oメモリ領域管理サブモジュール初期化 */
     IoInit( pMemMap, memMapNum );
-    
+
     /* 仮想メモリ領域管理サブモジュール初期化 */
     VirtInit();
-    
+
     /* ページ管理サブモジュール初期化 */
     MemMngPageInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

@@ -55,13 +55,13 @@ static PhysTbl_t gPhysTbl;
 /**
  * @brief       物理メモリ領域割当
  * @details     指定サイズを満たす物理メモリ領域を割り当てる。
- * 
+ *
  * @param[in]   size 割当サイズ
- * 
+ *
  * @return      割当結果を返す。
  * @retval      NULL     失敗
  * @retval      NULL以外 割り当てた物理メモリ領域の先頭アドレス
- * 
+ *
  * @note        割当サイズが4Kバイトアライメントでない場合は、割当サイズが4Kバ
  *              イトアライメントに合うよう加算して、物理メモリ領域を割り当てる。
  */
@@ -69,26 +69,26 @@ static PhysTbl_t gPhysTbl;
 void *MemMngPhysAlloc( size_t size )
 {
     void *pRet; /* 戻り値 */
-    
+
     /* 初期化 */
     pRet = NULL;
-    
+
     /* サイズチェック */
     if ( size == 0 ) {
         /* 不正 */
-        
+
         return NULL;
-        
+
     } else {
         /* 正常 */
-        
+
         /* アライメント計算 */
         size = MLIB_ALIGN( size, IA32_PAGING_PAGE_SIZE );
     }
-    
+
     /* メモリ領域割当 */
     pRet = AreaAlloc( &( gPhysTbl.allocList ), &( gPhysTbl.freeList ), size );
-    
+
     return pRet;
 }
 
@@ -97,9 +97,9 @@ void *MemMngPhysAlloc( size_t size )
 /**
  * @brief       物理メモリ領域解放
  * @details     割当中の物理メモリ領域を解放する。
- * 
+ *
  * @param[in]   *pAddr 解放するメモリアドレス
- * 
+ *
  * @return      解放結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
@@ -108,10 +108,10 @@ void *MemMngPhysAlloc( size_t size )
 CmnRet_t MemMngPhysFree( void *pAddr )
 {
     CmnRet_t ret;   /* 戻り値 */
-    
+
     /* メモリ領域解放 */
     ret = AreaFree( &( gPhysTbl.allocList ), &( gPhysTbl.freeList ), pAddr );
-    
+
     return ret;
 }
 
@@ -123,7 +123,7 @@ CmnRet_t MemMngPhysFree( void *pAddr )
 /**
  * @brief       物理メモリ領域管理初期化
  * @details     物理メモリ領域管理テーブルを初期化する。
- * 
+ *
  * @param[in]   *pMemMap メモリマップ
  * @param[in]   entryNum メモリマップエントリ数
  */
@@ -134,38 +134,38 @@ void PhysInit( MkMemMapEntry_t *pMemMap,
     uint32_t        index;      /* メモリマップエントリインデックス */
     AreaInfo_t      *pMemInfo;  /* 未割当メモリ領域情報             */
     MkMemMapEntry_t *pEntry;    /* メモリマップエントリ             */
-    
+
     /* 未割当物理メモリ領域情報リスト初期化 */
     MLibListInit( &( gPhysTbl.freeList ) );
-    
+
     /* 割当中物理メモリ領域情報リスト初期化 */
     MLibListInit( &( gPhysTbl.allocList ) );
-    
+
     /* メモリマップエントリ毎に繰り返し */
     for ( index = 0; index < entryNum; index++ ) {
         /* メモリマップ参照設定 */
         pEntry = &( pMemMap[ index ] );
-        
+
         /* メモリ領域タイプ判定 */
         if ( pEntry->type != MK_MEM_TYPE_AVAILABLE ) {
             /* 使用可能メモリ領域でない */
-            
+
             continue;
         }
-        
+
         /* 未割当メモリ領域情報リスト設定 */
         pMemInfo = AreaSet( &( gPhysTbl.freeList ),
                             pEntry->pAddr,
                             pEntry->size            );
-        
+
         /* 設定結果判定 */
         if ( pMemInfo == NULL ) {
             /* 失敗 */
-            
+
             /* [TODO] */
         }
     }
-    
+
     return;
 }
 

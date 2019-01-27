@@ -463,17 +463,17 @@ static IntMngHdl_t gHdlIntProcTbl[ INTMNG_INT_NO_NUM ];
 void IntMngHdlInit( void )
 {
     uint32_t intNo;     /* 割込み番号 */
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* 全割込み番号毎に繰り返し */
     for ( intNo =  INTMNG_INT_NO_MIN;
           intNo <= INTMNG_INT_NO_MAX;
           intNo++                     ) {
         /* 割込みハンドラ管理テーブル設定 */
         gHdlIntProcTbl[ intNo ] = HdlIgnore;
-        
+
         /* IDT登録 */
         IntMngIdtSet(
             intNo,                              /* IDTエントリ番号    */
@@ -483,10 +483,10 @@ void IntMngHdlInit( void )
             IA32_DESCRIPTOR_TYPE_GATE32_INT,    /* タイプ             */
             IA32_DESCRIPTOR_DPL_0            ); /* 特権レベル         */
     }
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -495,7 +495,7 @@ void IntMngHdlInit( void )
 /**
  * @brief       割込みハンドラ登録
  * @details     割込みハンドラを登録する。
- * 
+ *
  * @param[in]   intNo 割込み番号
  *                  - INTMNG_INT_NO_MIN 割込み番号最小値
  *                  - INTMNG_INT_NO_MAX 割込み番号最大値
@@ -513,7 +513,7 @@ void IntMngHdlSet( uint32_t    intNo,
 {
     /* 割込みハンドラ管理テーブル設定 */
     gHdlIntProcTbl[ intNo ] = func;
-    
+
     /* IDT設定 */
     IntMngIdtSet(
         intNo,                              /* IDTエントリ番号    */
@@ -793,7 +793,7 @@ HDL_CMN_PROC( 0xFF )
 /**
  * @brief       無視割込みハンドラ
  * @details     割込み処理として何もしない割込みハンドラ。
- * 
+ *
  * @param[in]   intNo   割込み番号
  * @param[in]   context 割込み発生時コンテキスト情報
  */
@@ -803,7 +803,7 @@ static void HdlIgnore( uint32_t        intNo,
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() intNo=%d", __func__, intNo );
-    
+
     /* [TODO]デバッグ用 */
     DEBUG_LOG( " edi    = %0#10x, esi    = %0#10x, ebp    = %0#10x",
                context.genReg.edi,
@@ -825,13 +825,13 @@ static void HdlIgnore( uint32_t        intNo,
                context.iretdInfo.esp,
                context.iretdInfo.ss,
                TaskMngSchedGetTaskId()                               );
-    
+
     while( 1 ) {
         IA32InstructionHlt();
     }
-    
+
     /* 処理無し */
-    
+
     return;
 }
 

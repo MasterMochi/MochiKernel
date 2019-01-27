@@ -11,7 +11,7 @@ SECTIONS {
     gBiosE820         = 0x0504;
     gMemMapEntryNum   = 0x0CD4;
     gMemMap           = 0x0CD8;
-    
+
     . = 0x7C00;
     .text   : { * ( .text   ) }
     .rodata : { * ( .rodata ) }

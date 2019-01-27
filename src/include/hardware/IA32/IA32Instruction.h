@@ -24,7 +24,7 @@
 /**
  * @brief       espレジスタ加算
  * @details     espレジスタを指定した値で加算する。
- * 
+ *
  * @param[in]   value 加算値
  */
 /******************************************************************************/
@@ -34,7 +34,7 @@ static inline void IA32InstructionAddEsp( int32_t value )
     __asm__ __volatile__ ( "add esp, %0"
                            :
                            : "a" ( value ) );
-    
+
     return;
 }
 
@@ -43,7 +43,7 @@ static inline void IA32InstructionAddEsp( int32_t value )
 /**
  * @brief       call命令実行
  * @details     call命令を用いて、指定したアドレスを実行する。
- * 
+ *
  * @param[in]   *pFunc 呼出し先アドレス
  */
 /******************************************************************************/
@@ -53,7 +53,7 @@ static inline void IA32InstructionCall( void *pFunc )
     __asm__ __volatile__ ( "call %0"
                            :
                            : "a" ( pFunc ) );
-    
+
     return;
 }
 
@@ -68,7 +68,7 @@ static inline void IA32InstructionCli( void )
 {
     /* cli命令実行 */
     __asm__ __volatile__ ( "cli" );
-    
+
     return;
 }
 
@@ -77,20 +77,20 @@ static inline void IA32InstructionCli( void )
 /**
  * @brief       ebpレジスタ値取得
  * @details     ebpレジスタの値を返す。
- * 
+ *
  * @return      ebpレジスタ値
  */
 /******************************************************************************/
 static inline uint32_t IA32InstructionGetEbp( void )
 {
     uint32_t ebp;   /* ebpレジスタ値 */
-    
+
     /* mov命令実行 */
     __asm__ __volatile__ ( "mov %0, ebp"
                            : "=m" ( *&ebp )
                            :
                            :                );
-    
+
     return ebp;
 }
 
@@ -99,20 +99,20 @@ static inline uint32_t IA32InstructionGetEbp( void )
 /**
  * @brief       espレジスタ値取得
  * @details     espレジスタの値を返す。
- * 
+ *
  * @return      espレジスタ値
  */
 /******************************************************************************/
 static inline uint32_t IA32InstructionGetEsp( void )
 {
     uint32_t esp;   /* espレジスタ値 */
-    
+
     /* mov命令実行 */
     __asm__ __volatile__ ( "mov %0, esp"
                            : "=m" ( *&esp )
                            :
                            :                );
-    
+
     return esp;
 }
 
@@ -127,7 +127,7 @@ static inline void IA32InstructionHlt( void )
 {
     /* hlt命令実行 */
     __asm__ __volatile__ ( "hlt" );
-    
+
     return;
 }
 
@@ -137,7 +137,7 @@ static inline void IA32InstructionHlt( void )
  * @brief       in（byte）命令実行
  * @details     in（byte）命令を実行して、指定したI/Oポートから8bitの値を読み込
  *              み、指定したアドレスに格納する。
- * 
+ *
  * @param[out]  *pValue 取得値格納先
  * @param[in]   portNo  I/Oポート番号
  */
@@ -149,7 +149,7 @@ static inline void IA32InstructionInByte( uint8_t  *pValue,
     __asm__ __volatile__ ( "in %0, %1"
                            : "=a" ( *pValue )
                            : "d"  ( portNo  ) );
-    
+
     return;
 }
 
@@ -159,7 +159,7 @@ static inline void IA32InstructionInByte( uint8_t  *pValue,
  * @brief       in（double word）命令実行
  * @details     in（double word）命令を実行して、指定したI/Oポートから32bitの値
  *              を読み込み、指定したアドレスに格納する。
- * 
+ *
  * @param[out]  *pValue 取得値格納先
  * @param[in]   portNo  I/Oポート番号
  */
@@ -171,7 +171,7 @@ static inline void IA32InstructionInDWord( uint32_t *pValue,
     __asm__ __volatile__ ( "in %0, %1"
                            : "=a" ( *pValue )
                            : "d"  ( portNo  ) );
-    
+
     return;
 }
 
@@ -181,7 +181,7 @@ static inline void IA32InstructionInDWord( uint32_t *pValue,
  * @brief       invlpg命令実行
  * @details     invlpg命令を実行して、指定した仮想アドレスが含まれるページのTLB
  *              エントリをフラッシュする。
- * 
+ *
  * @param[in]   *pAddr 仮想アドレス
  */
 /******************************************************************************/
@@ -192,7 +192,7 @@ static inline void IA32InstructionInvlpg( void *pAddr )
                            :
                            : "r" ( pAddr )
                            : "memory"      );
-    
+
     return;
 }
 
@@ -202,7 +202,7 @@ static inline void IA32InstructionInvlpg( void *pAddr )
  * @brief       in（word）命令実行
  * @details     in（word）命令を実行して、指定したI/Oポートから16bitの値を読み
  *              込み、指定したアドレスに格納する。
- * 
+ *
  * @param[out]  *pValue 取得値格納先
  * @param[in]   portNo  I/Oポート番号
  */
@@ -214,7 +214,7 @@ static inline void IA32InstructionInWord( uint16_t *pValue,
     __asm__ __volatile__ ( "in %0, %1"
                            : "=a" ( *pValue )
                            : "d"  ( portNo  ) );
-    
+
     return;
 }
 
@@ -229,7 +229,7 @@ static inline void IA32InstructionIretd( void )
 {
     /* iretd命令実行 */
     __asm__ __volatile__ ( "iretd" );
-    
+
     return;
 }
 
@@ -238,7 +238,7 @@ static inline void IA32InstructionIretd( void )
 /**
  * @brief       lgdt命令実行
  * @details     lgdt命令を実行して、GDTをCPUに設定する。
- * 
+ *
  * @param[in]   *pBase GDTベースアドレス
  * @param[in]   limit  リミット（GDTサイズ - 1Byte）
  */
@@ -247,16 +247,16 @@ static inline void IA32InstructionLgdt( IA32Descriptor_t *pBase,
                                         uint16_t         limit   )
 {
     IA32DescriptorPseudo_t gdtr;
-    
+
     /* 疑似ディスクリプタ設定 */
     gdtr.pBase = pBase;
     gdtr.limit = limit;
-    
+
     /* lgdt命令実行 */
     __asm__ __volatile__ ( "lgdt %0"
                            :
                            : "m"( gdtr ) );
-    
+
     return;
 }
 
@@ -265,7 +265,7 @@ static inline void IA32InstructionLgdt( IA32Descriptor_t *pBase,
 /**
  * @brief       lidt命令実行
  * @details     lidt命令を実行して、IDTをCPUに設定する。
- * 
+ *
  * @param[in]   *pBase IDTベースアドレス
  * @param[in]   limit  リミット（IDTサイズ - 1Byte）
  */
@@ -274,16 +274,16 @@ static inline void IA32InstructionLidt( IA32Descriptor_t *pBase,
                                         uint16_t         limit   )
 {
     IA32DescriptorPseudo_t idtr;
-    
+
     /* 疑似ディスクリプタ設定 */
     idtr.pBase = pBase;
     idtr.limit = limit;
-    
+
     /* lidt命令実行 */
     __asm__ __volatile__ ( "lidt %0"
                            :
                            : "m"( idtr ) );
-    
+
     return;
 }
 
@@ -292,7 +292,7 @@ static inline void IA32InstructionLidt( IA32Descriptor_t *pBase,
 /**
  * @brief       ltr命令実行
  * @details     ltr命令を実行して、タスクレジスタにTSSセレクタを設定する。
- * 
+ *
  * @param[in]   selector TSSセレクタ値
  */
 /******************************************************************************/
@@ -302,7 +302,7 @@ static inline void IA32InstructionLtr( uint16_t selector )
     __asm__ __volatile__ ( "ltr %0"
                            :
                            : "a" ( selector ) );
-    
+
     return;
 }
 
@@ -312,7 +312,7 @@ static inline void IA32InstructionLtr( uint16_t selector )
  * @brief       out（byte）命令実行
  * @details     out（byte）命令を実行して、指定した8bitの値を指定したI/Oポート
  *              に書き込む。
- * 
+ *
  * @param[in]   portNo I/Oポート番号
  * @param[in]   value  I/Oポート設定値
  */
@@ -322,10 +322,10 @@ static inline void IA32InstructionOutByte( uint16_t portNo,
 {
     /* out al命令実行 */
     __asm__ __volatile__ ( "out %0, %1"
-                           : 
+                           :
                            : "d" ( portNo ),
                              "a" ( value  )  );
-    
+
     return;
 }
 
@@ -335,7 +335,7 @@ static inline void IA32InstructionOutByte( uint16_t portNo,
  * @brief       out（double word）命令実行
  * @details     out（double word）命令を実行して、指定した32bitの値を指定した
  *              I/Oポートに書き込む。
- * 
+ *
  * @param[in]   portNo I/Oポート番号
  * @param[in]   value  I/Oポート設定値
  */
@@ -345,10 +345,10 @@ static inline void IA32InstructionOutDWord( uint16_t portNo,
 {
     /* out eax命令実行 */
     __asm__ __volatile__ ( "out %0, %1"
-                           : 
+                           :
                            : "d" ( portNo ),
                              "a" ( value  )  );
-    
+
     return;
 }
 
@@ -358,7 +358,7 @@ static inline void IA32InstructionOutDWord( uint16_t portNo,
  * @brief       out（word）命令実行
  * @details     out（word）命令を実行して、指定した16bitの値を指定したI/Oポート
  *              に書き込む。
- * 
+ *
  * @param[in]   portNo I/Oポート番号
  * @param[in]   value  I/Oポート設定値
  */
@@ -368,10 +368,10 @@ static inline void IA32InstructionOutWord( uint16_t portNo,
 {
     /* out ax命令実行 */
     __asm__ __volatile__ ( "out %0, %1"
-                           : 
+                           :
                            : "d" ( portNo ),
                              "a" ( value  )  );
-    
+
     return;
 }
 
@@ -380,9 +380,9 @@ static inline void IA32InstructionOutWord( uint16_t portNo,
 /**
  * @brief       pop命令実行
  * @details     pop命令を実行して、スタックから指定したアドレスにポップする。
- * 
+ *
  * @param[out]  *pValue 取得値格納先アドレス
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -392,7 +392,7 @@ static inline void IA32InstructionPop( uint32_t *pValue )
     /* pop命令実行 */
     __asm__ __volatile__ ( "pop %0"
                            : "=a" ( *pValue ) );
-    
+
     return;
 }
 
@@ -402,7 +402,7 @@ static inline void IA32InstructionPop( uint32_t *pValue )
  * @brief       popad命令実行
  * @details     popad命令を実行して、スタックからedi, esi, ebp, esp, ebx, edx,
  *              ecx, eaxレジスタにポップする。
- * 
+ *
  * @attention   - スタックポインタが破壊される。
  *              - スタックからespレジスタの値はポップされるが、espレジスタに値
  *                は格納されない。
@@ -412,7 +412,7 @@ static inline void IA32InstructionPopad( void )
 {
     /* popad命令実行 */
     __asm__ __volatile__ ( "popad" );
-    
+
     return;
 }
 
@@ -421,7 +421,7 @@ static inline void IA32InstructionPopad( void )
 /**
  * @brief       pop（ds）命令実行
  * @details     pop命令を実行して、スタックからdsレジスタにポップする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -429,7 +429,7 @@ static inline void IA32InstructionPopDs( void )
 {
     /* pop ds命令実行 */
     __asm__ __volatile__ ( "pop ds" );
-    
+
     return;
 }
 
@@ -438,7 +438,7 @@ static inline void IA32InstructionPopDs( void )
 /**
  * @brief       pop（es）命令実行
  * @details     pop命令を実行して、スタックからesレジスタにポップする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -446,7 +446,7 @@ static inline void IA32InstructionPopEs( void )
 {
     /* pop es命令実行 */
     __asm__ __volatile__ ( "pop es" );
-    
+
     return;
 }
 
@@ -455,7 +455,7 @@ static inline void IA32InstructionPopEs( void )
 /**
  * @brief       popfd命令実行
  * @details     popfd命令を実行して、スタックからeflagsレジスタにポップする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -463,7 +463,7 @@ static inline void IA32InstructionPopfd( void )
 {
     /* popfd命令実行 */
     __asm__ __volatile__ ( "popfd" );
-    
+
     return;
 }
 
@@ -472,7 +472,7 @@ static inline void IA32InstructionPopfd( void )
 /**
  * @brief       pop（fs）命令実行
  * @details     pop命令を実行して、スタックからfsレジスタにポップする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -480,7 +480,7 @@ static inline void IA32InstructionPopFs( void )
 {
     /* pop fs命令実行 */
     __asm__ __volatile__ ( "pop fs" );
-    
+
     return;
 }
 
@@ -489,7 +489,7 @@ static inline void IA32InstructionPopFs( void )
 /**
  * @brief       pop（gs）命令実行
  * @details     pop命令を実行して、スタックからgsレジスタにポップする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -497,7 +497,7 @@ static inline void IA32InstructionPopGs( void )
 {
     /* pop gs命令実行 */
     __asm__ __volatile__ ( "pop gs" );
-    
+
     return;
 }
 
@@ -506,7 +506,7 @@ static inline void IA32InstructionPopGs( void )
 /**
  * @brief       push命令実行
  * @details     push命令を実行して、指定した32bit値をスタックにプッシュする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -516,7 +516,7 @@ static inline void IA32InstructionPush( uint32_t value )
     __asm__ __volatile__ ( "push %0"
                            :
                            : "a" ( value ) );
-    
+
     return;
 }
 
@@ -526,7 +526,7 @@ static inline void IA32InstructionPush( uint32_t value )
  * @brief       pushad命令実行
  * @details     pushad命令を実行して、eax, ecx, edx, ebx, esp, ebp, esi, ediレ
  *              ジスタの値をスタックにプッシュする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -534,7 +534,7 @@ static inline void IA32InstructionPushad( void )
 {
     /* pushad命令実行 */
     __asm__ __volatile__ ( "pushad" );
-    
+
     return;
 }
 
@@ -543,7 +543,7 @@ static inline void IA32InstructionPushad( void )
 /**
  * @brief       push（ds）命令実行
  * @details     push命令を実行して、dsレジスタの値をスタックにプッシュする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -551,7 +551,7 @@ static inline void IA32InstructionPushDs( void )
 {
     /* push ds命令実行 */
     __asm__ __volatile__ ( "push ds" );
-    
+
     return;
 }
 
@@ -560,7 +560,7 @@ static inline void IA32InstructionPushDs( void )
 /**
  * @brief       push（es）命令実行
  * @details     push命令を実行して、esレジスタの値をスタックにプッシュする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -568,7 +568,7 @@ static inline void IA32InstructionPushEs( void )
 {
     /* push es命令実行 */
     __asm__ __volatile__ ( "push es" );
-    
+
     return;
 }
 
@@ -578,7 +578,7 @@ static inline void IA32InstructionPushEs( void )
  * @brief       pushfd命令実行
  * @details     pushfd命令を実行して、eflagsレジスタの値をスタックにプッシュす
  *              る。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -586,7 +586,7 @@ static inline void IA32InstructionPushfd( void )
 {
     /* pushfd命令実行 */
     __asm__ __volatile__ ( "pushfd" );
-    
+
     return;
 }
 
@@ -595,7 +595,7 @@ static inline void IA32InstructionPushfd( void )
 /**
  * @brief       push（fs）命令実行
  * @details     push命令を実行して、fsレジスタの値をスタックにプッシュする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -603,7 +603,7 @@ static inline void IA32InstructionPushFs( void )
 {
     /* push fs命令実行 */
     __asm__ __volatile__ ( "push fs" );
-    
+
     return;
 }
 
@@ -613,7 +613,7 @@ static inline void IA32InstructionPushFs( void )
 /**
  * @brief       push（gs）命令実行
  * @details     push命令を実行して、gsレジスタの値をスタックにプッシュする。
- * 
+ *
  * @attention   スタックポインタが破壊される。
  */
 /******************************************************************************/
@@ -621,7 +621,7 @@ static inline void IA32InstructionPushGs( void )
 {
     /* push gs命令実行 */
     __asm__ __volatile__ ( "push gs" );
-    
+
     return;
 }
 
@@ -632,7 +632,7 @@ static inline void IA32InstructionPushGs( void )
  * @details     rep insw命令を実行して、指定I/Oポートから16bitの値を読み込み、
  *              指定アドレスに格納する処理をアドレスを進めながら指定回数分繰り
  *              返す。
- * 
+ *
  * @param[out]  *pAddr 格納先アドレス
  * @param[in]   port   I/Oポート番号
  * @param[in]   count  繰り返し回数
@@ -653,7 +653,7 @@ static inline void IA32InstructionRepInsw( void     *pAddr,
                            : "edi",         /* ediレジスタ破壊指定    */
                              //"cx",         /* ecxレジスタ破壊指定    */
                              "cc" );        /* EFLAGSレジスタ破壊指定 */
-    
+
     return;
 }
 
@@ -662,7 +662,7 @@ static inline void IA32InstructionRepInsw( void     *pAddr,
 /**
  * @brief       cr0レジスタ設定
  * @details     cr0レジスタにシステム制御フラグを設定する。
- * 
+ *
  * @param[in]   cr0  システム制御フラグ
  *                  - IA32_CR0_PG ページング
  *                  - IA32_CR0_CD キャッシュディスエーブル
@@ -695,26 +695,26 @@ static inline void IA32InstructionSetCr0( uint32_t cr0,
     /* 初期化 */
     cr0  = cr0 & mask;
     mask = ~mask;
-    
+
     /* cr0レジスタ取得 */
     __asm__ __volatile__ ( "mov eax, cr0"
                            :
                            :
                            : "eax"        );
-    
+
     /* システム制御フラグ設定 */
     __asm__ __volatile__ ( "and eax, %0;"
                            "or  eax, %1"
                            :
                            : "r" ( mask ), "r" ( cr0 )
                            : "eax"                     );
-    
+
     /* cr0レジスタ設定 */
     __asm__ __volatile__ ( "mov cr0, eax"
                            :
                            :
                            : "eax"        );
-    
+
     return;
 }
 
@@ -723,7 +723,7 @@ static inline void IA32InstructionSetCr0( uint32_t cr0,
 /**
  * @brief       cr3レジスタ設定
  * @details     cr3レジスタにページディレクトリのベースアドレスを設定する。
- * 
+ *
  * @param[in]   pdbr ページディレクトリベースレジスタ
  */
 /******************************************************************************/
@@ -733,7 +733,7 @@ static inline void IA32InstructionSetCr3( IA32PagingPDBR_t pdbr )
     __asm__ __volatile__ ( "mov cr3, %0"
                            :
                            : "a" ( pdbr ) );
-    
+
     return;
 }
 
@@ -742,7 +742,7 @@ static inline void IA32InstructionSetCr3( IA32PagingPDBR_t pdbr )
 /**
  * @brief       espレジスタ設定
  * @details     指定した値をespレジスタに設定する。
- * 
+ *
  * @param[in]   value 設定値
  */
 /******************************************************************************/
@@ -753,7 +753,7 @@ static inline void IA32InstructionSetEsp( uint32_t value )
                            :
                            : "m" ( value )
                            :               );
-    
+
     return;
 }
 
@@ -768,7 +768,7 @@ static inline void IA32InstructionSti( void )
 {
     /* sti命令実行 */
     __asm__ __volatile__ ( "sti" );
-    
+
     return;
 }
 
@@ -777,7 +777,7 @@ static inline void IA32InstructionSti( void )
 /**
  * @brief       espレジスタ減算
  * @details     espレジスタを指定した値で減算する。
- * 
+ *
  * @param[in]   value 減算値
  */
 /******************************************************************************/
@@ -787,7 +787,7 @@ static inline void IA32InstructionSubEsp( int32_t value )
     __asm__ __volatile__ ( "sub esp, %0"
                            :
                            : "a" ( value ) );
-    
+
     return;
 }
 
@@ -802,7 +802,7 @@ static inline void IA32InstructionWbinvd( void )
 {
     /* wbinvd命令実行 */
     __asm__ __volatile__ ( "wbinvd" );
-    
+
     return;
 }
 

@@ -59,22 +59,22 @@ pt_t gLoadMngInitPt[ 4 ];
 void LoadMngInit( void )
 {
     mbr_t mbr;  /* MBR */
-    
+
     /* トレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* MBR読込み */
     DriverAtaRead( &mbr, 0, 1 );
-    
+
     /* パーティションテーブル取得 */
     gLoadMngInitPt[ 0 ] = mbr.partitionTbl[ 0 ];
     gLoadMngInitPt[ 1 ] = mbr.partitionTbl[ 1 ];
     gLoadMngInitPt[ 2 ] = mbr.partitionTbl[ 2 ];
     gLoadMngInitPt[ 3 ] = mbr.partitionTbl[ 3 ];
-    
+
     /* トレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

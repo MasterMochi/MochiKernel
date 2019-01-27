@@ -44,11 +44,11 @@
 /**
  * @brief       メモリコピー（仮想->物理）
  * @details     仮想アドレス空間から物理アドレス空間へメモリコピーを行う。
- * 
+ *
  * @param[in]   pPAddr コピー先物理アドレス
  * @param[in]   pVAddr コピー元仮想アドレス
  * @param[in]   size   コピーサイズ
- * 
+ *
  * @attention   引数pPAddrは4KiBアライメントであること。
  */
 /******************************************************************************/
@@ -61,39 +61,39 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
     uint32_t pageDirId; /* ページディレクトリID */
     uint32_t idx;       /* インデックス         */
     CmnRet_t ret;       /* 関数戻り値           */
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
     DEBUG_LOG( " pPAddr=%010p, pVAddr=%010p, size=%#X",
                pPAddr,
                pVAddr,
                size );
-    
+
     /* ページディレクトリID取得 */
     pageDirId = MemMngPageGetDirId();
-    
+
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
         /* 次コピー有無判定 */
         if ( ( size - idx ) > MK_CONFIG_SIZE_KERNEL_MAP ) {
             /* 次コピー有 */
-            
+
             /* コピーサイズ設定 */
             copySize = MK_CONFIG_SIZE_KERNEL_MAP;
-            
+
             /* マッピングサイズ設定 */
             mapSize = copySize;
-            
+
         } else {
             /* 次コピー無 */
-            
+
             /* コピーサイズ設定 */
             copySize = size - idx;
-            
+
             /* マッピングサイズ設定 */
             mapSize = MLIB_ALIGN( copySize, IA32_PAGING_PAGE_SIZE );
         }
-        
+
         /* ページマッピング設定 */
         ret = MemMngPageSet( pageDirId,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
@@ -102,26 +102,26 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW );
-        
+
         /* 設定結果判定 */
         if ( ret != CMN_SUCCESS ) {
             /* 失敗 */
-            
+
             /* [TODO] */
         }
-        
+
         /* コピー */
         memcpy( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, pVAddr + idx, copySize );
     }
-    
+
     /* ページマッピング解除 */
     MemMngPageUnset( pageDirId,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                      MK_CONFIG_SIZE_KERNEL_MAP );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -130,11 +130,11 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
 /**
  * @brief       メモリ設定
  * @details     物理アドレス空間のメモリ領域に指定値を設定する。
- * 
+ *
  * @param[in]   pPAddr 設定先物理アドレス
  * @param[in]   value  設定値
  * @param[in]   size   サイズ
- * 
+ *
  * @attention   引数pPhysAddrは4KiBアライメントであること。
  */
 /******************************************************************************/
@@ -147,38 +147,38 @@ void MemMngCtrlSet( void    *pPAddr,
     uint32_t pageDirId; /* ページディレクトリID */
     uint32_t idx;       /* インデックス         */
     CmnRet_t ret;       /* 関数戻り値           */
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start. pPAddr=%010p, value=%0#4X, size=%#X",
                __func__,
                pPAddr,
                value,
                size );
-    
+
     /* ページディレクトリID取得 */
     pageDirId = MemMngPageGetDirId();
-    
+
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
         /* 次設定有無判定 */
         if ( ( size - idx ) > MK_CONFIG_SIZE_KERNEL_MAP ) {
             /* 次設定有 */
-            
+
             /* サイズ設定 */
             setSize = MK_CONFIG_SIZE_KERNEL_MAP;
             /* マッピングサイズ設定 */
             mapSize = setSize;
-            
+
         } else {
             /* 次設定無 */
-            
+
             /* サイズ設定 */
             setSize = size - idx;
-            
+
             /* マッピングサイズ設定 */
             mapSize = MLIB_ALIGN( setSize, IA32_PAGING_PAGE_SIZE );
         }
-        
+
         /* ページマッピング設定 */
         ret = MemMngPageSet( pageDirId,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
@@ -187,26 +187,26 @@ void MemMngCtrlSet( void    *pPAddr,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW );
-        
+
         /* 設定結果判定 */
         if ( ret != CMN_SUCCESS ) {
             /* 失敗 */
-            
+
             /* [TODO] */
         }
-        
+
         /* メモリ設定 */
         memset( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, value, setSize );
     }
-    
+
     /* ページマッピング解除 */
     MemMngPageUnset( pageDirId,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                      MK_CONFIG_SIZE_KERNEL_MAP );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

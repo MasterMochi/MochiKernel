@@ -54,16 +54,16 @@ void IntMngIdtInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* IDT初期化 */
     memset( gIdt, 0, sizeof ( gIdt ) );
-    
+
     /* IDTR設定 */
     IA32InstructionLidt( ( IA32Descriptor_t * ) gIdt, sizeof ( gIdt ) - 1 );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 
@@ -72,7 +72,7 @@ void IntMngIdtInit( void )
 /**
  * @brief       IDTエントリ設定
  * @details     IDTにエントリを設定する。
- * 
+ *
  * @param[in]   index    IDTエントリ番号
  *                  - INTMNG_IDT_ENTRY_MIN 割込み番号（最小値）
  *                  - INTMNG_IDT_ENTRY_MAX 割込み番号（最大値）
@@ -116,7 +116,7 @@ void IntMngIdtSet( uint32_t index,
                count,
                type,
                level );
-    
+
     /* ディスクリプタ設定 */
     gIdt[ index ].offset_low  = IA32_DESCRIPTOR_OFFSET_LOW( pOffset );
     gIdt[ index ].selector    = selector;
@@ -126,10 +126,10 @@ void IntMngIdtSet( uint32_t index,
     gIdt[ index ].attr_dpl    = level;
     gIdt[ index ].attr_p      = IA32_DESCRIPTOR_P_YES;
     gIdt[ index ].offset_high = IA32_DESCRIPTOR_OFFSET_HIGH( pOffset );
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

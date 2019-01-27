@@ -54,87 +54,87 @@ void LoadMngProcLoad( void )
     uint32_t   srcLbaSize;      /* 読込元LBAサイズ        */
     MkImgHdr_t *pHeader;        /* ファイルヘッダ         */
     MkImgHdr_t kernelHeader;    /* カーネルバイナリヘッダ */
-    
+
     /* トレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* 初期化 */
     pDstAddr   = ( void * ) MK_ADDR_PROCIMG;
     srcLbaAddr = gLoadMngInitPt[ 1 ].lbaFirstAddr;
     srcLbaSize = MLIB_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
     size       = srcLbaSize;
-    
+
     /* カーネルイメージヘッダ読込み */
     DriverAtaRead( &kernelHeader,
                    srcLbaAddr,
                    srcLbaSize );
-    
+
     /* 読込み元LBAアドレス設定 */
     srcLbaAddr += srcLbaSize;
     srcLbaAddr += MLIB_ALIGN( kernelHeader.fileSize, 512 ) / 512;
-    
+
     /* ファイル毎に繰り返し */
     do {
         /* アドレス設定 */
         pHeader = ( MkImgHdr_t * ) pDstAddr;
-        
+
         /* ヘッダ読込み */
         DriverAtaRead( pHeader,
                        srcLbaAddr,
                        srcLbaSize );
-        
+
         /* ファイルサイズチェック */
         if ( pHeader->fileSize == 0 ) {
             /* ファイル無し */
-            
+
             break;
         }
-        
+
         /* トレースログ出力 */
         DEBUG_LOG( "%s() read process( %s: type=%d, size=%d ).",
                    __func__,
                    pHeader->fileName,
                    pHeader->fileType,
                    pHeader->fileSize );
-        
+
         /* アドレス・サイズ設定 */
         pDstAddr   += srcLbaSize * 512;
         srcLbaAddr += srcLbaSize;
         srcLbaSize  = MLIB_ALIGN( pHeader->fileSize, 512 ) / 512;
         size       += srcLbaSize;
-        
+
         /* ファイル読込み */
         DriverAtaRead( pDstAddr,
                        srcLbaAddr,
                        srcLbaSize );
-        
+
         /* アドレス・サイズ設定 */
         pDstAddr   += srcLbaSize * 512;
         srcLbaAddr += srcLbaSize;
         srcLbaSize  = MLIB_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
         size       += srcLbaSize;
-        
+
     } while ( true );
-    
+
     /* メモリマップリスト設定 */
     ret = MemMngMapSetList( ( void * ) MK_ADDR_PROCIMG,
                             MLIB_ALIGN( size * 512, 4096 ),
                             MK_MEM_TYPE_PROCIMG             );
-    
+
     /* 設定結果判定 */
     if ( ret != CMN_SUCCESS ) {
         /* 失敗 */
-        
+
         /* デバッグトレースログ出力 */
         DEBUG_LOG( "MemMngMapSetList() failed." );
-        
+
         /* アボート */
         CmnAbort();
     }
-    
+
     /* トレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

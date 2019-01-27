@@ -45,16 +45,16 @@ void TimerMngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* タイマ制御サブモジュール初期化 */
     CtrlInit();
-    
+
     /* PIT管理サブモジュール初期化 */
     TimerMngPitInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

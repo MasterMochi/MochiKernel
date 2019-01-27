@@ -44,16 +44,16 @@ void IoCtrlInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-    
+
     /* I/Oポート制御サブモジュール初期化 */
     PortInit();
-    
+
     /* I/Oメモリ制御サブモジュール初期化 */
     MemInit();
-    
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-    
+
     return;
 }
 

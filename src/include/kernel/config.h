@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* src/include/kernel/config.h                                                */
-/*                                                                 2019/01/25 */
+/*                                                                 2019/03/26 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /******************************************************************************/
 #ifndef _MK_CONFIG_H_
@@ -88,7 +88,7 @@
 /** メモリ制御用領域全サイズ */
 #define MK_CONFIG_SIZE_KERNEL_MAP   ( 0x01000000 )
 /** 全カーネル領域サイズ */
-#define MK_CONFIG_SIZE_KERNEL       ( 0x3FE00000 )
+#define MK_CONFIG_SIZE_KERNEL       ( 0x3FF00000 )
 /** アプリ領域先頭アドレス */
 #define MK_CONFIG_ADDR_APL_START    ( 0x40000000 )
 /** アプリ用スタック領域先頭アドレス */

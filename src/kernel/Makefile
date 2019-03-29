@@ -58,6 +58,7 @@ CFLAGS  = -O                 \
           -Iinclude/         \
           -I../include
 #          -DDEBUG_LOG_ENABLE
+
 # LDフラグ
 LDFLAGS = -T kernel.lds \
           -melf_i386

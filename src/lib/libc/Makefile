@@ -1,7 +1,9 @@
 #******************************************************************************#
+#*                                                                            *#
 #* src/libraries/libc/Makefile                                                *#
-#*                                                                 2019/01/26 *#
+#*                                                                 2019/04/02 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
+#*                                                                            *#
 #******************************************************************************#
 #******************************************************************************#
 #* 設定                                                                       *#
@@ -10,9 +12,7 @@
 LIB = libc.a
 
 # ソースコード
-SRCS = stdlib/malloc.c  \
-       stdlib/free.c    \
-       string/memcpy.c  \
+SRCS = string/memcpy.c  \
        string/memset.c  \
        string/strcpy.c  \
        string/strncmp.c \
@@ -22,7 +22,7 @@ SRCS = stdlib/malloc.c  \
 # ビルドディレクトリ
 BUILD_DIR = ../../../build
 # オブジェクトディレクトリ
-OBJ_DIR   = $(BUILD_DIR)/obj/libraries/libc
+OBJ_DIR   = $(BUILD_DIR)/obj/lib/libc
 
 # Cフラグ
 CFLAGS = -O               \

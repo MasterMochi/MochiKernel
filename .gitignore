@@ -7,6 +7,7 @@ doxygen/kernel
 doxygen/libraries
 doxygen/tools
 doxygen/log
+release/*
 vm/vmware/*
 *.o
 *.a

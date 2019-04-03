@@ -4,7 +4,7 @@ build/obj
 build/tools/*
 doxygen/booter
 doxygen/kernel
-doxygen/libraries
+doxygen/lib
 doxygen/tools
 doxygen/log
 release/*

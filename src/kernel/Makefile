@@ -8,7 +8,7 @@
 #******************************************************************************#
 #* 設定                                                                       *#
 #******************************************************************************#
-# 実行ファイル名
+# プログラム名
 PROG = kernel
 
 # ソースコード
@@ -45,25 +45,32 @@ SRCS = InitCtrl/InitCtrlInit.c \
        IoCtrl/IoCtrlPort.c     \
        IoCtrl/IoCtrlMem.c
 
+# リリースディレクトリ
+RELEASE_DIR = ../../release
+
 # ビルドディレクトリ
 BUILD_DIR = ../../build
+
 # オブジェクトディレクトリ
-OBJ_DIR   = $(BUILD_DIR)/obj/kernel
+OBJ_DIR = $(BUILD_DIR)/obj/$(PROG)
 
 # Cフラグ
-CFLAGS  = -O                 \
-          -Wall              \
-          -masm=intel        \
-          -m32               \
-          -fno-pic           \
-          -ffreestanding     \
-          -Iinclude/         \
-          -I../include
+CFLAGS  = -O                     \
+          -Wall                  \
+          -masm=intel            \
+          -m32                   \
+          -fno-pic               \
+          -ffreestanding         \
+          -Iinclude              \
+          -I../include           \
+          -I$(BUILD_DIR)/include
 #          -DDEBUG_LOG_ENABLE
 
 # LDフラグ
-LDFLAGS = -T kernel.lds \
-          -melf_i386
+LDFLAGS = -T kernel.lds      \
+          -melf_i386         \
+          -L$(BUILD_DIR)/lib
+
 # LDライブラリフラグ
 LDLIBS  = -lc    \
           -lMLib
@@ -81,23 +88,18 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 # 依存関係ファイル
 DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
 
-# インクルードディレクトリ
-CFLAGS  += -I$(BUILD_DIR)/include
-# ライブラリディレクトリ
-LDFLAGS += -L$(BUILD_DIR)/lib     \
-           -L$(BUILD_DIR)/obj/lib
-
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
 # コンパイル
 .PHONY: all
-all: $(OBJ_SUBDIRS) $(OBJ_DIR)/$(PROG) Makefile
+all: $(OBJ_SUBDIRS) $(OBJS) $(RELEASE_DIR)/$(PROG) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
+	-rm -rf $(RELEASE_DIR)/$(PROG)
 	-rm -rf $(OBJ_DIR)
 
 
@@ -114,8 +116,9 @@ $(OBJ_SUBDIRS):
 endif
 
 # 実行ファイル
-$(OBJ_DIR)/$(PROG): $(OBJS) Makefile
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+$(RELEASE_DIR)/$(PROG): $(OBJS) Makefile
+	$(LD) $(LDFLAGS) -o $(OBJ_DIR)/$(PROG) $(OBJS) $(LDLIBS)
+	ln -sfr $(OBJ_DIR)/$(PROG) $@
 
 # アセンブラファイルコンパイル
 $(OBJ_DIR)/%.o: %.s Makefile

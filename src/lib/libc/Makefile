@@ -9,7 +9,7 @@
 #* 設定                                                                       *#
 #******************************************************************************#
 # バイナリ名
-LIB = libc.a
+LIB = libc
 
 # ソースコード
 SRCS = string/memcpy.c  \
@@ -19,18 +19,23 @@ SRCS = string/memcpy.c  \
        string/strncpy.c \
        string/strlen.c
 
+# リリースディレクトリ
+RELEASE_DIR = ../../../build/lib/
+
 # ビルドディレクトリ
 BUILD_DIR = ../../../build
+
 # オブジェクトディレクトリ
-OBJ_DIR   = $(BUILD_DIR)/obj/lib/libc
+OBJ_DIR = $(BUILD_DIR)/obj/lib/libc
 
 # Cフラグ
-CFLAGS = -O               \
-         -Wall            \
-         -masm=intel      \
-         -m32             \
-         -ffreestanding   \
-         -I../../include/
+CFLAGS = -O                     \
+         -Wall                  \
+         -masm=intel            \
+         -m32                   \
+         -ffreestanding         \
+         -I../../include        \
+         -I$(BUILD_DIR)/include
 
 
 #******************************************************************************#
@@ -45,20 +50,18 @@ OBJS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 # 依存関係ファイル
 DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
 
-# インクルードディレクトリ
-CFLAGS  += -I$(BUILD_DIR)/include
 
 #******************************************************************************#
 #* phonyターゲット                                                            *#
 #******************************************************************************#
 # コンパイル
 .PHONY: all
-all: $(OBJ_SUBDIRS) $(OBJ_DIR)/$(LIB) Makefile
+all: $(OBJ_SUBDIRS) $(RELEASE_DIR)/$(LIB).a Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(OBJ_DIR)/../$(LIB)
+	-rm -rf $(RELEASE_DIR)/$(LIB).a
 	-rm -rf $(OBJ_DIR)
 
 
@@ -75,9 +78,9 @@ $(OBJ_SUBDIRS):
 endif
 
 # ライブラリ
-$(OBJ_DIR)/$(LIB): $(OBJS) Makefile
-	$(AR) rcs $@ $(OBJS)
-	ln -f -s $@ $(OBJ_DIR)/../$(LIB)
+$(RELEASE_DIR)/$(LIB).a: $(OBJS) Makefile
+	$(AR) rcs $(OBJ_DIR)/$(LIB).a $(OBJS)
+	ln -srf $(OBJ_DIR)/$(LIB).a $@
 
 # アセンブラファイルコンパイル
 $(OBJ_DIR)/%.o: %.s Makefile

@@ -9,7 +9,7 @@
 #* 設定                                                                       *#
 #******************************************************************************#
 # ライブラリ
-LIB = libMk.a
+LIB = libMk
 
 # ソースコード
 SRCS = MkMsg.c      \
@@ -20,10 +20,14 @@ SRCS = MkMsg.c      \
        MkTimer.c    \
        MkTaskName.c
 
+# リリースディレクトリ
+RELEASE_DIR = ../../../release
+
 # ビルドディレクトリ
 BUILD_DIR = ../../../build
+
 # オブジェクトディレクトリ
-OBJ_DIR   = $(BUILD_DIR)/obj/lib/libMk
+OBJ_DIR = $(BUILD_DIR)/obj/lib/libMk
 
 # Cフラグ
 CFLAGS = -O               \
@@ -53,12 +57,12 @@ DEPS = $(addprefix $(OBJ_DIR)/, $(SRCS:.c=.d))
 #******************************************************************************#
 # コンパイル
 .PHONY: all
-all: $(OBJ_SUBDIRS) $(OBJ_DIR)/$(LIB) Makefile
+all: $(OBJ_SUBDIRS) $(RELEASE_DIR)/$(LIB).a Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(OBJ_DIR)/../$(LIB)
+	-rm -rf $(RELEASE_DIR)/$(LIB).a
 	-rm -rf $(OBJ_DIR)
 
 
@@ -75,9 +79,9 @@ $(OBJ_SUBDIRS):
 endif
 
 # ライブラリ
-$(OBJ_DIR)/$(LIB): $(OBJS) Makefile
-	$(AR) rcs $@ $(OBJS)
-	ln -f -s $@ $(OBJ_DIR)/../$(LIB)
+$(RELEASE_DIR)/$(LIB).a: $(OBJS) Makefile
+	$(AR) rcs $(OBJ_DIR)/$(LIB).a $(OBJS)
+	ln -srf $(OBJ_DIR)/$(LIB).a $@
 
 # アセンブラファイルコンパイル
 $(OBJ_DIR)/%.o: %.s Makefile

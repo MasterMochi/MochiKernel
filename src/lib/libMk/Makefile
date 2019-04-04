@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/libraries/libMk/Makefile                                               *#
-#*                                                                 2019/04/02 *#
+#*                                                                 2019/04/03 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -21,13 +21,11 @@ SRCS = MkMsg.c      \
        MkTaskName.c
 
 # リリースディレクトリ
-RELEASE_DIR = ../../../release
-
+RELEASE_DIR = ../../../release/lib
 # ビルドディレクトリ
-BUILD_DIR = ../../../build
-
+BUILD_DIR   = ../../../build
 # オブジェクトディレクトリ
-OBJ_DIR = $(BUILD_DIR)/obj/lib/libMk
+OBJ_DIR     = $(BUILD_DIR)/obj/lib/libMk
 
 # Cフラグ
 CFLAGS = -O               \

@@ -1,11 +1,14 @@
 /******************************************************************************/
-/* src/tools/makeimg/makeimg.c                                                */
-/*                                                                 2018/12/09 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                            */
+/* src/tool/makeimg/makeimg.c                                                 */
+/*                                                                 2019/04/04 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
+/* 標準ヘッダ */
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -17,8 +20,12 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+/* ライブラリヘッダ */
 #include <MLib/MLib.h>
-#include "../../include/kernel/kernel.h"
+
+/* カーネルヘッダ */
+#include <kernel.h>
 
 
 /******************************************************************************/
@@ -45,16 +52,13 @@
 /* ファイル追加 */
 static void addFile( int  imgFd,
                      char *pPath );
-
 /* オプションチェック */
 static void checkOptions( int32_t argNum,
                           char    *pArg[] );
-
 /* ファイル名取得 */
 static void getFileName( char     *pFileName,
                          char     *pFilePath,
                          uint32_t length      );
-
 /* USAGE出力 */
 static void printUsage( int status );
 
@@ -121,10 +125,12 @@ int main( int  argNum,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
-               __LINE__,
-               gpImgPath,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't open %s. errno=%d.\n",
+            __LINE__,
+            gpImgPath,
+            errno
+        );
     }
 
     /* 書込みタイプチェック */
@@ -139,11 +145,13 @@ int main( int  argNum,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
-                   __LINE__,
-                   gpImgPath,
-                   ( int32_t ) writeSize,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+                __LINE__,
+                gpImgPath,
+                ( int32_t ) writeSize,
+                errno
+            );
         }
     }
 
@@ -197,10 +205,12 @@ static void addFile( int  imgFd,
         /* 失敗または異常 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the image. ret=%d, errno=%d.\n",
-               __LINE__,
-               ( int32_t ) offset,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't seek at the image. ret=%d, errno=%d.\n",
+            __LINE__,
+            ( int32_t ) offset,
+            errno
+        );
     }
 
     /* ヘッダオフセット設定 */
@@ -214,10 +224,12 @@ static void addFile( int  imgFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
-               __LINE__,
-               pPath,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't open %s. errno=%d.\n",
+            __LINE__,
+            pPath,
+            errno
+        );
     }
 
     /* バッファサイズ毎に繰り返し */
@@ -233,10 +245,12 @@ static void addFile( int  imgFd,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't read from %s. errno=%d.\n",
-                   __LINE__,
-                   pPath,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't read from %s. errno=%d.\n",
+                __LINE__,
+                pPath,
+                errno
+            );
 
         } else if ( readSize == 0 ) {
             /* EOF */
@@ -255,11 +269,13 @@ static void addFile( int  imgFd,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
-                   __LINE__,
-                   pPath,
-                   ( int32_t ) writeSize,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+                __LINE__,
+                pPath,
+                ( int32_t ) writeSize,
+                errno
+            );
         }
 
     } while ( readSize == BUFFER_SIZE );
@@ -272,11 +288,13 @@ static void addFile( int  imgFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
-               __LINE__,
-               pPath,
-               ( int32_t ) writeSize,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+            __LINE__,
+            pPath,
+            ( int32_t ) writeSize,
+            errno
+        );
     }
 
     /* ファイルヘッダ設定 */
@@ -293,10 +311,12 @@ static void addFile( int  imgFd,
         /* 失敗または異常 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the image. ret=%d, errno%d.\n",
-               __LINE__,
-               ( int32_t ) offset,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't seek at the image. ret=%d, errno%d.\n",
+            __LINE__,
+            ( int32_t ) offset,
+            errno
+        );
     }
 
     /* ファイルヘッダ書込み */
@@ -307,11 +327,13 @@ static void addFile( int  imgFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
-               __LINE__,
-               pPath,
-               ( int32_t ) writeSize,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+            __LINE__,
+            pPath,
+            ( int32_t ) writeSize,
+            errno
+        );
     }
 
     /* ファイルクローズ */
@@ -396,8 +418,10 @@ static void checkOptions( int32_t argNum,
         /* 未設定 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): No set file type! ( '-K', '-D', '-S' or '-U' )\n",
-               __LINE__ );
+        ABORT(
+            "ERROR(%04u): No set file type! ( '-K', '-D', '-S' or '-U' )\n",
+            __LINE__
+        );
     }
 
     return;

@@ -1,14 +1,13 @@
 #******************************************************************************#
+#*                                                                            *#
 #* build/Makefile                                                             *#
-#*                                                                 2018/12/09 *#
-#* Copyright (C) 2016-2018 Mochi                                              *#
+#*                                                                 2019/04/04 *#
+#* Copyright (C) 2016-2019 Mochi                                              *#
+#*                                                                            *#
 #******************************************************************************#
 #******************************************************************************#
 #* 設定                                                                       *#
 #******************************************************************************#
-# ディスクイメージファイル
-DISK_IMG    = mochi.img
-
 # booter
 BOOTER_IPL  = obj/booter/booter-ipl.bin
 BOOTER_MAIN = obj/booter/booter-main.bin
@@ -16,7 +15,13 @@ BOOTER_MAIN = obj/booter/booter-main.bin
 # kernel
 KERNEL      = obj/kernel/kernel
 
-# OS
+# tool
+MAKEIMG     = obj/tool/makeimg
+MAKEDISK    = obj/tool/makedisk
+
+# ディスクイメージファイル
+DISK_IMG    = disk.img
+# OSイメージファイル
 OS_IMG      = os.img
 
 
@@ -45,8 +50,9 @@ image: $(DISK_IMG)
 #* イメージファイル作成                                                       *#
 #******************************************************************************#
 $(DISK_IMG): all
-	tools/makeimg  -o $(OS_IMG) -K $(KERNEL)
-	tools/makedisk -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(OS_IMG)
+	$(MAKEIMG) -o $(OS_IMG) -K $(KERNEL)
+	$(MAKEDISK) -o $@ -i $(BOOTER_IPL) -b $(BOOTER_MAIN) -k $(OS_IMG)
 	sync
+
 
 #******************************************************************************#

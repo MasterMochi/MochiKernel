@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* doxygen/Makefile                                                           *#
-#*                                                                 2019/04/02 *#
+#*                                                                 2019/04/04 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -12,20 +12,20 @@
 BOOTER_CONFIG = ./booter.cnf
 KERNEL_CONFIG = ./kernel.cnf
 LIB_CONFIG    = ./lib.cnf
-TOOLS_CONFIG  = ./tools.cnf
+TOOL_CONFIG   = ./tool.cnf
 
 # Doxygen出力先
 BOOTER_OUTPUT = ./booter
 KERNEL_OUTPUT = ./kernel
 LIB_OUTPUT    = ./lib
-TOOLS_OUTPUT  = ./tools
+TOOL_OUTPUT   = ./tool
 
 # Doxygenログ
 LOG_DIR    = ./log
 BOOTER_LOG = $(LOG_DIR)/booter.log
 KERNEL_LOG = $(LOG_DIR)/kernel.log
 LIB_LOG    = $(LOG_DIR)/lib.log
-TOOLS_LOG  = $(LOG_DIR)/tools.log
+TOOL_LOG   = $(LOG_DIR)/tool.log
 
 
 #******************************************************************************#
@@ -33,7 +33,7 @@ TOOLS_LOG  = $(LOG_DIR)/tools.log
 #******************************************************************************#
 # サブディレクトリも含めたコンパイル
 .PHONY: all
-all: booter kernel lib tools
+all: booter kernel lib tool
 
 # booter
 .PHONY: booter
@@ -53,18 +53,18 @@ kernel: $(LOG_DIR) $(KERNEL_CONFIG)
 
 # lib
 .PHONY: lib
-libraries: $(LOG_DIR) $(LIB_CONFIG)
+lib: $(LOG_DIR) $(LIB_CONFIG)
 	@echo "*** lib ***"
 	doxygen $(LIB_CONFIG)
 	@cat $(LIB_LOG)
 	@echo ""
 
-# tools
-.PHONY: tools
-tools: $(LOG_DIR) $(TOOLS_CONFIG)
-	@echo "*** tools ***"
-	doxygen $(TOOLS_CONFIG)
-	@cat $(TOOLS_LOG)
+# tool
+.PHONY: tool
+tool: $(LOG_DIR) $(TOOL_CONFIG)
+	@echo "*** tool ***"
+	doxygen $(TOOL_CONFIG)
+	@cat $(TOOL_LOG)
 	@echo ""
 
 # 全生成ファイルの削除
@@ -74,7 +74,7 @@ clean:
 	-rm -rf $(BOOTER_OUTPUT)
 	-rm -rf $(KERNEL_OUTPUT)
 	-rm -rf $(LIB_OUTPUT)
-	-rm -rf $(TOOLS_OUTPUT)
+	-rm -rf $(TOOL_OUTPUT)
 	
 
 #******************************************************************************#

@@ -1,11 +1,14 @@
 /******************************************************************************/
-/* src/tools/makedisk/makedisk.c                                              */
-/*                                                                 2018/11/24 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                            */
+/* src/tool/makedisk/makedisk.c                                               */
+/*                                                                 2019/04/03 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
+/* 標準ヘッダ */
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -59,13 +62,13 @@
     }
 
 /** CS設定マクロ */
-#define SET_CYL_SEC( _CYLINDER, _SECTOR )   \
-    ( ( ( _CYLINDER & 0x0300 ) << 6 ) |     \
-      ( ( _SECTOR   & 0x003F ) << 8 ) |     \
+#define SET_CYL_SEC( _CYLINDER, _SECTOR ) \
+    ( ( ( _CYLINDER & 0x0300 ) << 6 ) |   \
+      ( ( _SECTOR   & 0x003F ) << 8 ) |   \
       (   _CYLINDER & 0x00FF        )   )
 
 /** CYLINDER取得マクロ */
-#define GET_CYLINDER( _CYLSEC )     \
+#define GET_CYLINDER( _CYLSEC )                              \
     ( ( ( _CYLSEC >> 6 ) & 0x0300 ) | ( _CYLSEC & 0x00FF ) )
 
 /** SECTOR取得マクロ */
@@ -107,24 +110,19 @@ static void checkOptions( int32_t argNum,
                           char    **ppKernelPath );
 /* CHSアドレス取得 */
 static chs_t getChs( uint32_t lba );
-
 /* USAGE出力 */
 static void printUsage( int status );
-
 /* IPLバイナリ書込み */
 static void writeIpl( int  diskFd,
                       char *pIplPath );
-
 /* ブートローダバイナリ書込み */
 static chs_t writeBoot( int   diskFd,
                         char  *pBootPath,
                         chs_t chsFirstAddr );
-
 /* カーネルバイナリ書込み */
 static chs_t writeKernel( int   diskFd,
                           char  *pKernelPath,
                           chs_t chsFirstAddr  );
-
 /* パーティションエントリ書込み */
 static void writePartitionEntry( int      diskFd,
                                  uint32_t no,
@@ -144,7 +142,7 @@ uint32_t sector;    /**< 仮想ディスクのセクタ数   */
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       makedisk
+ * @brief       メイン関数
  * @details     仮想マシン用ディスクイメージを作成する。
  *
  * @param[in]   argNum  引数の数
@@ -190,24 +188,26 @@ int main( int  argNum,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
-               __LINE__,
-               pDiskPath,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't open %s. errno=%d.\n",
+            __LINE__,
+            pDiskPath,
+            errno
+        );
     }
 
     /* IPLバイナリ書込み */
     writeIpl( diskFd, pIplPath );
 
     /* ブートローダバイナリ書込み */
-    chs.cylSec   = SET_CYL_SEC( 0, 1 );
-    chs.head     = 1;
-    chs = writeBoot( diskFd, pBootPath, chs );
+    chs.cylSec = SET_CYL_SEC( 0, 1 );
+    chs.head   = 1;
+    chs        = writeBoot( diskFd, pBootPath, chs );
 
     /* カーネルバイナリ書込み */
     chs.cylSec = SET_CYL_SEC( GET_CYLINDER( chs.cylSec ) + 1, 1 );
     chs.head   = 0;
-    chs = writeKernel( diskFd, pKernelPath, chs );
+    chs        = writeKernel( diskFd, pKernelPath, chs );
 
     /* 仮想ディスクファイルサイズチェック */
     if ( GET_CYLINDER( chs.cylSec ) < cylinder ) {
@@ -221,10 +221,12 @@ int main( int  argNum,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
-                   __LINE__,
-                   ( int32_t ) offset,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
+                __LINE__,
+                ( int32_t ) offset,
+                errno
+            );
         }
 
         /* 書込み */
@@ -235,25 +237,29 @@ int main( int  argNum,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
-                   __LINE__,
-                   pDiskPath,
-                   size,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+                __LINE__,
+                pDiskPath,
+                size,
+                errno
+            );
         }
 
     } else {
         /* 指定サイズ過達 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Overwrite.CHS=%u/%u/%u > %u/%u/%u.\n",
-               __LINE__,
-               GET_CYLINDER( chs.cylSec ),
-               chs.head,
-               GET_SECTOR( chs.cylSec ),
-               cylinder,
-               head,
-               sector );
+        ABORT(
+            "ERROR(%04u): Overwrite.CHS=%u/%u/%u > %u/%u/%u.\n",
+            __LINE__,
+            GET_CYLINDER( chs.cylSec ),
+            chs.head,
+            GET_SECTOR( chs.cylSec ),
+            cylinder,
+            head,
+            sector
+        );
     }
 
     /* 仮想ディスククローズ */
@@ -388,11 +394,13 @@ static void checkOptions( int32_t argNum,
         /* 範囲外 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): cylinder(%u) is out of range(%u-%u).\n",
-               __LINE__,
-               cylinder,
-               CYLINDER_MIN,
-               CYLINDER_MAX );
+        ABORT(
+            "ERROR(%04u): cylinder(%u) is out of range(%u-%u).\n",
+            __LINE__,
+            cylinder,
+            CYLINDER_MIN,
+            CYLINDER_MAX
+        );
     }
 
     /* ヘッド値チェック */
@@ -401,11 +409,13 @@ static void checkOptions( int32_t argNum,
         /* 範囲外 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Head(%u) is out of range(%u-%u).\n",
-               __LINE__,
-               head,
-               HEAD_MIN,
-               HEAD_MAX );
+        ABORT(
+            "ERROR(%04u): Head(%u) is out of range(%u-%u).\n",
+            __LINE__,
+            head,
+            HEAD_MIN,
+            HEAD_MAX
+        );
     }
 
     /* セクタ値チェック */
@@ -414,11 +424,13 @@ static void checkOptions( int32_t argNum,
         /* 範囲外 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Sector(%u) is out of range(%u-%u).\n",
-               __LINE__,
-               sector,
-               CYLINDER_MIN,
-               CYLINDER_MAX );
+        ABORT(
+            "ERROR(%04u): Sector(%u) is out of range(%u-%u).\n",
+            __LINE__,
+            sector,
+            CYLINDER_MIN,
+            CYLINDER_MAX
+        );
     }
 
     return;
@@ -443,9 +455,8 @@ static chs_t getChs( uint32_t lba )
     memset( &chs, 0, sizeof ( chs_t ) );
 
     /* CHSアドレス設定 */
-    chs.cylSec   = SET_CYL_SEC( ( lba / sector ) / head,
-                                lba % sector + 1 );
-    chs.head     = ( lba / sector ) % head;
+    chs.cylSec = SET_CYL_SEC( ( lba / sector ) / head, lba % sector + 1 );
+    chs.head   = ( lba / sector ) % head;
 
     return chs;
 }
@@ -503,10 +514,12 @@ static void writeIpl( int  diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
-               __LINE__,
-               pIplPath,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't open %s. errno=%d.\n",
+            __LINE__,
+            pIplPath,
+            errno
+        );
     }
 
     /* IPLバイナリ読込み */
@@ -517,11 +530,13 @@ static void writeIpl( int  diskFd,
         /* 読込み失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't read from %s. ret=%d, errno=%d.\n",
-               __LINE__,
-               pIplPath,
-               size,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't read from %s. ret=%d, errno=%d.\n",
+            __LINE__,
+            pIplPath,
+            size,
+            errno
+        );
     }
 
     /* IPLバイナリを仮想ディスクに書込み */
@@ -532,11 +547,13 @@ static void writeIpl( int  diskFd,
         /* 書込み */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
-               __LINE__,
-               pIplPath,
-               size,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't write %s. ret=%d, errno=%d.\n",
+            __LINE__,
+            pIplPath,
+            size,
+            errno
+        );
     }
 
     /* ファイルクローズ */
@@ -573,8 +590,8 @@ static chs_t writeBoot( int   diskFd,
     uint32_t lbaFirstAddr;          /* 書込み先先頭LBAアドレス            */
 
     /* 初期化 */
-    fileSize = 0;
-    lbaSize  = 0;
+    fileSize     = 0;
+    lbaSize      = 0;
     lbaFirstAddr = GET_CYLINDER( chsFirstAddr.cylSec ) * head * sector +
                    chsFirstAddr.head * sector +
                    GET_SECTOR( chsFirstAddr.cylSec ) - 1;
@@ -588,10 +605,12 @@ static chs_t writeBoot( int   diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
-               __LINE__,
-               ( int32_t ) offset,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
+            __LINE__,
+            ( int32_t ) offset,
+            errno
+        );
     }
 
     /* ブートローダバイナリファイルオープン */
@@ -602,10 +621,12 @@ static chs_t writeBoot( int   diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
-               __LINE__,
-               pBootPath,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't open %s. errno=%d.\n",
+            __LINE__,
+            pBootPath,
+            errno
+        );
     }
 
     /* 読み書きバッファサイズ毎に繰り返し */
@@ -621,10 +642,12 @@ static chs_t writeBoot( int   diskFd,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't read from %s. errno=%d.\n",
-                   __LINE__,
-                   pBootPath,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't read from %s. errno=%d.\n",
+                __LINE__,
+                pBootPath,
+                errno
+            );
 
         } else if ( readSize == 0 ) {
             /* EOF */
@@ -640,15 +663,18 @@ static chs_t writeBoot( int   diskFd,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't write %s. errno=%d.\n",
-                   __LINE__,
-                   pBootPath,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't write %s. errno=%d.\n",
+                __LINE__,
+                pBootPath,
+                errno
+            );
         }
 
         /* ファイルサイズ更新 */
         fileSize += writeSize;
         lbaSize++;
+
     } while ( writeSize == BUFFER_SIZE );
 
     /* パーティションテーブル設定 */
@@ -709,10 +735,12 @@ static chs_t writeKernel( int   diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
-               __LINE__,
-               ( int32_t ) offset,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
+            __LINE__,
+            ( int32_t ) offset,
+            errno
+        );
     }
 
     /* カーネルバイナリファイルオープン */
@@ -723,10 +751,12 @@ static chs_t writeKernel( int   diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't open %s. errno=%d.\n",
-               __LINE__,
-               pKernelPath,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't open %s. errno=%d.\n",
+            __LINE__,
+            pKernelPath,
+            errno
+        );
     }
 
     /* 読み書きバッファサイズ毎に繰り返し */
@@ -742,10 +772,12 @@ static chs_t writeKernel( int   diskFd,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't read from %s. errno=%d.\n",
-                   __LINE__,
-                   pKernelPath,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't read from %s. errno=%d.\n",
+                __LINE__,
+                pKernelPath,
+                errno
+            );
 
         } else if ( readSize == 0 ) {
             /* EOF */
@@ -761,15 +793,18 @@ static chs_t writeKernel( int   diskFd,
             /* 失敗 */
 
             /* アボート */
-            ABORT( "ERROR(%04u): Can't write %s. errno=%d.\n",
-                   __LINE__,
-                   pKernelPath,
-                   errno );
+            ABORT(
+                "ERROR(%04u): Can't write %s. errno=%d.\n",
+                __LINE__,
+                pKernelPath,
+                errno
+            );
         }
 
         /* ファイルサイズ更新 */
         fileSize += writeSize;
         lbaSize++;
+
     } while ( writeSize == BUFFER_SIZE );
 
     /* パーティションテーブル設定 */
@@ -815,10 +850,12 @@ static void writePartitionEntry( int      diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
-               __LINE__,
-               ( int32_t ) offset,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
+            __LINE__,
+            ( int32_t ) offset,
+            errno
+        );
     }
 
     /* MBR読込み */
@@ -829,10 +866,12 @@ static void writePartitionEntry( int      diskFd,
         /* 読込み失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't read from MBR. ret=%d, errno=%d.\n",
-               __LINE__,
-               size,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't read from MBR. ret=%d, errno=%d.\n",
+            __LINE__,
+            size,
+            errno
+        );
     }
 
     /* パーティションエントリ設定 */
@@ -846,10 +885,12 @@ static void writePartitionEntry( int      diskFd,
         /* 失敗 */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
-               __LINE__,
-               ( int32_t ) offset,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't seek at the disk image. ret=%d, errno=%d.\n",
+            __LINE__,
+            ( int32_t ) offset,
+            errno
+        );
     }
 
     /* MBR書込み */
@@ -860,10 +901,12 @@ static void writePartitionEntry( int      diskFd,
         /* 書込み */
 
         /* アボート */
-        ABORT( "ERROR(%04u): Can't write MBR. ret=%d, errno=%d.\n",
-               __LINE__,
-               size,
-               errno );
+        ABORT(
+            "ERROR(%04u): Can't write MBR. ret=%d, errno=%d.\n",
+            __LINE__,
+            size,
+            errno
+        );
     }
 
     return;

@@ -34,13 +34,11 @@ MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
             Debug/DebugLog.c
 
 # リリースディレクトリ
-RELEASE_DIR = ../../release
-
+RELEASE_DIR = ../../release/booter
 # ビルドディレクトリ
-BUILD_DIR = ../../build
-
+BUILD_DIR   = ../../build
 # オブジェクトディレクトリ
-OBJ_DIR = $(BUILD_DIR)/obj/booter
+OBJ_DIR     = $(BUILD_DIR)/obj/booter
 
 # ASフラグ
 ASFLAGS = --32
@@ -72,9 +70,9 @@ OBJ_SUBDIRS = $(sort $(addprefix $(OBJ_DIR)/, $(dir $(IPL_SRCS) $(MAIN_SRCS))))
 # IPL部オブジェクトファイル
 IPL_OBJS  = $(addprefix $(OBJ_DIR)/, $(IPL_SRCS:.s=.o))
 # メイン部オブジェクトファイル
-MAIN_OBJS = $(addprefix $(OBJ_DIR)/,                           \
-              $(patsubst %.s,%.o,$(filter %.s, $(MAIN_SRCS)))  \
-              $(patsubst %.c,%.o,$(filter %.c, $(MAIN_SRCS))))
+MAIN_OBJS = $(addprefix $(OBJ_DIR)/,                                     \
+                        $(patsubst %.s,%.o,$(filter %.s, $(MAIN_SRCS)))  \
+                        $(patsubst %.c,%.o,$(filter %.c, $(MAIN_SRCS))))
 
 # メイン部依存関係ファイル
 MAIN_DEPS = $(addprefix $(OBJ_DIR)/, $(MAIN_SRCS:.c=.d))

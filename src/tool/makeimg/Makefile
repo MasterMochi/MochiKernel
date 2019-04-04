@@ -1,7 +1,9 @@
 #******************************************************************************#
-#* src/tools/makeimg/Makefile                                                 *#
-#*                                                                 2018/12/09 *#
-#* Copyright (C) 2017-2018 Mochi.                                             *#
+#*                                                                            *#
+#* src/tool/makeimg/Makefile                                                  *#
+#*                                                                 2019/04/04 *#
+#* Copyright (C) 2017-2019 Mochi.                                             *#
+#*                                                                            *#
 #******************************************************************************#
 #******************************************************************************#
 #* 設定                                                                       *#
@@ -12,26 +14,21 @@ PROG = makeimg
 # ソースコード
 SRCS = makeimg.c
 
+# リリースディレクトリ
+RELEASE_DIR = ../../../release/tool
 # ビルドディレクトリ
-BUILD_DIR = ../../../build
+BUILD_DIR   = ../../../build
 # ツールディレクトリ
-TOOL_DIR  = $(BUILD_DIR)/tools
+OBJ_DIR     = $(BUILD_DIR)/obj/tool
 
 # Cフラグ
-CFLAGS  = -m32
+CFLAGS  = -m32                   \
+          -I../../include/kernel \
+          -I$(BUILD_DIR)/include
 # LDフラグ
-LDFLAGS =
+LDFLAGS = -L$(BUILD_DIR)/lib
 # LDライブラリフラグ
 LDLIBS  = -lMLib
-
-
-#******************************************************************************#
-#* 定義                                                                       *#
-#******************************************************************************#
-# インクルードディレクトリ
-CFLAGS  += -I$(BUILD_DIR)/include
-# ライブラリディレクトリ
-LDFLAGS += -L$(BUILD_DIR)/lib
 
 
 #******************************************************************************#
@@ -39,24 +36,26 @@ LDFLAGS += -L$(BUILD_DIR)/lib
 #******************************************************************************#
 # コンパイル
 .PHONY: all
-all: $(TOOL_DIR) $(TOOL_DIR)/$(PROG) Makefile
+all: $(OBJ_DIR) $(RELEASE_DIR)/$(PROG) Makefile
 
 # 全生成ファイルの削除
 .PHONY: clean
 clean:
-	-rm -rf $(TOOL_DIR)/$(PROG)
+	-rm -rf $(RELEASE_DIR)/$(PROG)
+	-rm -rf $(OBJ_DIR)/$(PROG)
 
 
 #******************************************************************************#
 #* 生成規則                                                                   *#
 #******************************************************************************#
 # ディレクトリ
-$(TOOL_DIR):
+$(OBJ_DIR):
 	mkdir -p $@
 
 # 実行ファイル
-$(TOOL_DIR)/$(PROG): $(SRCS) Makefile
-	$(CC) $(CFLAGS) -o $@ $(SRCS) $(LDFLAGS) $(LDLIBS)
+$(RELEASE_DIR)/$(PROG): $(SRCS) Makefile
+	$(CC) $(CFLAGS) -o $(OBJ_DIR)/$(PROG) $(SRCS) $(LDFLAGS) $(LDLIBS)
+	ln -sfr $(OBJ_DIR)/$(PROG) $@
 
 
 #******************************************************************************#

@@ -1,18 +1,19 @@
 /******************************************************************************/
-/* src/include/kernel/library.h                                               */
-/*                                                                 2019/01/27 */
+/*                                                                            */
+/* libMk.h                                                                    */
+/*                                                                 2019/04/05 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
-#ifndef _MK_LIBRARY_H_
-#define _MK_LIBRARY_H_
+#ifndef __LIB_MK_H__
+#define __LIB_MK_H__
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdint.h>
 
-/* 共通ヘッダ */
-#include <hardware/I8259A/I8259A.h>
+/* カーネルヘッダ */
 #include <kernel/config.h>
 #include <kernel/interrupt.h>
 #include <kernel/ioport.h>
@@ -25,17 +26,36 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/* IRQ番号 */
+#define MK_INT_IRQ0  (  0 ) /**< IRQ0  */
+#define MK_INT_IRQ1  (  1 ) /**< IRQ1  */
+#define MK_INT_IRQ2  (  2 ) /**< IRQ2  */
+#define MK_INT_IRQ3  (  3 ) /**< IRQ3  */
+#define MK_INT_IRQ4  (  4 ) /**< IRQ4  */
+#define MK_INT_IRQ5  (  5 ) /**< IRQ5  */
+#define MK_INT_IRQ6  (  6 ) /**< IRQ6  */
+#define MK_INT_IRQ7  (  7 ) /**< IRQ7  */
+#define MK_INT_IRQ8  (  8 ) /**< IRQ8  */
+#define MK_INT_IRQ9  (  9 ) /**< IRQ9  */
+#define MK_INT_IRQ10 ( 10 ) /**< IRQ10 */
+#define MK_INT_IRQ11 ( 11 ) /**< IRQ11 */
+#define MK_INT_IRQ12 ( 12 ) /**< IRQ12 */
+#define MK_INT_IRQ13 ( 13 ) /**< IRQ13 */
+#define MK_INT_IRQ14 ( 14 ) /**< IRQ14 */
+#define MK_INT_IRQ15 ( 15 ) /**< IRQ15 */
+
+
 /******************************************************************************/
-/* グローバル関数プロトタイプ宣言                                             */
+/* ライブラリ関数プロトタイプ宣言                                             */
 /******************************************************************************/
-/*---------*/
-/* MkInt.c */
-/*---------*/
+/*--------------------*/
+/* ハードウェア割込み */
+/*--------------------*/
 /* ハードウェア割込み処理完了 */
-extern int32_t MkIntComplete( uint8_t irqNo,
+extern int32_t MkIntComplete( uint8_t  irqNo,
                               uint32_t *pErrNo );
 /* ハードウェア割込み無効化 */
-extern int32_t MkIntDisable( uint8_t irqNo,
+extern int32_t MkIntDisable( uint8_t  irqNo,
                              uint32_t *pErrNo );
 /* ハードウェア割込み有効化 */
 extern int32_t MkIntEnable( uint8_t  irqNo,
@@ -51,16 +71,16 @@ extern int32_t MkIntWait( uint8_t  *pInt,
                           uint32_t *pErrNo );
 
 /*-----------*/
-/* MkIoMem.c */
+/* I/Oメモリ */
 /*-----------*/
 /* I/Oメモリ領域割当 */
 extern void *MkIoMemAlloc( void     *pAddr,
                            size_t   size,
                            uint32_t *pErrNo );
 
-/*------------*/
-/* MkIoPort.c */
-/*------------*/
+/*-----------*/
+/* I/Oポート */
+/*-----------*/
 /* I/Oポート入力(1バイト単位) */
 extern int32_t MkIoPortInByte( uint16_t portNo,
                                void     *pData,
@@ -92,9 +112,9 @@ extern int32_t MkIoPortOutWord( uint16_t portNo,
                                 size_t   count,
                                 uint32_t *pErrNo );
 
-/*---------*/
-/* MkMsg.c */
-/*---------*/
+/*----------------------*/
+/* メッセージパッシング */
+/*----------------------*/
 /* メッセージ受信 */
 extern int32_t MkMsgReceive( MkTaskId_t rcvTaskId,
                              void       *pBuffer,
@@ -107,9 +127,9 @@ extern int32_t MkMsgSend( MkTaskId_t dst,
                           size_t     size,
                           uint32_t   *pErrNo );
 
-/*--------------*/
-/* MkTaskName.c */
-/*--------------*/
+/*----------*/
+/* タスク名 */
+/*----------*/
 /* タスクID取得 */
 extern int32_t MkTaskNameGet( char       *pTaskName,
                               MkTaskId_t *pTaskId,
@@ -120,9 +140,9 @@ extern int32_t MkTaskNameRegister( char     *pTaskName,
 /* タスクID登録解除 */
 extern int32_t MkTaskNameUnregister( uint32_t *pErrNo );
 
-/*-----------*/
-/* MkTimer.c */
-/*-----------*/
+/*--------*/
+/* タイマ */
+/*--------*/
 /* スリープ */
 extern int32_t MkTimerSleep( uint32_t usec,
                              uint32_t *pErrNo );

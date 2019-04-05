@@ -1,7 +1,9 @@
 /******************************************************************************/
-/* src/include/kernel/taskname.h                                              */
-/*                                                                 2019/01/26 */
+/*                                                                            */
+/* kernel/taskname.h                                                          */
+/*                                                                 2019/04/04 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 #ifndef _MK_TASKNAME_H_
 #define _MK_TASKNAME_H_
@@ -12,9 +14,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* 共通ヘッダ */
-#include <kernel/config.h>
-#include <kernel/types.h>
+/* カーネルヘッダ */
+#include "config.h"
+#include "types.h"
 
 
 /******************************************************************************/

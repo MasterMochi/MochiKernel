@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/libraries/libMk/Makefile                                               *#
-#*                                                                 2019/04/03 *#
+#*                                                                 2019/04/05 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -28,13 +28,16 @@ BUILD_DIR   = ../../../build
 OBJ_DIR     = $(BUILD_DIR)/obj/lib/libMk
 
 # Cフラグ
-CFLAGS = -O               \
-         -Wall            \
-         -masm=intel      \
-         -m32             \
-         -static          \
-         -ffreestanding   \
-         -I../../include/
+CFLAGS = -O                                \
+         -Wall                             \
+         -masm=intel                       \
+         -m32                              \
+         -static                           \
+         -ffreestanding                    \
+         -I../../include                   \
+         -I../../../release/kernel/include \
+         -I$(RELEASE_DIR)/include          \
+         -I$(BUILD_DIR)/include
 
 
 #******************************************************************************#

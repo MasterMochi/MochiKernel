@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2019/04/03 *#
+#*                                                                 2019/04/05 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -43,15 +43,16 @@ OBJ_DIR     = $(BUILD_DIR)/obj/booter
 # ASフラグ
 ASFLAGS = --32
 # Cフラグ
-CFLAGS  = -O                     \
-          -Wall                  \
-          -masm=intel            \
-          -m32                   \
-          -fno-pic               \
-          -ffreestanding         \
-          -Iinclude/             \
-          -I../include           \
-          -I$(BUILD_DIR)/include \
+CFLAGS  = -O                             \
+          -Wall                          \
+          -masm=intel                    \
+          -m32                           \
+          -fno-pic                       \
+          -ffreestanding                 \
+          -Iinclude/                     \
+          -I../include                   \
+          -I../../release/kernel/include \
+          -I$(BUILD_DIR)/include         \
           -DDEBUG_LOG_ENABLE
 # LDフラグ
 LDFLAGS = -melf_i386         \

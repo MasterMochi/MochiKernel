@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2019/04/03 *#
+#*                                                                 2019/04/05 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -53,22 +53,21 @@ BUILD_DIR   = ../../build
 OBJ_DIR     = $(BUILD_DIR)/obj/$(PROG)
 
 # Cフラグ
-CFLAGS  = -O                     \
-          -Wall                  \
-          -masm=intel            \
-          -m32                   \
-          -fno-pic               \
-          -ffreestanding         \
-          -Iinclude              \
-          -I../include           \
+CFLAGS  = -O                       \
+          -Wall                    \
+          -masm=intel              \
+          -m32                     \
+          -fno-pic                 \
+          -ffreestanding           \
+          -Iinclude                \
+          -I../include             \
+          -I$(RELEASE_DIR)/include \
           -I$(BUILD_DIR)/include
 #          -DDEBUG_LOG_ENABLE
-
 # LDフラグ
 LDFLAGS = -T kernel.lds      \
           -melf_i386         \
           -L$(BUILD_DIR)/lib
-
 # LDライブラリフラグ
 LDLIBS  = -lc    \
           -lMLib

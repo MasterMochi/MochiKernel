@@ -1,4 +1,4 @@
-build/mochi.img
+build/disk.img
 build/os.img
 build/obj
 doxygen/booter

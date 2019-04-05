@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2018/11/24 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                 2019/04/05 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -111,7 +113,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_ITCCTRL_MSG,   "ITC-MSG " },   /* タスク間通信制御(ﾒｯｾｰｼﾞ) */
     { CMN_MODULE_IOCTRL_INIT,   "IOC-INIT" },   /* 入出力制御(初期化)       */
     { CMN_MODULE_IOCTRL_PORT,   "IOC-PORT" },   /* 入出力制御(I/Oポート)    */
-    { CMN_MODULE_IOCTRL_MEM,    "IOC-MEM"  },   /* 入出力制御(I/Oメモリ)    */
+    { CMN_MODULE_IOCTRL_MEM,    "IOC-MEM " },   /* 入出力制御(I/Oメモリ)    */
     { 0,                        "UNKNOWN " }  };/* 終端                     */
 
 /** 数字変換表 */

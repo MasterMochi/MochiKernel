@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* libMk.h                                                                    */
-/*                                                                 2019/04/05 */
+/*                                                                 2019/04/06 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -16,6 +16,7 @@
 /* カーネルヘッダ */
 #include <kernel/config.h>
 #include <kernel/interrupt.h>
+#include <kernel/iomem.h>
 #include <kernel/ioport.h>
 #include <kernel/message.h>
 #include <kernel/taskname.h>

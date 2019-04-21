@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/libraries/libc/Makefile                                                *#
-#*                                                                 2019/04/06 *#
+#*                                                                 2019/04/21 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -12,30 +12,28 @@
 LIB = libc
 
 # ソースコード
-SRCS = string/memcpy.c  \
-       string/memset.c  \
-       string/strcpy.c  \
-       string/strncmp.c \
-       string/strncpy.c \
-       string/strlen.c
+SRCS  = string/memcpy.c
+SRCS += string/memset.c
+SRCS += string/strcpy.c
+SRCS += string/strncmp.c
+SRCS += string/strncpy.c
+SRCS += string/strlen.c
 
 # リリースディレクトリ
 RELEASE_DIR = ../../../build/lib/
-
 # ビルドディレクトリ
-BUILD_DIR = ../../../build
-
+BUILD_DIR   = ../../../build
 # オブジェクトディレクトリ
-OBJ_DIR = $(BUILD_DIR)/obj/lib/$(LIB)
+OBJ_DIR     = $(BUILD_DIR)/obj/lib/$(LIB)
 
 # Cフラグ
-CFLAGS = -O                     \
-         -Wall                  \
-         -masm=intel            \
-         -m32                   \
-         -ffreestanding         \
-         -I../../include        \
-         -I$(BUILD_DIR)/include
+CFLAGS  = -O
+CFLAGS += -Wall
+CFLAGS += -masm=intel
+CFLAGS += -m32
+CFLAGS += -ffreestanding
+CFLAGS += -I../../include
+CFLAGS += -I$(BUILD_DIR)/include
 
 
 #******************************************************************************#

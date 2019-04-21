@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2019/04/05 *#
+#*                                                                 2019/04/21 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -16,22 +16,22 @@ IPL_SRCS = Ipl/IplMain.s
 # メイン部バイナリ名
 MAIN_NAME = booter-main.bin
 # メイン部ソースコード
-MAIN_SRCS = InitCtrl/InitCtrlInit16.s \
-            InitCtrl/InitCtrlInit32.s \
-            IntMng/IntMngInit.c       \
-            IntMng/IntMngIdt.c        \
-            IntMng/IntMngHdl.c        \
-            IntMng/IntMngPic.c        \
-            MemMng/MemMngInit.c       \
-            MemMng/MemMngMap.c        \
-            Driver/DriverInit.c       \
-            Driver/DriverA20.c        \
-            Driver/DriverAta.c        \
-            LoadMng/LoadMngInit.c     \
-            LoadMng/LoadMngKernel.c   \
-            LoadMng/LoadMngProc.c     \
-            Debug/DebugInit.c         \
-            Debug/DebugLog.c
+MAIN_SRCS  = InitCtrl/InitCtrlInit16.s
+MAIN_SRCS += InitCtrl/InitCtrlInit32.s
+MAIN_SRCS += IntMng/IntMngInit.c
+MAIN_SRCS += IntMng/IntMngIdt.c
+MAIN_SRCS += IntMng/IntMngHdl.c
+MAIN_SRCS += IntMng/IntMngPic.c
+MAIN_SRCS += MemMng/MemMngInit.c
+MAIN_SRCS += MemMng/MemMngMap.c
+MAIN_SRCS += Driver/DriverInit.c
+MAIN_SRCS += Driver/DriverA20.c
+MAIN_SRCS += Driver/DriverAta.c
+MAIN_SRCS += LoadMng/LoadMngInit.c
+MAIN_SRCS += LoadMng/LoadMngKernel.c
+MAIN_SRCS += LoadMng/LoadMngProc.c
+MAIN_SRCS += Debug/DebugInit.c
+MAIN_SRCS += Debug/DebugLog.c
 
 # リリースディレクトリ
 RELEASE_DIR = ../../release/booter
@@ -41,25 +41,25 @@ BUILD_DIR   = ../../build
 OBJ_DIR     = $(BUILD_DIR)/obj/booter
 
 # ASフラグ
-ASFLAGS = --32
+ASFLAGS  = --32
 # Cフラグ
-CFLAGS  = -O                             \
-          -Wall                          \
-          -masm=intel                    \
-          -m32                           \
-          -fno-pic                       \
-          -ffreestanding                 \
-          -Iinclude/                     \
-          -I../include                   \
-          -I../../release/kernel/include \
-          -I$(BUILD_DIR)/include         \
-          -DDEBUG_LOG_ENABLE
+CFLAGS   = -O
+CFLAGS  += -Wall
+CFLAGS  += -masm=intel
+CFLAGS  += -m32
+CFLAGS  += -fno-pic
+CFLAGS  += -ffreestanding
+CFLAGS  += -Iinclude
+CFLAGS  += -I../include
+CFLAGS  += -I../../release/kernel/include
+CFLAGS  += -I$(BUILD_DIR)/include
+CFLAGS  += -DDEBUG_LOG_ENABLE
 # LDフラグ
-LDFLAGS = -melf_i386         \
-          -L$(BUILD_DIR)/lib
+LDFLAGS  = -melf_i386
+LDFLAGS += -L$(BUILD_DIR)/lib
 # LDライブラリフラグ
-LDLIBS  = -lc    \
-          -lMLib
+LDLIBS   = -lc
+LDLIBS  += -lMLib
 
 
 #******************************************************************************#

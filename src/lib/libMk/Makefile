@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/libraries/libMk/Makefile                                               *#
-#*                                                                 2019/04/06 *#
+#*                                                                 2019/04/21 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -12,13 +12,13 @@
 LIB = libMk
 
 # ソースコード
-SRCS = MkMsg.c      \
-       MkInt.c      \
-       MkIoMem.c    \
-       MkIoPort.c   \
-       MkProc.c     \
-       MkTimer.c    \
-       MkTaskName.c
+SRCS  = MkMsg.c
+SRCS += MkInt.c
+SRCS += MkIoMem.c
+SRCS += MkIoPort.c
+SRCS += MkProc.c
+SRCS += MkTimer.c
+SRCS += MkTaskName.c
 
 # リリースディレクトリ
 RELEASE_DIR = ../../../release/lib
@@ -28,16 +28,16 @@ BUILD_DIR   = ../../../build
 OBJ_DIR     = $(BUILD_DIR)/obj/lib/$(LIB)
 
 # Cフラグ
-CFLAGS = -O                                \
-         -Wall                             \
-         -masm=intel                       \
-         -m32                              \
-         -static                           \
-         -ffreestanding                    \
-         -I../../include                   \
-         -I../../../release/kernel/include \
-         -I$(RELEASE_DIR)/include          \
-         -I$(BUILD_DIR)/include
+CFLAGS  = -O
+CFLAGS += -Wall
+CFLAGS += -masm=intel
+CFLAGS += -m32
+CFLAGS += -static
+CFLAGS += -ffreestanding
+CFLAGS += -I../../include
+CFLAGS += -I../../../release/kernel/include
+CFLAGS += -I$(RELEASE_DIR)/include
+CFLAGS += -I$(BUILD_DIR)/include
 
 
 #******************************************************************************#

@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/tool/makeimg/Makefile                                                  *#
-#*                                                                 2019/04/05 *#
+#*                                                                 2019/04/21 *#
 #* Copyright (C) 2017-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -22,9 +22,9 @@ BUILD_DIR   = ../../../build
 OBJ_DIR     = $(BUILD_DIR)/obj/tool
 
 # Cフラグ
-CFLAGS  = -m32                                     \
-          -I../../../release/kernel/include/kernel \
-          -I$(BUILD_DIR)/include
+CFLAGS  = -m32
+CFLAGS += -I../../../release/kernel/include/kernel
+CFLAGS += -I$(BUILD_DIR)/include
 # LDフラグ
 LDFLAGS = -L$(BUILD_DIR)/lib
 # LDライブラリフラグ

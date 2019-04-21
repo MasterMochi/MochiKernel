@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2019/04/05 *#
+#*                                                                 2019/04/09 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -12,38 +12,38 @@
 PROG = kernel
 
 # ソースコード
-SRCS = InitCtrl/InitCtrlInit.c \
-       Debug/DebugInit.c       \
-       Debug/DebugLog.c        \
-       MemMng/MemMngInit.c     \
-       MemMng/MemMngGdt.c      \
-       MemMng/MemMngArea.c     \
-       MemMng/MemMngPage.c     \
-       MemMng/MemMngCtrl.c     \
-       MemMng/MemMngMap.c      \
-       MemMng/MemMngPhys.c     \
-       MemMng/MemMngIo.c       \
-       MemMng/MemMngVirt.c     \
-       TaskMng/TaskMngInit.c   \
-       TaskMng/TaskMngTss.c    \
-       TaskMng/TaskMngTask.c   \
-       TaskMng/TaskMngSched.c  \
-       TaskMng/TaskMngElf.c    \
-       TaskMng/TaskMngProc.c   \
-       TaskMng/TaskMngName.c   \
-       IntMng/IntMngInit.c     \
-       IntMng/IntMngIdt.c      \
-       IntMng/IntMngHdl.c      \
-       IntMng/IntMngPic.c      \
-       IntMng/IntMngCtrl.c     \
-       TimerMng/TimerMngInit.c \
-       TimerMng/TimerMngCtrl.c \
-       TimerMng/TimerMngPit.c  \
-       ItcCtrl/ItcCtrlInit.c   \
-       ItcCtrl/ItcCtrlMsg.c    \
-       IoCtrl/IoCtrlInit.c     \
-       IoCtrl/IoCtrlPort.c     \
-       IoCtrl/IoCtrlMem.c
+SRCS  = InitCtrl/InitCtrlInit.c
+SRCS += Debug/DebugInit.c
+SRCS += Debug/DebugLog.c
+SRCS += MemMng/MemMngInit.c
+SRCS += MemMng/MemMngGdt.c
+SRCS += MemMng/MemMngArea.c
+SRCS += MemMng/MemMngPage.c
+SRCS += MemMng/MemMngCtrl.c
+SRCS += MemMng/MemMngMap.c
+SRCS += MemMng/MemMngPhys.c
+SRCS += MemMng/MemMngIo.c
+SRCS += MemMng/MemMngVirt.c
+SRCS += TaskMng/TaskMngInit.c
+SRCS += TaskMng/TaskMngTss.c
+SRCS += TaskMng/TaskMngTask.c
+SRCS += TaskMng/TaskMngSched.c
+SRCS += TaskMng/TaskMngElf.c
+SRCS += TaskMng/TaskMngProc.c
+SRCS += TaskMng/TaskMngName.c
+SRCS += IntMng/IntMngInit.c
+SRCS += IntMng/IntMngIdt.c
+SRCS += IntMng/IntMngHdl.c
+SRCS += IntMng/IntMngPic.c
+SRCS += IntMng/IntMngCtrl.c
+SRCS += TimerMng/TimerMngInit.c
+SRCS += TimerMng/TimerMngCtrl.c
+SRCS += TimerMng/TimerMngPit.c
+SRCS += ItcCtrl/ItcCtrlInit.c
+SRCS += ItcCtrl/ItcCtrlMsg.c
+SRCS += IoCtrl/IoCtrlInit.c
+SRCS += IoCtrl/IoCtrlPort.c
+SRCS += IoCtrl/IoCtrlMem.c
 
 # リリースディレクトリ
 RELEASE_DIR = ../../release/kernel
@@ -53,24 +53,24 @@ BUILD_DIR   = ../../build
 OBJ_DIR     = $(BUILD_DIR)/obj/$(PROG)
 
 # Cフラグ
-CFLAGS  = -O                       \
-          -Wall                    \
-          -masm=intel              \
-          -m32                     \
-          -fno-pic                 \
-          -ffreestanding           \
-          -Iinclude                \
-          -I../include             \
-          -I$(RELEASE_DIR)/include \
-          -I$(BUILD_DIR)/include
-#          -DDEBUG_LOG_ENABLE
+CFLAGS   = -O
+CFLAGS  += -Wall
+CFLAGS  += -masm=intel
+CFLAGS  += -m32
+CFLAGS  += -fno-pic
+CFLAGS  += -ffreestanding
+CFLAGS  += -Iinclude
+CFLAGS  += -I../include
+CFLAGS  += -I$(RELEASE_DIR)/include
+CFLAGS  += -I$(BUILD_DIR)/include
+#CFLAGS  += -DDEBUG_LOG_ENABLE
 # LDフラグ
-LDFLAGS = -T kernel.lds      \
-          -melf_i386         \
-          -L$(BUILD_DIR)/lib
+LDFLAGS  = -T kernel.lds
+LDFLAGS += -melf_i386
+LDFLAGS += -L$(BUILD_DIR)/lib
 # LDライブラリフラグ
-LDLIBS  = -lc    \
-          -lMLib
+LDLIBS   = -lc
+LDLIBS  += -lMLib
 
 
 #******************************************************************************#

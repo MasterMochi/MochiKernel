@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/tool/makeimg/Makefile                                                  *#
-#*                                                                 2019/04/21 *#
+#*                                                                 2019/04/23 *#
 #* Copyright (C) 2017-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -14,21 +14,27 @@ PROG = makeimg
 # ソースコード
 SRCS = makeimg.c
 
-# リリースディレクトリ
-RELEASE_DIR = ../../../release/tool
 # ビルドディレクトリ
 BUILD_DIR   = ../../../build
+# リリースディレクトリ
+RELEASE_DIR = $(BUILD_DIR)/release/tool
 # ツールディレクトリ
 OBJ_DIR     = $(BUILD_DIR)/obj/tool
 
 # Cフラグ
-CFLAGS  = -m32
-CFLAGS += -I../../../release/kernel/include/kernel
-CFLAGS += -I$(BUILD_DIR)/include
+CFLAGS   = -m32
+CFLAGS  += -I$(BUILD_DIR)/release/kernel/include/kernel
+CFLAGS  += -I$(BUILD_DIR)/include
+ifdef BASE_CFLAGS
+CFLAGS  += $(BASE_CFLAGS)
+endif
 # LDフラグ
-LDFLAGS = -L$(BUILD_DIR)/lib
+LDFLAGS  = -L$(BUILD_DIR)/lib
+ifdef BASE_LDFLAGS
+LDFLAGS += $(BASE_LDFLAGS)
+endif
 # LDライブラリフラグ
-LDLIBS  = -lMLib
+LIBS     = -lMLib
 
 
 #******************************************************************************#
@@ -54,7 +60,7 @@ $(OBJ_DIR):
 
 # 実行ファイル
 $(RELEASE_DIR)/$(PROG): $(SRCS) Makefile
-	$(CC) $(CFLAGS) -o $(OBJ_DIR)/$(PROG) $(SRCS) $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) -o $(OBJ_DIR)/$(PROG) $(SRCS) $(LDFLAGS) $(LIBS)
 	ln -sfr $(OBJ_DIR)/$(PROG) $@
 
 

@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2019/04/21 *#
+#*                                                                 2019/04/23 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -14,7 +14,7 @@ IPL_NAME = booter-ipl.bin
 IPL_SRCS = Ipl/IplMain.s
 
 # メイン部バイナリ名
-MAIN_NAME = booter-main.bin
+MAIN_NAME  = booter-main.bin
 # メイン部ソースコード
 MAIN_SRCS  = InitCtrl/InitCtrlInit16.s
 MAIN_SRCS += InitCtrl/InitCtrlInit32.s
@@ -33,10 +33,10 @@ MAIN_SRCS += LoadMng/LoadMngProc.c
 MAIN_SRCS += Debug/DebugInit.c
 MAIN_SRCS += Debug/DebugLog.c
 
-# リリースディレクトリ
-RELEASE_DIR = ../../release/booter
 # ビルドディレクトリ
 BUILD_DIR   = ../../build
+# リリースディレクトリ
+RELEASE_DIR = $(BUILD_DIR)/release/booter
 # オブジェクトディレクトリ
 OBJ_DIR     = $(BUILD_DIR)/obj/booter
 
@@ -49,17 +49,23 @@ CFLAGS  += -masm=intel
 CFLAGS  += -m32
 CFLAGS  += -fno-pic
 CFLAGS  += -ffreestanding
+CFLAGS  += -DDEBUG_LOG_ENABLE
 CFLAGS  += -Iinclude
 CFLAGS  += -I../include
 CFLAGS  += -I../../release/kernel/include
 CFLAGS  += -I$(BUILD_DIR)/include
-CFLAGS  += -DDEBUG_LOG_ENABLE
+ifdef BASE_CFLAGS
+CFLAGS  += $(BASE_CFLAGS)
+endif
 # LDフラグ
 LDFLAGS  = -melf_i386
 LDFLAGS += -L$(BUILD_DIR)/lib
-# LDライブラリフラグ
-LDLIBS   = -lc
-LDLIBS  += -lMLib
+ifdef BASE_LDFLAGS
+LDFLAGS += $(BASE_LDFLAGS)
+endif
+# ライブラリフラグ
+LIBS   = -lc
+LIBS  += -lMLib
 
 
 #******************************************************************************#
@@ -108,12 +114,12 @@ endif
 
 # IPL部バイナリ
 $(RELEASE_DIR)/$(IPL_NAME): $(IPL_OBJS) Makefile
-	$(LD) -T booter-ipl.lds $(LDFLAGS) -o $(OBJ_DIR)/$(IPL_NAME) $(IPL_OBJS) $(LDLIBS)
+	$(LD) -T booter-ipl.lds $(LDFLAGS) -o $(OBJ_DIR)/$(IPL_NAME) $(IPL_OBJS) $(LIBS)
 	ln -sfr $(OBJ_DIR)/$(IPL_NAME) $@
 
 # メイン部バイナリ
 $(RELEASE_DIR)/$(MAIN_NAME): $(MAIN_OBJS) Makefile
-	$(LD) -T booter-main.lds $(LDFLAGS) -o $(OBJ_DIR)/$(MAIN_NAME) $(MAIN_OBJS) $(LDLIBS)
+	$(LD) -T booter-main.lds $(LDFLAGS) -o $(OBJ_DIR)/$(MAIN_NAME) $(MAIN_OBJS) $(LIBS)
 	ln -sfr $(OBJ_DIR)/$(MAIN_NAME) $@
 
 # アセンブラファイルコンパイル

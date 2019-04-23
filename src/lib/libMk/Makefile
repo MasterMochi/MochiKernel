@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/libraries/libMk/Makefile                                               *#
-#*                                                                 2019/04/21 *#
+#*                                                                 2019/04/23 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -20,10 +20,10 @@ SRCS += MkProc.c
 SRCS += MkTimer.c
 SRCS += MkTaskName.c
 
-# リリースディレクトリ
-RELEASE_DIR = ../../../release/lib
 # ビルドディレクトリ
 BUILD_DIR   = ../../../build
+# リリースディレクトリ
+RELEASE_DIR = $(BUILD_DIR)/release/lib
 # オブジェクトディレクトリ
 OBJ_DIR     = $(BUILD_DIR)/obj/lib/$(LIB)
 
@@ -35,9 +35,12 @@ CFLAGS += -m32
 CFLAGS += -static
 CFLAGS += -ffreestanding
 CFLAGS += -I../../include
-CFLAGS += -I../../../release/kernel/include
 CFLAGS += -I$(RELEASE_DIR)/include
+CFLAGS += -I$(BUILD_DIR)/release/kernel/include
 CFLAGS += -I$(BUILD_DIR)/include
+ifdef BASE_CFLAGS
+CFLAGS += BASE_CFLAGS
+endif
 
 
 #******************************************************************************#

@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2019/04/09 *#
+#*                                                                 2019/04/23 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -45,10 +45,10 @@ SRCS += IoCtrl/IoCtrlInit.c
 SRCS += IoCtrl/IoCtrlPort.c
 SRCS += IoCtrl/IoCtrlMem.c
 
-# リリースディレクトリ
-RELEASE_DIR = ../../release/kernel
 # ビルドディレクトリ
 BUILD_DIR   = ../../build
+# リリースディレクトリ
+RELEASE_DIR = $(BUILD_DIR)/release/kernel
 # オブジェクトディレクトリ
 OBJ_DIR     = $(BUILD_DIR)/obj/$(PROG)
 
@@ -59,18 +59,24 @@ CFLAGS  += -masm=intel
 CFLAGS  += -m32
 CFLAGS  += -fno-pic
 CFLAGS  += -ffreestanding
+#CFLAGS  += -DDEBUG_LOG_ENABLE
 CFLAGS  += -Iinclude
 CFLAGS  += -I../include
 CFLAGS  += -I$(RELEASE_DIR)/include
 CFLAGS  += -I$(BUILD_DIR)/include
-#CFLAGS  += -DDEBUG_LOG_ENABLE
+ifdef BASE_CFLAGS
+CFLAGS  += $(BASE_CFLAGS)
+endif
 # LDフラグ
 LDFLAGS  = -T kernel.lds
 LDFLAGS += -melf_i386
 LDFLAGS += -L$(BUILD_DIR)/lib
+ifdef BASE_LDFLAGS
+LDFLAGS += $(BASE_LDFLAGS)
+endif
 # LDライブラリフラグ
-LDLIBS   = -lc
-LDLIBS  += -lMLib
+LIBS     = -lc
+LIBS    += -lMLib
 
 
 #******************************************************************************#
@@ -114,7 +120,7 @@ endif
 
 # 実行ファイル
 $(RELEASE_DIR)/$(PROG): $(OBJS) Makefile
-	$(LD) $(LDFLAGS) -o $(OBJ_DIR)/$(PROG) $(OBJS) $(LDLIBS)
+	$(LD) $(LDFLAGS) -o $(OBJ_DIR)/$(PROG) $(OBJS) $(LIBS)
 	ln -sfr $(OBJ_DIR)/$(PROG) $@
 
 # アセンブラファイルコンパイル

@@ -1,10 +1,10 @@
 build/disk.img
 build/os.img
 build/obj
-build/release/booter/booter-ipl.bin
-build/release/booter/booter-main.bin
-build/release/kernel/kernel
-build/release/lib/libMk.a
+build/release/booter-ipl.bin
+build/release/booter-main.bin
+build/release/kernel
+build/release/libMk.a
 build/release/tool/*
 doxygen/booter
 doxygen/kernel

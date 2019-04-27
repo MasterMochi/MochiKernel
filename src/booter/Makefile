@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2019/04/23 *#
+#*                                                                 2019/04/27 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -36,7 +36,7 @@ MAIN_SRCS += Debug/DebugLog.c
 # ビルドディレクトリ
 BUILD_DIR   = ../../build
 # リリースディレクトリ
-RELEASE_DIR = $(BUILD_DIR)/release/booter
+RELEASE_DIR = $(BUILD_DIR)/release
 # オブジェクトディレクトリ
 OBJ_DIR     = $(BUILD_DIR)/obj/booter
 
@@ -52,7 +52,7 @@ CFLAGS  += -ffreestanding
 CFLAGS  += -DDEBUG_LOG_ENABLE
 CFLAGS  += -Iinclude
 CFLAGS  += -I../include
-CFLAGS  += -I../../release/kernel/include
+CFLAGS  += -I$(RELEASE_DIR)/include
 CFLAGS  += -I$(BUILD_DIR)/include
 ifdef BASE_CFLAGS
 CFLAGS  += $(BASE_CFLAGS)

@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/tool/makeimg/Makefile                                                  *#
-#*                                                                 2019/04/23 *#
+#*                                                                 2019/04/27 *#
 #* Copyright (C) 2017-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -23,7 +23,7 @@ OBJ_DIR     = $(BUILD_DIR)/obj/tool
 
 # Cフラグ
 CFLAGS   = -m32
-CFLAGS  += -I$(BUILD_DIR)/release/kernel/include/kernel
+CFLAGS  += -I$(BUILD_DIR)/release/include/kernel
 CFLAGS  += -I$(BUILD_DIR)/include
 ifdef BASE_CFLAGS
 CFLAGS  += $(BASE_CFLAGS)

@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2019/04/23 *#
+#*                                                                 2019/04/27 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -48,7 +48,7 @@ SRCS += IoCtrl/IoCtrlMem.c
 # ビルドディレクトリ
 BUILD_DIR   = ../../build
 # リリースディレクトリ
-RELEASE_DIR = $(BUILD_DIR)/release/kernel
+RELEASE_DIR = $(BUILD_DIR)/release
 # オブジェクトディレクトリ
 OBJ_DIR     = $(BUILD_DIR)/obj/$(PROG)
 

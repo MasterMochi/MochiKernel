@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libMk/MkTaskName.c                                                 */
-/*                                                                 2019/03/02 */
+/*                                                                 2019/06/12 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -49,7 +49,7 @@ int32_t MkTaskNameGet( char       *pTaskName,
     param.funcId    = MK_TASKNAME_FUNCID_GET;
     param.errNo     = MK_TASKNAME_ERR_NONE;
     param.ret       = MK_TASKNAME_RET_FAILURE;
-    param.taskId    = MK_CONFIG_TASKID_NULL;
+    param.taskId    = MK_TASKID_NULL;
     param.pTaskName = pTaskName;
 
     /* カーネルコール */
@@ -102,7 +102,7 @@ int32_t MkTaskNameRegister( char     *pTaskName,
     param.funcId    = MK_TASKNAME_FUNCID_REGISTER;
     param.errNo     = MK_TASKNAME_ERR_NONE;
     param.ret       = MK_TASKNAME_RET_FAILURE;
-    param.taskId    = MK_CONFIG_TASKID_NULL;
+    param.taskId    = MK_TASKID_NULL;
     param.pTaskName = pTaskName;
 
     /* カーネルコール */
@@ -148,7 +148,7 @@ int32_t MkTaskNameUnregister( uint32_t *pErrNo )
     param.funcId    = MK_TASKNAME_FUNCID_UNREGISTER;
     param.errNo     = MK_TASKNAME_ERR_NONE;
     param.ret       = MK_TASKNAME_RET_FAILURE;
-    param.taskId    = MK_CONFIG_TASKID_NULL;
+    param.taskId    = MK_TASKID_NULL;
     param.pTaskName = NULL;
 
     /* カーネルコール */

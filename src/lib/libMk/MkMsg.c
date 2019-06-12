@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libMk/MkMsg.c                                                      */
-/*                                                                 2019/04/02 */
+/*                                                                 2019/06/12 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -27,8 +27,8 @@
  *              ジの受信を待ち合わせる。
  *
  * @param[in]   rcvTaskId   受信待ちタスクID
- *                  - MK_CONFIG_TASKID_NULL     全てのタスク
- *                  - MK_CONFIG_TASKID_NULL以外 タスク指定
+ *                  - MK_TASKID_NULL     全てのタスク
+ *                  - MK_TASKID_NULL以外 タスク指定
  * @param[out]  *pBuffer    メッセージバッファ
  * @param[in]   size        メッセージバッファサイズ
  * @param[out]  *pSrcTaskId 送信元タスクID

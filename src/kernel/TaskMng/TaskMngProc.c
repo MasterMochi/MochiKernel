@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2018/12/31 */
-/* Copyright (C) 2018 Mochi.                                                  */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -51,7 +53,7 @@ typedef struct {
     void       *pEntryPoint;                /**< エントリポイント     */
     void       *pEndPoint;                  /**< エンドポイント       */
     void       *pBreakPoint;                /**< ブレイクポイント     */
-    MkTaskId_t taskId[ MK_CONFIG_TID_NUM ]; /**< タスクIDリスト       */
+    MkTaskId_t taskId[ MK_TID_NUM ]; /**< タスクIDリスト       */
 } ProcTbl_t;
 
 
@@ -59,7 +61,7 @@ typedef struct {
 /* 変数定義                                                                   */
 /******************************************************************************/
 /** プロセス管理テーブル */
-static ProcTbl_t gProcTbl[ MK_CONFIG_PID_NUM ];
+static ProcTbl_t gProcTbl[ MK_PID_NUM ];
 
 
 /******************************************************************************/
@@ -90,9 +92,9 @@ static void SetBreakPoint( MkProcParam_t *pParam );
  * @param[in]   size   実行ファイルサイズ
  *
  * @return      追加時に割り当てたタスクIDを返す。
- * @retval      MK_CONFIG_PID_NULL 失敗
- * @retval      MK_CONFIG_PID_MIN  タスクID最小値
- * @retval      MK_CONFIG_PID_MAX  タスクID最大値
+ * @retval      MK_PID_NULL 失敗
+ * @retval      MK_PID_MIN  タスクID最小値
+ * @retval      MK_PID_MAX  タスクID最大値
  */
 /******************************************************************************/
 MkPid_t TaskMngProcAdd( uint8_t type,
@@ -112,15 +114,15 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     pBreakPoint = NULL;
     pageDirId   = MEMMNG_PAGE_DIR_FULL;
     ret         = CMN_FAILURE;
-    pid         = MK_CONFIG_PID_NULL;
-    taskId      = MK_CONFIG_TASKID_NULL;
+    pid         = MK_PID_NULL;
+    taskId      = MK_TASKID_NULL;
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.",                    __func__          );
     DEBUG_LOG( " type=%u, pAddr=%010p, size=%d", type, pAddr, size );
 
     /* 未使用PID検索 */
-    for ( pid = MK_CONFIG_PID_MIN; pid <= MK_CONFIG_PID_MAX; pid++ ) {
+    for ( pid = MK_PID_MIN; pid <= MK_PID_MAX; pid++ ) {
         /* 使用フラグ判定 */
         if ( gProcTbl[ pid ].used == CMN_UNUSED ) {
             /* 未使用 */
@@ -134,7 +136,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
 
                 /* [TODO] */
 
-                return MK_CONFIG_TASKID_NULL;
+                return MK_TASKID_NULL;
             }
 
             /* ページディレクトリ割当 */
@@ -149,7 +151,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                 /* デバッグトレースログ出力 */
                 DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                return MK_CONFIG_PID_NULL;
+                return MK_PID_NULL;
             }
 
             /* 仮想メモリ領域設定 */
@@ -179,14 +181,14 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                 /* デバッグトレースログ出力 */
                 DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                return MK_CONFIG_PID_NULL;
+                return MK_PID_NULL;
             }
 
             /* タスク追加 */
             taskId = TaskMngTaskAdd( pid, 0, pageDirId, &TaskMngProcStart );
 
             /* タスク追加結果判定 */
-            if ( taskId == MK_CONFIG_TASKID_NULL ) {
+            if ( taskId == MK_TASKID_NULL ) {
                 /* 失敗 */
 
                 /* [TODO]ELFファイル読込メモリ解放 */
@@ -195,7 +197,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                 /* デバッグトレースログ出力 */
                 DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                return MK_CONFIG_PID_NULL;
+                return MK_PID_NULL;
             }
 
             /* ブレイクポイント設定 */
@@ -220,7 +222,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
 
                 /* [TODO] */
 
-                return MK_CONFIG_TASKID_NULL;
+                return MK_TASKID_NULL;
             }
 
             /* デバッグトレースログ出力 */
@@ -233,7 +235,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-    return MK_CONFIG_PID_NULL;
+    return MK_PID_NULL;
 }
 
 
@@ -243,8 +245,8 @@ MkPid_t TaskMngProcAdd( uint8_t type,
  * @details     指定したプロセスIDのページディレクトリIDを取得する。
  *
  * @param[in]   pid プロセスID
- *                  - MK_CONFIG_PID_MIN プロセスID最小値
- *                  - MK_CONFIG_PID_MAX プロセスID最大値
+ *                  - MK_PID_MIN プロセスID最小値
+ *                  - MK_PID_MAX プロセスID最大値
  *
  * @return      ページディレクトリIDを返す。
  */
@@ -262,8 +264,8 @@ uint32_t TaskMngProcGetPageDirId( MkPid_t pid )
  * @details     指定したプロセスIDのプロセスタイプを取得する。
  *
  * @param[in]   pid プロセスID
- *                  - MK_CONFIG_PID_MIN プロセスID最小値
- *                  - MK_CONFIG_PID_MAX プロセスID最大値
+ *                  - MK_PID_MIN プロセスID最小値
+ *                  - MK_PID_MAX プロセスID最大値
  *
  * @return      プロセスタイプを返す。
  * @retval      TASKMNG_PROC_TYPE_KERNEL カーネル

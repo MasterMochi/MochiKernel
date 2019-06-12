@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2018/12/09 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -84,14 +86,14 @@ typedef struct {
 
 /** スケジューラテーブル構造体 */
 typedef struct {
-    schedTaskInfo_t *pRunningTaskInfo;                  /**< 実行中タスク情報        */
-    uint32_t        runFlg;                             /**< タスク実行済みフラグ    */
-    uint32_t        runningGrpIdx;                      /**< 実行中タスクグループIDX */
-    uint32_t        reservedGrpIdx;                     /**< 予約タスクグループIDX   */
-    schedRunGrp_t   runGrp[ SCHED_RUNGRP_NUM ];         /**< 実行可能タスクグループ  */
-    schedWaitGrp_t  waitGrp;                            /**< 待ちタスクグループ      */
-    MLibList_t      freeQ;                              /**< 空タスクキュー          */
-    schedTaskInfo_t taskInfo[ MK_CONFIG_TASKID_NUM ];   /**< タスク情報              */
+    schedTaskInfo_t *pRunningTaskInfo;          /**< 実行中タスク情報        */
+    uint32_t        runFlg;                     /**< タスク実行済みフラグ    */
+    uint32_t        runningGrpIdx;              /**< 実行中タスクグループIDX */
+    uint32_t        reservedGrpIdx;             /**< 予約タスクグループIDX   */
+    schedRunGrp_t   runGrp[ SCHED_RUNGRP_NUM ]; /**< 実行可能タスクグループ  */
+    schedWaitGrp_t  waitGrp;                    /**< 待ちタスクグループ      */
+    MLibList_t      freeQ;                      /**< 空タスクキュー          */
+    schedTaskInfo_t taskInfo[ MK_TASKID_NUM ];  /**< タスク情報              */
 } schedTbl_t;
 
 
@@ -128,8 +130,8 @@ static schedTbl_t gSchedTbl;
  * @details     指定したタスクIDをスケジュールに追加する。
  *
  * @param[in]   taskId タスクID
- *                  - MK_CONFIG_TASKID_MIN タスクID最小値
- *                  - MK_CONFIG_TASKID_MAX タスクID最大値
+ *                  - MK_TASKID_MIN タスクID最小値
+ *                  - MK_TASKID_MAX タスクID最大値
  *
  * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 成功
@@ -314,8 +316,8 @@ void TaskMngSchedExec( void )
  * @details     現在実行中タスクのタスクIDを取得する。
  *
  * @return      タスクIDを返す。
- * @retval      MK_CONFIG_TASKID_MIN タスクID最小値
- * @retval      MK_CONFIG_TASKID_MAX タスクID最大値
+ * @retval      MK_TASKID_MIN タスクID最小値
+ * @retval      MK_TASKID_MAX タスクID最大値
  */
 /******************************************************************************/
 MkTaskId_t TaskMngSchedGetTaskId( void )
@@ -357,9 +359,7 @@ void TaskMngSchedInit( void )
     pIdleTaskInfo->taskId      = TASKMNG_TASKID_IDLE;
 
     /* 空タスクキュー初期化 */
-    for ( taskId  = SCHED_IDLE_IDX + 1;
-          taskId <= MK_CONFIG_TASKID_MAX;
-          taskId++                       ) {
+    for ( taskId  = SCHED_IDLE_IDX + 1; taskId <= MK_TASKID_MAX; taskId++ ) {
         /* エンキュー */
         retMLib =
             MLibListInsertHead( &( gSchedTbl.freeQ ),

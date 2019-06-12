@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2018/12/09 */
-/* Copyright (C) 2018 Mochi.                                                  */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -86,7 +88,7 @@ static void Send( MkMsgParam_t *pParam );
 /* 変数定義                                                                   */
 /******************************************************************************/
 /** 管理情報 */
-static MngTbl_t gMngTbl[ MK_CONFIG_TASKID_NUM ];
+static MngTbl_t gMngTbl[ MK_TASKID_NUM ];
 
 /** メッセージバッファ */
 static MsgBuffer_t gMsgBuffer[ MSG_BUFFER_NUM ];
@@ -122,14 +124,14 @@ void ItcCtrlMsgInit( void )
                   IA32_DESCRIPTOR_DPL_3    );   /* 特権レベル     */
 
     /* 管理情報初期化 */
-    for ( taskId = MK_CONFIG_TASKID_MIN;
-          taskId < MK_CONFIG_TASKID_NUM;
+    for ( taskId = MK_TASKID_MIN;
+          taskId < MK_TASKID_NUM;
           taskId++                       ) {
         gMngTbl[ taskId ].state   = STATE_INIT;
         gMngTbl[ taskId ].pBuffer = NULL;
-        gMngTbl[ taskId ].head    = MK_CONFIG_TASKID_NULL;
-        gMngTbl[ taskId ].next    = MK_CONFIG_TASKID_NULL;
-        gMngTbl[ taskId ].src     = MK_CONFIG_TASKID_NULL;
+        gMngTbl[ taskId ].head    = MK_TASKID_NULL;
+        gMngTbl[ taskId ].next    = MK_TASKID_NULL;
+        gMngTbl[ taskId ].src     = MK_TASKID_NULL;
     }
 
     /* メッセージバッファリスト初期化 */
@@ -169,7 +171,7 @@ static void AddSndWaitList( MkTaskId_t src,
     next  = *pTail;
 
     /* 後続リンクチェック */
-    while ( next != MK_CONFIG_TASKID_NULL ) {
+    while ( next != MK_TASKID_NULL ) {
         /* 後続リンク有 */
 
         /* 後続リンク取得 */
@@ -263,7 +265,7 @@ static void Receive( MkMsgParam_t *pParam )
     /* 受信ループ */
     while ( true ) {
         /* 受信待ち送信元タスクID判定 */
-        if ( pParam->rcv.src == MK_CONFIG_TASKID_NULL ) {
+        if ( pParam->rcv.src == MK_TASKID_NULL ) {
             /* ANY */
 
             /* 送信待ちリンクリストから先頭エントリ取得 */
@@ -309,7 +311,7 @@ static void Receive( MkMsgParam_t *pParam )
         }
 
         /* エントリ取得結果判定 */
-        if ( src != MK_CONFIG_TASKID_NULL ) {
+        if ( src != MK_TASKID_NULL ) {
             /* 該当エントリ有 */
 
             /* コピーサイズ設定 */
@@ -365,9 +367,9 @@ static void Receive( MkMsgParam_t *pParam )
  * @param[in]   taskId タスクID
  *
  * @return      先頭エントリのタスクIDを返す。
- * @retval      MK_CONFIG_TASKID_NULL 先頭エントリ無し
- * @retval      MK_CONFIG_TASKID_MIN  タスクID最小値
- * @retval      MK_CONFIG_TASKID_MAX  タスクID最大値
+ * @retval      MK_TASKID_NULL 先頭エントリ無し
+ * @retval      MK_TASKID_MIN  タスクID最小値
+ * @retval      MK_TASKID_MAX  タスクID最大値
  */
 /******************************************************************************/
 static MkTaskId_t RemoveSndWaitListTop( MkTaskId_t taskId )
@@ -378,12 +380,12 @@ static MkTaskId_t RemoveSndWaitListTop( MkTaskId_t taskId )
     headTaskId = gMngTbl[ taskId ].head;
 
     /* 先頭タスク有無判定 */
-    if ( headTaskId != MK_CONFIG_TASKID_NULL ) {
+    if ( headTaskId != MK_TASKID_NULL ) {
         /* タスク有り */
 
         /* 先頭タスク削除 */
         gMngTbl[ taskId     ].head = gMngTbl[ headTaskId ].next;
-        gMngTbl[ headTaskId ].next = MK_CONFIG_TASKID_NULL;
+        gMngTbl[ headTaskId ].next = MK_TASKID_NULL;
     }
 
     return headTaskId;
@@ -400,8 +402,8 @@ static MkTaskId_t RemoveSndWaitListTop( MkTaskId_t taskId )
  * @param[in]   rmvTaskId 削除タスクID
  *
  * @return      削除タスクIDを返す。
- * @retval      MK_CONFIG_TASKID_NULL 該当エントリ無し
- * @retval      引数rmvTaskId         削除エントリのタスクID
+ * @retval      MK_TASKID_NULL 該当エントリ無し
+ * @retval      引数rmvTaskId  削除エントリのタスクID
  */
 /******************************************************************************/
 static MkTaskId_t RemoveSndWaitList( MkTaskId_t taskId,
@@ -415,13 +417,13 @@ static MkTaskId_t RemoveSndWaitList( MkTaskId_t taskId,
     waitTaskId = *pTail;
 
     /* 削除タスクID検索 */
-    while ( waitTaskId != MK_CONFIG_TASKID_NULL ) {
+    while ( waitTaskId != MK_TASKID_NULL ) {
         if ( waitTaskId == rmvTaskId ) {
             /* 該当タスクID */
 
             /* 該当タスク削除 */
             *pTail                    = gMngTbl[ rmvTaskId ].next;
-            gMngTbl[ rmvTaskId ].next = MK_CONFIG_TASKID_NULL;
+            gMngTbl[ rmvTaskId ].next = MK_TASKID_NULL;
 
             break;
         }
@@ -533,8 +535,8 @@ static void Send( MkMsgParam_t *pParam )
         /* 受信待ち状態 */
 
         /* 受信待ちメッセージ送信元判定 */
-        if ( ( gMngTbl[ pParam->snd.dst ].src == taskId                ) ||
-             ( gMngTbl[ pParam->snd.dst ].src == MK_CONFIG_TASKID_NULL )    ) {
+        if ( ( gMngTbl[ pParam->snd.dst ].src == taskId         ) ||
+             ( gMngTbl[ pParam->snd.dst ].src == MK_TASKID_NULL )    ) {
             /* 自タスクIDまたはANY */
 
             /* 送信先タスクスケジュール開始 */

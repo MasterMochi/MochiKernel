@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/IntMngCtrl/IntMngCtrl.c                                         */
-/*                                                                 2018/11/24 */
-/* Copyright (C) 2018 Mochi.                                                  */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -145,7 +147,7 @@ static uint32_t AllocWaitInfo( MkTaskId_t taskId )
 
             return index;
 
-        } else if ( gWaitInfo[ index ].taskId == MK_CONFIG_TASKID_NULL ) {
+        } else if ( gWaitInfo[ index ].taskId == MK_TASKID_NULL ) {
             /* 空きエントリ */
 
             free = index;
@@ -187,7 +189,7 @@ void IntMngCtrlInit( void )
 
     /* 割込み待ち情報初期化 */
     for ( i = 0; i < WAITINFO_ENTRY_NUM; i++ ) {
-        gWaitInfo[ i ].taskId  = MK_CONFIG_TASKID_NULL;
+        gWaitInfo[ i ].taskId  = MK_TASKID_NULL;
         gWaitInfo[ i ].monitor = 0;
         gWaitInfo[ i ].flag    = 0;
         gWaitInfo[ i ].state   = STATE_INIT;
@@ -660,7 +662,7 @@ static void StopMonitoring( MkTaskId_t   taskId,
         /* 無し */
 
         /* 割込み待ち情報初期化 */
-        gWaitInfo[ index ].taskId = MK_CONFIG_TASKID_NULL;
+        gWaitInfo[ index ].taskId = MK_TASKID_NULL;
     }
 
     /* 割込み待ち情報インデックス初期化 */

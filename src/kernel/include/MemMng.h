@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2018/11/24 */
-/* Copyright (C) 2016-2018 Mochi.                                             */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 #ifndef MEMMNG_H
 #define MEMMNG_H
@@ -43,7 +45,7 @@
 #define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /**< PDID最小値             */
 
 /* ページディレクトリ定義 */
-#define MEMMNG_PAGE_DIR_NUM       MK_CONFIG_PID_NUM     /**< PD管理数   */
+#define MEMMNG_PAGE_DIR_NUM       MK_PID_NUM            /**< PD管理数   */
 #define MEMMNG_PAGE_DIR_FULL      MEMMNG_PAGE_DIR_NUM   /**< PD空き無し */
 
 /* ページテーブル定義 */

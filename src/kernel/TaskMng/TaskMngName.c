@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/TaskMng/TaskMngName.c                                           */
-/*                                                                 2019/03/26 */
+/*                                                                 2019/06/12 */
 /* Copyright (C) 2019 Mochi.                                                  */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -90,7 +92,7 @@ void TaskMngNameInit( void )
     /* タスク名管理テーブルエントリ毎に繰り返す */
     for ( idx = 0; idx < MK_CONFIG_TASKNAME_NUM; idx++ ) {
         /* タスクID初期化　*/
-        gTaskNameTbl[ idx ].taskId = MK_CONFIG_TASKID_NULL;
+        gTaskNameTbl[ idx ].taskId = MK_TASKID_NULL;
 
         /* タスク名初期化 */
         memset( gTaskNameTbl[ idx ].taskName,
@@ -321,7 +323,7 @@ static void doUnregister( MkTaskNameParam_t *pParam )
     }
 
     /* 該当エントリ初期化 */
-    pEntry->taskId = MK_CONFIG_TASKID_NULL;
+    pEntry->taskId = MK_TASKID_NULL;
     memset( pEntry->taskName, 0, MK_CONFIG_TASKNAME_LENMAX + 1 );
 
     /* 戻り値設定 */
@@ -349,7 +351,7 @@ static TaskNameEntry_t *GetUnusedEntry( void )
     /* タスク名管理テーブルエントリ毎に繰り返す */
     for ( idx = 0; idx < MK_CONFIG_TASKNAME_NUM; idx++ ) {
         /* 未使用エントリ判定 */
-        if ( gTaskNameTbl[ idx ].taskId == MK_CONFIG_TASKID_NULL ) {
+        if ( gTaskNameTbl[ idx ].taskId == MK_TASKID_NULL ) {
             /* 未使用エントリ */
 
             return &( gTaskNameTbl[ idx ] );

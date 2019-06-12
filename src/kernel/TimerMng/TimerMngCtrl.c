@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/TimerMng/TimerMngCtrl.c                                         */
-/*                                                                 2018/12/09 */
-/* Copyright (C) 2018 Mochi.                                                  */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -509,7 +511,7 @@ static void Unset( TimerInfo_t *pTimerInfo )
     pTimerInfo->type   = TIMERMNG_TYPE_ONESHOT;
     pTimerInfo->pFunc  = NULL;
     pTimerInfo->pArg   = NULL;
-    pTimerInfo->taskId = MK_CONFIG_TASKID_NULL;
+    pTimerInfo->taskId = MK_TASKID_NULL;
 
     /* 未使用タイマ情報リスト追加 */
     ( void ) MLibListInsertTail( &gUnusedList,

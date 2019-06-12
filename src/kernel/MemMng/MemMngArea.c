@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2018/12/09 */
-/* Copyright (C) 2017-2018 Mochi.                                             */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -411,7 +413,7 @@ void AreaInit( void )
 
     for ( index = 0; index < AREA_INFO_NUM; index++ ) {
         /* メモリ領域情報設定 */
-        gAreaTbl.areaInfo[ index ].taskId = MK_CONFIG_TASKID_NULL;
+        gAreaTbl.areaInfo[ index ].taskId = MK_TASKID_NULL;
 
         /* 空メモリ領域情報参照変数設定 */
         pEmpty = ( MLibListNode_t * ) &( gAreaTbl.areaInfo[ index ] );

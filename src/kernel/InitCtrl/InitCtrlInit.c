@@ -1,7 +1,9 @@
 /******************************************************************************/
+/*                                                                            */
 /* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2018/12/09 */
-/* Copyright (C) 2016-2018 Mochi.                                             */
+/*                                                                 2019/06/12 */
+/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
@@ -127,7 +129,7 @@ static void InitLoadProcImg( void )
     /* 初期化 */
     pAddr   = ( void * ) MK_ADDR_PROCIMG;
     type    = TASKMNG_PROC_TYPE_USER;
-    pid     = MK_CONFIG_PID_NULL;
+    pid     = MK_PID_NULL;
     pHeader = ( MkImgHdr_t * ) pAddr;
 
     /* ファイル毎に繰り返し */
@@ -168,7 +170,7 @@ static void InitLoadProcImg( void )
                               pHeader->fileSize );
 
         /* プロセス追加結果判定 */
-        if ( pid == MK_CONFIG_PID_NULL ) {
+        if ( pid == MK_PID_NULL ) {
             /* 失敗 */
 
             /* デバッグトレースログ出力 */

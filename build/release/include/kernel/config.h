@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/config.h                                                            */
-/*                                                                 2019/04/04 */
+/*                                                                 2019/06/12 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -17,48 +17,11 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/*----------------*/
-/* プロセスID定義 */
-/*----------------*/
-/** プロセスID最大値 */
-#define MK_CONFIG_PID_MAX  ( 1024 )
-/** プロセスID最小値(変更不可) */
-#define MK_CONFIG_PID_MIN  ( 0 )
-/** プロセスID数 */
-#define MK_CONFIG_PID_NUM  ( MK_CONFIG_PID_MAX - MK_CONFIG_PID_MIN + 1 )
-/** プロセスID無効値 */
-#define MK_CONFIG_PID_NULL ( MK_CONFIG_PID_MAX + 1 )
-
-/*----------------*/
-/* スレッドID定義 */
-/*----------------*/
-/** スレッドID最大値 */
-#define MK_CONFIG_TID_MAX  ( 4 )
-/** スレッドID最小値(変更不可) */
-#define MK_CONFIG_TID_MIN  ( 0 )
-/** スレッドID数 */
-#define MK_CONFIG_TID_NUM  ( MK_CONFIG_TID_MAX - MK_CONFIG_TID_MIN + 1 )
-/** スレッドID無効値 */
-#define MK_CONFIG_TID_NULL ( MK_CONFIG_TID_MAX + 1 )
-
-/*--------------*/
-/* タスクID定義 */
-/*--------------*/
-/** タスクID作成マクロ */
-#define MK_CONFIG_TASKID_MAKE( _PID, _TID ) \
-    ( MK_CONFIG_PID_MAX * ( _TID ) + ( _PID ) )
-/** タスクID最大値 */
-#define MK_CONFIG_TASKID_MAX \
-    ( MK_CONFIG_TASKID_MAKE( MK_CONFIG_PID_MAX, MK_CONFIG_TID_MAX  ) )
-/** タスクID最小値 */
-#define MK_CONFIG_TASKID_MIN \
-    ( MK_CONFIG_TASKID_MAKE( MK_CONFIG_PID_MIN, MK_CONFIG_TID_MIN  ) )
-/** タスクID数 */
-#define MK_CONFIG_TASKID_NUM \
-    ( MK_CONFIG_TASKID_MAX - MK_CONFIG_TASKID_MIN + 1 )
-/** 無効タスクID */
-#define MK_CONFIG_TASKID_NULL \
-    ( MK_CONFIG_TASKID_MAX + 1 )
+/*--------*/
+/* ID定義 */
+/*--------*/
+#define MK_CONFIG_PID_MAX  ( 1024 ) /** プロセスID最大値 */
+#define MK_CONFIG_TID_MAX  ( 4 )    /** スレッドID最大値 */
 
 /*------*/
 /* tick */

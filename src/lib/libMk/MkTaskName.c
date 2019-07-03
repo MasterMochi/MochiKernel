@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libMk/MkTaskName.c                                                 */
-/*                                                                 2019/06/12 */
+/*                                                                 2019/07/03 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -57,7 +57,8 @@ int32_t MkTaskNameGet( char       *pTaskName,
                            "int %1"
                            :
                            : "a" ( &param                   ),
-                             "i" ( MK_CONFIG_INTNO_TASKNAME )  );
+                             "i" ( MK_CONFIG_INTNO_TASKNAME )
+                           : "esi"                             );
 
     /* タスクID設定 */
     *pTaskId = param.taskId;
@@ -110,7 +111,8 @@ int32_t MkTaskNameRegister( char     *pTaskName,
                            "int %1"
                            :
                            : "a" ( &param                   ),
-                             "i" ( MK_CONFIG_INTNO_TASKNAME )  );
+                             "i" ( MK_CONFIG_INTNO_TASKNAME )
+                           : "esi"                             );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -156,7 +158,8 @@ int32_t MkTaskNameUnregister( uint32_t *pErrNo )
                            "int %1"
                            :
                            : "a" ( &param                   ),
-                             "i" ( MK_CONFIG_INTNO_TASKNAME )  );
+                             "i" ( MK_CONFIG_INTNO_TASKNAME )
+                           : "esi"                             );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {

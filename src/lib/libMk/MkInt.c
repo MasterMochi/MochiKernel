@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libMk/MkInt.c                                                      */
-/*                                                                 2019/04/02 */
+/*                                                                 2019/07/03 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -66,7 +66,8 @@ int32_t MkIntComplete( uint8_t  irqNo,
                            "int %1"
                            :
                            : "a" ( &param                    ),
-                             "i" ( MK_CONFIG_INTNO_INTERRUPT )  );
+                             "i" ( MK_CONFIG_INTNO_INTERRUPT )
+                           : "esi"                              );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -125,7 +126,8 @@ int32_t MkIntDisable( uint8_t  irqNo,
                            "int %1"
                            :
                            : "a" ( &param                    ),
-                             "i" ( MK_CONFIG_INTNO_INTERRUPT )  );
+                             "i" ( MK_CONFIG_INTNO_INTERRUPT )
+                           : "esi"                              );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -184,7 +186,8 @@ int32_t MkIntEnable( uint8_t  irqNo,
                            "int %1"
                            :
                            : "a" ( &param                    ),
-                             "i" ( MK_CONFIG_INTNO_INTERRUPT )  );
+                             "i" ( MK_CONFIG_INTNO_INTERRUPT )
+                           : "esi"                              );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -244,7 +247,8 @@ int32_t MkIntStartMonitoring( uint8_t  irqNo,
                            "int %1"
                            :
                            : "a" ( &param                    ),
-                             "i" ( MK_CONFIG_INTNO_INTERRUPT )  );
+                             "i" ( MK_CONFIG_INTNO_INTERRUPT )
+                           : "esi"                              );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -303,7 +307,8 @@ int32_t MkIntStopMonitoring( uint8_t  irqNo,
                            "int %1"
                            :
                            : "a" ( &param                    ),
-                             "i" ( MK_CONFIG_INTNO_INTERRUPT )  );
+                             "i" ( MK_CONFIG_INTNO_INTERRUPT )
+                           : "esi"                              );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -349,7 +354,8 @@ int32_t MkIntWait( uint8_t  *pInt,
                            "int %1"
                            :
                            : "a" ( &param                    ),
-                             "i" ( MK_CONFIG_INTNO_INTERRUPT )  );
+                             "i" ( MK_CONFIG_INTNO_INTERRUPT )
+                           : "esi"                              );
 
     /* 割込み発生フラグ設定要否判定 */
     if ( pInt != NULL ) {

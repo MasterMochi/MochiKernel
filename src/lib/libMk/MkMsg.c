@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libMk/MkMsg.c                                                      */
-/*                                                                 2019/06/12 */
+/*                                                                 2019/07/03 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -64,7 +64,8 @@ int32_t MkMsgReceive( MkTaskId_t rcvTaskId,
                            "int %1"
                            :
                            : "a" ( &param                  ),
-                             "i" ( MK_CONFIG_INTNO_MESSAGE )  );
+                             "i" ( MK_CONFIG_INTNO_MESSAGE )
+                           : "esi"                            );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -126,7 +127,8 @@ int32_t MkMsgSend( MkTaskId_t dst,
                            "int %1"
                            :
                            : "a" ( &param                  ),
-                             "i" ( MK_CONFIG_INTNO_MESSAGE )  );
+                             "i" ( MK_CONFIG_INTNO_MESSAGE )
+                           : "esi"                            );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libMk/MkIoPort.c                                                   */
-/*                                                                 2019/04/02 */
+/*                                                                 2019/07/03 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -57,7 +57,8 @@ int32_t MkIoPortInByte( uint16_t portNo,
                            "int %1"
                            :
                            : "a" ( &param                 ),
-                             "i" ( MK_CONFIG_INTNO_IOPORT )  );
+                             "i" ( MK_CONFIG_INTNO_IOPORT )
+                           : "esi"                           );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -108,7 +109,8 @@ int32_t MkIoPortInDWord( uint16_t portNo,
                            "int %1"
                            :
                            : "a" ( &param                 ),
-                             "i" ( MK_CONFIG_INTNO_IOPORT )  );
+                             "i" ( MK_CONFIG_INTNO_IOPORT )
+                           : "esi"                           );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -159,7 +161,8 @@ int32_t MkIoPortInWord( uint16_t portNo,
                            "int %1"
                            :
                            : "a" ( &param                 ),
-                             "i" ( MK_CONFIG_INTNO_IOPORT )  );
+                             "i" ( MK_CONFIG_INTNO_IOPORT )
+                           : "esi"                           );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -210,7 +213,8 @@ int32_t MkIoPortOutByte( uint16_t portNo,
                            "int %1"
                            :
                            : "a" ( &param                 ),
-                             "i" ( MK_CONFIG_INTNO_IOPORT )  );
+                             "i" ( MK_CONFIG_INTNO_IOPORT )
+                           : "esi"                           );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -261,7 +265,8 @@ int32_t MkIoPortOutDWord( uint16_t portNo,
                            "int %1"
                            :
                            : "a" ( &param                 ),
-                             "i" ( MK_CONFIG_INTNO_IOPORT )  );
+                             "i" ( MK_CONFIG_INTNO_IOPORT )
+                           : "esi"                           );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {
@@ -312,7 +317,8 @@ int32_t MkIoPortOutWord( uint16_t portNo,
                            "int %1"
                            :
                            : "a" ( &param                 ),
-                             "i" ( MK_CONFIG_INTNO_IOPORT )  );
+                             "i" ( MK_CONFIG_INTNO_IOPORT )
+                           : "esi"                           );
 
     /* エラー番号設定要否判定 */
     if ( pErrNo != NULL ) {

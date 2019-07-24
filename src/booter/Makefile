@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/booter/Makefile                                                        *#
-#*                                                                 2019/04/27 *#
+#*                                                                 2019/07/24 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -16,21 +16,21 @@ IPL_SRCS = Ipl/IplMain.s
 # メイン部バイナリ名
 MAIN_NAME  = booter-main.bin
 # メイン部ソースコード
-MAIN_SRCS  = InitCtrl/InitCtrlInit16.s
-MAIN_SRCS += InitCtrl/InitCtrlInit32.s
-MAIN_SRCS += IntMng/IntMngInit.c
+MAIN_SRCS  = InitCtrl/InitCtrl16.s
+MAIN_SRCS += InitCtrl/InitCtrl32.s
+MAIN_SRCS += IntMng/IntMng.c
 MAIN_SRCS += IntMng/IntMngIdt.c
 MAIN_SRCS += IntMng/IntMngHdl.c
 MAIN_SRCS += IntMng/IntMngPic.c
-MAIN_SRCS += MemMng/MemMngInit.c
+MAIN_SRCS += MemMng/MemMng.c
 MAIN_SRCS += MemMng/MemMngMap.c
-MAIN_SRCS += Driver/DriverInit.c
+MAIN_SRCS += Driver/Driver.c
 MAIN_SRCS += Driver/DriverA20.c
 MAIN_SRCS += Driver/DriverAta.c
-MAIN_SRCS += LoadMng/LoadMngInit.c
+MAIN_SRCS += LoadMng/LoadMng.c
 MAIN_SRCS += LoadMng/LoadMngKernel.c
 MAIN_SRCS += LoadMng/LoadMngProc.c
-MAIN_SRCS += Debug/DebugInit.c
+MAIN_SRCS += Debug/Debug.c
 MAIN_SRCS += Debug/DebugLog.c
 
 # ビルドディレクトリ

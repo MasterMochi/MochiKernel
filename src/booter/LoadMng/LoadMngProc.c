@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/LoadMng/LoadMngProc.c                                           */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -25,7 +25,7 @@
 #include <MemMng.h>
 
 /* 内部モジュールヘッダ */
-#include "LoadMngInit.h"
+#include "LoadMng.h"
 
 
 /******************************************************************************/
@@ -66,7 +66,7 @@ void LoadMngProcLoad( void )
 
     /* 初期化 */
     pDstAddr   = ( void * ) MK_ADDR_PROCIMG;
-    srcLbaAddr = gLoadMngInitPt[ 1 ].lbaFirstAddr;
+    srcLbaAddr = gLoadMngPt[ 1 ].lbaFirstAddr;
     srcLbaSize = MLIB_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
     size       = srcLbaSize;
 

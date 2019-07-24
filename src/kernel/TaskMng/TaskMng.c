@@ -1,20 +1,27 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/IoCtrl/IoCtrlInit.c                                             */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/* src/kernel/TaskMng/TaskMng.c                                               */
+/*                                                                 2019/07/24 */
+/* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
+/* 標準ヘッダ */
+#include <stdarg.h>
+#include <stdint.h>
+
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "IoCtrlMem.h"
-#include "IoCtrlPort.h"
+#include "TaskMngName.h"
+#include "TaskMngProc.h"
+#include "TaskMngSched.h"
+#include "TaskMngTask.h"
+#include "TaskMngTss.h"
 
 
 /******************************************************************************/
@@ -22,10 +29,10 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_IOCTRL_INIT, \
-                    __LINE__,               \
-                    __VA_ARGS__             )
+#define DEBUG_LOG( ... )                        \
+    DebugLogOutput( CMN_MODULE_TASKMNG_MAIN,    \
+                    __LINE__,                   \
+                    __VA_ARGS__              )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -36,20 +43,29 @@
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       入出力制御初期化
- * @details     入出力制御内サブモジュールの初期化を行う。
+ * @brief       タスク管理初期化
+ * @details     タスク管理内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void IoCtrlInit( void )
+void TaskMngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
-    /* I/Oポート制御サブモジュール初期化 */
-    PortInit();
+    /* TSS管理サブモジュール初期化 */
+    TaskMngTssInit();
 
-    /* I/Oメモリ制御サブモジュール初期化 */
-    MemInit();
+    /* タスク管理サブモジュール初期化 */
+    TaskMngTaskInit();
+
+    /* プロセス管理サブモジュール初期化 */
+    TaskMngProcInit();
+
+    /* タスク名管理サブモジュール初期化 */
+    TaskMngNameInit();
+
+    /* スケジューラサブモジュール初期化 */
+    TaskMngSchedInit();
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

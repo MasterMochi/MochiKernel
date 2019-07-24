@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2019/04/27 *#
+#*                                                                 2019/07/24 *#
 #* Copyright (C) 2016-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -12,10 +12,10 @@
 PROG = kernel
 
 # ソースコード
-SRCS  = InitCtrl/InitCtrlInit.c
-SRCS += Debug/DebugInit.c
+SRCS  = InitCtrl/InitCtrl.c
+SRCS += Debug/Debug.c
 SRCS += Debug/DebugLog.c
-SRCS += MemMng/MemMngInit.c
+SRCS += MemMng/MemMng.c
 SRCS += MemMng/MemMngGdt.c
 SRCS += MemMng/MemMngArea.c
 SRCS += MemMng/MemMngPage.c
@@ -24,24 +24,24 @@ SRCS += MemMng/MemMngMap.c
 SRCS += MemMng/MemMngPhys.c
 SRCS += MemMng/MemMngIo.c
 SRCS += MemMng/MemMngVirt.c
-SRCS += TaskMng/TaskMngInit.c
+SRCS += TaskMng/TaskMng.c
 SRCS += TaskMng/TaskMngTss.c
 SRCS += TaskMng/TaskMngTask.c
 SRCS += TaskMng/TaskMngSched.c
 SRCS += TaskMng/TaskMngElf.c
 SRCS += TaskMng/TaskMngProc.c
 SRCS += TaskMng/TaskMngName.c
-SRCS += IntMng/IntMngInit.c
+SRCS += IntMng/IntMng.c
 SRCS += IntMng/IntMngIdt.c
 SRCS += IntMng/IntMngHdl.c
 SRCS += IntMng/IntMngPic.c
 SRCS += IntMng/IntMngCtrl.c
-SRCS += TimerMng/TimerMngInit.c
+SRCS += TimerMng/TimerMng.c
 SRCS += TimerMng/TimerMngCtrl.c
 SRCS += TimerMng/TimerMngPit.c
-SRCS += ItcCtrl/ItcCtrlInit.c
+SRCS += ItcCtrl/ItcCtrl.c
 SRCS += ItcCtrl/ItcCtrlMsg.c
-SRCS += IoCtrl/IoCtrlInit.c
+SRCS += IoCtrl/IoCtrl.c
 SRCS += IoCtrl/IoCtrlPort.c
 SRCS += IoCtrl/IoCtrlMem.c
 

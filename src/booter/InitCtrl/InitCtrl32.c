@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/booter/InitCtrl/InitCtrlInit32.c                                       */
-/*                                                                 2019/07/23 */
+/* src/booter/InitCtrl/InitCtrl32.c                                           */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -30,7 +30,7 @@
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_INIT_INIT,   \
+    DebugLogOutput( CMN_MODULE_INIT_MAIN,   \
                     __LINE__,               \
                     __VA_ARGS__           )
 #else

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/InitCtrl/InitCtrlInit.c                                         */
-/*                                                                 2019/07/21 */
+/* src/kernel/InitCtrl/InitCtrl.c                                             */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2016-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -30,8 +30,6 @@
 #include <TaskMng.h>
 #include <TimerMng.h>
 
-/* 内部モジュールヘッダ */
-
 
 /******************************************************************************/
 /* 定義                                                                       */
@@ -39,7 +37,7 @@
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_INIT_INIT,   \
+    DebugLogOutput( CMN_MODULE_INIT_MAIN,   \
                     __LINE__,               \
                     __VA_ARGS__           )
 #else
@@ -50,7 +48,7 @@
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
-static void InitLoadProcImg( void );
+static void LoadProcImg( void );
 
 
 /******************************************************************************/
@@ -92,7 +90,7 @@ void InitCtrlInit( void )
     IoCtrlInit();
 
     /* プロセスイメージ読込 */
-    InitLoadProcImg();
+    LoadProcImg();
 
     /* 割込み有効化 */
     IntMngPicEnable();
@@ -120,7 +118,7 @@ void InitCtrlInit( void )
  * @details     プロセスイメージを読み込み、プロセスを追加する。
  */
 /******************************************************************************/
-static void InitLoadProcImg( void )
+static void LoadProcImg( void )
 {
     void       *pAddr;      /* ファイルアドレス */
     uint8_t    type;        /* プロセスタイプ   */

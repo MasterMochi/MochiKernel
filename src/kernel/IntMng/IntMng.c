@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/Debug/DebugInit.c                                               */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/* src/kernel/IntMng/IntMng.c                                                 */
+/*                                                                 2019/07/24 */
+/* Copyright (C) 2016-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -16,7 +16,10 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "DebugLog.h"
+#include "IntMngCtrl.h"
+#include "IntMngHdl.h"
+#include "IntMngIdt.h"
+#include "IntMngPic.h"
 
 
 /******************************************************************************/
@@ -25,9 +28,9 @@
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_DEBUG_INIT,  \
+    DebugLogOutput( CMN_MODULE_INTMNG_MAIN, \
                     __LINE__,               \
-                    __VA_ARGS__            )
+                    __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -38,14 +41,29 @@
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       デバッグ制御初期化
- * @details     デバッグ制御内サブモジュールの初期化を行う。
+ * @brief       割込み管理初期化
+ * @details     割込み管理内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void DebugInit( void )
+void IntMngInit( void )
 {
-    /* ログ管理サブモジュール初期化 */
-    DebugLogInit();
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+
+    /* IDT管理サブモジュール初期化 */
+    IntMngIdtInit();
+
+    /* ハンドラ管理サブモジュール初期化 */
+    IntMngHdlInit();
+
+    /* PIC管理サブモジュール初期化 */
+    IntMngPicInit();
+
+    /* ハードウェア割込み制御サブモジュール初期化 */
+    IntMngCtrlInit();
+
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end.", __func__ );
 
     return;
 }

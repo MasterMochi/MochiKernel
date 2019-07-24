@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/LoadMng/LoadMngInit.c                                           */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -18,7 +18,7 @@
 #include <Driver.h>
 
 /* 内部モジュールヘッダ */
-#include "LoadMngInit.h"
+#include "LoadMng.h"
 
 
 /******************************************************************************/
@@ -27,7 +27,7 @@
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_LOADMNG_INIT,    \
+    DebugLogOutput( CMN_MODULE_LOADMNG_MAIN,    \
                     __LINE__,                   \
                     __VA_ARGS__              )
 #else
@@ -46,7 +46,7 @@ typedef struct {
 /* 変数定義                                                                   */
 /******************************************************************************/
 /** パーティションテーブル */
-pt_t gLoadMngInitPt[ 4 ];
+pt_t gLoadMngPt[ 4 ];
 
 
 /******************************************************************************/
@@ -69,10 +69,10 @@ void LoadMngInit( void )
     DriverAtaRead( &mbr, 0, 1 );
 
     /* パーティションテーブル取得 */
-    gLoadMngInitPt[ 0 ] = mbr.partitionTbl[ 0 ];
-    gLoadMngInitPt[ 1 ] = mbr.partitionTbl[ 1 ];
-    gLoadMngInitPt[ 2 ] = mbr.partitionTbl[ 2 ];
-    gLoadMngInitPt[ 3 ] = mbr.partitionTbl[ 3 ];
+    gLoadMngPt[ 0 ] = mbr.partitionTbl[ 0 ];
+    gLoadMngPt[ 1 ] = mbr.partitionTbl[ 1 ];
+    gLoadMngPt[ 2 ] = mbr.partitionTbl[ 2 ];
+    gLoadMngPt[ 3 ] = mbr.partitionTbl[ 3 ];
 
     /* トレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

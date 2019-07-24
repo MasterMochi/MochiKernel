@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/Debug/DebugLog.c                                                */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -82,20 +82,20 @@ typedef struct {
 #ifdef DEBUG_LOG_ENABLE
 /** 識別子変換テーブル */
 const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
-    { CMN_MODULE_INIT_INIT,      "INI-INIT" },    /* 初期化制御(初期化)     */
-    { CMN_MODULE_INTMNG_INIT,    "INT-INIT" },    /* 割込管理(初期化)       */
+    { CMN_MODULE_INIT_MAIN,      "INI-MAIN" },    /* 初期化制御(メイン)     */
+    { CMN_MODULE_INTMNG_MAIN,    "INT-MAIN" },    /* 割込管理(初期化)       */
     { CMN_MODULE_INTMNG_PIC,     "INT-PIC " },    /* 割込管理(PIC管理)      */
     { CMN_MODULE_INTMNG_IDT,     "INT-IDT " },    /* 割込管理(IDT管理)      */
     { CMN_MODULE_INTMNG_HDL,     "INT-HDL " },    /* 割込管理(ハンドラ管理) */
-    { CMN_MODULE_MEMMNG_INIT,    "MEM-INIT" },    /* メモリ管理(初期化)     */
+    { CMN_MODULE_MEMMNG_MAIN,    "MEM-MAIN" },    /* メモリ管理(メイン)     */
     { CMN_MODULE_MEMMNG_MAP,     "MEM-MAP " },    /* メモリ管理(マップ管理) */
-    { CMN_MODULE_DRIVER_INIT,    "DRV-INIT" },    /* ドライバ(初期化)       */
+    { CMN_MODULE_DRIVER_MAIN,    "DRV-MAIN" },    /* ドライバ(メイン)       */
     { CMN_MODULE_DRIVER_A20,     "DRV-A20 " },    /* ドライバ(A20)          */
     { CMN_MODULE_DRIVER_ATA,     "DRV-ATA " },    /* ドライバ(ATA)          */
-    { CMN_MODULE_LOADMNG_INIT,   "LDM-INIT" },    /* 読込管理               */
+    { CMN_MODULE_LOADMNG_MAIN,   "LDM-MAIN" },    /* 読込管理(メイン)       */
     { CMN_MODULE_LOADMNG_KERNEL, "LDM-KRNL" },    /* 読込管理(カーネル)     */
     { CMN_MODULE_LOADMNG_PROC,   "LDM-PROC" },    /* 読込管理(プロセス)     */
-    { CMN_MODULE_DEBUG_INIT,     "DBG-INIT" },    /* デバッグ制御(初期化)   */
+    { CMN_MODULE_DEBUG_MAIN,     "DBG-MAIN" },    /* デバッグ制御(メイン)   */
     { CMN_MODULE_DEBUG_LOG,      "DBG-LOG " },    /* デバッグ制御(ログ管理) */
     { 0,                         "UNKNOWN " }  }; /* 終端                   */
 #endif

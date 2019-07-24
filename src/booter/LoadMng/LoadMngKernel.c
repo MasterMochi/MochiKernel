@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/LoadMng/LoadMngKernel.c                                         */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -28,7 +28,7 @@
 #include <MemMng.h>
 
 /* 内部モジュールヘッダ */
-#include "LoadMngInit.h"
+#include "LoadMng.h"
 
 
 /******************************************************************************/
@@ -72,12 +72,12 @@ void LoadMngKernelLoad( void )
 
     /* カーネルイメージヘッダ読込み */
     DriverAtaRead( &header,
-                   gLoadMngInitPt[ 1 ].lbaFirstAddr,
-                   size );
+                   gLoadMngPt[ 1 ].lbaFirstAddr,
+                   size                          );
 
     /* カーネル読込み */
     DriverAtaRead( ( void * ) MB_CONFIG_ADDR_KERNEL,
-                   gLoadMngInitPt[ 1 ].lbaFirstAddr + size,
+                   gLoadMngPt[ 1 ].lbaFirstAddr + size,
                    MLIB_ALIGN( header.fileSize, 512 ) / 512 );
 
     /* ELF操作用変数設定 */

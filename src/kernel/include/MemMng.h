@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/MemMng.h                                                */
-/*                                                                 2019/06/12 */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2016-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -58,6 +58,16 @@
 /******************************************************************************/
 /* グローバル関数宣言                                                         */
 /******************************************************************************/
+/*----------*/
+/* MemMng.c */
+/*----------*/
+/* メモリ管理初期化 */
+extern void MemMngInit( BiosE820Entry_t *pBiosE820,
+                        size_t          biosE820Num,
+                        MkMemMapEntry_t *pMemMap,
+                        size_t          memMapNum    );
+
+
 /*--------------*/
 /* MemMngCtrl.c */
 /*--------------*/
@@ -83,16 +93,6 @@ extern uint16_t MemMngGdtAdd( void    *pBase,
                               uint8_t type,
                               uint8_t level,
                               uint8_t opSize  );
-
-
-/*--------------*/
-/* MemMngInit.c */
-/*--------------*/
-/* メモリ管理初期化 */
-extern void MemMngInit( BiosE820Entry_t *pBiosE820,
-                        size_t          biosE820Num,
-                        MkMemMapEntry_t *pMemMap,
-                        size_t          memMapNum    );
 
 
 /*------------*/

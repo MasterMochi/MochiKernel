@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/booter/Debug/DebugInit.c                                               */
-/*                                                                 2019/07/23 */
+/* src/booter/Debug/Debug.c                                                   */
+/*                                                                 2019/07/24 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -25,7 +25,7 @@
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_DEBUG_INIT,  \
+    DebugLogOutput( CMN_MODULE_DEBUG_MAIN,  \
                     __LINE__,               \
                     __VA_ARGS__            )
 #else

@@ -1,7 +1,9 @@
 /******************************************************************************/
-/* src/kernel/IntMng/IntMngCtrl.h                                              */
-/*                                                                 2018/06/14 */
-/* Copyright (C) 2018 Mochi.                                                  */
+/*                                                                            */
+/* src/kernel/IntMng/IntMngCtrl.h                                             */
+/*                                                                 2019/07/22 */
+/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                            */
 /******************************************************************************/
 #ifndef INTMNG_CTRL_H
 #define INTMNG_CTRL_H

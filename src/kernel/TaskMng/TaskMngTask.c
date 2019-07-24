@@ -1,21 +1,25 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTask.c                                           */
-/*                                                                 2019/06/12 */
+/*                                                                 2019/07/23 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
-/* 共通ヘッダ */
+/* 標準ヘッダ */
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
+
+/* ライブラリヘッダ */
+#include <MLib/MLib.h>
+
+/* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
 #include <kernel/types.h>
-#include <MLib/MLib.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -123,14 +127,14 @@ MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
             /* 未使用 */
 
             /* タスク基本設定 */
-            gTaskTbl[ taskId ].used         = CMN_USED;
-            gTaskTbl[ taskId ].state        = 0;
-            gTaskTbl[ taskId ].pid          = pid;
-            gTaskTbl[ taskId ].tid          = tid;
-            gTaskTbl[ taskId ].context.eip  = ( uint32_t ) pAddr;
-            gTaskTbl[ taskId ].context.esp  = MK_CONFIG_ADDR_KERNEL_STACK +
-                                              MK_CONFIG_SIZE_KERNEL_STACK -
-                                              sizeof ( uint32_t );
+            gTaskTbl[ taskId ].used        = CMN_USED;
+            gTaskTbl[ taskId ].state       = 0;
+            gTaskTbl[ taskId ].pid         = pid;
+            gTaskTbl[ taskId ].tid         = tid;
+            gTaskTbl[ taskId ].context.eip = ( uint32_t ) pAddr;
+            gTaskTbl[ taskId ].context.esp = MK_CONFIG_ADDR_KERNEL_STACK +
+                                             MK_CONFIG_SIZE_KERNEL_STACK -
+                                             sizeof ( uint32_t );
 
             /* カーネルスタック情報設定 */
             pStackInfo              = &( gTaskTbl[ taskId ].kernelStackInfo );

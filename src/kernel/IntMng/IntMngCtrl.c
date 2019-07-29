@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IntMngCtrl/IntMngCtrl.c                                         */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,8 +11,10 @@
 /* 標準ヘッダ */
 #include <stdbool.h>
 
-/* 共通ヘッダ */
+/* カーネルヘッダ */
 #include <kernel/interrupt.h>
+
+/* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
 #include <hardware/I8259A/I8259A.h>
 
@@ -298,8 +300,8 @@ static void Complete( MkTaskId_t   taskId,
         /* 権限無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -308,8 +310,8 @@ static void Complete( MkTaskId_t   taskId,
     IntMngPicEoi( pParam->irqNo );
 
     /* 戻り値設定 */
-    pParam->ret   = MK_INT_RET_SUCCESS;
-    pParam->errNo = MK_INT_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -337,8 +339,8 @@ static void Disable( MkTaskId_t   taskId,
         /* 権限無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -347,8 +349,8 @@ static void Disable( MkTaskId_t   taskId,
     IntMngPicDenyIrq( pParam->irqNo );
 
     /* 戻り値設定 */
-    pParam->ret   = MK_INT_RET_SUCCESS;
-    pParam->errNo = MK_INT_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -376,8 +378,8 @@ static void Enable( MkTaskId_t   taskId,
         /* 権限無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -386,8 +388,8 @@ static void Enable( MkTaskId_t   taskId,
     IntMngPicAllowIrq( pParam->irqNo );
 
     /* 戻り値設定 */
-    pParam->ret   = MK_INT_RET_SUCCESS;
-    pParam->errNo = MK_INT_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -460,8 +462,8 @@ static void HdlSwInt( uint32_t        intNo,
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -501,8 +503,8 @@ static void HdlSwInt( uint32_t        intNo,
         /* 不明 */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_INT_ERR_PARAM_FUNCID; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_PARAM;
     }
 
     return;
@@ -577,9 +579,9 @@ static void StartMonitoring( MkTaskId_t   taskId,
          ( pParam->irqNo == I8259A_IRQ8    )    ) { /* RTC */
         /* 範囲外 */
 
-        /* エラー番号 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_PARAM_IRQNO;
+        /* エラー設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_PARAM;
 
         return;
     }
@@ -589,8 +591,8 @@ static void StartMonitoring( MkTaskId_t   taskId,
         /* 開始済み */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_ALREADY_START;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_ALREADY_START;
 
         return;
     }
@@ -605,8 +607,8 @@ static void StartMonitoring( MkTaskId_t   taskId,
     gWaitInfo[ index ].monitor |= ( 1 << pParam->irqNo );
 
     /* 戻り値設定 */
-    pParam->ret   = MK_INT_RET_SUCCESS;
-    pParam->errNo = MK_INT_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -634,9 +636,9 @@ static void StopMonitoring( MkTaskId_t   taskId,
          ( pParam->irqNo == I8259A_IRQ8    )    ) { /* RTC */
         /* 範囲外 */
 
-        /* エラー番号 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_PARAM_IRQNO;
+        /* エラー設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_PARAM;
 
         return;
     }
@@ -649,8 +651,8 @@ static void StopMonitoring( MkTaskId_t   taskId,
         /* 権限無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -671,8 +673,8 @@ static void StopMonitoring( MkTaskId_t   taskId,
     gMonitoringInfo.waitInfoIdx[ pParam->irqNo ] = WAITINFO_ENTRY_NUM;
 
     /* 戻り値設定 */
-    pParam->ret   = MK_INT_RET_SUCCESS;
-    pParam->errNo = MK_INT_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -701,8 +703,8 @@ static void Wait( MkTaskId_t   taskId,
         /* 該当エントリ無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_INT_RET_FAILURE;
-        pParam->errNo = MK_INT_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -722,9 +724,9 @@ static void Wait( MkTaskId_t   taskId,
     }
 
     /* 戻り値設定 */
-    pParam->ret   = MK_INT_RET_SUCCESS;
-    pParam->errNo = MK_INT_ERR_NONE;
-    pParam->flag  = gWaitInfo[ index ].flag;
+    pParam->ret  = MK_RET_SUCCESS;
+    pParam->err  = MK_ERR_NONE;
+    pParam->flag = gWaitInfo[ index ].flag;
 
     /* 割込み待ち情報設定 */
     gWaitInfo[ index ].flag  = 0;

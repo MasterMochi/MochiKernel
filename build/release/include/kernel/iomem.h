@@ -1,12 +1,12 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/iomem.h                                                             */
-/*                                                                 2019/04/04 */
+/*                                                                 2019/07/27 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
-#ifndef _MK_IOMEM_H_
-#define _MK_IOMEM_H_
+#ifndef __KERNEL_IOMEM_H__
+#define __KERNEL_IOMEM_H__
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
@@ -22,24 +22,20 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/** I/Oメモリ制御割込み番号 */
+#define MK_IOMEM_INTNO MK_CONFIG_INTNO_IOMEM
+
 /* 機能ID */
 #define MK_IOMEM_FUNCID_ALLOC     ( 0x00000001 )    /**< I/Oメモリ領域割当 */
 
-/* エラー番号 */
-#define MK_IOMEM_ERR_NONE         ( 0x00000000 )    /**< エラー無し             */
-#define MK_IOMEM_ERR_PARAM_FUNCID ( 0x00000001 )    /**< 機能ID不正             */
-#define MK_IOMEM_ERR_UNAUTHORIZED ( 0x00000002 )    /**< 権限無し               */
-#define MK_IOMEM_ERR_IO_ALLOC     ( 0x00000003 )    /**< I/Oメモリ領域割当失敗  */
-#define MK_IOMEM_ERR_VIRT_ALLOC   ( 0x00000004 )    /**< 仮想メモリ領域割当失敗 */
-#define MK_IOMEM_ERR_PAGE_SET     ( 0x00000005 )    /**< ページ設定失敗         */
-
 /** I/Oメモリ制御機能パラメータ */
 typedef struct {
-    uint32_t funcId;    /**< 機能ID                    */
-    uint32_t errNo;     /**< エラー番号                */
-    void     *pRet;     /**< 戻り値                    */
-    void     *pAddr;    /**< I/Oメモリ領域先頭アドレス */
-    size_t   size;      /**< I/Oメモリ領域サイズ       */
+    uint32_t funcId;        /**< 機能ID                    */
+    MkRet_t  ret;           /**< 戻り値                    */
+    MkErr_t  err;           /**< エラー内容                */
+    void     *pIoAddr;      /**< I/Oメモリ領域先頭アドレス */
+    size_t   size;          /**< I/Oメモリ領域サイズ       */
+    void     *pVirtAddr;    /**< 割当先メモリアドレス      */
 } MkIoMemParam_t;
 
 

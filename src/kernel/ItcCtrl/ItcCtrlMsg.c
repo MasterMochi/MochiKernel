@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -17,9 +17,11 @@
 #include <MLib/MLib.h>
 #include <MLib/MLibList.h>
 
+/* カーネルヘッダ */
+#include <kernel/message.h>
+
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32.h>
-#include <kernel/message.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -213,8 +215,9 @@ static void HdlInt( uint32_t        intNo,
     }
 
     /* 初期化 */
-    pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-    pParam->errNo = MK_MSG_ERR_NONE;        /* エラー番号 */
+    pParam->ret           = MK_RET_FAILURE;
+    pParam->err           = MK_ERR_NONE;
+    pParam->recv.recvSize = 0;
 
     /* 機能ID判定 */
     if ( pParam->funcId == MK_MSG_FUNCID_RECEIVE ) {
@@ -229,8 +232,9 @@ static void HdlInt( uint32_t        intNo,
         /* 不正 */
 
         /* エラー設定 */
-        pParam->ret   = MK_MSG_RET_FAILURE;         /* 戻り値     */
-        pParam->errNo = MK_MSG_ERR_PARAM_FUNCID;    /* エラー番号 */
+        pParam->ret           = MK_RET_FAILURE;
+        pParam->err           = MK_ERR_PARAM;
+        pParam->recv.recvSize = 0;
     }
 
     return;
@@ -254,9 +258,9 @@ static void Receive( MkMsgParam_t *pParam )
     MkTaskId_t src;     /* 送信元タスクID     */
 
     DEBUG_LOG( "%s() start. pParam=%p", __func__, pParam );
-    DEBUG_LOG( " pParam->rcv.src    =%u", pParam->rcv.src     );
-    DEBUG_LOG( " pParam->rcv.pBuffer=%p", pParam->rcv.pBuffer );
-    DEBUG_LOG( " pParam->rcv.size   =%u", pParam->rcv.size    );
+    DEBUG_LOG( " pParam->recv.src       =%u", pParam->recv.src        );
+    DEBUG_LOG( " pParam->recv.pBuffer   =%p", pParam->recv.pBuffer    );
+    DEBUG_LOG( " pParam->recv.bufferSize=%u", pParam->recv.bufferSize );
 
     /* 初期化 */
     size = 0;
@@ -267,7 +271,7 @@ static void Receive( MkMsgParam_t *pParam )
     /* 受信ループ */
     while ( true ) {
         /* 受信待ち送信元タスクID判定 */
-        if ( pParam->rcv.src == MK_TASKID_NULL ) {
+        if ( pParam->recv.src == MK_TASKID_NULL ) {
             /* ANY */
 
             /* 送信待ちリンクリストから先頭エントリ取得 */
@@ -277,15 +281,16 @@ static void Receive( MkMsgParam_t *pParam )
             /* 指定 */
 
             /* タスク存在確認 */
-            exist = TaskMngTaskCheckExist( pParam->rcv.src );
+            exist = TaskMngTaskCheckExist( pParam->recv.src );
 
             /* 確認結果判定 */
             if ( exist == false ) {
                 /* 存在しない */
 
                 /* エラー設定 */
-                pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-                pParam->errNo = MK_MSG_ERR_NO_EXIST;    /* エラー番号 */
+                pParam->ret           = MK_RET_FAILURE;
+                pParam->err           = MK_ERR_NO_EXIST;
+                pParam->recv.recvSize = 0;
 
                 DEBUG_LOG( "%s() end.", __func__ );
 
@@ -293,15 +298,16 @@ static void Receive( MkMsgParam_t *pParam )
             }
 
             /* プロセス階層差取得 */
-            diff = TaskMngTaskGetTypeDiff( taskId, pParam->rcv.src );
+            diff = TaskMngTaskGetTypeDiff( taskId, pParam->recv.src );
 
             /* 階層差チェック */
             if ( diff > 1 ) {
                 /* 非隣接階層 */
 
                 /* エラー設定 */
-                pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-                pParam->errNo = MK_MSG_ERR_PROC_TYPE;   /* エラー番号 */
+                pParam->ret           = MK_RET_FAILURE;
+                pParam->err           = MK_ERR_UNAUTHORIZED;
+                pParam->recv.recvSize = 0;
 
                 DEBUG_LOG( "%s() end.", __func__ );
 
@@ -309,7 +315,7 @@ static void Receive( MkMsgParam_t *pParam )
             }
 
             /* 送信待ちリンクリストから指定タスクIDのエントリ取得 */
-            src = RemoveSndWaitList( taskId, pParam->rcv.src );
+            src = RemoveSndWaitList( taskId, pParam->recv.src );
         }
 
         /* エントリ取得結果判定 */
@@ -318,10 +324,10 @@ static void Receive( MkMsgParam_t *pParam )
 
             /* コピーサイズ設定 */
             size = MLIB_MIN( gMngTbl[ src ].pBuffer->size,
-                             pParam->rcv.size              );
+                             pParam->recv.bufferSize       );
 
             /* メッセージコピー */
-            memcpy( pParam->rcv.pBuffer,
+            memcpy( pParam->recv.pBuffer,
                     gMngTbl[ src ].pBuffer->msg,
                     size                         );
 
@@ -338,8 +344,10 @@ static void Receive( MkMsgParam_t *pParam )
             gMngTbl[ taskId ].state = STATE_INIT;
 
             /* 戻り値設定 */
-            pParam->ret     = size;
-            pParam->rcv.src = src;
+            pParam->ret           = MK_RET_SUCCESS;
+            pParam->err           = MK_ERR_NONE;
+            pParam->recv.src      = src;
+            pParam->recv.recvSize = size;
 
             break;
         }
@@ -454,17 +462,17 @@ static void Send( MkMsgParam_t *pParam )
     MkTaskId_t taskId;  /* タスクID           */
 
     DEBUG_LOG( "%s() start. pParam=%p", __func__, pParam );
-    DEBUG_LOG( " pParam->snd.dst =%u", pParam->snd.dst  );
-    DEBUG_LOG( " pParam->snd.pMsg=%p", pParam->snd.pMsg );
-    DEBUG_LOG( " pParam->snd.size=%u", pParam->snd.size );
+    DEBUG_LOG( " pParam->send.dst =%u", pParam->send.dst  );
+    DEBUG_LOG( " pParam->send.pMsg=%p", pParam->send.pMsg );
+    DEBUG_LOG( " pParam->send.size=%u", pParam->send.size );
 
     /* 送信サイズチェック */
-    if ( pParam->snd.size > MK_MSG_SIZE_MAX ) {
+    if ( pParam->send.size > MK_MSG_SIZE_MAX ) {
         /* 超過 */
 
         /* エラー設定 */
-        pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-        pParam->errNo = MK_MSG_ERR_SIZE_OVER;   /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_SIZE_OVER;
 
         DEBUG_LOG( "%s() end.", __func__ );
 
@@ -475,15 +483,15 @@ static void Send( MkMsgParam_t *pParam )
     taskId = TaskMngSchedGetTaskId();
 
     /* タスク存在確認 */
-    exist = TaskMngTaskCheckExist( pParam->snd.dst );
+    exist = TaskMngTaskCheckExist( pParam->send.dst );
 
     /* 確認結果判定 */
     if ( exist == false ) {
         /* 存在しない */
 
         /* エラー設定 */
-        pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-        pParam->errNo = MK_MSG_ERR_NO_EXIST;    /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_EXIST;
 
         DEBUG_LOG( "%s() end.", __func__ );
 
@@ -491,15 +499,15 @@ static void Send( MkMsgParam_t *pParam )
     }
 
     /* プロセス階層差取得 */
-    diff = TaskMngTaskGetTypeDiff( taskId, pParam->snd.dst );
+    diff = TaskMngTaskGetTypeDiff( taskId, pParam->send.dst );
 
     /* 階層差チェック */
     if ( diff > 1 ) {
         /* 非隣接階層 */
 
         /* エラー設定 */
-        pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-        pParam->errNo = MK_MSG_ERR_PROC_TYPE;   /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         DEBUG_LOG( "%s() end.", __func__ );
 
@@ -515,8 +523,8 @@ static void Send( MkMsgParam_t *pParam )
         /* 失敗 */
 
         /* エラー設定 */
-        pParam->ret   = MK_MSG_RET_FAILURE;     /* 戻り値     */
-        pParam->errNo = MK_MSG_ERR_NO_MEMORY;   /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_MEMORY;
 
         DEBUG_LOG( "%s() end.", __func__ );
 
@@ -524,25 +532,25 @@ static void Send( MkMsgParam_t *pParam )
     }
 
     /* メッセージコピー */
-    gMngTbl[ taskId ].pBuffer->size = pParam->snd.size;
+    gMngTbl[ taskId ].pBuffer->size = pParam->send.size;
     memcpy( gMngTbl[ taskId ].pBuffer->msg,
-            pParam->snd.pMsg,
+            pParam->send.pMsg,
             gMngTbl[ taskId ].pBuffer->size );
 
     /* 送信待ちリスト追加 */
-    AddSndWaitList( taskId, pParam->snd.dst );
+    AddSndWaitList( taskId, pParam->send.dst );
 
     /* 送信先タスク状態判定 */
-    if ( gMngTbl[ pParam->snd.dst ].state == STATE_RCVWAIT ) {
+    if ( gMngTbl[ pParam->send.dst ].state == STATE_RCVWAIT ) {
         /* 受信待ち状態 */
 
         /* 受信待ちメッセージ送信元判定 */
-        if ( ( gMngTbl[ pParam->snd.dst ].src == taskId         ) ||
-             ( gMngTbl[ pParam->snd.dst ].src == MK_TASKID_NULL )    ) {
+        if ( ( gMngTbl[ pParam->send.dst ].src == taskId         ) ||
+             ( gMngTbl[ pParam->send.dst ].src == MK_TASKID_NULL )    ) {
             /* 自タスクIDまたはANY */
 
             /* 送信先タスクスケジュール開始 */
-            TaskMngSchedStart( pParam->snd.dst );
+            TaskMngSchedStart( pParam->send.dst );
         }
     }
 
@@ -559,7 +567,8 @@ static void Send( MkMsgParam_t *pParam )
     gMngTbl[ taskId ].state = STATE_INIT;
 
     /* 戻り値設定 */
-    pParam->ret = MK_MSG_RET_SUCCESS;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     DEBUG_LOG( "%s() end.", __func__ );
 

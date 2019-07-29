@@ -1,12 +1,12 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/message.h                                                           */
-/*                                                                 2019/04/04 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
-#ifndef _MK_MESSAGE_H_
-#define _MK_MESSAGE_H_
+#ifndef __KERNEL_MESSAGE_H__
+#define __KERNEL_MESSAGE_H__
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
@@ -22,6 +22,9 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/** メッセージパッシング割込み番号 */
+#define MK_MSG_INTNO MK_CONFIG_INTNO_MESSAGE
+
 /** メッセージサイズ最大 */
 #define MK_MSG_SIZE_MAX         ( 24576 )
 
@@ -29,44 +32,31 @@
 #define MK_MSG_FUNCID_RECEIVE   ( 0x00000001 )  /**< メッセージ受信 */
 #define MK_MSG_FUNCID_SEND      ( 0x00000002 )  /**< メッセージ送信 */
 
-/* エラー番号 */
-#define MK_MSG_ERR_NONE         ( 0x00000000 )  /**< エラー無し           */
-#define MK_MSG_ERR_PARAM_FUNCID ( 0x00000001 )  /**< 機能ID不正           */
-#define MK_MSG_ERR_SIZE_OVER    ( 0x00000002 )  /**< 送信サイズ超過       */
-#define MK_MSG_ERR_NO_EXIST     ( 0x00000003 )  /**< タスクが存在しない   */
-#define MK_MSG_ERR_PROC_TYPE    ( 0x00000004 )  /**< 非隣接プロセスタイプ */
-#define MK_MSG_ERR_NO_MEMORY    ( 0x00000005 )  /**< メモリ不足           */
-
-/* 戻り値 */
-#define MK_MSG_RET_FAILURE      ( -1 )          /**< 失敗 */
-#define MK_MSG_RET_SUCCESS      (  0 )          /**< 成功 */
-
-
 /** メッセージ受信パラメータ */
 typedef struct {
     MkTaskId_t src;             /**< 受信メッセージ送信元タスクID */
-    void       *pBuffer;        /**< 受信メッセージ格納先         */
-    size_t     size;            /**< 受信メッセージサイズ         */
-} MkMsgParamRcv_t;
+    void       *pBuffer;        /**< 受信バッファ                 */
+    size_t     bufferSize;      /**< 受信バッファサイズ           */
+    size_t     recvSize;        /**< 受信メッセージサイズ         */
+} MkMsgParamRecv_t;
 
 /** メッセージ送信パラメータ */
 typedef struct {
     MkTaskId_t dst;             /**< 送信先タスクID       */
     void       *pMsg;           /**< 送信メッセージ格納先 */
     size_t     size;            /**< 送信メッセージサイズ */
-} MkMsgParamSnd_t;
+} MkMsgParamSend_t;
 
 /** メッセージパッシングパラメータ */
 typedef struct {
     uint32_t funcId;            /**< 機能ID                   */
-    uint32_t errNo;             /**< エラー番号               */
-    int32_t  ret;               /**< 戻り値                   */
+    MkRet_t  ret;               /**< 戻り値                   */
+    MkErr_t  err;               /**< エラー内容               */
     union {                     /*----------------------------*/
-        MkMsgParamRcv_t rcv;    /**< メッセージ受信パラメータ */
-        MkMsgParamSnd_t snd;    /**< メッセージ送信パラメータ */
+        MkMsgParamRecv_t recv;  /**< メッセージ受信パラメータ */
+        MkMsgParamSend_t send;  /**< メッセージ送信パラメータ */
     };                          /*----------------------------*/
 } MkMsgParam_t;
-
 
 
 /******************************************************************************/

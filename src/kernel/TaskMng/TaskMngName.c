@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngName.c                                           */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2019 Mochi.                                                  */
 /*                                                                            */
 /******************************************************************************/
@@ -12,10 +12,12 @@
 #include <stdint.h>
 #include <string.h>
 
-/* 共通ヘッダ */
-#include <hardware/IA32/IA32Descriptor.h>
+/* カーネルヘッダ */
 #include <kernel/config.h>
 #include <kernel/taskname.h>
+
+/* 共通ヘッダ */
+#include <hardware/IA32/IA32Descriptor.h>
 
 /* モジュールヘッダ */
 #include <Cmn.h>
@@ -131,8 +133,8 @@ static void doGet( MkTaskNameParam_t *pParam )
         /* 不正 */
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_PARAM_NAME;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_PARAM;
 
         return;
     }
@@ -145,15 +147,15 @@ static void doGet( MkTaskNameParam_t *pParam )
         /* 該当無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_NOREGISTERED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_REGISTERED;
 
         return;
     }
 
     /* 戻り値設定 */
-    pParam->ret    = MK_TASKNAME_RET_SUCCESS;
-    pParam->errNo  = MK_TASKNAME_ERR_NONE;
+    pParam->ret    = MK_RET_SUCCESS;
+    pParam->err    = MK_ERR_NONE;
     pParam->taskId = pEntry->taskId;
 
     return;
@@ -179,8 +181,8 @@ static void doRegister( MkTaskNameParam_t *pParam )
         /* 不正 */
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_PARAM_NAME;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_PARAM;
 
         return;
     }
@@ -195,8 +197,8 @@ static void doRegister( MkTaskNameParam_t *pParam )
         /* ユーザプロセス　*/
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -213,15 +215,15 @@ static void doRegister( MkTaskNameParam_t *pParam )
             /* 一致 */
 
             /* 戻り値設定 */
-            pParam->ret   = MK_TASKNAME_RET_SUCCESS;
-            pParam->errNo = MK_TASKNAME_ERR_NONE;
+            pParam->ret = MK_RET_SUCCESS;
+            pParam->err = MK_ERR_NONE;
 
         } else {
             /* 不一致 */
 
             /* エラー設定 */
-            pParam->ret   = MK_TASKNAME_RET_FAILURE;
-            pParam->errNo = MK_TASKNAME_ERR_REGISTERED;
+            pParam->ret = MK_RET_FAILURE;
+            pParam->err = MK_ERR_REGISTERED;
         }
 
         return;
@@ -240,8 +242,8 @@ static void doRegister( MkTaskNameParam_t *pParam )
                 MK_CONFIG_TASKNAME_LENMAX + 1 );
 
         /* 戻り値設定 */
-        pParam->ret   = MK_TASKNAME_RET_SUCCESS;
-        pParam->errNo = MK_TASKNAME_ERR_NONE;
+        pParam->ret = MK_RET_SUCCESS;
+        pParam->err = MK_ERR_NONE;
 
         return;
     }
@@ -254,8 +256,8 @@ static void doRegister( MkTaskNameParam_t *pParam )
         /* 失敗 */
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_FULL;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
 
         return;
     }
@@ -267,8 +269,8 @@ static void doRegister( MkTaskNameParam_t *pParam )
             MK_CONFIG_TASKNAME_LENMAX + 1 );
 
     /* 戻り値設定 */
-    pParam->ret   = MK_TASKNAME_RET_SUCCESS;
-    pParam->errNo = MK_TASKNAME_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -300,8 +302,8 @@ static void doUnregister( MkTaskNameParam_t *pParam )
         /* ユーザプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_UNAUTHORIZED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -314,8 +316,8 @@ static void doUnregister( MkTaskNameParam_t *pParam )
         /* 該当エントリ無し */
 
         /* エラー設定 */
-        pParam->ret   = MK_TASKNAME_RET_FAILURE;
-        pParam->errNo = MK_TASKNAME_ERR_NOREGISTERED;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_REGISTERED;
 
         return;
     }
@@ -325,8 +327,8 @@ static void doUnregister( MkTaskNameParam_t *pParam )
     memset( pEntry->taskName, 0, MK_CONFIG_TASKNAME_LENMAX + 1 );
 
     /* 戻り値設定 */
-    pParam->ret   = MK_TASKNAME_RET_SUCCESS;
-    pParam->errNo = MK_TASKNAME_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -415,8 +417,8 @@ static void HdlInt( uint32_t        intNo,
             /* 不正 */
 
             /* エラー設定 */
-            pParam->ret   = MK_TASKNAME_RET_FAILURE;
-            pParam->errNo = MK_TASKNAME_ERR_PARAM_FUNCID;
+            pParam->ret = MK_RET_FAILURE;
+            pParam->err = MK_ERR_PARAM;
     }
 
     DEBUG_LOG( "%s(): end. ret=%d, errNo=%u",

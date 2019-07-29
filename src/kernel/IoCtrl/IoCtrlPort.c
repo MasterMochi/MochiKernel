@@ -1,15 +1,17 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlPort.c                                             */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
-/* 共通ヘッダ */
+/* カーネルヘッダ */
 #include <kernel/ioport.h>
+
+/* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
 
 /* 外部モジュールヘッダ */
@@ -136,8 +138,8 @@ static void HdlInt( uint32_t        intNo,
     }
 
     /* エラー設定初期化 */
-    pParam->ret   = MK_IOPORT_RET_SUCCESS;  /* 戻り値     */
-    pParam->errNo = MK_IOPORT_ERR_NONE;     /* エラー番号 */
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     /* 機能ID判定 */
     for ( idx = 0; gFuncTbl[ idx ].funcId != 0; idx++ ) {
@@ -153,8 +155,8 @@ static void HdlInt( uint32_t        intNo,
     }
 
     /* エラー設定 */
-    pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-    pParam->errNo = MK_IOPORT_ERR_PARAM_FUNCID; /* エラー番号 */
+    pParam->ret = MK_RET_FAILURE;
+    pParam->err = MK_ERR_PARAM;
 
     return;
 }
@@ -187,8 +189,8 @@ static void InByte( MkIoPortParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -233,8 +235,8 @@ static void InWord( MkIoPortParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -279,8 +281,8 @@ static void InDword( MkIoPortParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -325,8 +327,8 @@ static void OutByte( MkIoPortParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -371,8 +373,8 @@ static void OutWord( MkIoPortParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }
@@ -417,8 +419,8 @@ static void OutDword( MkIoPortParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->ret   = MK_IOPORT_RET_FAILURE;      /* 戻り値     */
-        pParam->errNo = MK_IOPORT_ERR_UNAUTHORIZED; /* エラー番号 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_UNAUTHORIZED;
 
         return;
     }

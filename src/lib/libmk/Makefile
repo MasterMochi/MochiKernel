@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
-#* src/libraries/libMk/Makefile                                               *#
-#*                                                                 2019/04/27 *#
+#* src/libraries/libmk/Makefile                                               *#
+#*                                                                 2019/07/27 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -9,16 +9,16 @@
 #* 設定                                                                       *#
 #******************************************************************************#
 # ライブラリ
-LIB = libMk
+LIB = libmk
 
 # ソースコード
-SRCS  = MkMsg.c
-SRCS += MkInt.c
-SRCS += MkIoMem.c
-SRCS += MkIoPort.c
-SRCS += MkProc.c
-SRCS += MkTimer.c
-SRCS += MkTaskName.c
+SRCS  = LibMkMsg.c
+SRCS += LibMkInt.c
+SRCS += LibMkIoMem.c
+SRCS += LibMkIoPort.c
+SRCS += LibMkProc.c
+SRCS += LibMkTaskName.c
+SRCS += LibMkTimer.c
 
 # ビルドディレクトリ
 BUILD_DIR   = ../../../build

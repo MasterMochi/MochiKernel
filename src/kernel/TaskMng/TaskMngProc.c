@@ -450,8 +450,8 @@ static void HdlInt( uint32_t        intNo,
             /* 不正 */
 
             /* アウトプットパラメータ設定 */
-            pParam->ret   = MK_PROC_RET_FAILURE;
-            pParam->errNo = MK_PROC_ERR_PARAM_FUNCID;
+            pParam->ret = MK_RET_FAILURE;
+            pParam->err = MK_ERR_PARAM;
     }
 
     return;
@@ -526,8 +526,8 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                 DEBUG_LOG( "%s(): MemMngPhysAlloc() error.", __func__ );
 
                 /* 戻り値設定 */
-                pParam->errNo       = MK_PROC_ERR_NO_MEMORY;
-                pParam->ret         = MK_PROC_RET_FAILURE;
+                pParam->ret         = MK_RET_FAILURE;
+                pParam->err         = MK_ERR_NO_MEMORY;
                 pParam->pBreakPoint = ( void * ) breakPoint;
 
                 return;
@@ -556,8 +556,8 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                 DEBUG_LOG( "%s(): MemMngPageSet() error(%d).", __func__, ret );
 
                 /* 戻り値設定 */
-                pParam->errNo       = MK_PROC_ERR_NO_MEMORY;
-                pParam->ret         = MK_PROC_RET_FAILURE;
+                pParam->ret         = MK_RET_FAILURE;
+                pParam->err         = MK_ERR_NO_MEMORY;
                 pParam->pBreakPoint = ( void * ) breakPoint;
 
                 return;
@@ -584,8 +584,8 @@ static void SetBreakPoint( MkProcParam_t *pParam )
     gProcTbl[ pid ].pBreakPoint = ( void * ) breakPoint;
 
     /* 戻り値設定 */
-    pParam->errNo       = MK_PROC_ERR_NONE;
-    pParam->ret         = MK_PROC_RET_SUCCESS;
+    pParam->ret         = MK_RET_SUCCESS;
+    pParam->err         = MK_ERR_NONE;
     pParam->pBreakPoint = ( void * ) breakPoint;
 
     return;

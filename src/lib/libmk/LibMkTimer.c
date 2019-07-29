@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/lib/libMk/MkTimer.c                                                    */
-/*                                                                 2019/07/24 */
+/* src/lib/libmk/LibMkTimer.c                                                 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,7 +11,10 @@
 /* 標準ヘッダ */
 #include <stdint.h>
 
-/* 共通ヘッダ */
+/* ライブラリヘッダ */
+#include <MLib/MLib.h>
+
+/* カーネルヘッダ */
 #include <kernel/timer.h>
 
 
@@ -23,45 +26,40 @@
  * @brief       スリープ
  * @details     指定した時間スリープする。
  *
- * @param[in]   usec スリープ時間(マイクロ秒)
- * @param[out]  *pErrNo エラー番号
- *                  - MK_TIMER_ERR_NONE        エラー無し
- *                  - MK_TIMER_ERR_NO_RESOURCE リソース不足
+ * @param[in]   usec  スリープ時間(マイクロ秒)
+ * @param[out]  *pErr エラー内容
+ *                  - MK_ERR_NONE        エラー無し
+ *                  - MK_ERR_NO_RESOURCE リソース不足
  *
  * @return      処理結果を返す。
- * @retval      MK_TIMER_RET_SUCCESS 成功
- * @retval      MK_TIMER_RET_FAILURE 失敗（エラー番号を参照）
+ * @retval      MK_RET_SUCCESS 成功
+ * @retval      MK_RET_FAILURE 失敗
  *
  * @attention   カーネルのtick時間よりも短いスリープ時間を設定した場合、tick時
  *              間に丸められる。
  */
 /******************************************************************************/
-int32_t MkTimerSleep( uint32_t usec,
-                      uint32_t *pErrNo )
+MkRet_t LibMkTimerSleep( uint32_t usec,
+                         MkErr_t  *pErr )
 {
     volatile MkTimerParam_t param;
 
     /* パラメータ設定 */
     param.funcId = MK_TIMER_FUNCID_SLEEP;
-    param.errNo  = MK_TIMER_ERR_NONE;
-    param.ret    = MK_TIMER_RET_FAILURE;
+    param.ret    = MK_RET_FAILURE;
+    param.err    = MK_ERR_NONE;
     param.usec   = usec;
 
     /* カーネルコール */
     __asm__ __volatile__ ( "mov esi, %0\n"
                            "int %1"
                            :
-                           : "a" ( &param                ),
-                             "i" ( MK_CONFIG_INTNO_TIMER )
-                           : "esi"                          );
+                           : "a" ( &param         ),
+                             "i" ( MK_TIMER_INTNO )
+                           : "esi"                   );
 
-    /* エラー番号設定要否判定 */
-    if ( pErrNo != NULL ) {
-        /* 必要 */
-
-        /* エラー番号設定 */
-        *pErrNo = param.errNo;
-    }
+    /* エラー内容設定 */
+    MLIB_SET_IFNOT_NULL( pErr, param.err );
 
     return param.ret;
 }

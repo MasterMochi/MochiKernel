@@ -1,12 +1,12 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/types.h                                                             */
-/*                                                                 2019/06/13 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
-#ifndef _MK_TYPES_H_
-#define _MK_TYPES_H_
+#ifndef __KERNEL_TYPES_H_
+#define __KERNEL_TYPES_H_
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
@@ -65,6 +65,37 @@ typedef uint32_t MkTid_t;
 
 /** タスクID   */
 typedef uint32_t MkTaskId_t;
+
+
+/*------------*/
+/* 戻り値定義 */
+/*------------*/
+#define MK_RET_SUCCESS (  0 )   /**< 成功 */
+#define MK_RET_FAILURE ( -1 )   /**< 失敗 */
+
+/** 戻り値型 */
+typedef int32_t MkRet_t;
+
+
+/*------------*/
+/* エラー定義 */
+/*------------*/
+#define MK_ERR_NONE          ( 0x00000000 ) /**< エラー無し             */
+#define MK_ERR_PARAM         ( 0x00000001 ) /**< パラメータ不正         */
+#define MK_ERR_UNAUTHORIZED  ( 0x00000002 ) /**< 権限無し               */
+#define MK_ERR_ALREADY_START ( 0x00000003 ) /**< 開始済み               */
+#define MK_ERR_IO_ALLOC      ( 0x00000004 ) /**< I/Oメモリ領域割当失敗  */
+#define MK_ERR_VIRT_ALLOC    ( 0x00000005 ) /**< 仮想メモリ領域割当失敗 */
+#define MK_ERR_PAGE_SET      ( 0x00000006 ) /**< ページ設定失敗         */
+#define MK_ERR_NO_EXIST      ( 0x00000007 ) /**< 存在しない             */
+#define MK_ERR_NO_MEMORY     ( 0x00000008 ) /**< メモリ不足             */
+#define MK_ERR_SIZE_OVER     ( 0x00000009 ) /**< サイズ超過             */
+#define MK_ERR_NO_REGISTERED ( 0x0000000A ) /**< 登録無し               */
+#define MK_ERR_REGISTERED    ( 0x0000000B ) /**< 登録済み               */
+#define MK_ERR_NO_RESOURCE   ( 0x0000000C ) /**< リソース不足           */
+
+/** エラー型 */
+typedef uint32_t MkErr_t;
 
 
 /******************************************************************************/

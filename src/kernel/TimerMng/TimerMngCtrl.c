@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TimerMng/TimerMngCtrl.c                                         */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -16,7 +16,7 @@
 /* ライブラリヘッダ */
 #include <MLib/MLibList.h>
 
-/* 共通ヘッダ */
+/* カーネルヘッダ */
 #include <kernel/config.h>
 #include <kernel/timer.h>
 
@@ -343,8 +343,8 @@ static void HdlInt( uint32_t        intNo,
             /* 不正 */
 
             /* アウトプットパラメータ設定 */
-            pParam->ret   = MK_TIMER_RET_FAILURE;
-            pParam->errNo = MK_TIMER_ERR_PARAM_FUNCID;
+            pParam->ret = MK_RET_FAILURE;
+            pParam->err = MK_ERR_PARAM;
     }
 
     return;
@@ -454,8 +454,8 @@ static void Sleep( MkTimerParam_t *pParam )
         /* 失敗 */
 
         /* アウトプットパラメータ設定 */
-        pParam->ret   = MK_TIMER_RET_FAILURE;
-        pParam->errNo = MK_TIMER_ERR_NO_RESOURCE;
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
 
         return;
     }
@@ -467,8 +467,8 @@ static void Sleep( MkTimerParam_t *pParam )
     TaskMngSchedExec();
 
     /* アウトプットパラメータ設定 */
-    pParam->ret   = MK_TIMER_RET_SUCCESS;
-    pParam->errNo = MK_TIMER_ERR_NONE;
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }

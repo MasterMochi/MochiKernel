@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/lib/libMk/MkProc.c                                                     */
-/*                                                                 2019/07/24 */
+/* src/lib/libmk/LibMkProc.c                                                  */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -12,7 +12,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* 共通ヘッダ */
+/* ライブラリヘッダ */
+#include <MLib/MLib.h>
+
+/* カーネルヘッダ */
 #include <kernel/config.h>
 #include <kernel/proc.h>
 
@@ -25,24 +28,27 @@
  * @brief       ブレイクポイント設定
  * @details     ブレイクポイントを設定する。
  *
- * @param[in]   quantity 増減量
- * @param[out]  *pErrNo  エラー番号
- *                  - MK_IOMEM_ERR_NONE エラー無し
+ * @param[in]   quantity       ブレイクポイント増減量
+ * @param[out]  **ppBreakPoint ブレイクポイント
+ * @param[out]  *pErr          エラー内容
+ *                  - MK_ERR_NONE      エラー無し
+ *                  - MK_ERR_NO_MEMORY メモリ不足
  *
  * @return      割当結果を返す。
- * @retval      NULL     失敗
- * @retval      NULL以外 成功(ブレイクポイント)
+ * @retval      MK_RET_SUCCESS 成功
+ * @retval      MK_RET_FAILURE 失敗
  */
 /******************************************************************************/
-void *MkProcSetBreakPoint( int32_t  quantity,
-                           uint32_t *pErrNo   )
+MkRet_t LibMkProcSetBreakPoint( int32_t quantity,
+                                void    **ppBreakPoint,
+                                MkErr_t *pErr           )
 {
     volatile MkProcParam_t param;
 
     /* パラメータ設定 */
     param.funcId      = MK_PROC_FUNCID_SET_BREAKPOINT;
-    param.errNo       = MK_PROC_ERR_NONE;
-    param.ret         = MK_PROC_RET_SUCCESS;
+    param.ret         = MK_RET_SUCCESS;
+    param.err         = MK_ERR_NONE;
     param.pBreakPoint = NULL;
     param.quantity    = quantity;
 
@@ -50,19 +56,17 @@ void *MkProcSetBreakPoint( int32_t  quantity,
     __asm__ __volatile__ ( "mov esi, %0\n"
                            "int %1"
                            :
-                           : "a" ( &param               ),
-                             "i" ( MK_CONFIG_INTNO_PROC )
-                           : "esi"                         );
+                           : "a" ( &param        ),
+                             "i" ( MK_PROC_INTNO )
+                           : "esi"                  );
 
-    /* エラー番号設定要否判定 */
-    if ( pErrNo != NULL ) {
-        /* 必要 */
+    /* エラー内容設定 */
+    MLIB_SET_IFNOT_NULL( pErr, param.err );
 
-        /* エラー番号設定 */
-        *pErrNo = param.errNo;
-    }
+    /* ブレイクポイント設定 */
+    MLIB_SET_IFNOT_NULL( ppBreakPoint, param.pBreakPoint );
 
-    return param.pBreakPoint;
+    return param.ret;
 }
 
 

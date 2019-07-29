@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlMem.c                                              */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/07/28 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -104,44 +104,47 @@ static void Alloc( MkIoMemParam_t *pParam )
         /* 非ドライバプロセス */
 
         /* エラー設定 */
-        pParam->pRet  = NULL;                       /* 戻り値     */
-        pParam->errNo = MK_IOMEM_ERR_UNAUTHORIZED;  /* エラー番号 */
+        pParam->ret       = MK_RET_FAILURE;
+        pParam->err       = MK_ERR_UNAUTHORIZED;
+        pParam->pVirtAddr = NULL;
 
         return;
     }
 
     /* I/Oメモリ領域割当 */
-    pRet = MemMngIoAlloc( pParam->pAddr, pParam->size );
+    pRet = MemMngIoAlloc( pParam->pIoAddr, pParam->size );
 
     /* 割当結果判定 */
     if ( pRet == NULL ) {
         /* 失敗 */
 
         /* エラー設定 */
-        pParam->pRet  = NULL;                   /* 戻り値     */
-        pParam->errNo = MK_IOMEM_ERR_IO_ALLOC;  /* エラー番号 */
+        pParam->ret       = MK_RET_FAILURE;
+        pParam->err       = MK_ERR_IO_ALLOC;
+        pParam->pVirtAddr = NULL;
 
         return;
     }
 
     /* 仮想メモリ領域割当 */
-    pParam->pRet = MemMngVirtAlloc( pid, pParam->size );
+    pParam->pVirtAddr = MemMngVirtAlloc( pid, pParam->size );
 
     /* 割当結果判定 */
-    if ( pParam->pRet == NULL ) {
+    if ( pParam->pVirtAddr == NULL ) {
         /* 失敗 */
 
         /* エラー設定 */
-        pParam->pRet  = NULL;                       /* 戻り値     */
-        pParam->errNo = MK_IOMEM_ERR_VIRT_ALLOC;    /* エラー番号 */
+        pParam->ret       = MK_RET_FAILURE;
+        pParam->err       = MK_ERR_VIRT_ALLOC;
+        pParam->pVirtAddr = NULL;
 
         return;
     }
 
     /* ページマッピング設定 */
     ret = MemMngPageSet( dirId,
-                         pParam->pRet,
-                         pParam->pAddr,
+                         pParam->pVirtAddr,
+                         pParam->pIoAddr,
                          pParam->size,
                          IA32_PAGING_G_NO,
                          IA32_PAGING_US_USER,
@@ -152,11 +155,16 @@ static void Alloc( MkIoMemParam_t *pParam )
         /* 失敗 */
 
         /* エラー設定 */
-        pParam->pRet  = NULL;                   /* 戻り値     */
-        pParam->errNo = MK_IOMEM_ERR_PAGE_SET;  /* エラー番号 */
+        pParam->ret       = MK_RET_FAILURE;
+        pParam->err       = MK_ERR_PAGE_SET;
+        pParam->pVirtAddr = NULL;
 
         return;
     }
+
+    /* 戻り値設定 */
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -197,8 +205,9 @@ static void HdlInt( uint32_t        intNo,
             /* 不正 */
 
             /* エラー設定 */
-            pParam->pRet  = NULL;                      /* 戻り値     */
-            pParam->errNo = MK_IOMEM_ERR_PARAM_FUNCID; /* エラー番号 */
+            pParam->ret       = MK_RET_FAILURE;
+            pParam->err       = MK_ERR_PARAM;
+            pParam->pVirtAddr = NULL;
     }
 
     return;

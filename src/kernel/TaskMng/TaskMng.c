@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMng.c                                               */
-/*                                                                 2019/07/24 */
+/*                                                                 2019/08/09 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -21,6 +21,8 @@
 #include "TaskMngProc.h"
 #include "TaskMngSched.h"
 #include "TaskMngTask.h"
+#include "TaskMngTbl.h"
+#include "TaskMngThread.h"
 #include "TaskMngTss.h"
 
 
@@ -52,20 +54,26 @@ void TaskMngInit( void )
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
-    /* TSS管理サブモジュール初期化 */
-    TaskMngTssInit();
+    /* テーブル管理初期化 */
+    TblInit();
 
-    /* タスク管理サブモジュール初期化 */
-    TaskMngTaskInit();
+    /* プロセス制御初期化 */
+    ProcInit();
 
-    /* プロセス管理サブモジュール初期化 */
-    TaskMngProcInit();
+    /* スレッド制御初期化 */
+    ThreadInit();
 
-    /* タスク名管理サブモジュール初期化 */
-    TaskMngNameInit();
+    /* タスク制御初期化 */
+    TaskInit();
 
-    /* スケジューラサブモジュール初期化 */
-    TaskMngSchedInit();
+    /* TSS管理初期化 */
+    TssInit();
+
+    /* タスク名管理初期化 */
+    NameInit();
+
+    /* スケジューラ初期化 */
+    SchedInit();
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

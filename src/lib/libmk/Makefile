@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/libraries/libmk/Makefile                                               *#
-#*                                                                 2019/07/27 *#
+#*                                                                 2019/08/28 *#
 #* Copyright (C) 2018-2019 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -17,8 +17,10 @@ SRCS += LibMkInt.c
 SRCS += LibMkIoMem.c
 SRCS += LibMkIoPort.c
 SRCS += LibMkProc.c
+SRCS += LibMkTask.c
 SRCS += LibMkTaskName.c
 SRCS += LibMkTimer.c
+SRCS += LibMkThread.c
 
 # ビルドディレクトリ
 BUILD_DIR   = ../../../build

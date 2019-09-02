@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMng.c                                                 */
-/*                                                                 2019/07/24 */
+/*                                                                 2019/08/11 */
 /* Copyright (C) 2016-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -18,6 +18,7 @@
 /* 内部モジュールヘッダ */
 #include "MemMngArea.h"
 #include "MemMngGdt.h"
+#include "MemMngHeap.h"
 #include "MemMngIo.h"
 #include "MemMngMap.h"
 #include "MemMngPage.h"
@@ -66,6 +67,9 @@ void MemMngInit( BiosE820Entry_t *pBiosE820,
 
     /* GDT管理サブモジュール初期化 */
     MemMngGdtInit();
+
+    /* ヒープ管理サブモジュール初期化 */
+    HeapInit();
 
     /* メモリ領域管理サブモジュール初期化 */
     AreaInit();

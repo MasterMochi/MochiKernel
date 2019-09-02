@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/09/11 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -42,7 +42,7 @@
 
 
 /******************************************************************************/
-/* ローカル関数プロトタイプ宣言                                               */
+/* ローカル関数宣言                                                           */
 /******************************************************************************/
 /* ELFヘッダチェック */
 static CmnRet_t ElfCheckElfHeader( void   *pAddr,
@@ -54,7 +54,7 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
 
 
 /******************************************************************************/
-/* グローバル関数定義                                                         */
+/* モジュール内グローバル関数定義                                             */
 /******************************************************************************/
 /******************************************************************************/
 /**
@@ -72,11 +72,11 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t TaskMngElfLoad( void     *pAddr,
-                         size_t   size,
-                         uint32_t pageDirId,
-                         void     **ppEntryPoint,
-                         void     **ppEndPoint    )
+CmnRet_t ElfLoad( void     *pAddr,
+                  size_t   size,
+                  uint32_t pageDirId,
+                  void     **ppEntryPoint,
+                  void     **ppEndPoint    )
 {
     void       *pPhyAddr;   /* 物理アドレス                     */
     uint32_t   index;       /* インデックス                     */
@@ -338,8 +338,8 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     }
 
     /* エントリポイントチェック */
-    if ( ( pHdr->e_entry <  MK_CONFIG_ADDR_APL_START ) &&
-         ( pHdr->e_entry >= MK_CONFIG_ADDR_APL_STACK )    ) {
+    if ( ( pHdr->e_entry <  MK_CONFIG_ADDR_USER_START ) &&
+         ( pHdr->e_entry >= MK_CONFIG_ADDR_USER_STACK )    ) {
         /* 不正値 */
 
         /* デバッグトレースログ出力 */
@@ -456,9 +456,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         }
 
         /* 仮想メモリチェック */
-        if ( ( pEntry->p_vaddr < MK_CONFIG_ADDR_APL_START      ) ||
+        if ( ( pEntry->p_vaddr < MK_CONFIG_ADDR_USER_START      ) ||
              ( ( pEntry->p_vaddr + pEntry->p_memsz ) >=
-               MK_CONFIG_ADDR_APL_STACK                        ) ||
+               MK_CONFIG_ADDR_USER_STACK                        ) ||
              ( ( pEntry->p_vaddr % IA32_PAGING_PAGE_SIZE ) != 0 )    ) {
             /* 不正値 */
 

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* libmk.h                                                                    */
-/*                                                                 2019/07/28 */
+/*                                                                 2019/08/30 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -19,8 +19,10 @@
 #include <kernel/iomem.h>
 #include <kernel/ioport.h>
 #include <kernel/message.h>
+#include <kernel/task.h>
 #include <kernel/taskname.h>
 #include <kernel/timer.h>
+#include <kernel/thread.h>
 #include <kernel/types.h>
 
 
@@ -45,6 +47,13 @@
 #define LIBMK_INT_IRQ14 ( 14 ) /**< IRQ14 */
 #define LIBMK_INT_IRQ15 ( 15 ) /**< IRQ15 */
 
+/** ハードウェア割込み用foreachマクロ */
+#define LIBMK_INT_FOREACH( _LIST, _IRQNO )     \
+    for ( ( _IRQNO )  = LIBMK_INT_IRQ0;        \
+          ( _IRQNO ) <= LIBMK_INT_IRQ15;       \
+          ( _IRQNO )++                   )     \
+        if ( ( ( _LIST ) & ( 1 << ( _IRQNO ) ) ) != 0 )
+
 
 /******************************************************************************/
 /* ライブラリ関数プロトタイプ宣言                                             */
@@ -68,8 +77,8 @@ extern MkRet_t LibMkIntStartMonitoring( uint8_t irqNo,
 extern MkRet_t LibMkIntStopMonitoring( uint8_t irqNo,
                                        MkErr_t *pErr  );
 /* ハードウェア割込み待ち合わせ */
-extern MkRet_t LibMkIntWait( uint8_t *pInt,
-                             MkErr_t *pErr  );
+extern MkRet_t LibMkIntWait( uint32_t *pIntList,
+                             MkErr_t  *pErr      );
 
 /*-----------*/
 /* I/Oメモリ */
@@ -137,6 +146,13 @@ extern MkRet_t LibMkProcSetBreakPoint( int32_t quantity,
                                        void    *ppBreakPoint,
                                        MkErr_t *pErr          );
 
+/*------------*/
+/* タスク管理 */
+/*------------*/
+/* タスクID取得 */
+extern MkRet_t LibMkTaskGetId( MkTaskId_t *pTaskId,
+                               MkErr_t    *pErr     );
+
 /*----------*/
 /* タスク名 */
 /*----------*/
@@ -156,6 +172,16 @@ extern MkRet_t MkTaskNameUnregister( MkErr_t *pErr );
 /* スリープ */
 extern MkRet_t LibMkTimerSleep( uint32_t usec,
                                 MkErr_t  *pErr );
+
+/*----------*/
+/* スレッド */
+/*----------*/
+extern MkRet_t LibMkThreadCreate( MkThreadFunc_t pFunc,
+                                  void           *pArg,
+                                  void           *pStackAddr,
+                                  size_t         stackSize,
+                                  MkTaskId_t     *pTaskId,
+                                  MkErr_t        *pErr        );
 
 
 /******************************************************************************/

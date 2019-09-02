@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/config.h                                                            */
-/*                                                                 2019/07/28 */
+/*                                                                 2019/08/11 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -54,14 +54,14 @@
 #define MK_CONFIG_SIZE_KERNEL_MAP   ( 0x01000000 )
 /** 全カーネル領域サイズ */
 #define MK_CONFIG_SIZE_KERNEL       ( 0x3FF00000 )
-/** アプリ領域先頭アドレス */
-#define MK_CONFIG_ADDR_APL_START    ( 0x40000000 )
-/** アプリ用スタック領域先頭アドレス */
-#define MK_CONFIG_ADDR_APL_STACK    ( 0xBFFFE000 )
-/** アプリ用スタック領域サイズ */
-#define MK_CONFIG_SIZE_APL_STACK    ( 0x00008000 )
-/** 全アプリ領域サイズ */
-#define MK_CONFIG_SIZE_APL          ( 0x40000000 )
+/** ユーザ空間領域先頭アドレス */
+#define MK_CONFIG_ADDR_USER_START   ( 0x40000000 )
+/** ユーザ空間スタック領域先頭アドレス */
+#define MK_CONFIG_ADDR_USER_STACK   ( 0xBFFFE000 )
+/** ユーザ空間スタック領域サイズ */
+#define MK_CONFIG_SIZE_USER_STACK   ( 0x00008000 )
+/** 全ユーザ空間領域サイズ */
+#define MK_CONFIG_SIZE_USER         ( 0x40000000 )
 
 /*------------*/
 /* 割込み番号 */
@@ -78,8 +78,12 @@
 #define MK_CONFIG_INTNO_TIMER     ( 0x34 )
 /** プロセス管理割込み番号 */
 #define MK_CONFIG_INTNO_PROC      ( 0x35 )
-/** タスク名管理割込み番号　*/
+/** タスク名管理割込み番号 */
 #define MK_CONFIG_INTNO_TASKNAME  ( 0x36 )
+/** スレッド管理割込み番号 */
+#define MK_CONFIG_INTNO_THREAD    ( 0x37 )
+/** タスク管理割込み番号 */
+#define MK_CONFIG_INTNO_TASK      ( 0x38 )
 
 /*--------------*/
 /* タスク名管理 */

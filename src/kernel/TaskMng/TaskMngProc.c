@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/08/14 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -17,7 +17,6 @@
 #include <MLib/MLib.h>
 
 /* 共通ヘッダ */
-#include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
 #include <kernel/proc.h>
 #include <kernel/types.h>
@@ -33,6 +32,8 @@
 #include "TaskMngElf.h"
 #include "TaskMngSched.h"
 #include "TaskMngTask.h"
+#include "TaskMngTbl.h"
+#include "TaskMngThread.h"
 
 
 /******************************************************************************/
@@ -48,31 +49,10 @@
 #define DEBUG_LOG( ... )
 #endif
 
-/** プロセス管理テーブル構造体 */
-typedef struct {
-    uint8_t    used;                        /**< 使用フラグ           */
-    uint8_t    type;                        /**< プロセスタイプ       */
-    uint8_t    reserved[ 2 ];               /**< 予約                 */
-    uint32_t   pageDirId;                   /**< ページディレクトリID */
-    void       *pEntryPoint;                /**< エントリポイント     */
-    void       *pEndPoint;                  /**< エンドポイント       */
-    void       *pBreakPoint;                /**< ブレイクポイント     */
-    MkTaskId_t taskId[ MK_TID_NUM ]; /**< タスクIDリスト       */
-} ProcTbl_t;
-
-
-/******************************************************************************/
-/* 変数定義                                                                   */
-/******************************************************************************/
-/** プロセス管理テーブル */
-static ProcTbl_t gProcTbl[ MK_PID_NUM ];
-
 
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
-/* プロセス開始 */
-static void TaskMngProcStart( void );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
@@ -86,7 +66,7 @@ static void SetBreakPoint( MkProcParam_t *pParam );
 /******************************************************************************/
 /**
  * @brief       プロセス追加
- * @details     プロセス追加を行う。
+ * @details     実行ファイルから新しいプロセスを追加する。
  *
  * @param[in]   type   プロセスタイプ
  *                  - MK_PROCESS_TYPE_DRIVER ドライバプロセス
@@ -95,7 +75,7 @@ static void SetBreakPoint( MkProcParam_t *pParam );
  * @param[in]   *pAddr 実行ファイルアドレス
  * @param[in]   size   実行ファイルサイズ
  *
- * @return      追加時に割り当てたタスクIDを返す。
+ * @return      追加時に割り当てたプロセスIDを返す。
  * @retval      MK_PID_NULL 失敗
  * @retval      MK_PID_MIN  タスクID最小値
  * @retval      MK_PID_MAX  タスクID最大値
@@ -105,209 +85,154 @@ MkPid_t TaskMngProcAdd( uint8_t type,
                         void    *pAddr,
                         size_t  size    )
 {
-    void       *pEntryPoint;    /* エントリポイント     */
-    void       *pEndPoint;      /* エンドポイント       */
-    void       *pBreakPoint;    /* ブレイクポイント     */
-    uint32_t   pageDirId;       /* ページディレクトリID */
-    CmnRet_t   ret;             /* 関数戻り値           */
-    MkPid_t    pid;             /* PID                  */
-    MkTaskId_t taskId;          /* タスクID             */
+    CmnRet_t      ret;          /* 関数戻り値       */
+    MkTid_t       tid;          /* スレッドID       */
+    TblProcInfo_t *pProcInfo;   /* プロセス管理情報 */
 
     /* 初期化 */
-    pEntryPoint = NULL;
-    pBreakPoint = NULL;
-    pageDirId   = MEMMNG_PAGE_DIR_FULL;
-    ret         = CMN_FAILURE;
-    pid         = MK_PID_NULL;
-    taskId      = MK_TASKID_NULL;
+    ret       = CMN_FAILURE;
+    pProcInfo = NULL;
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.",                    __func__          );
     DEBUG_LOG( " type=%u, pAddr=%010p, size=%d", type, pAddr, size );
 
-    /* 未使用PID検索 */
-    for ( pid = MK_PID_MIN; pid <= MK_PID_MAX; pid++ ) {
-        /* 使用フラグ判定 */
-        if ( gProcTbl[ pid ].used == CMN_UNUSED ) {
-            /* 未使用 */
+    /* プロセス管理情報割当 */
+    pProcInfo = TblAllocProcInfo();
 
-            /* 仮想メモリ領域管理開始 */
-            ret = MemMngVirtStart( pid );
+    /* 取得結果判定 */
+    if ( pProcInfo == NULL ) {
+        /* 失敗 */
 
-            /* 管理開始結果判定 */
-            if ( ret == CMN_FAILURE ) {
-                /* 失敗 */
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                /* [TODO] */
+        return MK_PID_NULL;
+    }
 
-                return MK_TASKID_NULL;
-            }
+    /* ページディレクトリ割当 */
+    pProcInfo->pageDirId = MemMngPageAllocDir();
 
-            /* ページディレクトリ割当 */
-            pageDirId = MemMngPageAllocDir();
+    /* 割当結果判定 */
+    if ( pProcInfo->pageDirId == MEMMNG_PAGE_DIR_FULL ) {
+        /* 失敗 */
 
-            /* 割当結果判定 */
-            if ( pageDirId == MEMMNG_PAGE_DIR_FULL ) {
-                /* 失敗 */
+        /* プロセス管理情報解放 */
+        TblFreeProcInfo( pProcInfo );
 
-                /* [TODO] */
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                /* デバッグトレースログ出力 */
-                DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+        return MK_PID_NULL;
+    }
 
-                return MK_PID_NULL;
-            }
+    /* 仮想メモリ領域管理開始 */
+    ret = MemMngVirtStart( pProcInfo->pid );
 
-            /* 仮想メモリ領域設定 */
-            MemMngVirtAllocSpecified( pid,
-                                      ( void * ) MK_CONFIG_ADDR_BOOTDATA,
-                                      MK_CONFIG_SIZE_BOOTDATA                 );
-            MemMngVirtAllocSpecified( pid,
-                                      ( void * ) MK_CONFIG_ADDR_KERNEL_START,
-                                      MK_CONFIG_SIZE_KERNEL                   );
-            MemMngVirtAllocSpecified( pid,
-                                      ( void * ) MK_CONFIG_ADDR_APL_START,
-                                      MK_CONFIG_SIZE_APL                      );
+    /* 管理開始結果判定 */
+    if ( ret == CMN_FAILURE ) {
+        /* 失敗 */
 
-            /* ELFファイル読込 */
-            ret = TaskMngElfLoad( pAddr,
-                                  size,
-                                  pageDirId,
-                                  &pEntryPoint,
-                                  &pEndPoint    );
+        /* [TODO]ページディレクトリ解放 */
 
-            /* 読込結果判定 */
-            if ( ret != CMN_SUCCESS ) {
-                /* 失敗 */
+        /* プロセス管理情報解放 */
+        TblFreeProcInfo( pProcInfo );
 
-                /* [TODO]ページディレクトリ解放 */
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                /* デバッグトレースログ出力 */
-                DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+        return MK_PID_NULL;
+    }
 
-                return MK_PID_NULL;
-            }
+    /* ELFファイル読込 */
+    ret = ElfLoad( pAddr,
+                   size,
+                   pProcInfo->pageDirId,
+                   &( pProcInfo->pEntryPoint ),
+                   &( pProcInfo->pEndPoint   )  );
 
-            /* タスク追加 */
-            taskId = TaskMngTaskAdd( pid, 0, pageDirId, &TaskMngProcStart );
+    /* 読込結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
 
-            /* タスク追加結果判定 */
-            if ( taskId == MK_TASKID_NULL ) {
-                /* 失敗 */
+        /* [TODO]ページディレクトリ解放 */
 
-                /* [TODO]ELFファイル読込メモリ解放 */
-                /* [TODO]ページディレクトリ解放    */
+        /* プロセス管理情報解放 */
+        TblFreeProcInfo( pProcInfo );
 
-                /* デバッグトレースログ出力 */
-                DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-                return MK_PID_NULL;
-            }
+        return MK_PID_NULL;
+    }
 
-            /* ブレイクポイント設定 */
-            pBreakPoint = ( void * ) MLIB_ALIGN( ( uint32_t ) pEndPoint - 1,
-                                                 IA32_PAGING_PAGE_SIZE       );
+    /* プロセスタイプ設定 */
+    pProcInfo->type = type;
 
-            /* プロセス情報設定 */
-            gProcTbl[ pid ].used        = CMN_USED;     /* 使用フラグ           */
-            gProcTbl[ pid ].type        = type;         /* プロセスタイプ       */
-            gProcTbl[ pid ].pageDirId   = pageDirId;    /* ページディレクトリID */
-            gProcTbl[ pid ].pEntryPoint = pEntryPoint;  /* エントリポイント     */
-            gProcTbl[ pid ].pEndPoint   = pEndPoint;    /* エンドポイント       */
-            gProcTbl[ pid ].pBreakPoint = pBreakPoint;  /* ブレイクポイント     */
-            gProcTbl[ pid ].taskId[ 0 ] = taskId;       /* タスクID             */
+    /* ブレイクポイント設定 */
+    pProcInfo->pBreakPoint =
+        ( void * ) MLIB_ALIGN( ( uint32_t ) pProcInfo->pEndPoint - 1,
+                               IA32_PAGING_PAGE_SIZE                  );
 
-            /* スケジューラ追加 */
-            ret = TaskMngSchedAdd( taskId );
+    /* スレッド追加 */
+    tid = ThreadAddMain( pProcInfo );
 
-            /* 追加結果判定 */
-            if ( ret == CMN_FAILURE ) {
-                /* 失敗 */
+    /* 追加結果判定 */
+    if ( tid == MK_TID_NULL ) {
+        /* 失敗 */
 
-                /* [TODO] */
+        /* [TODO]ページディレクトリ解放 */
+        /* [TODO]ELFロード領域解放 */
 
-                return MK_TASKID_NULL;
-            }
+        /* プロセス管理情報解放 */
+        TblFreeProcInfo( pProcInfo );
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=%d", __func__, pid );
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
-            return pid;
-        }
+        return MK_PID_NULL;
     }
 
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+    DEBUG_LOG( "%s() end. ret=%d", __func__, pProcInfo->pid );
 
-    return MK_PID_NULL;
+    return pProcInfo->pid;
 }
 
 
 /******************************************************************************/
-/**
- * @brief       ページディレクトリID取得
- * @details     指定したプロセスIDのページディレクトリIDを取得する。
- *
- * @param[in]   pid プロセスID
- *                  - MK_PID_MIN プロセスID最小値
- *                  - MK_PID_MAX プロセスID最大値
- *
- * @return      ページディレクトリIDを返す。
- */
+/* モジュール内グローバル関数定義                                             */
 /******************************************************************************/
-uint32_t TaskMngProcGetPageDirId( MkPid_t pid )
-{
-    /* ページディレクトリID返却 */
-    return gProcTbl[ pid ].pageDirId;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       プロセスタイプ取得
- * @details     指定したプロセスIDのプロセスタイプを取得する。
- *
- * @param[in]   pid プロセスID
- *                  - MK_PID_MIN プロセスID最小値
- *                  - MK_PID_MAX プロセスID最大値
- *
- * @return      プロセスタイプを返す。
- * @retval      TASKMNG_PROC_TYPE_KERNEL カーネル
- * @retval      TASKMNG_PROC_TYPE_DRIVER ドライバ
- * @retval      TASKMNG_PROC_TYPE_SERVER サーバ
- * @retval      TASKMNG_PROC_TYPE_USER   ユーザ
- */
-/******************************************************************************/
-uint8_t TaskMngProcGetType( MkPid_t pid )
-{
-    /* タスクタイプ返却 */
-    return gProcTbl[ pid ].type;
-}
-
-
 /******************************************************************************/
 /**
  * @brief       プロセス管理初期化
- * @details     プロセス管理サブモジュールの初期化を行う。
+ * @details     プロセス管理情報テーブルの初期化、アイドルプロセス用のプロセス
+ *              管理情報の設定、および、プロセス管理提供のカーネルコール用割込
+ *              みハンドラを設定する。
  */
 /******************************************************************************/
-void TaskMngProcInit( void )
+void ProcInit( void )
 {
+    TblProcInfo_t *pIdleProcInfo;   /* アイドルプロセス管理情報 */
+
+    /* 初期化 */
+    pIdleProcInfo = NULL;
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
-    /* タスク管理テーブル初期化 */
-    memset( gProcTbl, 0, sizeof ( gProcTbl ) );
+    /* アイドルプロセス管理情報割当 */
+    pIdleProcInfo = TblAllocProcInfo();
 
-    /* カーネルプロセス設定 */
-    gProcTbl[ TASKMNG_PID_IDLE ].used        = CMN_USED;
-    gProcTbl[ TASKMNG_PID_IDLE ].type        = TASKMNG_PROC_TYPE_KERNEL;
-    gProcTbl[ TASKMNG_PID_IDLE ].pageDirId   = MEMMNG_PAGE_DIR_ID_IDLE;
-    gProcTbl[ TASKMNG_PID_IDLE ].pEntryPoint = NULL;
-    gProcTbl[ TASKMNG_PID_IDLE ].taskId[ 0 ] = TASKMNG_TASKID_IDLE;
+    /* アイドルプロセス管理情報設定 */
+    pIdleProcInfo->type        = TASKMNG_PROC_TYPE_KERNEL;
+    pIdleProcInfo->pageDirId   = MEMMNG_PAGE_DIR_ID_IDLE;
+    pIdleProcInfo->pEntryPoint = NULL;
+    pIdleProcInfo->pEndPoint   = NULL;
+    pIdleProcInfo->pBreakPoint = NULL;
 
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( MK_CONFIG_INTNO_PROC,     /* 割込み番号     */
+    IntMngHdlSet( MK_PROC_INTNO,            /* 割込み番号     */
                   HdlInt,                   /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
 
@@ -321,100 +246,6 @@ void TaskMngProcInit( void )
 /******************************************************************************/
 /* ローカル関数定義                                                           */
 /******************************************************************************/
-/******************************************************************************/
-/**
- * @brief       プロセス起動開始
- * @details     プロセスの起動を開始する。
- */
-/******************************************************************************/
-void TaskMngProcStart( void )
-{
-    void       *pEntryPoint;    /* エントリポイント         */
-    void       *pStack;         /* スタックアドレス         */
-    MkPid_t    pid;             /* プロセスID               */
-    uint8_t    type;            /* プロセスタイプ           */
-    uint32_t   codeSegSel;      /* コードセグメントセレクタ */
-    uint32_t   dataSegSel;      /* データセグメントセレクタ */
-    ProcTbl_t  *pProcInfo;      /* プロセス情報             */
-    MkTaskId_t taskId;          /* タスクID                 */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-
-    /* 初期化 */
-    taskId      = TaskMngSchedGetTaskId();          /* タスクID         */
-    pid         = TaskMngTaskGetPid( taskId );      /* PID              */
-    pStack      = TaskMngTaskGetAplStack( taskId ); /* スタックアドレス */
-    pProcInfo   = &( gProcTbl[ pid ] );             /* プロセス情報     */
-    pEntryPoint = pProcInfo->pEntryPoint;           /* エントリポイント */
-    type        = pProcInfo->type;                  /* プロセスタイプ   */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "taskId=%u, pid=%u, pEntryPoint=%p, pStack=%p",
-               taskId,
-               pid,
-               pEntryPoint,
-               pStack );
-
-    /* タスクタイプ判定 */
-    if ( type == TASKMNG_PROC_TYPE_KERNEL ) {
-        /* カーネル */
-
-        /* セグメントセレクタ設定 */
-        codeSegSel = MEMMNG_SEGSEL_KERNEL_CODE;     /* コード */
-        dataSegSel = MEMMNG_SEGSEL_KERNEL_DATA;     /* データ */
-
-    } else {
-        /* アプリ */
-
-        codeSegSel = MEMMNG_SEGSEL_APL_CODE;        /* コード */
-        dataSegSel = MEMMNG_SEGSEL_APL_DATA;        /* データ */
-    }
-
-    /* iretd命令用スタック設定 */
-    __asm__ __volatile__ ( "push %0\n"              /* ss     */
-                           "push %1\n"              /* esp    */
-                           "push 0x00003202\n"      /* eflags */
-                           "push %2\n"              /* cs     */
-                           "push %3\n"              /* eip    */
-                           :
-                           : "a" ( dataSegSel ),
-                             "b" ( ( uint32_t ) pStack - 16 ),
-                             "c" ( codeSegSel ),
-                             "d" ( ( uint32_t ) pEntryPoint )  );
-
-    /* セグメントレジスタ設定用スタック設定 */
-    __asm__ __volatile__ ( "push eax\n"             /* gs */
-                           "push eax\n"             /* fs */
-                           "push eax\n"             /* es */
-                           "push eax\n" );          /* ds */
-
-    /* 汎用レジスタ設定用スタック設定 */
-    IA32InstructionPush( 0 );                       /* eax           */
-    IA32InstructionPush( 0 );                       /* ecx           */
-    IA32InstructionPush( 0 );                       /* edx           */
-    IA32InstructionPush( 0 );                       /* ebx           */
-    IA32InstructionPush( 0 );                       /* esp( 未使用 ) */
-    IA32InstructionPush( 0 );                       /* ebp           */
-    IA32InstructionPush( 0 );                       /* esi           */
-    IA32InstructionPush( 0 );                       /* edi           */
-
-    /* 汎用レジスタ設定 */
-    IA32InstructionPopad();
-
-    /* セグメントレジスタ設定 */
-    IA32InstructionPopDs();
-    IA32InstructionPopEs();
-    IA32InstructionPopFs();
-    IA32InstructionPopGs();
-
-    /* タスクエントリポイントへ移行 */
-    IA32InstructionIretd();
-
-    /* not return */
-}
-
-
 /******************************************************************************/
 /**
  * @brief       割込みハンドラ
@@ -469,22 +300,26 @@ static void HdlInt( uint32_t        intNo,
 /******************************************************************************/
 static void SetBreakPoint( MkProcParam_t *pParam )
 {
-    void       *pPhyAddr;       /* 物理アドレス             */
-    void       *pVirtAddr;      /* ページ先頭アドレス       */
-    int32_t    remain;          /* 残増減量                 */
-    int32_t    quantity;        /* 増減量(ページサイズ以下) */
-    MkPid_t    pid;             /* プロセスID               */
-    uint32_t   breakPoint;      /* ブレイクポイント         */
-    uint32_t   oldPageNum;      /* 旧ページ数               */
-    uint32_t   newPageNum;      /* 新ページ数               */
-    CmnRet_t   ret;             /* 呼出し関数戻り値         */
-    MkTaskId_t taskId;          /* タスクID                 */
+    void          *pPhyAddr;    /* 物理アドレス             */
+    void          *pVirtAddr;   /* ページ先頭アドレス       */
+    int32_t       remain;       /* 残増減量                 */
+    int32_t       quantity;     /* 増減量(ページサイズ以下) */
+    uint32_t      breakPoint;   /* ブレイクポイント         */
+    uint32_t      oldPageNum;   /* 旧ページ数               */
+    uint32_t      newPageNum;   /* 新ページ数               */
+    CmnRet_t      ret;          /* 呼出し関数戻り値         */
+    TblProcInfo_t *pProcInfo;   /* プロセス管理情報         */
 
     /* 初期化 */
-    taskId     = TaskMngSchedGetTaskId();
-    pid        = TaskMngTaskGetPid( taskId );
-    breakPoint = ( uint32_t ) gProcTbl[ pid ].pBreakPoint;
+    pPhyAddr   = NULL;
+    pVirtAddr  = NULL;
     remain     = pParam->quantity;
+    quantity   = 0;
+    oldPageNum = 0;
+    newPageNum = 0;
+    ret        = CMN_SUCCESS;
+    pProcInfo  = SchedGetProcInfo();
+    breakPoint = ( uint32_t ) pProcInfo->pBreakPoint;
 
     while ( remain != 0 ) {
         /* 残増減量比較 */
@@ -541,7 +376,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                                                  IA32_PAGING_PAGE_SIZE ) );
 
             /* ページングマッピング設定 */
-            ret = MemMngPageSet( gProcTbl[ pid ].pageDirId,
+            ret = MemMngPageSet( pProcInfo->pageDirId,
                                  pVirtAddr,
                                  pPhyAddr,
                                  IA32_PAGING_PAGE_SIZE,
@@ -571,7 +406,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                                                  IA32_PAGING_PAGE_SIZE      ) );
 
             /* ページングマッピング解除 */
-            MemMngPageUnset( gProcTbl[ pid ].pageDirId,
+            MemMngPageUnset( pProcInfo->pageDirId,
                              pVirtAddr,
                              IA32_PAGING_PAGE_SIZE      );
         }
@@ -581,7 +416,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
     }
 
     /* ブレイクポイント設定 */
-    gProcTbl[ pid ].pBreakPoint = ( void * ) breakPoint;
+    pProcInfo->pBreakPoint = ( void * ) breakPoint;
 
     /* 戻り値設定 */
     pParam->ret         = MK_RET_SUCCESS;

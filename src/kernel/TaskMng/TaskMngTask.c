@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTask.c                                           */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/08/28 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -19,20 +19,20 @@
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
+#include <kernel/task.h>
 #include <kernel/types.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
+#include <IntMng.h>
 #include <MemMng.h>
 #include <TaskMng.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngElf.h"
-#include "TaskMngProc.h"
 #include "TaskMngSched.h"
+#include "TaskMngTbl.h"
 #include "TaskMngTask.h"
-#include "TaskMngTss.h"
 
 
 /******************************************************************************/
@@ -48,186 +48,22 @@
 #define DEBUG_LOG( ... )
 #endif
 
-/** タスクスタック情報 */
-typedef struct {
-    void                 *pTopAddr;         /**< 先頭アドレス */
-    void                 *pBottomAddr;      /**< 終端アドレス */
-    size_t               size;              /**< サイズ       */
-} TaskStackInfo_t;
-
-/** タスク管理テーブル構造体 */
-typedef struct {
-    uint8_t              used;              /**< 使用フラグ               */
-    uint8_t              state;             /**< タスク状態               */
-    uint8_t              reserved[ 2 ];     /**< パディング               */
-    MkPid_t              pid;               /**< プロセスID               */
-    MkTid_t              tid;               /**< スレッドID               */
-    TaskStackInfo_t      aplStackInfo;      /**< アプリスタックアドレス   */
-    TaskStackInfo_t      kernelStackInfo;   /**< カーネルスタックアドレス */
-    TaskMngTaskContext_t context;           /**< コンテキスト             */
-} TaskTbl_t;
-
 
 /******************************************************************************/
-/* 変数定義                                                                   */
+/* ローカル関数宣言                                                           */
 /******************************************************************************/
-/** タスク管理テーブル */
-static TaskTbl_t gTaskTbl[ MK_TASKID_NUM ];
+/* タスクID取得 */
+static void DoGetId( MkTaskParam_t *pParam );
+/* 割込みハンドラ */
+static void HdlInt( uint32_t        intNo,
+                    IntMngContext_t context );
+/* タスク起動 */
+static void Start( void );
 
 
 /******************************************************************************/
 /* グローバル関数定義                                                         */
 /******************************************************************************/
-/******************************************************************************/
-/**
- * @brief       タスク追加
- * @details     タスク追加を行う。
- *
- * @param[in]   pid       プロセスID
- * @param[in]   tid       スレッドID
- * @param[in]   pageDirId ページディレクトリID
- * @param[in]   *pAddr    実行アドレス
- *
- * @return      追加時に割り当てたタスクIDを返す。
- * @retval      MK_TASKID_NULL 失敗
- * @retval      MK_TASKID_MIN  タスクID最小値
- * @retval      MK_TASKID_MAX  タスクID最大値
- */
-/******************************************************************************/
-MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
-                           MkTid_t  tid,
-                           uint32_t pageDirId,
-                           void     *pAddr     )
-{
-    void            *pAplStack;      /* アプリスタック       */
-    void            *pKernelStack;   /* カーネルスタック     */
-    CmnRet_t        ret;             /* 関数戻り値           */
-    MkTaskId_t      taskId;          /* タスクID             */
-    TaskStackInfo_t *pStackInfo;     /* スタック情報         */
-
-    /* 初期化 */
-    pAplStack    = NULL;
-    pKernelStack = NULL;
-    ret          = CMN_FAILURE;
-    taskId       = MK_TASKID_MIN;
-    pStackInfo   = NULL;
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( "  pid=%u, tid=%u, pageDirId=%u, pAddr=%010p",
-               pid,
-               tid,
-               pageDirId,
-               pAddr                                          );
-
-    /* 空タスク検索 */
-    for ( taskId = MK_TASKID_MIN; taskId < MK_TASKID_MAX; taskId++ ) {
-        /* 使用フラグ判定 */
-        if ( gTaskTbl[ taskId ].used == CMN_UNUSED ) {
-            /* 未使用 */
-
-            /* タスク基本設定 */
-            gTaskTbl[ taskId ].used        = CMN_USED;
-            gTaskTbl[ taskId ].state       = 0;
-            gTaskTbl[ taskId ].pid         = pid;
-            gTaskTbl[ taskId ].tid         = tid;
-            gTaskTbl[ taskId ].context.eip = ( uint32_t ) pAddr;
-            gTaskTbl[ taskId ].context.esp = MK_CONFIG_ADDR_KERNEL_STACK +
-                                             MK_CONFIG_SIZE_KERNEL_STACK -
-                                             sizeof ( uint32_t );
-
-            /* カーネルスタック情報設定 */
-            pStackInfo              = &( gTaskTbl[ taskId ].kernelStackInfo );
-            pStackInfo->pTopAddr    = ( void * ) MK_CONFIG_ADDR_KERNEL_STACK;
-            pStackInfo->pBottomAddr = ( void * )
-                                      ( MK_CONFIG_ADDR_KERNEL_STACK +
-                                        MK_CONFIG_SIZE_KERNEL_STACK -
-                                        sizeof ( uint32_t )            );
-            pStackInfo->size        = MK_CONFIG_SIZE_KERNEL_STACK;
-
-            /* アプリスタック情報設定 */
-            pStackInfo              = &( gTaskTbl[ taskId ].aplStackInfo );
-            pStackInfo->pTopAddr    = ( void * ) MK_CONFIG_ADDR_APL_STACK;
-            pStackInfo->pBottomAddr = ( void * )
-                                      ( MK_CONFIG_ADDR_APL_STACK +
-                                        MK_CONFIG_SIZE_APL_STACK -
-                                        sizeof ( uint32_t )          );
-            pStackInfo->size        = MK_CONFIG_SIZE_APL_STACK;
-
-            /* カーネルスタック領域割り当て */
-            pKernelStack = MemMngPhysAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
-
-            /* 割り当て結果判定 */
-            if ( pKernelStack == NULL ) {
-                /* 失敗 */
-
-                /* [TODO] */
-
-                return MK_TASKID_NULL;
-            }
-
-            /* アプリスタック領域割り当て */
-            pAplStack = MemMngPhysAlloc( MK_CONFIG_SIZE_APL_STACK );
-
-            /* 割り当て結果判定 */
-            if ( pAplStack == NULL ) {
-                /* 失敗 */
-
-                /* [TODO] */
-
-                return MK_TASKID_NULL;
-            }
-
-            /* カーネルスタックページマップ設定 */
-            ret = MemMngPageSet( pageDirId,
-                                 ( void * ) MK_CONFIG_ADDR_KERNEL_STACK,
-                                 pKernelStack,
-                                 MK_CONFIG_SIZE_KERNEL_STACK,
-                                 IA32_PAGING_G_NO,
-                                 IA32_PAGING_US_SV,
-                                 IA32_PAGING_RW_RW );
-
-            /* ページマップ設定結果判定 */
-            if ( ret != CMN_SUCCESS ) {
-                /* 失敗 */
-
-                /* [TODO] */
-
-                return MK_TASKID_NULL;
-            }
-
-            /* アプリスタックページマップ設定 */
-            ret = MemMngPageSet( pageDirId,
-                                 ( void * ) MK_CONFIG_ADDR_APL_STACK,
-                                 pAplStack,
-                                 MK_CONFIG_SIZE_APL_STACK,
-                                 IA32_PAGING_G_NO,
-                                 IA32_PAGING_US_USER,
-                                 IA32_PAGING_RW_RW );
-
-            /* ページマップ設定結果判定 */
-            if ( ret != CMN_SUCCESS ) {
-                /* 失敗 */
-
-                /* [TODO] */
-
-                return MK_TASKID_NULL;
-            }
-
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=%u", __func__, taskId );
-
-            return taskId;
-        }
-    }
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%u", __func__, MK_TASKID_NULL );
-
-    return MK_TASKID_NULL;
-}
-
-
 /******************************************************************************/
 /**
  * @brief       タスク存在確認
@@ -242,111 +78,14 @@ MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
 /******************************************************************************/
 bool TaskMngTaskCheckExist( MkTaskId_t taskId )
 {
-    return gTaskTbl[ taskId ].used == CMN_USED;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       アプリスタックアドレス取得
- * @details     指定したタスクIDのアプリスタックの終端アドレスを取得する。
- *
- * @param[in]   taskId タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- *
- * @return      終端アドレスを返す。
- */
-/******************************************************************************/
-void *TaskMngTaskGetAplStack( MkTaskId_t taskId )
-{
-    /* アプリスタックアドレス */
-    return gTaskTbl[ taskId ].aplStackInfo.pBottomAddr;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       コンテキスト取得
- * @details     指定したタスクIDのコンテキストを取得する。
- *
- * @param[in]   taskId タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- *
- * @return      コンテキストを返す。
- */
-/******************************************************************************/
-TaskMngTaskContext_t TaskMngTaskGetContext( MkTaskId_t taskId )
-{
-    /* コンテキスト返却 */
-    return gTaskTbl[ taskId ].context;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       カーネルスタックアドレス取得
- * @details     指定したタスクIDのカーネルスタックの終端アドレスを取得する。
- *
- * @param[in]   taskId タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- *
- * @return      終端アドレスを返す。
- */
-/******************************************************************************/
-void *TaskMngTaskGetKernelStack( MkTaskId_t taskId )
-{
-    /* カーネルスタックアドレス返却 */
-    return gTaskTbl[ taskId ].kernelStackInfo.pBottomAddr;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       ページディレクトリID取得
- * @details     指定したタスクIDのページディレクトリIDを取得する。
- *
- * @param[in]   taskId タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- *
- * @return      ページディレクトリIDを返す。
- */
-/******************************************************************************/
-uint32_t TaskMngTaskGetPageDirId( MkTaskId_t taskId )
-{
-    /* ページディレクトリID返却 */
-    return TaskMngProcGetPageDirId( gTaskTbl[ taskId ].pid );
-}
-
-
-/******************************************************************************/
-/**
- * @brief       プロセスID取得
- * @details     指定したタスクIDのプロセスIDを取得する。
- *
- * @param[in]   taskId タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- *
- * @return      プロセスIDを返す。
- * @retval      MK_PID_MIN プロセスID最小値
- * @retval      MK_PID_MAX プロセスID最大値
- */
-/******************************************************************************/
-MkPid_t TaskMngTaskGetPid( MkTaskId_t taskId )
-{
-    /* プロセスID返却 */
-    return gTaskTbl[ taskId ].pid;
+    return ( TblGetTaskInfo( taskId ) != NULL );
 }
 
 
 /******************************************************************************/
 /**
  * @brief       プロセスタイプ取得
- * @details     指定したタスクIDのプロセスタイプを取得する。
+ * @details     タスクID taskId のタスクのプロセスタイプを取得する。
  *
  * @param[in]   taskId タスクID
  *                  - MK_TASKID_MIN タスクID最小値
@@ -361,15 +100,28 @@ MkPid_t TaskMngTaskGetPid( MkTaskId_t taskId )
 /******************************************************************************/
 uint8_t TaskMngTaskGetType( MkTaskId_t taskId )
 {
-    /* タスクタイプ返却 */
-    return TaskMngProcGetType( gTaskTbl[ taskId ].pid );
+    TblProcInfo_t *pProcInfo;   /* プロセス管理情報 */
+
+    /* プロセス管理情報取得 */
+    pProcInfo = TblGetProcInfo( MK_TASKID_TO_PID( taskId ) );
+
+    /* 取得結果判定 */
+    if ( pProcInfo == NULL ) {
+        /* 失敗 */
+
+        /* TODO */
+        return TASKMNG_PROC_TYPE_KERNEL;
+    }
+
+    return pProcInfo->type;
 }
 
 
 /******************************************************************************/
 /**
  * @brief       プロセスタイプ差取得
- * @details     指定したタスクIDのプロセスタイプを比較し階層差を取得する。
+ * @details     タスクID taskId1 と taskId2 のタスクのプロセスタイプを比較し階
+ *              層差を取得する。
  *
  * @param[in]   taskId1 タスクID
  * @param[in]   taskId2 タスクID
@@ -388,31 +140,91 @@ uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
     uint8_t type2;  /* プロセスタイプ */
 
     /* プロセスタイプ取得 */
-    type1 = TaskMngProcGetType( taskId1 );
-    type2 = TaskMngProcGetType( taskId2 );
+    type1 = TaskMngTaskGetType( taskId1 );
+    type2 = TaskMngTaskGetType( taskId2 );
 
     return MLIB_MAX( type1, type2 ) - MLIB_MIN( type1, type2 );
 }
 
 
 /******************************************************************************/
+/* モジュール内グローバル関数定義                                             */
+/******************************************************************************/
+/******************************************************************************/
 /**
- * @brief       タスク管理初期化
- * @details     タスク管理サブモジュールの初期化を行う。
+ * @brief       タスク追加
+ * @details     タスクのカーネルスタック領域を割当てて、タスク管理情報pTaskInfo
+ *              に必要な情報を設定し、タスクをスケジューラに登録する。
+ *
+ * @param[in]   *pTaskInfo   タスク(スレッド)管理情報
+ *
+ * @return      追加時したタスクIDを返す。
+ * @retval      MK_TASKID_NULL 失敗
+ * @retval      MK_TASKID_MIN  タスクID最小値
+ * @retval      MK_TASKID_MAX  タスクID最大値
  */
 /******************************************************************************/
-void TaskMngTaskInit( void )
+MkTaskId_t TaskAdd( TblTaskInfo_t *pTaskInfo )
 {
+    CmnRet_t ret;   /* 関数戻り値 */
+
+    /* 初期化 */
+    ret = CMN_FAILURE;
+
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG( "  pid=%u, tid=%u, pAddr=%010p",
+               pTaskInfo->pProcInfo->pid,
+               pTaskInfo->tid,
+               pTaskInfo->pEntryPoint           );
+
+    /* タスク基本設定 */
+    pTaskInfo->context.eip = ( uint32_t ) &Start;
+    pTaskInfo->context.esp = ( uint32_t ) pTaskInfo->kernelStack.pBottomAddr;
+
+    /* スケジューラ追加 */
+    ret = SchedAdd( pTaskInfo );
+
+    /* 追加結果判定 */
+    if ( ret == CMN_FAILURE ) {
+        /* 失敗 */
+
+        return MK_TASKID_NULL;
+    }
+
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() end. ret=%u", __func__, pTaskInfo->taskId );
+
+    return pTaskInfo->taskId;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       タスク制御初期化
+ * @details     アイドルタスク管理情報を設定する。
+ */
+/******************************************************************************/
+void TaskInit( void )
+{
+    TblTaskInfo_t *pIdleTaskInfo;   /* アイドルタスク管理情報 */
+
+    /* 初期化 */
+    pIdleTaskInfo = NULL;
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
-    /* タスク管理テーブル初期化 */
-    memset( gTaskTbl, 0, sizeof ( gTaskTbl ) );
+    /* アイドルタスク管理情報取得 */
+    pIdleTaskInfo = TblGetTaskInfo( TASKMNG_TASKID_IDLE );
 
-    /* アイドルタスク設定 */
-    gTaskTbl[ TASKMNG_TASKID_IDLE ].used = CMN_USED;
-    gTaskTbl[ TASKMNG_TASKID_IDLE ].pid  = TASKMNG_PID_IDLE;
-    gTaskTbl[ TASKMNG_TASKID_IDLE ].tid  = 0;
+    /* アイドルタスク管理情報設定 */
+    pIdleTaskInfo->state = 0;
+
+    /* 割込みハンドラ設定 */
+    IntMngHdlSet( MK_CONFIG_INTNO_TASK,     /* 割込み番号     */
+                  HdlInt,                   /* 割込みハンドラ */
+                  IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -422,23 +234,172 @@ void TaskMngTaskInit( void )
 
 
 /******************************************************************************/
+/* ローカル関数定義                                                           */
+/******************************************************************************/
+/******************************************************************************/
 /**
- * @brief       コンテキスト設定
- * @details     指定したタスクIDのコンテキストを設定する。
+ * @brief       タスクID取得
+ * @details     実行中タスクのタスクIDを取得する。
  *
- * @param[in]   taskId    設定先タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- * @param[in]   *pContext コンテキスト
+ * @param[in]   *pParam パラメータ
  */
 /******************************************************************************/
-void TaskMngTaskSetContext( MkTaskId_t           taskId,
-                            TaskMngTaskContext_t *pContext )
+static void DoGetId( MkTaskParam_t *pParam )
 {
-    /* コンテキスト設定 */
-    gTaskTbl[ taskId ].context = *pContext;
+    /* タスクID取得 */
+    pParam->taskId = TaskMngSchedGetTaskId();
+
+    /* 戻り値設定 */
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       割込みハンドラ
+ * @details     機能IDから該当する機能を呼び出す。
+ *
+ * @param[in]   intNo   割込み番号
+ * @param[in]   context 割込み発生時コンテキスト
+ */
+/******************************************************************************/
+static void HdlInt( uint32_t        intNo,
+                    IntMngContext_t context )
+{
+    MkTaskParam_t *pParam;  /* パラメータ */
+
+    /* 初期化 */
+    pParam = ( MkTaskParam_t * ) context.genReg.esi;
+
+    DEBUG_LOG( "%s(): start. pParam=%p", __func__, pParam );
+
+    /* パラメータチェック */
+    if ( pParam == NULL ) {
+        /* 不正 */
+
+        DEBUG_LOG( "%s(): end.", __func__ );
+
+        return;
+    }
+
+    /* 機能ID判定 */
+    switch ( pParam->funcId ) {
+        case MK_TASK_FUNCID_GET_ID:
+            /* タスクID取得 */
+
+            DEBUG_LOG( "%s(): get.", __func__ );
+            DoGetId( pParam );
+            break;
+
+        default:
+            /* 不正 */
+
+            /* エラー設定 */
+            pParam->ret = MK_RET_FAILURE;
+            pParam->err = MK_ERR_PARAM;
+    }
+
+    DEBUG_LOG( "%s(): end. ret=%d, err=%u",
+               __func__,
+               pParam->ret,
+               pParam->err                   );
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       タスク起動開始
+ * @details     タスクの起動を開始する。
+ */
+/******************************************************************************/
+static void Start( void )
+{
+    void          *pEntryPoint; /* エントリポイント         */
+    void          *pStack;      /* スタックアドレス         */
+    uint32_t      codeSegSel;   /* コードセグメントセレクタ */
+    uint32_t      dataSegSel;   /* データセグメントセレクタ */
+    TblTaskInfo_t *pTaskInfo;   /* タスク管理情報           */
+    TblProcInfo_t *pProcInfo;   /* プロセス管理情報         */
+
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG( "%s() start.", __func__ );
+
+    /* 初期化 */
+    pTaskInfo   = SchedGetTaskInfo();
+    pProcInfo   = pTaskInfo->pProcInfo;
+    pEntryPoint = pTaskInfo->pEntryPoint;
+    pStack      = pTaskInfo->userStack.pBottomAddr;
+    codeSegSel  = 0;
+    dataSegSel  = 0;
+
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG(
+        "pid=%u, pEntryPoint=%p, pStack=%p",
+        pProcInfo->pid,
+        pEntryPoint,
+        pStack
+    );
+
+    /* タスクタイプ判定 */
+    if ( pProcInfo->type == TASKMNG_PROC_TYPE_KERNEL ) {
+        /* カーネル */
+
+        /* セグメントセレクタ設定 */
+        codeSegSel = MEMMNG_SEGSEL_KERNEL_CODE;     /* コード */
+        dataSegSel = MEMMNG_SEGSEL_KERNEL_DATA;     /* データ */
+
+    } else {
+        /* アプリ */
+
+        codeSegSel = MEMMNG_SEGSEL_APL_CODE;        /* コード */
+        dataSegSel = MEMMNG_SEGSEL_APL_DATA;        /* データ */
+    }
+
+    /* iretd命令用スタック設定 */
+    __asm__ __volatile__ ( "push %0\n"              /* ss     */
+                           "push %1\n"              /* esp    */
+                           "push 0x00003202\n"      /* eflags */
+                           "push %2\n"              /* cs     */
+                           "push %3\n"              /* eip    */
+                           :
+                           : "a" ( dataSegSel ),
+                             "b" ( ( uint32_t ) pStack - 16 ),
+                             "c" ( codeSegSel ),
+                             "d" ( ( uint32_t ) pEntryPoint )  );
+
+    /* セグメントレジスタ設定用スタック設定 */
+    __asm__ __volatile__ ( "push eax\n"             /* gs */
+                           "push eax\n"             /* fs */
+                           "push eax\n"             /* es */
+                           "push eax\n" );          /* ds */
+
+    /* 汎用レジスタ設定用スタック設定 */
+    IA32InstructionPush( 0 );                       /* eax           */
+    IA32InstructionPush( 0 );                       /* ecx           */
+    IA32InstructionPush( 0 );                       /* edx           */
+    IA32InstructionPush( 0 );                       /* ebx           */
+    IA32InstructionPush( 0 );                       /* esp( 未使用 ) */
+    IA32InstructionPush( 0 );                       /* ebp           */
+    IA32InstructionPush( 0 );                       /* esi           */
+    IA32InstructionPush( 0 );                       /* edi           */
+
+    /* 汎用レジスタ設定 */
+    IA32InstructionPopad();
+
+    /* セグメントレジスタ設定 */
+    IA32InstructionPopDs();
+    IA32InstructionPopEs();
+    IA32InstructionPopFs();
+    IA32InstructionPopGs();
+
+    /* タスクエントリポイントへ移行 */
+    IA32InstructionIretd();
+
+    /* not return */
 }
 
 

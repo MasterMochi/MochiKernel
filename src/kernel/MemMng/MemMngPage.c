@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/08/12 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -84,8 +84,14 @@ static CmnRet_t PageSet( uint32_t dirId,
                          uint32_t attrUs,
                          uint32_t attrRw      );
 
+/* 全ページディレクトリ設定（カーネル領域） */
+static void SetAllKernelPageDir( void );
+
 /* ページマッピングデフォルト設定 */
 static CmnRet_t PageSetDefault( uint32_t dirId );
+
+/* ページディレクトリ設定（カーネル領域） */
+static void SetKernelPageDir( uint32_t dirId );
 
 /* 4KiBページマッピング解除 */
 static void PageUnset( uint32_t dirId,
@@ -119,9 +125,10 @@ uint32_t MemMngPageAllocDir( void )
             /* 未使用 */
 
             /* ページディレクトリ初期化 */
-            memcpy( &pgPageDir[ id ],
-                    &pgPageDir[ MEMMNG_PAGE_DIR_ID_IDLE ],
-                    sizeof ( IA32PagingDir_t )            );
+            memset( &pgPageDir[ id ], 0, sizeof ( IA32PagingDir_t ) );
+
+            /* カーネル領域設定 */
+            SetKernelPageDir( id );
 
             /* ページ使用中設定 */
             gPageMngTbl.usedDir[ id ] = CMN_USED;
@@ -405,6 +412,14 @@ CmnRet_t MemMngPageSet( uint32_t dirId,
         size -= IA32_PAGING_PAGE_SIZE;
     }
 
+    /* ページディレクトリ判定 */
+    if ( dirId == MEMMNG_PAGE_DIR_ID_IDLE ) {
+        /* アイドルプロセス */
+
+        /* 全ページディレクトリ設定 */
+        SetAllKernelPageDir();
+    }
+
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end. ret=%d", __func__, ret );
 
@@ -455,6 +470,14 @@ void MemMngPageUnset( uint32_t dirId,
 
         /* サイズ更新 */
         size -= IA32_PAGING_PAGE_SIZE;
+    }
+
+    /* ページディレクトリ判定 */
+    if ( dirId == MEMMNG_PAGE_DIR_ID_IDLE ) {
+        /* アイドルプロセス */
+
+        /* 全ページディレクトリ設定 */
+        SetAllKernelPageDir();
     }
 
     /* デバッグトレースログ出力 */
@@ -671,6 +694,36 @@ static CmnRet_t PageSet( uint32_t dirId,
 
 /******************************************************************************/
 /**
+ * @brief       全ページディレクトリ設定（カーネル領域）
+ * @details     全ページディレクトリにアイドルプロセス用ページディレクトリの一
+ *              部をコピーすることで、カーネルが使用するメモリ空間を設定する。
+ */
+/******************************************************************************/
+static void SetAllKernelPageDir( void )
+{
+    uint32_t dirId;
+
+    /* 全ページディレクトリ毎に繰り返す */
+    for ( dirId = MEMMNG_PAGE_DIR_ID_MIN;
+          dirId < MEMMNG_PAGE_DIR_NUM;
+          dirId++                         ) {
+        /* 使用中判定 */
+        if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
+            /* 未使用 */
+
+            continue;
+        }
+
+        /* カーネル領域ページディレクトリ設定 */
+        SetKernelPageDir( dirId );
+    }
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       ページマッピングデフォルト設定
  * @details     カーネル領域をページにマッピングする。
  *
@@ -828,6 +881,27 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     }
 
     return CMN_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ページディレクトリ設定（カーネル領域）
+ * @details     引数dirIdのページディレクトリにアイドルプロセス用ページディレク
+ *              トリの一部をコピーすることで、カーネルが使用するメモリ空間を設
+ *              定する。
+ *
+ * @param[in]   dirId ページディレクトリID
+ */
+/******************************************************************************/
+static void SetKernelPageDir( uint32_t dirId )
+{
+    memcpy( &pgPageDir[ dirId                   ],
+            &pgPageDir[ MEMMNG_PAGE_DIR_ID_IDLE ],
+            IA32_PAGING_GET_PDE_IDX( MK_CONFIG_SIZE_USER ) *
+                sizeof( IA32PagingPDE_t )                    );
+
+    return;
 }
 
 

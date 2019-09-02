@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2019/07/23 */
+/*                                                                 2019/08/08 */
 /* Copyright (C) 2017-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -29,7 +29,8 @@
 #include <MemMng.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngTask.h"
+#include "TaskMngSched.h"
+#include "TaskMngTbl.h"
 #include "TaskMngTss.h"
 
 
@@ -52,10 +53,6 @@
 /** アイドルタスク情報インデックス */
 #define SCHED_IDLE_IDX         ( 0 )
 
-/* タスク情報使用フラグ */
-#define SCHED_TASK_INFO_UNUSED ( 0 )    /**< 未使用 */
-#define SCHED_TASK_INFO_USED   ( 1 )    /**< 使用中 */
-
 /* スケジューラ実行中レベル */
 #define SCHED_LEVEL_KERNEL     ( 0 )    /**< カーネルレベル */
 #define SCHED_LEVEL_DRIVER     ( 1 )    /**< ドライバレベル */
@@ -65,15 +62,6 @@
 /* 実行状態 */
 #define STATE_RUN              ( 0 )    /**< 実行状態 */
 #define STATE_WAIT             ( 1 )    /**< 待ち状態 */
-
-/** タスク情報構造体 */
-typedef struct {
-    MLibListNode_t node;            /**< 連結リスト情報 */
-    uint8_t        used;            /**< 使用フラグ     */
-    uint8_t        state;           /**< 実行状態       */
-    uint8_t        reserved[ 2 ];   /**< 予約           */
-    MkTaskId_t     taskId;          /**< タスクID       */
-} schedTaskInfo_t;
 
 /** 実行可能タスクグループ構造体 */
 typedef struct {
@@ -90,14 +78,13 @@ typedef struct {
 
 /** スケジューラテーブル構造体 */
 typedef struct {
-    schedTaskInfo_t *pRunningTaskInfo;          /**< 実行中タスク情報        */
-    uint32_t        runFlg;                     /**< タスク実行済みフラグ    */
-    uint32_t        runningGrpIdx;              /**< 実行中タスクグループIDX */
-    uint32_t        reservedGrpIdx;             /**< 予約タスクグループIDX   */
-    schedRunGrp_t   runGrp[ SCHED_RUNGRP_NUM ]; /**< 実行可能タスクグループ  */
-    schedWaitGrp_t  waitGrp;                    /**< 待ちタスクグループ      */
-    MLibList_t      freeQ;                      /**< 空タスクキュー          */
-    schedTaskInfo_t taskInfo[ MK_TASKID_NUM ];  /**< タスク情報              */
+    TblTaskInfo_t  *pIdleTaskInfo;              /**< アイドルタスク管理情報  */
+    TblTaskInfo_t  *pRunTaskInfo;               /**< 実行中タスク情報        */
+    uint32_t       runFlg;                      /**< タスク実行済みフラグ    */
+    uint32_t       runningGrpIdx;               /**< 実行中タスクグループIDX */
+    uint32_t       reservedGrpIdx;              /**< 予約タスクグループIDX   */
+    schedRunGrp_t  runGrp[ SCHED_RUNGRP_NUM ];  /**< 実行可能タスクグループ  */
+    schedWaitGrp_t waitGrp;                     /**< 待ちタスクグループ      */
 } schedTbl_t;
 
 
@@ -105,17 +92,14 @@ typedef struct {
 /* ローカル関数プロトタイプ宣言                                               */
 /******************************************************************************/
 /* 実行予約タスクグループエンキュー */
-static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo );
-
+static void EnqueueToReservedGrp( TblTaskInfo_t *pTaskInfo );
 /* 実行可能タスクグループ役割切替 */
-static void SchedSwitchRunGrpRole( void );
-
+static void SwitchRunGrpRole( void );
 /* タスクスイッチ */
-static void SchedSwitchTask( MkTaskId_t nowTaskId,
-                             MkTaskId_t nextTaskId );
-
+static void SwitchTask( TblTaskInfo_t *pRunTaskInfo,
+                        TblTaskInfo_t *pNextTaskInfo );
 /* タスクスイッチ終了ポイント（ラベル） */
-void SchedSwitchTaskEnd( void );
+void SwitchTaskEnd( void );
 
 
 /******************************************************************************/
@@ -130,92 +114,44 @@ static schedTbl_t gSchedTbl;
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       スケジュール追加
- * @details     指定したタスクIDをスケジュールに追加する。
- *
- * @param[in]   taskId タスクID
- *                  - MK_TASKID_MIN タスクID最小値
- *                  - MK_TASKID_MAX タスクID最大値
- *
- * @return      処理結果を返す。
- * @retval      CMN_SUCCESS 成功
- * @retval      CMN_FAILURE 失敗
- */
-/******************************************************************************/
-CmnRet_t TaskMngSchedAdd( MkTaskId_t taskId )
-{
-    schedTaskInfo_t *pTaskInfo; /* タスク情報 */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. taskId=%u", __func__, taskId );
-
-    /* 空タスクキューから空タスク情報取得 */
-    pTaskInfo =
-        ( schedTaskInfo_t * ) MLibListRemoveTail( &( gSchedTbl.freeQ ) );
-
-    /* 取得結果判定 */
-    if ( pTaskInfo == NULL ) {
-        /* 空タスク情報無し */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_FAILURE );
-
-        return CMN_FAILURE;
-    }
-
-    /* タスク情報設定 */
-    pTaskInfo->used   = SCHED_TASK_INFO_USED;   /* 使用フラグ */
-    pTaskInfo->state  = STATE_RUN;              /* 実行状態   */
-    pTaskInfo->taskId = taskId;                 /* タスクID   */
-
-    /* 実行予約タスクグループにエンキュー */
-    SchedEnqueueToReservedGrp( pTaskInfo );
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%d", __func__, CMN_SUCCESS );
-
-    return CMN_SUCCESS;
-}
-
-
-/******************************************************************************/
-/**
  * @brief       スケジューラ実行
  * @details     スケジューラを実行して次に実行可能なタスクにタスクスイッチする。
  */
 /******************************************************************************/
 void TaskMngSchedExec( void )
 {
-    uint32_t        level;          /* 実行中レベル         */
-    MkTaskId_t      nowTaskId;      /* 実行中タスクID       */
-    schedRunGrp_t   *pRunningGrp;   /* 実行中タスクグループ */
-    schedTaskInfo_t *pTaskInfo;     /* タスク情報           */
+    uint32_t      level;            /* 実行中レベル           */
+    TblProcInfo_t *pRunProcInfo;    /* 実行中プロセス管理情報 */
+    TblTaskInfo_t *pRunTaskInfo;    /* 実行中タスク管理情報   */
+    TblTaskInfo_t *pNextTaskInfo;   /* タスク情報             */
+    schedRunGrp_t *pRunGrp;         /* 実行中タスクグループ   */
 
     /* 初期化 */
-    level       = SCHED_LEVEL_KERNEL;
-    nowTaskId   = gSchedTbl.pRunningTaskInfo->taskId;
-    pRunningGrp = NULL;
-    pTaskInfo   = NULL;
+    level         = SCHED_LEVEL_KERNEL;
+    pRunTaskInfo  = gSchedTbl.pRunTaskInfo;
+    pRunProcInfo  = pRunTaskInfo->pProcInfo;
+    pNextTaskInfo = NULL;
+    pRunGrp       = NULL;
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start.", __func__ );*/
 
-    /* 実行中タスク判定 */
-    if ( nowTaskId == TASKMNG_TASKID_IDLE ) {
-        /* アイドルタスク */
+    /* 実行中プロセス判定 */
+    if ( pRunProcInfo->pid == TASKMNG_PID_IDLE ) {
+        /* アイドルプロセス */
 
         /* 実行可能タスクグループ役割切替 */
-        SchedSwitchRunGrpRole();
+        SwitchRunGrpRole();
 
     } else {
-        /* アイドルタスク以外 */
+        /* アイドルプロセス以外 */
 
         /* 実行中タスク状態判定 */
-        if ( gSchedTbl.pRunningTaskInfo->state == STATE_RUN ) {
+        if ( pRunTaskInfo->state == STATE_RUN ) {
             /* 実行状態 */
 
             /* 実行予約タスクグループにキューイング */
-            SchedEnqueueToReservedGrp( gSchedTbl.pRunningTaskInfo );
+            EnqueueToReservedGrp( pRunTaskInfo );
 
             /* タスク実行済みフラグ設定 */
             gSchedTbl.runFlg = true;
@@ -229,7 +165,7 @@ void TaskMngSchedExec( void )
     }
 
     /* 実行中タスクグループ設定 */
-    pRunningGrp = &gSchedTbl.runGrp[ gSchedTbl.runningGrpIdx ];
+    pRunGrp = &gSchedTbl.runGrp[ gSchedTbl.runningGrpIdx ];
 
     do {
         /* 実行中レベル判定 */
@@ -237,29 +173,33 @@ void TaskMngSchedExec( void )
             /* カーネルレベル */
 
             /* カーネルキューからデキュー */
-            pTaskInfo = ( schedTaskInfo_t * )
-                MLibListRemoveTail( &( pRunningGrp->kernelQ ) );
+            pNextTaskInfo =
+                ( TblTaskInfo_t * )
+                MLibListRemoveTail( &( pRunGrp->kernelQ ) );
 
         } else if ( level == SCHED_LEVEL_DRIVER ) {
             /* ドライバレベル */
 
             /* ドライバキューからデキュー */
-            pTaskInfo = ( schedTaskInfo_t * )
-                MLibListRemoveTail( &( pRunningGrp->driverQ ) );
+            pNextTaskInfo =
+                ( TblTaskInfo_t * )
+                MLibListRemoveTail( &( pRunGrp->driverQ ) );
 
         } else if ( level == SCHED_LEVEL_SERVER ) {
             /* サーバレベル */
 
             /* サーバキューからデキュー */
-            pTaskInfo = ( schedTaskInfo_t * )
-                MLibListRemoveTail( &( pRunningGrp->serverQ ) );
+            pNextTaskInfo =
+                ( TblTaskInfo_t * )
+                MLibListRemoveTail( &( pRunGrp->serverQ ) );
 
         } else if ( level == SCHED_LEVEL_USER ) {
             /* ユーザレベル */
 
             /* ユーザキューからデキュー */
-            pTaskInfo = ( schedTaskInfo_t * )
-                MLibListRemoveTail( &( pRunningGrp->userQ ) );
+            pNextTaskInfo =
+                ( TblTaskInfo_t * )
+                MLibListRemoveTail( &( pRunGrp->userQ ) );
 
         } else {
             /* 他 */
@@ -269,7 +209,7 @@ void TaskMngSchedExec( void )
                 /* 実行済みタスク無 */
 
                 /* アイドルタスク設定 */
-                pTaskInfo = &gSchedTbl.taskInfo[ SCHED_IDLE_IDX ];
+                pNextTaskInfo = gSchedTbl.pIdleTaskInfo;
 
                 break;
 
@@ -277,10 +217,10 @@ void TaskMngSchedExec( void )
                 /* 実行済みタスク有 */
 
                 /* 実行可能タスクグループ役割切替 */
-                SchedSwitchRunGrpRole();
+                SwitchRunGrpRole();
 
                 /* 実行中タスクグループ設定 */
-                pRunningGrp = &gSchedTbl.runGrp[ gSchedTbl.runningGrpIdx ];
+                pRunGrp = &gSchedTbl.runGrp[ gSchedTbl.runningGrpIdx ];
 
                 /* 実行中レベル初期化 */
                 level = SCHED_LEVEL_KERNEL;
@@ -294,17 +234,17 @@ void TaskMngSchedExec( void )
         level++;
 
     /* デキュー結果判定 */
-    } while ( pTaskInfo == NULL );
+    } while ( pNextTaskInfo == NULL );
 
     /* 実行中タスク情報切り替え */
-    gSchedTbl.pRunningTaskInfo = pTaskInfo;
+    gSchedTbl.pRunTaskInfo = pNextTaskInfo;
 
-    /* タスクID比較 */
-    if ( nowTaskId != pTaskInfo->taskId ) {
+    /* タスク比較 */
+    if ( pRunTaskInfo != pNextTaskInfo ) {
         /* 別タスク */
 
         /* タスクスイッチ */
-        SchedSwitchTask( nowTaskId, pTaskInfo->taskId );
+        SwitchTask( pRunTaskInfo, pNextTaskInfo );
     }
 
     /* デバッグトレースログ出力 *//*
@@ -327,7 +267,195 @@ void TaskMngSchedExec( void )
 MkTaskId_t TaskMngSchedGetTaskId( void )
 {
     /* タスクID返却 */
-    return gSchedTbl.pRunningTaskInfo->taskId;
+    return gSchedTbl.pRunTaskInfo->taskId;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       スケジュール開始
+ * @details     タスクID taskId のタスクのスケジュールを開始する。
+ *
+ * @param[in]   taskId タスクID
+ */
+/******************************************************************************/
+void TaskMngSchedStart( MkTaskId_t taskId )
+{
+    MLibRet_t     retMLib;      /* MLib関数戻り値 */
+    TblTaskInfo_t *pTaskInfo;   /* タスク管理情報 */
+
+    /* 初期化 */
+    retMLib   = MLIB_FAILURE;
+    pTaskInfo = NULL;
+
+    /* タスク管理情報取得 */
+    pTaskInfo = TblGetTaskInfo( taskId );
+
+    /* 待ちキューから削除 */
+    retMLib = MLibListRemove( &( gSchedTbl.waitGrp.waitQ ),
+                              &( pTaskInfo->nodeInfo )      );
+
+    /* 削除結果判定 */
+    if ( retMLib != MLIB_SUCCESS ) {
+        /* 失敗 */
+
+        return;
+    }
+
+    /* 実行予約タスクグループにエンキュー */
+    EnqueueToReservedGrp( pTaskInfo );
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       スケジュール停止
+ * @details     タスクID taskId のタスクのスケジュールを停止する。
+ *
+ * @param[in]   taskId タスクID
+ */
+/******************************************************************************/
+void TaskMngSchedStop( MkTaskId_t taskId )
+{
+    MLibList_t    *pTaskQ0;     /* タスクキュー     */
+    MLibList_t    *pTaskQ1;     /* タスクキュー     */
+    TblTaskInfo_t *pTaskInfo;   /* タスク管理情報   */
+    TblProcInfo_t *pProcInfo;   /* プロセス管理情報 */
+
+    /* 初期化 */
+    pTaskQ0   = NULL;
+    pTaskQ1   = NULL;
+    pTaskInfo = NULL;
+
+    /* タスク管理情報取得 */
+    pTaskInfo = TblGetTaskInfo( taskId );
+
+    /* 取得結果判定 */
+    if ( pTaskInfo == NULL ) {
+        /* 失敗 */
+
+        return;
+    }
+
+    /* プロセス管理情報取得 */
+    pProcInfo = pTaskInfo->pProcInfo;
+
+    /* 実行中タスク判定 */
+    if ( pTaskInfo != gSchedTbl.pRunTaskInfo ) {
+        /* 実行中タスクでない */
+
+        /* プロセスタイプ判定 */
+        if ( pProcInfo->type == TASKMNG_PROC_TYPE_KERNEL ) {
+            /* カーネル */
+
+            /* タスクキュー取得 */
+            pTaskQ0 = &gSchedTbl.runGrp[ 0 ].kernelQ;
+            pTaskQ1 = &gSchedTbl.runGrp[ 1 ].kernelQ;
+
+        } else if ( pProcInfo->type == TASKMNG_PROC_TYPE_DRIVER ) {
+            /* ドライバ */
+
+            /* タスクキュー取得 */
+            pTaskQ0 = &gSchedTbl.runGrp[ 0 ].driverQ;
+            pTaskQ1 = &gSchedTbl.runGrp[ 1 ].driverQ;
+
+        } else if ( pProcInfo->type == TASKMNG_PROC_TYPE_SERVER ) {
+            /* サーバ */
+
+            /* タスクキュー取得 */
+            pTaskQ0 = &gSchedTbl.runGrp[ 0 ].serverQ;
+            pTaskQ1 = &gSchedTbl.runGrp[ 1 ].serverQ;
+
+        } else {
+            /* ユーザ */
+
+            /* タスクキュー取得 */
+            pTaskQ0 = &gSchedTbl.runGrp[ 0 ].userQ;
+            pTaskQ1 = &gSchedTbl.runGrp[ 1 ].userQ;
+        }
+
+        /* タスクキューから削除 */
+        MLibListRemove( pTaskQ0, &( pTaskInfo->nodeInfo ) );
+        MLibListRemove( pTaskQ1, &( pTaskInfo->nodeInfo ) );
+    }
+
+    /* 待ちキューにエンキュー */
+    MLibListInsertHead( &( gSchedTbl.waitGrp.waitQ ),
+                        &( pTaskInfo->nodeInfo )      );
+
+    /* 実行状態設定 */
+    pTaskInfo->state = STATE_WAIT;
+
+    return;
+}
+
+
+/******************************************************************************/
+/* モジュール内グローバル関数定義                                             */
+/******************************************************************************/
+/******************************************************************************/
+/**
+ * @brief       スケジュール追加
+ * @details     タスク管理情報pTaskInfoで管理するタスクをスケジューラに追加し、
+ *              スケジューリングを開始する。
+ *
+ * @param[in]   *pTaskInfo タスク管理情報
+ *
+ * @return      処理結果を返す。
+ * @retval      CMN_SUCCESS 成功
+ * @retval      CMN_FAILURE 失敗
+ */
+/******************************************************************************/
+CmnRet_t SchedAdd( TblTaskInfo_t *pTaskInfo )
+{
+    /* 実行予約タスクグループにエンキュー */
+    EnqueueToReservedGrp( pTaskInfo );
+
+    return CMN_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       実行中プロセス管理情報取得
+ * @details     現在実行中のタスクのプロセス管理情報を取得する。
+ *
+ * @return      プロセス管理情報を返す。
+ */
+/******************************************************************************/
+TblProcInfo_t *SchedGetProcInfo( void )
+{
+    return gSchedTbl.pRunTaskInfo->pProcInfo;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       実行中タスク管理情報取得
+ * @details     現在実行中のタスクの管理情報を取得する。
+ *
+ * @return      タスク管理情報を返す。
+ */
+/******************************************************************************/
+TblTaskInfo_t *SchedGetTaskInfo( void )
+{
+    return gSchedTbl.pRunTaskInfo;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       実行中スレッド管理情報取得
+ * @details     現在実行中のタスクのスレッド管理情報を取得する。
+ *
+ * @return      スレッド管理情報を返す。
+ */
+/******************************************************************************/
+TblThreadInfo_t *SchedGetThreadInfo( void )
+{
+    return gSchedTbl.pRunTaskInfo;
 }
 
 
@@ -337,16 +465,12 @@ MkTaskId_t TaskMngSchedGetTaskId( void )
  * @details     スケジューラサブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void TaskMngSchedInit( void )
+void SchedInit( void )
 {
-    MkTaskId_t      taskId;         /* タスクID           */
-    MLibRet_t       retMLib;        /* MLib関数戻り値     */
-    schedTaskInfo_t *pIdleTaskInfo; /* アイドルタスク情報 */
-
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
-    /* スケジューラテーブル0初期化 */
+    /* スケジューラテーブル初期化 */
     memset( &gSchedTbl, 0, sizeof ( schedTbl_t ) );
 
     /* 実行可能タスクグループIDX設定 */
@@ -356,197 +480,12 @@ void TaskMngSchedInit( void )
     /* タスク実行済フラグ初期化 */
     gSchedTbl.runFlg = false;
 
-    /* アイドルタスク情報初期化 */
-    pIdleTaskInfo              = &gSchedTbl.taskInfo[ SCHED_IDLE_IDX ];
-    gSchedTbl.pRunningTaskInfo = pIdleTaskInfo;
-    pIdleTaskInfo->used        = SCHED_TASK_INFO_USED;
-    pIdleTaskInfo->taskId      = TASKMNG_TASKID_IDLE;
-
-    /* 空タスクキュー初期化 */
-    for ( taskId  = SCHED_IDLE_IDX + 1; taskId <= MK_TASKID_MAX; taskId++ ) {
-        /* エンキュー */
-        retMLib =
-            MLibListInsertHead( &( gSchedTbl.freeQ ),
-                                &( gSchedTbl.taskInfo[ taskId ].node ) );
-
-        /* エンキュー結果判定 */
-        if ( retMLib != MLIB_SUCCESS ) {
-            /* 失敗 */
-
-            /* [TODO] */
-        }
-    }
+    /* アイドルタスク管理情報取得 */
+    gSchedTbl.pIdleTaskInfo = TblGetTaskInfo( TASKMNG_TASKID_IDLE );
+    gSchedTbl.pRunTaskInfo  = gSchedTbl.pIdleTaskInfo;
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       スケジュール開始
- * @details     指定したタスクのスケジュールを開始する。
- *
- * @param[in]   taskId タスクID
- */
-/******************************************************************************/
-void TaskMngSchedStart( MkTaskId_t taskId )
-{
-    schedTaskInfo_t *pTaskInfo; /* タスク情報 */
-
-    /* 初期化 */
-    pTaskInfo = NULL;
-
-    /* 待ちキュータスク情報検索 */
-    do {
-        /* 次タスク情報取得 */
-        pTaskInfo = ( schedTaskInfo_t * )
-            MLibListGetNextNode( &gSchedTbl.waitGrp.waitQ,
-                                 &pTaskInfo->node          );
-
-        /* 取得結果判定 */
-        if ( pTaskInfo == NULL ) {
-            /* タスク無し */
-
-            return;
-        }
-
-    } while ( pTaskInfo->taskId != taskId );
-
-    /* 待ちキューから削除 */
-    MLibListRemove( &gSchedTbl.waitGrp.waitQ,
-                    &pTaskInfo->node          );
-
-    /* 実行予約タスクグループにエンキュー */
-    SchedEnqueueToReservedGrp( pTaskInfo );
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       スケジュール停止
- * @details     指定したタスクのスケジュールを停止する。
- *
- * @param[in]   taskId タスクID
- */
-/******************************************************************************/
-void TaskMngSchedStop( MkTaskId_t taskId )
-{
-    uint8_t         type;       /* プロセスタイプ */
-    MLibList_t      *pTaskQ0;   /* タスクキュー   */
-    MLibList_t      *pTaskQ1;   /* タスクキュー   */
-    schedTaskInfo_t *pTaskInfo; /* タスク情報     */
-
-    /* 初期化 */
-    type      = 0;
-    pTaskQ0   = NULL;
-    pTaskQ1   = NULL;
-    pTaskInfo = NULL;
-
-    /* 実行中タスク判定 */
-    if ( gSchedTbl.pRunningTaskInfo->taskId == taskId ) {
-        /* 実行中タスク */
-
-        /* 待ちキューにエンキュー */
-        MLibListInsertHead( &gSchedTbl.waitGrp.waitQ,
-                            &( gSchedTbl.pRunningTaskInfo->node ) );
-
-        /* 実行状態設定 */
-        gSchedTbl.pRunningTaskInfo->state = STATE_WAIT;
-    }
-
-    /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
-
-    /* プロセスタイプ判定 */
-    if ( type == TASKMNG_PROC_TYPE_KERNEL ) {
-        /* カーネル */
-
-        /* タスクキュー取得 */
-        pTaskQ0 = &gSchedTbl.runGrp[ 0 ].kernelQ;
-        pTaskQ1 = &gSchedTbl.runGrp[ 1 ].kernelQ;
-
-    } else if ( type == TASKMNG_PROC_TYPE_DRIVER ) {
-        /* ドライバ */
-
-        /* タスクキュー取得 */
-        pTaskQ0 = &gSchedTbl.runGrp[ 0 ].driverQ;
-        pTaskQ1 = &gSchedTbl.runGrp[ 1 ].driverQ;
-
-    } else if ( type == TASKMNG_PROC_TYPE_SERVER ) {
-        /* サーバ */
-
-        /* タスクキュー取得 */
-        pTaskQ0 = &gSchedTbl.runGrp[ 0 ].serverQ;
-        pTaskQ1 = &gSchedTbl.runGrp[ 1 ].serverQ;
-
-    } else {
-        /* ユーザ */
-
-        /* タスクキュー取得 */
-        pTaskQ0 = &gSchedTbl.runGrp[ 0 ].userQ;
-        pTaskQ1 = &gSchedTbl.runGrp[ 1 ].userQ;
-    }
-
-    /* 先頭タスク情報取得 */
-    pTaskInfo = ( schedTaskInfo_t * )
-        MLibListGetNextNode( pTaskQ0, NULL );
-
-    /* タスク検索 */
-    while ( pTaskInfo != NULL ) {
-        /* 対象タスク情報判定 */
-        if ( pTaskInfo->taskId == taskId ) {
-            /* 対象 */
-
-            /* タスクキューから削除 */
-            MLibListRemove( pTaskQ0, &pTaskInfo->node );
-
-            /* 待ちキューにエンキュー */
-            MLibListInsertHead( &gSchedTbl.waitGrp.waitQ,
-                                &( pTaskInfo->node )      );
-
-            /* 実行状態設定 */
-            pTaskInfo->state = STATE_WAIT;
-
-            return;
-        }
-
-        /* 次タスク情報取得 */
-        pTaskInfo = ( schedTaskInfo_t * )
-            MLibListGetNextNode( pTaskQ0, &pTaskInfo->node );
-    }
-
-    /* 先頭タスク情報取得 */
-    pTaskInfo = ( schedTaskInfo_t * )
-        MLibListGetNextNode( pTaskQ1, NULL );
-
-    /* タスク検索 */
-    while ( pTaskInfo != NULL ) {
-        /* 対象タスク情報判定 */
-        if ( pTaskInfo->taskId == taskId ) {
-            /* 対象 */
-
-            /* タスクキューから削除 */
-            MLibListRemove( pTaskQ1, &pTaskInfo->node );
-
-            /* 待ちキューにエンキュー */
-            MLibListInsertHead( &gSchedTbl.waitGrp.waitQ,
-                                &( pTaskInfo->node )      );
-
-            /* 実行状態設定 */
-            pTaskInfo->state = STATE_WAIT;
-
-            return;
-        }
-
-        /* 次タスク情報取得 */
-        pTaskInfo = ( schedTaskInfo_t * )
-            MLibListGetNextNode( pTaskQ1, &pTaskInfo->node );
-    }
 
     return;
 }
@@ -563,16 +502,16 @@ void TaskMngSchedStop( MkTaskId_t taskId )
  * @param[in]   *pTaskInfo タスク情報
  */
 /******************************************************************************/
-static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
+static void EnqueueToReservedGrp( TblTaskInfo_t *pTaskInfo )
 {
     uint8_t         taskType;         /* タスクタイプ           */
     MLibRet_t       retMLib;          /* MLib関数戻り値         */
     schedRunGrp_t   *pReservedGrp;    /* 実行予約タスクグループ */
-    MLibList_t      *pTaskQ;          /* タスクキュー           */
+    MLibList_t      *pSchedQ;         /* スケジュールキュー     */
 
     /* 初期化 */
     taskType     = TASKMNG_PROC_TYPE_USER;
-    pTaskQ       = NULL;
+    pSchedQ      = NULL;
     pReservedGrp = &gSchedTbl.runGrp[ gSchedTbl.reservedGrpIdx ];
     retMLib      = MLIB_FAILURE;
 
@@ -580,37 +519,37 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
     /*DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );*/
 
     /* プロセスタイプ取得 */
-    taskType = TaskMngTaskGetType( pTaskInfo->taskId );
+    taskType = pTaskInfo->pProcInfo->type;
 
     /* プロセスタイプ判定 */
     if ( taskType == TASKMNG_PROC_TYPE_KERNEL ) {
         /* カーネル */
 
-        /* タスクキュー設定 */
-        pTaskQ = &pReservedGrp->kernelQ;
+        /* エンキュー先をカーネルキューに設定 */
+        pSchedQ = &pReservedGrp->kernelQ;
 
     } else if ( taskType == TASKMNG_PROC_TYPE_DRIVER ) {
         /* ドライバ */
 
-        /* タスクキュー設定 */
-        pTaskQ = &pReservedGrp->driverQ;
+        /* エンキュー先をドライバキューに設定 */
+        pSchedQ = &pReservedGrp->driverQ;
 
     } else if ( taskType == TASKMNG_PROC_TYPE_SERVER ) {
         /* サーバ */
 
-        /* タスクキュー設定 */
-        pTaskQ = &pReservedGrp->serverQ;
+        /* エンキュー先をサーバキューに設定 */
+        pSchedQ = &pReservedGrp->serverQ;
 
     } else {
         /* ユーザ */
 
-        /* タスクキュー設定 */
-        pTaskQ = &pReservedGrp->userQ;
+        /* エンキュー先をユーザキューに設定 */
+        pSchedQ = &( pReservedGrp->userQ );
     }
 
     /* エンキュー */
-    retMLib =  MLibListInsertHead( pTaskQ,
-                                   &( pTaskInfo->node ) );
+    retMLib =  MLibListInsertHead( pSchedQ,
+                                   &( pTaskInfo->nodeInfo ) );
 
     /* エンキュー結果判定 */
     if ( retMLib != MLIB_SUCCESS ) {
@@ -635,7 +574,7 @@ static void SchedEnqueueToReservedGrp( schedTaskInfo_t *pTaskInfo )
  * @details     実行可能タスクグループの役割を切り替える。
  */
 /******************************************************************************/
-static void SchedSwitchRunGrpRole( void )
+static void SwitchRunGrpRole( void )
 {
     /* デバッグトレースログ出力 */
     /*DEBUG_LOG( "%s() start.", __func__ );*/
@@ -660,44 +599,42 @@ static void SchedSwitchRunGrpRole( void )
  * @details     現在実行中タスクのコンテキストを保存し、指定されたタスクIDのコ
  *              ンテキストを復元してタスクスイッチする。
  *
- * @param[in]   nowTaskId  現在実行中のタスクID
- * @param[in]   nextTaskId タスクスイッチ先タスクID
+ * @param[in]   *pRunTaskInfo  実行中タスク管理情報
+ * @param[in]   *pNextTaskInfo タスクスイッチ先タスク管理情報
  */
 /******************************************************************************/
 static __attribute__ ( ( noinline ) )
-    void SchedSwitchTask( MkTaskId_t nowTaskId,
-                          MkTaskId_t nextTaskId )
+    void SwitchTask( TblTaskInfo_t *pRunTaskInfo,
+                     TblTaskInfo_t *pNextTaskInfo )
 {
-    void                 *pKernelStack;    /* カーネルスタック     */
-    uint32_t             pageDirId;        /* ページディレクトリID */
-    IA32PagingPDBR_t     pdbr;             /* PDBR                 */
-    TaskMngTaskContext_t nowContext;       /* 現タスクコンテキスト */
-    TaskMngTaskContext_t nextContext;      /* 次タスクコンテキスト */
+    void             *pKernelStack;     /* カーネルスタック     */
+    TblContext_t     *pRunContext;      /* 現タスクコンテキスト */
+    TblContext_t     *pNextContext;     /* 次タスクコンテキスト */
+    TblProcInfo_t    *pNextProcInfo;    /* 次プロセス管理情報 */
+    IA32PagingPDBR_t pdbr;              /* PDBR                 */
 
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start. nowTaskId=%u, nextTaskId=%u",
+    DEBUG_LOG( "%s() start. runTaskId=%u, nextTaskId=%u",
                __func__,
-               nowTaskId,
-               nextTaskId );*/
+               pRunTaskInfo->taskId,
+               pNextTaskInfo->taskId );*/
 
-    /* コンテキスト取得 */
-    nextContext = TaskMngTaskGetContext( nextTaskId );
+    /* 初期化 */
+    pNextProcInfo = pNextTaskInfo->pProcInfo;
+    pRunContext   = &( pRunTaskInfo->context );
+    pNextContext  = &( pNextTaskInfo->context );
+    pKernelStack  = pNextTaskInfo->kernelStack.pBottomAddr;
 
     /* カーネルスタック設定 */
-    pKernelStack = TaskMngTaskGetKernelStack( nextTaskId );
-    TaskMngTssSetEsp0( ( uint32_t ) pKernelStack );
-
-    /* ページディレクトリID取得 */
-    pageDirId = TaskMngTaskGetPageDirId( nextTaskId );
+    TssSetEsp0( ( uint32_t ) pKernelStack );
 
     /* ページディレクトリ切替 */
-    pdbr = MemMngPageSwitchDir( pageDirId );
+    pdbr = MemMngPageSwitchDir( pNextProcInfo->pageDirId );
 
     /* コンテキスト退避 */
-    nowContext.eip = ( uint32_t ) SchedSwitchTaskEnd;
-    nowContext.esp = IA32InstructionGetEsp();
-    nowContext.ebp = IA32InstructionGetEbp();
-    TaskMngTaskSetContext( nowTaskId, &nowContext );
+    pRunContext->eip = ( uint32_t ) SwitchTaskEnd;
+    pRunContext->esp = IA32InstructionGetEsp();
+    pRunContext->ebp = IA32InstructionGetEbp();
 
     /* タスクスイッチ */
     __asm__ __volatile__ ( "mov eax, %0\n"
@@ -708,16 +645,16 @@ static __attribute__ ( ( noinline ) )
                            "jmp ebx"
                            :
                            : "m" ( pdbr ),
-                             "m" ( nextContext.eip ),
-                             "m" ( nextContext.esp ),
-                             "m" ( nextContext.ebp )
+                             "m" ( pNextContext->eip ),
+                             "m" ( pNextContext->esp ),
+                             "m" ( pNextContext->ebp )
                            : "eax",
                              "ebx",
                              "ebp",
                              "esp"                    );
 
     /* ラベル */
-    __asm__ __volatile__ ( "SchedSwitchTaskEnd:" );
+    __asm__ __volatile__ ( "SwitchTaskEnd:" );
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() end.", __func__ );*/

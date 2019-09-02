@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMngVirt.c                                             */
-/*                                                                 2019/07/22 */
+/*                                                                 2019/08/13 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -217,6 +217,17 @@ CmnRet_t MemMngVirtStart( MkPid_t pid )
 
         return CMN_FAILURE;
     }
+
+    /* 仮想メモリ領域設定 */
+    MemMngVirtAllocSpecified( pid,
+                              ( void * ) MK_CONFIG_ADDR_BOOTDATA,
+                              MK_CONFIG_SIZE_BOOTDATA                 );
+    MemMngVirtAllocSpecified( pid,
+                              ( void * ) MK_CONFIG_ADDR_KERNEL_START,
+                              MK_CONFIG_SIZE_KERNEL                   );
+    MemMngVirtAllocSpecified( pid,
+                              ( void * ) MK_CONFIG_ADDR_USER_START,
+                              MK_CONFIG_SIZE_USER                     );
 
     return CMN_SUCCESS;
 }

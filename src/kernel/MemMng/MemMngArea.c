@@ -419,8 +419,7 @@ void AreaInit( void )
         pEmpty = ( MLibListNode_t * ) &( gAreaTbl.areaInfo[ index ] );
 
         /* 空メモリ領域情報リスト挿入 */
-        retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ),
-                                           pEmpty );
+        retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ), pEmpty );
 
         /* 挿入結果判定 */
         if ( retMLib != MLIB_SUCCESS ) {

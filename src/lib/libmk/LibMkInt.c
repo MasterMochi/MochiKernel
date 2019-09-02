@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libmk/LibMkInt.c                                                   */
-/*                                                                 2019/07/27 */
+/*                                                                 2019/08/30 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -303,8 +303,8 @@ MkRet_t LibMkIntStopMonitoring( uint8_t irqNo,
  * @brief       ハードウェア割込み待ち合わせ
  * @details     監視を開始しているハードウェア割込みの待ち合わせを行う。
  *
- * @param[out]  *pInt 割込み発生フラグ
- * @param[out]  *pErr エラー内容
+ * @param[out]  *pIntList 割込み番号リスト
+ * @param[out]  *pErr     エラー内容
  *                  - MK_ERR_NONE         エラー無し
  *                  - MK_ERR_PARAM        パラメータ不正
  *                  - MK_ERR_UNAUTHORIZED 権限無し
@@ -314,8 +314,8 @@ MkRet_t LibMkIntStopMonitoring( uint8_t irqNo,
  * @retval      MK_RET_FAILURE 失敗
  */
 /******************************************************************************/
-MkRet_t LibMkIntWait( uint8_t *pInt,
-                      MkErr_t *pErr  )
+MkRet_t LibMkIntWait( uint32_t *pIntList,
+                      MkErr_t  *pErr      )
 {
     volatile MkIntParam_t param;
 
@@ -333,8 +333,8 @@ MkRet_t LibMkIntWait( uint8_t *pInt,
                              "i" ( MK_INT_INTNO )
                            : "esi"                 );
 
-    /* 割込み発生フラグ設定 */
-    MLIB_SET_IFNOT_NULL( pInt, param.flag );
+    /* 割込み番号リスト設定 */
+    MLIB_SET_IFNOT_NULL( pIntList, param.flag );
 
     /* エラー設定 */
     MLIB_SET_IFNOT_NULL( pErr, param.err );

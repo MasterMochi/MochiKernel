@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/TaskMng.h                                               */
-/*                                                                 2019/07/24 */
+/*                                                                 2019/08/09 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -44,22 +44,17 @@
 /* タスク管理初期化 */
 extern void TaskMngInit( void );
 
-
 /*----------------*/
 /* TaskMngSched.c */
 /*----------------*/
 /* スケジューラ実行 */
 extern void TaskMngSchedExec( void );
-
 /* タスクID取得 */
 extern MkTaskId_t TaskMngSchedGetTaskId( void );
-
 /* スケジュール開始 */
 extern void TaskMngSchedStart( MkTaskId_t taskId );
-
 /* スケジュール停止 */
 extern void TaskMngSchedStop( MkTaskId_t taskId );
-
 
 /*---------------*/
 /* TaskMngProc.c */
@@ -69,28 +64,17 @@ extern MkPid_t TaskMngProcAdd( uint8_t type,
                                void    *pAddr,
                                size_t  size    );
 
-
 /*---------------*/
 /* TaskMngTask.c */
 /*---------------*/
-/* タスク追加 */
-extern MkTaskId_t TaskMngTaskAdd( MkPid_t  pid,
-                                  MkTid_t  tid,
-                                  uint32_t pageDirId,
-                                  void     *pAddr     );
-
 /* タスク存在確認 */
 extern bool TaskMngTaskCheckExist( MkTaskId_t taskId );
-
-/* プロセスID取得 */
-extern MkPid_t TaskMngTaskGetPid( MkTaskId_t taskId );
-
 /* タスクタイプ取得 */
 extern uint8_t TaskMngTaskGetType( MkTaskId_t taskId );
-
 /* プロセス階層差取得 */
 extern uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
                                        MkTaskId_t taskId2  );
+
 
 /******************************************************************************/
 #endif

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libmk/MkMsg.c                                                      */
-/*                                                                 2019/07/28 */
+/*                                                                 2019/11/20 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -72,7 +72,7 @@ MkRet_t LibMkMsgReceive( MkTaskId_t recvTaskId,
     param.recv.src        = recvTaskId;
     param.recv.pBuffer    = pBuffer;
     param.recv.bufferSize = bufferSize;
-    param.recv.recvSize   = 0;
+    param.recv.size       = 0;
 
     /* カーネルコール */
     __asm__ __volatile__ ( "mov esi, %0\n"
@@ -89,7 +89,7 @@ MkRet_t LibMkMsgReceive( MkTaskId_t recvTaskId,
     MLIB_SET_IFNOT_NULL( pSrcTaskId, param.recv.src );
 
     /* 受信メッセージサイズ */
-    MLIB_SET_IFNOT_NULL( pRecvSize, param.recv.recvSize );
+    MLIB_SET_IFNOT_NULL( pRecvSize, param.recv.size );
 
     return param.ret;
 }
@@ -136,6 +136,67 @@ MkRet_t LibMkMsgSend( MkTaskId_t dst,
 
     /* パラメータ設定 */
     param.funcId    = MK_MSG_FUNCID_SEND;
+    param.ret       = MK_RET_FAILURE;
+    param.err       = MK_ERR_NONE;
+    param.send.dst  = dst;
+    param.send.pMsg = pMsg;
+    param.send.size = size;
+
+    /* カーネルコール */
+    __asm__ __volatile__ ( "mov esi, %0\n"
+                           "int %1"
+                           :
+                           : "a" ( &param       ),
+                             "i" ( MK_MSG_INTNO )
+                           : "esi"                 );
+
+    /* エラー内容設定 */
+    MLIB_SET_IFNOT_NULL( pErr, param.err );
+
+    return param.ret;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       メッセージ送信(ノンブロッキング)
+ * @details     指定したタスクにメッセージを送信する。
+ *
+ * @param[in]   dst   送信先タスク
+ * @param[in]   *pMsg メッセージ
+ * @param[in]   size  サイズ
+ * @param[out]  *pErr エラー内容
+ *                  - MK_ERR_NONE         エラー無し
+ *                  - MK_ERR_PARAM        パラメータ不正
+ *                  - MK_ERR_UNAUTHORIZED 非隣接プロセスタイプ
+ *                  - MK_ERR_SIZE_OVER    送信サイズ超過
+ *                  - MK_ERR_NO_EXIST     存在しないタスクID指定
+ *                  - MK_ERR_NO_MEMORY    メモリ不足
+ *
+ * @return      処理結果を返す。
+ * @retval      MK_RET_SUCCESS 成功
+ * @retval      MK_RET_FAILURE 失敗
+ */
+/******************************************************************************/
+MkRet_t LibMkMsgSendNB( MkTaskId_t dst,
+                        void       *pMsg,
+                        size_t     size,
+                        MkErr_t    *pErr  )
+{
+    volatile MkMsgParam_t param;
+
+    /* 引数チェック */
+    if ( ( pMsg == NULL ) || ( size == 0 ) ) {
+        /* 不正 */
+
+        /* エラー内容設定 */
+        MLIB_SET_IFNOT_NULL( pErr, MK_ERR_PARAM );
+
+        return MK_RET_FAILURE;
+    }
+
+    /* パラメータ設定 */
+    param.funcId    = MK_MSG_FUNCID_SEND_NB;
     param.ret       = MK_RET_FAILURE;
     param.err       = MK_ERR_NONE;
     param.send.dst  = dst;

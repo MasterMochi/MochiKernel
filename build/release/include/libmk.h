@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* libmk.h                                                                    */
-/*                                                                 2019/08/30 */
+/*                                                                 2019/11/19 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -133,11 +133,16 @@ extern MkRet_t LibMkMsgReceive( MkTaskId_t recvTaskId,
                                 MkTaskId_t *pSrcTaskId,
                                 size_t     *pRecvSize,
                                 MkErr_t    *pErr        );
-/* メッセージ送信 */
+/* メッセージ送信(ブロッキング) */
 extern MkRet_t LibMkMsgSend( MkTaskId_t dst,
                              void       *pMsg,
                              size_t     msgSize,
                              MkErr_t    *pErr    );
+/* メッセージ送信(ノンブロッキング) */
+extern MkRet_t LibMkMsgSendNB( MkTaskId_t dst,
+                               void       *pMsg,
+                               size_t     msgSize,
+                               MkErr_t    *pErr    );
 
 /*--------------*/
 /* プロセス管理 */

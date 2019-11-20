@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/message.h                                                           */
-/*                                                                 2019/07/28 */
+/*                                                                 2019/11/19 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -29,15 +29,16 @@
 #define MK_MSG_SIZE_MAX         ( 24576 )
 
 /* 機能ID */
-#define MK_MSG_FUNCID_RECEIVE   ( 0x00000001 )  /**< メッセージ受信 */
-#define MK_MSG_FUNCID_SEND      ( 0x00000002 )  /**< メッセージ送信 */
+#define MK_MSG_FUNCID_RECEIVE   ( 0x00000001 )  /**< メッセージ受信                   */
+#define MK_MSG_FUNCID_SEND      ( 0x00000002 )  /**< メッセージ送信(ブロッキング)     */
+#define MK_MSG_FUNCID_SEND_NB   ( 0x00000003 )  /**< メッセージ送信(ノンブロッキング) */
 
 /** メッセージ受信パラメータ */
 typedef struct {
     MkTaskId_t src;             /**< 受信メッセージ送信元タスクID */
     void       *pBuffer;        /**< 受信バッファ                 */
     size_t     bufferSize;      /**< 受信バッファサイズ           */
-    size_t     recvSize;        /**< 受信メッセージサイズ         */
+    size_t     size;            /**< 受信メッセージサイズ         */
 } MkMsgParamRecv_t;
 
 /** メッセージ送信パラメータ */

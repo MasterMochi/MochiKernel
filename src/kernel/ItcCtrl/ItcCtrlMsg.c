@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2019/07/28 */
+/*                                                                 2019/11/20 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -19,6 +19,7 @@
 
 /* カーネルヘッダ */
 #include <kernel/message.h>
+#include <kernel/types.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32.h>
@@ -27,6 +28,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
+#include <MemMng.h>
 #include <TaskMng.h>
 
 
@@ -43,62 +45,56 @@
 #define DEBUG_LOG( ... )
 #endif
 
-/* メッセージパッシング状態 */
-#define STATE_INIT    ( 0 )     /**< 初期状態     */
-#define STATE_SNDWAIT ( 1 )     /**< 送信待ち状態 */
-#define STATE_RCVWAIT ( 2 )     /**< 受信待ち状態 */
+/* 状態 */
+#define STATE_INIT     ( 0 )    /**< 初期状態     */
+#define STATE_RECVWAIT ( 1 )    /**< 受信待ち状態 */
+#define STATE_SENDWAIT ( 2 )    /**< 送信待ち状態 */
 
-/** メッセージバッファ数 */
-#define MSG_BUFFER_NUM ( 1024 )
-
-/** メッセージバッファ */
+/** 管理情報 */
 typedef struct {
-    MLibListNode_t node;                    /**< 連結リスト情報   */
-    size_t         size;                    /**< メッセージサイズ */
-    uint8_t        msg[ MK_MSG_SIZE_MAX ];  /**< メッセージ       */
-} MsgBuffer_t;
+    MLibList_t list;    /**< メッセージリスト         */
+    MkTaskId_t src;     /**< 受信待ちメッセージ送信元 */
+    uint32_t   state;   /**< 状態                     */
+    uint32_t   seqNo;   /**< シーケンス番号           */
+} mngEntry_t;
 
-/** 管理情報型 */
+/** メッセージ */
 typedef struct {
-    uint32_t    state;          /**< メッセージパッシング状態           */
-    MsgBuffer_t *pBuffer;       /**< メッセージバッファポインタ         */
-    MkTaskId_t  head;           /**< 送信待ちリンクリスト（先頭リンク） */
-    MkTaskId_t  next;           /**< 送信待ちリンクリスト（後続リンク） */
-    MkTaskId_t  src;            /**< 受信待ちメッセージ送信元           */
-} MngTbl_t;
+    MLibListNode_t nodeInfo;    /**< ノード情報       */
+    MkTaskId_t     src;         /**< 送信元タスクID   */
+    uint32_t       seqNo;       /**< シーケンス番号   */
+    size_t         size;        /**< メッセージサイズ */
+    uint8_t        msg[];       /**< メッセージ       */
+} msg_t;
 
 
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
-/* 送信待ちリンクリスト追加 */
-static void AddSndWaitList( MkTaskId_t src,
-                            MkTaskId_t dst  );
+/* 送信元タスクIDチェック */
+static bool CheckSrc( MLibListNode_t *pNode,
+                      void           *pArg   );
+/* タスク有効チェック */
+static bool CheckValid( MkTaskId_t self,
+                        MkTaskId_t other,
+                        MkErr_t    *pErr  );
+/* メッセージ受信 */
+static void DoReceive( MkMsgParam_t *pParam );
+/* メッセージ送信共通処理 */
+static void DoSendCmn( MkTaskId_t   *pTaskId,
+                       MkMsgParam_t *pParam   );
+/* メッセージ送信 */
+static void DoSendNB( MkMsgParam_t *pParam );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
-/* メッセージ受信 */
-static void Receive( MkMsgParam_t *pParam );
-/* 送信待ちリンクリスト先頭エントリ削除 */
-static MkTaskId_t RemoveSndWaitListTop( MkTaskId_t taskId );
-/* 送信待ちリンクリスト指定エントリ削除 */
-static MkTaskId_t RemoveSndWaitList( MkTaskId_t taskId,
-                                     MkTaskId_t rmvTaskId );
-/* メッセージ送信 */
-static void Send( MkMsgParam_t *pParam );
 
 
 /******************************************************************************/
-/* 変数定義                                                                   */
+/* 静的グローバル変数定義                                                     */
 /******************************************************************************/
 /** 管理情報 */
-static MngTbl_t gMngTbl[ MK_TASKID_NUM ];
-
-/** メッセージバッファ */
-static MsgBuffer_t gMsgBuffer[ MSG_BUFFER_NUM ];
-
-/** 未使用メッセージバッファリスト */
-MLibList_t gUnusedBufferList;
+static mngEntry_t gMngTbl[ MK_TASKID_NUM ];
 
 
 /******************************************************************************/
@@ -107,46 +103,29 @@ MLibList_t gUnusedBufferList;
 /******************************************************************************/
 /**
  * @brief       メッセージ制御初期化
- * @details     メッセージ制御サブモジュールの初期化を行う。
+ * @details     機能呼出し用割込みハンドラの設定を行う。
  */
 /******************************************************************************/
 void ItcCtrlMsgInit( void )
 {
-    int        i;       /* インデックス */
-    MkTaskId_t taskId;  /* タスクID     */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    uint32_t idx;   /* インデックス */
 
     /* 初期化 */
-    memset( &gUnusedBufferList, 0, sizeof ( MLibList_t  ) );
-    memset( gMsgBuffer,         0, sizeof ( MsgBuffer_t ) );
+    idx = 0;
 
     /* 割込みハンドラ設定 */
     IntMngHdlSet( MK_CONFIG_INTNO_MESSAGE,      /* 割込み番号     */
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3    );   /* 特権レベル     */
 
-    /* 管理情報初期化 */
-    for ( taskId = MK_TASKID_MIN;
-          taskId < MK_TASKID_NUM;
-          taskId++                       ) {
-        gMngTbl[ taskId ].state   = STATE_INIT;
-        gMngTbl[ taskId ].pBuffer = NULL;
-        gMngTbl[ taskId ].head    = MK_TASKID_NULL;
-        gMngTbl[ taskId ].next    = MK_TASKID_NULL;
-        gMngTbl[ taskId ].src     = MK_TASKID_NULL;
+    /* 管理テーブルエントリ毎に繰り返す */
+    for ( idx = 0; idx < MK_TASKID_NUM; idx++ ) {
+        /* 初期化 */
+        MLibListInit( &( gMngTbl[ idx ].list ) );
+        gMngTbl[ idx ].src   = MK_TASKID_NULL;
+        gMngTbl[ idx ].state = STATE_INIT;
+        gMngTbl[ idx ].seqNo = 0;
     }
-
-    /* メッセージバッファリスト初期化 */
-    for ( i = 0; i < MSG_BUFFER_NUM; i++ ) {
-        /* 未使用メッセージバッファリスト挿入 */
-        MLibListInsertHead( &gUnusedBufferList,
-                            &gMsgBuffer[ i ].node );
-    }
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
 
     return;
 }
@@ -157,203 +136,200 @@ void ItcCtrlMsgInit( void )
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       送信待ちリンクリスト追加
- * @details     送信先タスクIDの送信待ちリンクリストに送信元タスクIDを追加する。
+ * @brief       送信元タスクIDチェック
+ * @details     メッセージ送信元が指定したタスクIDと一致するかチェックする。
  *
- * @param[in]   src 送信元タスクID
- * @param[in]   dst 送信先タスクID
+ * @param[in]   *pNode ノード
+ * @param[in]   *pArg  タスクID
+ *
+ * @return      判定結果を返す。
+ * @retval      true  一致
+ * @retval      false 不一致
  */
 /******************************************************************************/
-static void AddSndWaitList( MkTaskId_t src,
-                            MkTaskId_t dst  )
+static bool CheckSrc( MLibListNode_t *pNode,
+                      void           *pArg   )
 {
-    MkTaskId_t next;    /* 後続リンク先タスクID       */
-    MkTaskId_t *pTail;  /* 最後尾リンク格納先タスクID */
+    msg_t      *pMsg;   /* メッセージ */
+    MkTaskId_t taskId;  /* タスクID   */
 
     /* 初期化 */
-    pTail = &gMngTbl[ dst ].head;
-    next  = *pTail;
+    pMsg   = ( msg_t * ) pNode;
+    taskId = *( ( MkTaskId_t * ) pArg );
 
-    /* 後続リンクチェック */
-    while ( next != MK_TASKID_NULL ) {
-        /* 後続リンク有 */
+    /* タスクID比較 */
+    if ( taskId == pMsg->src ) {
+        /* 一致 */
 
-        /* 後続リンク取得 */
-        pTail = &gMngTbl[ next ].next;
-        next  = *pTail;
+        return true;
     }
 
-    /* リンクリスト追加 */
-    *pTail = src;
-
-    return;
+    return false;
 }
 
 
 /******************************************************************************/
 /**
- * @brief       割込みハンドラ
- * @details     機能IDから該当する機能を呼び出す。
+ * @brief       タスク有効チェック
+ * @details     相手タスクの存在チェックとタスク間のプロセス階層差チェックを行
+ *              う。
  *
- * @param[in]   intNo   割込み番号
- * @param[in]   context 割込み発生時コンテキスト情報
+ * @param[in]   self  自タスクID
+ * @param[in]   other 他タスクID
+ * @param[out]  *pErr エラー要因
+ *                  - MK_ERR_NONE         エラー無し
+ *                  - MK_ERR_NO_EXIST     タスクが存在しない
+ *                  - MK_ERR_UNAUTHORIZED 権限無し
+ *
+ * @return      チェック結果を返す。
+ * @retval      true  有効
+ * @retval      false 無効
  */
 /******************************************************************************/
-static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context )
+static bool CheckValid( MkTaskId_t self,
+                        MkTaskId_t other,
+                        MkErr_t    *pErr  )
 {
-    MkMsgParam_t *pParam;
+    bool    exist;  /* タスク存在確認結果 */
+    uint8_t diff;   /* プロセス階層差     */
 
     /* 初期化 */
-    pParam = ( MkMsgParam_t * ) context.genReg.esi;
+    exist = false;
+    diff  = 0;
+    *pErr = MK_ERR_NONE;
 
-    /* パラメータチェック */
-    if ( pParam == NULL ) {
-        /* 不正 */
+    /* 他タスク存在確認 */
+    exist = TaskMngTaskCheckExist( other );
 
-        return;
+    /* 確認結果判定 */
+    if ( exist == false ) {
+        /* 存在しない */
+
+        /* エラー要因設定 */
+        *pErr = MK_ERR_NO_EXIST;
+
+        return false;
     }
 
-    /* 初期化 */
-    pParam->ret           = MK_RET_FAILURE;
-    pParam->err           = MK_ERR_NONE;
-    pParam->recv.recvSize = 0;
+    /* プロセス階層差取得 */
+    diff = TaskMngTaskGetTypeDiff( self, other );
 
-    /* 機能ID判定 */
-    if ( pParam->funcId == MK_MSG_FUNCID_RECEIVE ) {
-        /* メッセージ受信 */
-        Receive( pParam );
+    /* 階層差判定 */
+    if ( diff > 1 ) {
+        /* 非隣接 */
 
-    } else if ( pParam->funcId == MK_MSG_FUNCID_SEND ) {
-        /* メッセージ送信 */
-        Send( pParam );
+        /* エラー要因設定 */
+        *pErr = MK_ERR_UNAUTHORIZED;
 
-    } else {
-        /* 不正 */
-
-        /* エラー設定 */
-        pParam->ret           = MK_RET_FAILURE;
-        pParam->err           = MK_ERR_PARAM;
-        pParam->recv.recvSize = 0;
+        return false;
     }
 
-    return;
-}
-
+    return true;
+ }
 
 /******************************************************************************/
 /**
- * @brief       メッセージ受信
- * @details     メッセージ受信を行う。
+ * @brief           メッセージ受信
+ * @details         メッセージキューからメッセージをデキューし、機能呼び出し元
+ *                  にメッセージを返す。デキューしたメッセージの送信元タスクが
+ *                  送信ブロッキング状態となっている場合はブロッキング状態を解
+ *                  除する。メッセージが無い場合は、メッセージがキューイングさ
+ *                  れるまでブロックする。
  *
- * @param[in]   *pParam パラメータ
+ * @param[in,out]   *pParam パラメータ
  */
 /******************************************************************************/
-static void Receive( MkMsgParam_t *pParam )
+static void DoReceive( MkMsgParam_t *pParam )
 {
-    bool       exist;   /* タスク存在確認結果 */
-    size_t     size;    /* 受信サイズ         */
-    uint8_t    diff;    /* プロセス階層差     */
-    MkTaskId_t taskId;  /* 受信タスクID       */
-    MkTaskId_t src;     /* 送信元タスクID     */
-
-    DEBUG_LOG( "%s() start. pParam=%p", __func__, pParam );
-    DEBUG_LOG( " pParam->recv.src       =%u", pParam->recv.src        );
-    DEBUG_LOG( " pParam->recv.pBuffer   =%p", pParam->recv.pBuffer    );
-    DEBUG_LOG( " pParam->recv.bufferSize=%u", pParam->recv.bufferSize );
+    bool       valid;       /* タスク有効     */
+    msg_t      *pMsg;       /* メッセージ     */
+    size_t     size;        /* コピーサイズ   */
+    MkErr_t    err;         /* エラー要因     */
+    MkTaskId_t taskId;      /* タスクID       */
+    mngEntry_t *pDstInfo;   /* 送信先管理情報 */
 
     /* 初期化 */
-    size = 0;
-
-    /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    valid    = false;
+    pMsg     = NULL;
+    size     = 0;
+    err      = MK_ERR_NONE;
+    taskId   = TaskMngSchedGetTaskId();
+    pDstInfo = &( gMngTbl[ taskId ] );
 
     /* 受信ループ */
     while ( true ) {
-        /* 受信待ち送信元タスクID判定 */
+        /* 受信待ちタスクID判定 */
         if ( pParam->recv.src == MK_TASKID_NULL ) {
             /* ANY */
 
-            /* 送信待ちリンクリストから先頭エントリ取得 */
-            src = RemoveSndWaitListTop( taskId );
+            /* メッセージデキュー */
+            pMsg = ( msg_t * ) MLibListRemoveHead( &( pDstInfo->list ) );
 
         } else {
             /* 指定 */
 
-            /* タスク存在確認 */
-            exist = TaskMngTaskCheckExist( pParam->recv.src );
+            /* タスク有効チェック */
+            valid = CheckValid( taskId, pParam->recv.src, &err );
 
-            /* 確認結果判定 */
-            if ( exist == false ) {
-                /* 存在しない */
+            /* チェック結果判定 */
+            if ( valid == false ) {
+                /* 無効 */
 
-                /* エラー設定 */
-                pParam->ret           = MK_RET_FAILURE;
-                pParam->err           = MK_ERR_NO_EXIST;
-                pParam->recv.recvSize = 0;
-
-                DEBUG_LOG( "%s() end.", __func__ );
+                /* 戻り値設定 */
+                pParam->ret = MK_RET_FAILURE;
+                pParam->err = err;
 
                 return;
             }
 
-            /* プロセス階層差取得 */
-            diff = TaskMngTaskGetTypeDiff( taskId, pParam->recv.src );
-
-            /* 階層差チェック */
-            if ( diff > 1 ) {
-                /* 非隣接階層 */
-
-                /* エラー設定 */
-                pParam->ret           = MK_RET_FAILURE;
-                pParam->err           = MK_ERR_UNAUTHORIZED;
-                pParam->recv.recvSize = 0;
-
-                DEBUG_LOG( "%s() end.", __func__ );
-
-                return;
-            }
-
-            /* 送信待ちリンクリストから指定タスクIDのエントリ取得 */
-            src = RemoveSndWaitList( taskId, pParam->recv.src );
+            /* 指定送信元メッセージデキュー */
+            pMsg = ( msg_t * )
+                   MLibListSearchHead( &( pDstInfo->list ),
+                                       &CheckSrc,
+                                       &( pParam->recv.src ),
+                                       MLIB_LIST_REMOVE       );
         }
 
-        /* エントリ取得結果判定 */
-        if ( src != MK_TASKID_NULL ) {
-            /* 該当エントリ有 */
+        /* メッセージ取得結果判定 */
+        if ( pMsg != NULL ) {
+            /* メッセージ有 */
+
+            /* 送信元タスク状態判定 */
+            if ( ( gMngTbl[ pMsg->src ].state == STATE_SENDWAIT ) &&
+                 ( gMngTbl[ pMsg->src ].seqNo == pMsg->seqNo    )    ) {
+                /* 送信待ち状態 */
+
+                /* 送信元タスクスケジュール開始 */
+                TaskMngSchedStart( pMsg->src );
+            }
+
+            /* 状態設定 */
+            pDstInfo->state = STATE_INIT;
 
             /* コピーサイズ設定 */
-            size = MLIB_MIN( gMngTbl[ src ].pBuffer->size,
-                             pParam->recv.bufferSize       );
+            size = MLIB_MIN( pMsg->size, pParam->recv.bufferSize );
+
+            /* 戻り値設定 */
+            pParam->ret       = MK_RET_SUCCESS;
+            pParam->err       = MK_ERR_NONE;
+            pParam->recv.size = size;
+            pParam->recv.src  = pMsg->src;
 
             /* メッセージコピー */
             memcpy( pParam->recv.pBuffer,
-                    gMngTbl[ src ].pBuffer->msg,
-                    size                         );
+                    pMsg->msg,
+                    size                  );
 
             /* メッセージバッファ解放 */
-            memset( gMngTbl[ src ].pBuffer, 0, sizeof ( MsgBuffer_t ) );
-            MLibListInsertHead( &gUnusedBufferList,
-                                &gMngTbl[ src ].pBuffer->node );
-            gMngTbl[ src ].pBuffer = NULL;
+            memset( pMsg, 0, sizeof ( pMsg->size ) );
+            MemMngHeapFree( pMsg );
+            pMsg = NULL;
 
-            /* 送信元タスクスケジュール開始 */
-            TaskMngSchedStart( src );
-
-            /* 状態設定 */
-            gMngTbl[ taskId ].state = STATE_INIT;
-
-            /* 戻り値設定 */
-            pParam->ret           = MK_RET_SUCCESS;
-            pParam->err           = MK_ERR_NONE;
-            pParam->recv.src      = src;
-            pParam->recv.recvSize = size;
-
-            break;
+            return;
         }
 
         /* 状態設定 */
-        gMngTbl[ taskId ].state = STATE_RCVWAIT;
+        pDstInfo->state = STATE_RECVWAIT;
 
         /* スケジュール停止 */
         TaskMngSchedStop( taskId );
@@ -362,7 +338,50 @@ static void Receive( MkMsgParam_t *pParam )
         TaskMngSchedExec();
     }
 
-    DEBUG_LOG( "%s() end.", __func__ );
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief           メッセージ送信(ブロック)
+ * @details         メッセージ送信共通処理を呼び出し、送信先タスクがメッセージ
+ *                  を受け取るまでブロックする。
+ *
+ * @param[in,out]   *pParam パラメータ
+ */
+/******************************************************************************/
+static void DoSend( MkMsgParam_t *pParam )
+{
+    MkTaskId_t taskId;  /* 送信元タスクID */
+
+    /* 初期化 */
+    taskId = MK_TASKID_NULL;
+
+    /* 共通処理 */
+    DoSendCmn( &taskId, pParam );
+
+    /* 処理結果判定 */
+    if ( pParam->ret == MK_RET_FAILURE ) {
+        /* 失敗 */
+        return;
+    }
+
+    /* 状態設定 */
+    gMngTbl[ taskId ].state = STATE_SENDWAIT;
+
+    /* スケジュール停止 */
+    TaskMngSchedStop( taskId );
+
+    /* スケジュール実行 */
+    TaskMngSchedExec();
+
+    /* 状態初期化 */
+    gMngTbl[ taskId ].state = STATE_INIT;
+
+    /* 戻り値設定 */
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
 
     return;
 }
@@ -370,182 +389,77 @@ static void Receive( MkMsgParam_t *pParam )
 
 /******************************************************************************/
 /**
- * @brief       送信待ちリンクリスト先頭エントリ削除
- * @details     指定したタスクIDの送信待ちリンクリストから先頭のタスクIDを削除
- *              し、削除したタスクIDを返却する。
+ * @brief           メッセージ送信共通処理
+ * @details         送信先タスクが有効かチェックした後、メッセージをカーネル空
+ *                  間内にコピーし、送信先タスクにキューイングする。送信先タス
+ *                  クが受信ブロッキング状態にある場合は、ブロッキング状態を解
+ *                  除する。
  *
- * @param[in]   taskId タスクID
- *
- * @return      先頭エントリのタスクIDを返す。
- * @retval      MK_TASKID_NULL 先頭エントリ無し
- * @retval      MK_TASKID_MIN  タスクID最小値
- * @retval      MK_TASKID_MAX  タスクID最大値
+ * @param[out]      *pTaskId 送信元タスクID
+ * @param[in,out]   *pParam  パラメータ
  */
 /******************************************************************************/
-static MkTaskId_t RemoveSndWaitListTop( MkTaskId_t taskId )
+static void DoSendCmn( MkTaskId_t   *pTaskId,
+                       MkMsgParam_t *pParam   )
 {
-    MkTaskId_t headTaskId;  /* 先頭エントリタスクID */
-
-    /* 先頭エントリタスクID取得 */
-    headTaskId = gMngTbl[ taskId ].head;
-
-    /* 先頭タスク有無判定 */
-    if ( headTaskId != MK_TASKID_NULL ) {
-        /* タスク有り */
-
-        /* 先頭タスク削除 */
-        gMngTbl[ taskId     ].head = gMngTbl[ headTaskId ].next;
-        gMngTbl[ headTaskId ].next = MK_TASKID_NULL;
-    }
-
-    return headTaskId;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       送信待ちリンクリスト指定エントリ削除
- * @details     指定したタスクIDの送信待ちリンクリストから指定したタスクIDのエ
- *              ントリを削除し、削除したタスクIDを返却する。
- *
- * @param[in]   taskId    タスクID
- * @param[in]   rmvTaskId 削除タスクID
- *
- * @return      削除タスクIDを返す。
- * @retval      MK_TASKID_NULL 該当エントリ無し
- * @retval      引数rmvTaskId  削除エントリのタスクID
- */
-/******************************************************************************/
-static MkTaskId_t RemoveSndWaitList( MkTaskId_t taskId,
-                                     MkTaskId_t rmvTaskId )
-{
-    MkTaskId_t *pTail;      /* 最後尾リンク格納先 */
-    MkTaskId_t waitTaskId;  /* 送信待ちタスクID   */
+    bool    valid;   /* タスク有効 */
+    msg_t   *pMsg;   /* メッセージ */
+    MkErr_t err;     /* エラー要因 */
 
     /* 初期化 */
-    pTail      = &gMngTbl[ taskId ].head;
-    waitTaskId = *pTail;
+    valid    = false;
+    err      = MK_ERR_NONE;
+    *pTaskId = TaskMngSchedGetTaskId();
 
-    /* 削除タスクID検索 */
-    while ( waitTaskId != MK_TASKID_NULL ) {
-        if ( waitTaskId == rmvTaskId ) {
-            /* 該当タスクID */
+    /* タスク有効チェック */
+    valid = CheckValid( *pTaskId, pParam->send.dst, &err );
 
-            /* 該当タスク削除 */
-            *pTail                    = gMngTbl[ rmvTaskId ].next;
-            gMngTbl[ rmvTaskId ].next = MK_TASKID_NULL;
+    /* チェック結果判定 */
+    if ( valid == false ) {
+        /* 無効 */
 
-            break;
-        }
-
-        /* 後続リンク取得 */
-        pTail      = &gMngTbl[ waitTaskId ].next;
-        waitTaskId = *pTail;
-    }
-
-    return waitTaskId;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       メッセージ送信
- * @details     メッセージ送信を行う。
- *
- * @param[in]   *pParam パラメータ
- */
-/******************************************************************************/
-static void Send( MkMsgParam_t *pParam )
-{
-    bool       exist;   /* タスク存在確認結果 */
-    uint8_t    diff;    /* プロセス階層差     */
-    MkTaskId_t taskId;  /* タスクID           */
-
-    DEBUG_LOG( "%s() start. pParam=%p", __func__, pParam );
-    DEBUG_LOG( " pParam->send.dst =%u", pParam->send.dst  );
-    DEBUG_LOG( " pParam->send.pMsg=%p", pParam->send.pMsg );
-    DEBUG_LOG( " pParam->send.size=%u", pParam->send.size );
-
-    /* 送信サイズチェック */
-    if ( pParam->send.size > MK_MSG_SIZE_MAX ) {
-        /* 超過 */
-
-        /* エラー設定 */
+        /* 戻り値設定 */
         pParam->ret = MK_RET_FAILURE;
-        pParam->err = MK_ERR_SIZE_OVER;
-
-        DEBUG_LOG( "%s() end.", __func__ );
+        pParam->err = err;
 
         return;
     }
 
-    /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    /* メッセージ領域割当 */
+    pMsg = MemMngHeapAlloc( sizeof ( msg_t ) + pParam->send.size );
 
-    /* タスク存在確認 */
-    exist = TaskMngTaskCheckExist( pParam->send.dst );
-
-    /* 確認結果判定 */
-    if ( exist == false ) {
-        /* 存在しない */
-
-        /* エラー設定 */
-        pParam->ret = MK_RET_FAILURE;
-        pParam->err = MK_ERR_NO_EXIST;
-
-        DEBUG_LOG( "%s() end.", __func__ );
-
-        return;
-    }
-
-    /* プロセス階層差取得 */
-    diff = TaskMngTaskGetTypeDiff( taskId, pParam->send.dst );
-
-    /* 階層差チェック */
-    if ( diff > 1 ) {
-        /* 非隣接階層 */
-
-        /* エラー設定 */
-        pParam->ret = MK_RET_FAILURE;
-        pParam->err = MK_ERR_UNAUTHORIZED;
-
-        DEBUG_LOG( "%s() end.", __func__ );
-
-        return;
-    }
-
-    /* メッセージバッファ割当 */
-    gMngTbl[ taskId ].pBuffer =
-        ( MsgBuffer_t * ) MLibListRemoveHead( &gUnusedBufferList );
-
-    /* メッセージ割当結果判定 */
-    if ( gMngTbl[ taskId ].pBuffer == NULL ) {
+    /* 割当結果判定 */
+    if ( pMsg == NULL ) {
         /* 失敗 */
 
-        /* エラー設定 */
+        /* 戻り値設定 */
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_NO_MEMORY;
 
-        DEBUG_LOG( "%s() end.", __func__ );
-
         return;
     }
 
-    /* メッセージコピー */
-    gMngTbl[ taskId ].pBuffer->size = pParam->send.size;
-    memcpy( gMngTbl[ taskId ].pBuffer->msg,
-            pParam->send.pMsg,
-            gMngTbl[ taskId ].pBuffer->size );
+    /* シーケンス番号更新 */
+    ( gMngTbl[ *pTaskId ].seqNo )++;
 
-    /* 送信待ちリスト追加 */
-    AddSndWaitList( taskId, pParam->send.dst );
+    /* メッセージヘッダ設定 */
+    pMsg->src   = *pTaskId;
+    pMsg->seqNo = gMngTbl[ *pTaskId ].seqNo;
+    pMsg->size  = pParam->send.size;
+
+    /* メッセージコピー */
+    memcpy( pMsg->msg, pParam->send.pMsg, pParam->send.size );
+
+    /* キューイング */
+    MLibListInsertTail( &( gMngTbl[ pParam->send.dst ].list ),
+                        &( pMsg->nodeInfo                   )  );
 
     /* 送信先タスク状態判定 */
-    if ( gMngTbl[ pParam->send.dst ].state == STATE_RCVWAIT ) {
+    if ( gMngTbl[ pParam->send.dst ].state == STATE_RECVWAIT ) {
         /* 受信待ち状態 */
 
         /* 受信待ちメッセージ送信元判定 */
-        if ( ( gMngTbl[ pParam->send.dst ].src == taskId         ) ||
+        if ( ( gMngTbl[ pParam->send.dst ].src == *pTaskId       ) ||
              ( gMngTbl[ pParam->send.dst ].src == MK_TASKID_NULL )    ) {
             /* 自タスクIDまたはANY */
 
@@ -554,25 +468,91 @@ static void Send( MkMsgParam_t *pParam )
         }
     }
 
-    /* 状態設定 */
-    gMngTbl[ taskId ].state = STATE_SNDWAIT;
-
-    /* スケジュール停止 */
-    TaskMngSchedStop( taskId );
-
-    /* スケジュール実行 */
-    TaskMngSchedExec();
-
-    /* 初期状態設定 */
-    gMngTbl[ taskId ].state = STATE_INIT;
-
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
     pParam->err = MK_ERR_NONE;
 
-    DEBUG_LOG( "%s() end.", __func__ );
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief           メッセージ送信(ノンブロック)
+ * @details         メッセージ送信共通処理を呼び出す。
+ *
+ * @param[in,out]   *pParam パラメータ
+ */
+/******************************************************************************/
+static void DoSendNB( MkMsgParam_t *pParam )
+{
+    MkTaskId_t taskId;  /* 送信元タスクID */
+
+    /* 初期化 */
+    taskId = MK_TASKID_NULL;
+
+    /* 共通処理 */
+    DoSendCmn( &taskId, pParam );
 
     return;
 }
+
+
+/******************************************************************************/
+/**
+ * @brief           割込みハンドラ
+ * @details         機能IDから適切なハンドラを呼び出す。
+ *
+ * @param[in]       intNo   割込み番号
+ * @param[in,out]   context 割込み発生時コンテキスト情報
+ */
+/******************************************************************************/
+static void HdlInt( uint32_t        intNo,
+                    IntMngContext_t context )
+{
+    MkMsgParam_t *pParam;   /* パラメータ */
+
+    /* 初期化 */
+    pParam = ( MkMsgParam_t * ) context.genReg.esi;
+
+    /* パラメータチェック */
+    if ( pParam == NULL ) {
+        /* 不正 */
+        return;
+    }
+
+    /* パラメータ初期化 */
+    pParam->ret       = MK_RET_FAILURE;
+    pParam->err       = MK_ERR_NONE;
+    pParam->recv.size = 0;
+
+    /* 機能ID判定 */
+    if ( pParam->funcId == MK_MSG_FUNCID_RECEIVE ) {
+        /* メッセージ受信 */
+
+        DoReceive( pParam );
+
+    } else if ( pParam->funcId == MK_MSG_FUNCID_SEND ) {
+        /* メッセージ送信 */
+
+        DoSend( pParam );
+
+    } else if ( pParam->funcId == MK_MSG_FUNCID_SEND_NB ) {
+        /* メッセージ送信(ノンブロック) */
+
+        DoSendNB( pParam );
+
+    } else {
+        /* 不正 */
+
+        /* エラー設定 */
+        pParam->ret       = MK_RET_FAILURE;
+        pParam->err       = MK_ERR_PARAM;
+        pParam->recv.size = 0;
+    }
+
+    return;
+}
+
 
 /******************************************************************************/

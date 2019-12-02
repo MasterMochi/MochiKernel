@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTbl.c                                            */
-/*                                                                 2019/08/13 */
+/*                                                                 2019/11/21 */
 /* Copyright (C) 2019 Mochi.                                                  */
 /*                                                                            */
 /******************************************************************************/
@@ -333,8 +333,6 @@ TblTaskInfo_t *TblGetTaskInfo( MkTaskId_t taskId )
     pProcInfo   = NULL;
     pThreadInfo = NULL;
 
-    DEBUG_LOG( "%s(): start. taskId=%u", __func__, taskId );
-
     /* プロセス管理情報取得 */
     pProcInfo = TblGetProcInfo( MK_TASKID_TO_PID( taskId ) );
 
@@ -348,8 +346,6 @@ TblTaskInfo_t *TblGetTaskInfo( MkTaskId_t taskId )
     /* スレッド管理情報取得 */
     pThreadInfo = TblGetThreadInfo( pProcInfo,
                                     MK_TASKID_TO_TID( taskId ) );
-
-    DEBUG_LOG( "%s(): end. ret=%p", __func__, pThreadInfo );
 
     return ( TblTaskInfo_t * ) pThreadInfo;
 }

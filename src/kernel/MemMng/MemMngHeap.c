@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMngHeap.c                                             */
-/*                                                                 2019/08/11 */
+/*                                                                 2019/12/03 */
 /* Copyright (C) 2019 Mcohi.                                                  */
 /*                                                                            */
 /******************************************************************************/
@@ -228,30 +228,33 @@ static void *AllocFromFreeArea( areaInfo_t *pAreaInfo,
 {
     areaInfo_t *pFreeAreaInfo;  /* 未使用メモリ領域情報 */
 
-    /* 未使用メモリ領域リストから削除 */
-    MLibListRemove( &gFreeList, &( pAreaInfo->nodeInfo ) );
-
     /* 分割判定 */
     if ( ( pAreaInfo->size - size ) >= ( sizeof ( areaInfo_t ) + 4 ) ) {
         /* 分割可能 */
 
         /* 分割 */
-        pFreeAreaInfo = ( areaInfo_t * ) ( ( ( uint32_t ) pAreaInfo ) +
-                                           sizeof ( areaInfo_t )      +
-                                           size                         );
+        pAreaInfo->size -= sizeof ( areaInfo_t ) + size;
 
-        /* 領域情報設定 */
-        pFreeAreaInfo->size = pAreaInfo->size - size - sizeof ( areaInfo_t );
-        pAreaInfo->size     = size;
+        /* 未使用メモリ領域情報設定 */
+        pFreeAreaInfo       = ( areaInfo_t * )
+                              ( ( ( uint32_t ) pAreaInfo->area ) +
+                                pAreaInfo->size                    );
+        pFreeAreaInfo->size = size;
 
-        /* 未使用メモリ領域リスト追加 */
-        MLibListInsertHead( &gFreeList, &( pFreeAreaInfo->nodeInfo ) );
+    } else {
+        /* 分割不可 */
+
+        /* 未使用メモリ領域設定 */
+        pFreeAreaInfo = pAreaInfo;
+
+        /* 未使用メモリ領域リストから削除 */
+        MLibListRemove( &gFreeList, &( pAreaInfo->nodeInfo ) );
     }
 
     /* 使用中メモリ領域リスト追加 */
-    MLibListInsertHead( &gUsedList, &( pAreaInfo->nodeInfo ) );
+    MLibListInsertHead( &gUsedList, &( pFreeAreaInfo->nodeInfo ) );
 
-    return pAreaInfo->area;
+    return pFreeAreaInfo->area;
 }
 
 
@@ -304,73 +307,69 @@ static void InsertFreeList( areaInfo_t *pAreaInfo )
     pPrevAreaInfo = NULL;
     pNextAreaInfo = NULL;
 
-    /* 未使用メモリ領域リスト先頭取得 */
-    pPrevAreaInfo = ( areaInfo_t * ) MLibListGetNextNode( &gFreeList, NULL );
+    do {
+        /* シフト */
+        pPrevAreaInfo = pNextAreaInfo;
 
-    /* 取得結果判定 */
-    if ( pPrevAreaInfo == NULL ) {
-        /* 未使用メモリ領域無し */
+        /* 次未使用メモリ領域情報取得 */
+        pNextAreaInfo =
+            ( areaInfo_t * )
+            MLibListGetNextNode( &gFreeList,
+                                 ( MLibListNode_t * ) pPrevAreaInfo );
 
-        /* 最後尾に挿入 */
-        MLibListInsertTail( &gFreeList, &( pAreaInfo->nodeInfo ) );
-
-        return;
-    }
-
-    /* 未使用メモリ領域リストエントリ毎に繰り返す */
-    while ( true ) {
-        /* 次メモリ領域取得 */
-        pNextAreaInfo = ( areaInfo_t * )
-                        MLibListGetNextNode( &gFreeList,
-                                             &( pPrevAreaInfo->nodeInfo ) );
-
-        /* 後メモリ領域結合判定 */
-        if ( ( ( uint32_t ) pAreaInfo->area + pAreaInfo->size ) ==
-             ( ( uint32_t ) pNextAreaInfo                     )    ) {
-            /* 後方結合 */
-
-            /* 結合 */
-            pAreaInfo->size += sizeof ( areaInfo_t ) + pNextAreaInfo->size;
-
-            /* 後メモリ領域をリストから削除 */
-            MLibListRemove( &gFreeList, &( pNextAreaInfo->nodeInfo ) );
-        }
-
-        /* 前メモリ領域結合判定 */
-        if ( ( ( uint32_t ) pPrevAreaInfo->area + pPrevAreaInfo->size ) ==
-             ( ( uint32_t ) pAreaInfo                                 )    ) {
-            /* 前方結合 */
-
-            /* 結合 */
-            pPrevAreaInfo->size += sizeof ( areaInfo_t ) + pAreaInfo->size;
-
-            break;
-        }
-
-        /* 後メモリ領域有無判定 */
+        /* 取得結果判定 */
         if ( pNextAreaInfo == NULL ) {
             /* 無し */
 
-            /* 最後尾に挿入 */
-            MLibListInsertTail( &gFreeList, &( pAreaInfo->nodeInfo ) );
-
             break;
         }
 
-        /* 前後メモリ領域位置判定 */
-        if ( ( pPrevAreaInfo < pAreaInfo ) && ( pAreaInfo < pNextAreaInfo ) ) {
-            /* 中間 */
+    /* 挿入位置判定 */
+    } while ( !( ( pPrevAreaInfo < pAreaInfo                 ) &&
+                 (                 pAreaInfo < pNextAreaInfo )    ) );
 
-            /* 挿入 */
-            MLibListInsertNext( &gFreeList,
-                                &( pPrevAreaInfo->nodeInfo ),
-                                &( pAreaInfo->nodeInfo     )  );
+    /* 次ノード有無判定 */
+    if ( pNextAreaInfo != NULL ) {
+        /* 有り */
 
-            break;
+        /* 次ノード隣接判定 */
+        if ( ( ( uint32_t ) pAreaInfo->area + pAreaInfo->size ) ==
+             ( ( uint32_t ) pNextAreaInfo                     )    ) {
+            /* 隣接 */
+
+            /* 次ノード結合 */
+            pAreaInfo->size += sizeof ( areaInfo_t ) + pNextAreaInfo->size;
+
+            /* 次ノード削除 */
+            MLibListRemove( &gFreeList, &( pNextAreaInfo->nodeInfo ) );
+        }
+    }
+
+    /* 前ノード有無判定 */
+    if ( pPrevAreaInfo != NULL ) {
+        /* 有り */
+
+        /* 前ノード隣接判定 */
+        if ( ( ( uint32_t ) pPrevAreaInfo->area + pPrevAreaInfo->size ) ==
+             ( ( uint32_t ) pAreaInfo                                 )    ) {
+            /* 隣接 */
+
+            /* 前ノード結合 */
+            pPrevAreaInfo->size += sizeof ( areaInfo_t ) + pAreaInfo->size;
+
+            return;
         }
 
-        /* 次のメモリ領域 */
-        pPrevAreaInfo = pNextAreaInfo;
+        /* 挿入 */
+        MLibListInsertNext( &gFreeList,
+                            &( pPrevAreaInfo->nodeInfo ),
+                            &( pAreaInfo->nodeInfo     )  );
+
+    } else {
+        /* 無し */
+
+        /* 挿入 */
+        MLibListInsertHead( &gFreeList, &( pAreaInfo->nodeInfo ) );
     }
 
     return;

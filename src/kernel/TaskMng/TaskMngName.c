@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngName.c                                           */
-/*                                                                 2019/08/09 */
+/*                                                                 2019/11/21 */
 /* Copyright (C) 2019 Mochi.                                                  */
 /*                                                                            */
 /******************************************************************************/
@@ -380,13 +380,9 @@ static void HdlInt( uint32_t        intNo,
     /* 初期化 */
     pParam = ( MkTaskNameParam_t * ) context.genReg.esi;
 
-    DEBUG_LOG( "%s(): start. pParam=%p", __func__, pParam );
-
     /* パラメータチェック */
     if ( pParam == NULL ) {
         /* 不正 */
-
-        DEBUG_LOG( "%s(): end.", __func__ );
 
         return;
     }
@@ -425,7 +421,7 @@ static void HdlInt( uint32_t        intNo,
     DEBUG_LOG( "%s(): end. ret=%d, err=%u",
                __func__,
                pParam->ret,
-               pParam->err                   );
+               pParam->err                  );
     return;
 }
 

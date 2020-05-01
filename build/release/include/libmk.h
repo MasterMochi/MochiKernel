@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* libmk.h                                                                    */
-/*                                                                 2019/11/19 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/04/30 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __LIBMK_H__
@@ -132,6 +132,7 @@ extern MkRet_t LibMkMsgReceive( MkTaskId_t recvTaskId,
                                 size_t     bufferSize,
                                 MkTaskId_t *pSrcTaskId,
                                 size_t     *pRecvSize,
+                                uint32_t   timeout,
                                 MkErr_t    *pErr        );
 /* メッセージ送信(ブロッキング) */
 extern MkRet_t LibMkMsgSend( MkTaskId_t dst,

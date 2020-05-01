@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/types.h                                                             */
-/*                                                                 2019/07/28 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/04/30 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __KERNEL_TYPES_H_
@@ -93,6 +93,7 @@ typedef int32_t MkRet_t;
 #define MK_ERR_NO_REGISTERED ( 0x0000000A ) /**< 登録無し               */
 #define MK_ERR_REGISTERED    ( 0x0000000B ) /**< 登録済み               */
 #define MK_ERR_NO_RESOURCE   ( 0x0000000C ) /**< リソース不足           */
+#define MK_ERR_TIMEOUT       ( 0x0000000D ) /**< タイムアウト           */
 
 /** エラー型 */
 typedef uint32_t MkErr_t;

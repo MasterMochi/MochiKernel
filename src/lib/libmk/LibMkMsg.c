@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/lib/libmk/MkMsg.c                                                      */
-/*                                                                 2019/11/20 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/04/30 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -34,6 +34,7 @@
  * @param[in]   bufferSize  メッセージバッファサイズ
  * @param[out]  *pSrcTaskId 送信元タスクID
  * @param[out]  *pRecvSize  受信メッセージサイズ
+ * @param[in]   timeout     タイムアウト時間[us]
  * @param[out]  *pErr       エラー内容
  *                  - MK_ERR_NONE         エラー無し
  *                  - MK_ERR_PARAM        パラメータ不正
@@ -51,6 +52,7 @@ MkRet_t LibMkMsgReceive( MkTaskId_t recvTaskId,
                          size_t     bufferSize,
                          MkTaskId_t *pSrcTaskId,
                          size_t     *pRecvSize,
+                         uint32_t   timeout,
                          MkErr_t    *pErr        )
 {
     volatile MkMsgParam_t param;
@@ -73,6 +75,7 @@ MkRet_t LibMkMsgReceive( MkTaskId_t recvTaskId,
     param.recv.pBuffer    = pBuffer;
     param.recv.bufferSize = bufferSize;
     param.recv.size       = 0;
+    param.timeout         = timeout;
 
     /* カーネルコール */
     __asm__ __volatile__ ( "mov esi, %0\n"

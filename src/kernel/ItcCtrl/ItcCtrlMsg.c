@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2019/11/20 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/04/30 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -30,6 +30,7 @@
 #include <IntMng.h>
 #include <MemMng.h>
 #include <TaskMng.h>
+#include <TimerMng.h>
 
 
 /******************************************************************************/
@@ -46,9 +47,10 @@
 #endif
 
 /* 状態 */
-#define STATE_INIT     ( 0 )    /**< 初期状態     */
-#define STATE_RECVWAIT ( 1 )    /**< 受信待ち状態 */
-#define STATE_SENDWAIT ( 2 )    /**< 送信待ち状態 */
+#define STATE_INIT        ( 0 ) /**< 初期状態                 */
+#define STATE_RECVWAIT    ( 1 ) /**< 受信待ち状態             */
+#define STATE_RECVTIMEOUT ( 2 ) /**< 受信待ちタイムアウト状態 */
+#define STATE_SENDWAIT    ( 3 ) /**< 送信待ち状態             */
 
 /** 管理情報 */
 typedef struct {
@@ -56,6 +58,7 @@ typedef struct {
     MkTaskId_t src;     /**< 受信待ちメッセージ送信元 */
     uint32_t   state;   /**< 状態                     */
     uint32_t   seqNo;   /**< シーケンス番号           */
+    uint32_t   timerId; /**< タイマID                 */
 } mngEntry_t;
 
 /** メッセージ */
@@ -88,6 +91,9 @@ static void DoSendNB( MkMsgParam_t *pParam );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
+/* メッセージ受信待ちタイムアウト */
+static void TimeoutReceive( uint32_t timerId,
+                            void     *pArg    );
 
 
 /******************************************************************************/
@@ -122,9 +128,10 @@ void ItcCtrlMsgInit( void )
     for ( idx = 0; idx < MK_TASKID_NUM; idx++ ) {
         /* 初期化 */
         MLibListInit( &( gMngTbl[ idx ].list ) );
-        gMngTbl[ idx ].src   = MK_TASKID_NULL;
-        gMngTbl[ idx ].state = STATE_INIT;
-        gMngTbl[ idx ].seqNo = 0;
+        gMngTbl[ idx ].src     = MK_TASKID_NULL;
+        gMngTbl[ idx ].state   = STATE_INIT;
+        gMngTbl[ idx ].seqNo   = 0;
+        gMngTbl[ idx ].timerId = TIMERMNG_TIMERID_NULL;
     }
 
     return;
@@ -234,7 +241,8 @@ static bool CheckValid( MkTaskId_t self,
  *                  にメッセージを返す。デキューしたメッセージの送信元タスクが
  *                  送信ブロッキング状態となっている場合はブロッキング状態を解
  *                  除する。メッセージが無い場合は、メッセージがキューイングさ
- *                  れるまでブロックする。
+ *                  れるまでブロックする。タイムアウト時間が設定されている場合
+ *                  はタイマを設定する。
  *
  * @param[in,out]   *pParam パラメータ
  */
@@ -245,6 +253,7 @@ static void DoReceive( MkMsgParam_t *pParam )
     msg_t      *pMsg;       /* メッセージ     */
     size_t     size;        /* コピーサイズ   */
     MkErr_t    err;         /* エラー要因     */
+    uint32_t   tick;        /* タイムアウト値 */
     MkTaskId_t taskId;      /* タスクID       */
     mngEntry_t *pDstInfo;   /* 送信先管理情報 */
 
@@ -253,6 +262,7 @@ static void DoReceive( MkMsgParam_t *pParam )
     pMsg     = NULL;
     size     = 0;
     err      = MK_ERR_NONE;
+    tick     = 0;
     taskId   = TaskMngSchedGetTaskId();
     pDstInfo = &( gMngTbl[ taskId ] );
 
@@ -274,6 +284,13 @@ static void DoReceive( MkMsgParam_t *pParam )
             /* チェック結果判定 */
             if ( valid == false ) {
                 /* 無効 */
+
+                /* タイマ解除 */
+                TimerMngCtrlUnset( pDstInfo->timerId );
+
+                /* 管理情報初期化 */
+                pDstInfo->state   = STATE_INIT;
+                pDstInfo->timerId = TIMERMNG_TIMERID_NULL;
 
                 /* 戻り値設定 */
                 pParam->ret = MK_RET_FAILURE;
@@ -303,8 +320,12 @@ static void DoReceive( MkMsgParam_t *pParam )
                 TaskMngSchedStart( pMsg->src );
             }
 
-            /* 状態設定 */
-            pDstInfo->state = STATE_INIT;
+            /* タイマ解除 */
+            TimerMngCtrlUnset( pDstInfo->timerId );
+
+            /* 管理情報初期化 */
+            pDstInfo->state   = STATE_INIT;
+            pDstInfo->timerId = TIMERMNG_TIMERID_NULL;
 
             /* コピーサイズ設定 */
             size = MLIB_MIN( pMsg->size, pParam->recv.bufferSize );
@@ -328,6 +349,35 @@ static void DoReceive( MkMsgParam_t *pParam )
             return;
         }
 
+        /* タイムアウト設定判定 */
+        if ( pParam->timeout != 0 ) {
+            /* タイムアウト有り */
+
+            /* tick変換 */
+            tick = pParam->timeout / ( 1000000 / MK_CONFIG_TICK_HZ );
+
+            /* タイマ設定 */
+            pDstInfo->timerId =
+                TimerMngCtrlSet( tick,
+                                 TIMERMNG_TYPE_ONESHOT,
+                                 TimeoutReceive,
+                                 pDstInfo               );
+
+            /* タイムアウト設定初期化 */
+            pParam->timeout = 0;
+
+            /* タイマ設定結果判定 */
+            if ( pDstInfo->timerId == TIMERMNG_TIMERID_NULL ) {
+                /* 失敗 */
+
+                /* 戻り値設定 */
+                pParam->ret = MK_RET_FAILURE;
+                pParam->err = MK_ERR_NO_RESOURCE;
+
+                return;
+            }
+        }
+
         /* 状態設定 */
         pDstInfo->state = STATE_RECVWAIT;
 
@@ -336,6 +386,20 @@ static void DoReceive( MkMsgParam_t *pParam )
 
         /* スケジュール実行 */
         TaskMngSchedExec();
+
+        /* タイムアウト判定 */
+        if ( pDstInfo->state == STATE_RECVTIMEOUT ) {
+            /* タイムアウト */
+
+            /* 状態設定 */
+            pDstInfo->state = STATE_INIT;
+
+            /* 戻り値設定 */
+            pParam->ret = MK_RET_SUCCESS;
+            pParam->err = MK_ERR_TIMEOUT;
+
+            return;
+        }
     }
 
     return;
@@ -550,6 +614,48 @@ static void HdlInt( uint32_t        intNo,
         pParam->err       = MK_ERR_PARAM;
         pParam->recv.size = 0;
     }
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       メッセージ受信待ちタイムアウト
+ * @details     メッセージ受信待ち合わせを解除する。
+ *
+ * @param[in]   timerId タイマID
+ * @param[in]   *pArg   管理情報
+ */
+/******************************************************************************/
+static void TimeoutReceive( uint32_t timerId,
+                            void     *pArg    )
+{
+    MkTaskId_t taskId;      /* タスクID */
+    mngEntry_t *pDstInfo;   /* 管理情報 */
+
+    /* 初期化 */
+    taskId   = TimerMngCtrlGetTaskId( timerId );
+    pDstInfo = ( mngEntry_t * ) pArg;
+
+    /* タイマID無効判定 */
+    if ( pDstInfo->timerId != timerId ) {
+        /* 無効 */
+
+        return;
+    }
+
+    /* 状態設定 */
+    pDstInfo->state = STATE_RECVTIMEOUT;
+
+    /* タイマID初期化 */
+    pDstInfo->timerId = TIMERMNG_TIMERID_NULL;
+
+    /* スケジュール開始 */
+    TaskMngSchedStart( taskId );
+
+    /* スケジューラ実行 */
+    TaskMngSchedExec();
 
     return;
 }

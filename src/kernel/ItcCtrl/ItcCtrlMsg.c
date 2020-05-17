@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2020/04/30 */
+/*                                                                 2020/05/14 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -395,7 +395,7 @@ static void DoReceive( MkMsgParam_t *pParam )
             pDstInfo->state = STATE_INIT;
 
             /* 戻り値設定 */
-            pParam->ret = MK_RET_SUCCESS;
+            pParam->ret = MK_RET_FAILURE;
             pParam->err = MK_ERR_TIMEOUT;
 
             return;

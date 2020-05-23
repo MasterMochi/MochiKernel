@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2019/08/12 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/05/22 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -130,7 +130,7 @@ uint32_t MemMngPageAllocDir( void )
             /* カーネル領域設定 */
             SetKernelPageDir( id );
 
-            /* ページ使用中設定 */
+            /* ページディレクトリ使用中設定 */
             gPageMngTbl.usedDir[ id ] = CMN_USED;
 
             break;
@@ -192,6 +192,9 @@ CmnRet_t MemMngPageFreeDir( uint32_t id )
             /* [TODO]ページテーブル解放 */
         }
     }
+
+    /* ページディレクトリ未使用設定 */
+    gPageMngTbl.usedDir[ id ] = CMN_UNUSED;
 
     /* ページテーブル初期化 */
     memset( &pgPageDir[ id ], 0, sizeof ( IA32PagingDir_t ) );
@@ -516,7 +519,7 @@ static uint32_t PageAllocTbl( void )
             /* ページテーブル初期化 */
             memset( &pgPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );
 
-            /* ページ使用中設定 */
+            /* ページテーブル使用中設定 */
             gPageMngTbl.usedTbl[ id ] = CMN_USED;
 
             break;
@@ -566,6 +569,9 @@ static CmnRet_t PageFreeTbl( uint32_t id )
 
         return CMN_FAILURE;
     }
+
+    /* ページテーブル未使用設定 */
+    gPageMngTbl.usedTbl[ id ] = CMN_UNUSED;
 
     /* ページテーブル初期化 */
     memset( &pgPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );

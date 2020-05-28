@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2020/05/14 */
+/*                                                                 2020/05/28 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -369,6 +369,9 @@ static void DoReceive( MkMsgParam_t *pParam )
             /* タイマ設定結果判定 */
             if ( pDstInfo->timerId == TIMERMNG_TIMERID_NULL ) {
                 /* 失敗 */
+
+                /* 状態設定 */
+                pDstInfo->state = STATE_INIT;
 
                 /* 戻り値設定 */
                 pParam->ret = MK_RET_FAILURE;

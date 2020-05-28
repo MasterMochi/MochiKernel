@@ -392,7 +392,7 @@ static void HdlInt( uint32_t        intNo,
         case MK_TASKNAME_FUNCID_GET:
             /* タスクID取得 */
 
-            DEBUG_LOG( "%s(): get.", __func__ );
+            /* DEBUG_LOG( "%s(): get.", __func__ ); */
             doGet( pParam );
             break;
 
@@ -418,10 +418,12 @@ static void HdlInt( uint32_t        intNo,
             pParam->err = MK_ERR_PARAM;
     }
 
+    /*
     DEBUG_LOG( "%s(): end. ret=%d, err=%u",
                __func__,
                pParam->ret,
                pParam->err                  );
+    */
     return;
 }
 

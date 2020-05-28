@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TimerMng/TimerMngCtrl.c                                         */
-/*                                                                 2020/04/30 */
+/*                                                                 2020/05/28 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -395,7 +395,13 @@ static void Set( TimerInfo_t *pTimerInfo )
         if ( pNext == NULL ) {
             /* 次エントリ無し */
 
-            break;
+            /* 挿入 */
+            ( void ) MLibListInsertNext(
+                        &gUsedList,
+                        ( MLibListNode_t * ) pPrev,
+                        ( MLibListNode_t * ) pTimerInfo );
+
+            return;
         }
 
         /* 次エントリと残タイマ値比較 */
@@ -421,25 +427,6 @@ static void Set( TimerInfo_t *pTimerInfo )
         }
 
         pPrev = pNext;
-    }
-
-    /* 前エントリ有無判定 */
-    if ( pPrev == NULL ) {
-        /* 前エントリ無し */
-
-        /* 先頭に挿入 */
-        ( void ) MLibListInsertHead(
-                    &gUsedList,
-                    ( MLibListNode_t * ) pTimerInfo );
-
-    } else {
-        /* 前エントリ有り */
-
-        /* 挿入 */
-        ( void ) MLibListInsertNext(
-                    &gUsedList,
-                    ( MLibListNode_t * ) pPrev,
-                    ( MLibListNode_t * ) pTimerInfo );
     }
 
     return;

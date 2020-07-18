@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlPort.c                                             */
-/*                                                                 2019/07/28 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/07/18 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -311,6 +311,7 @@ static void InDword( MkIoPortParam_t *pParam )
 static void OutByte( MkIoPortParam_t *pParam )
 {
     uint8_t    type;    /* プロセスタイプ */
+    uint32_t   idx;     /* インデックス   */
     MkTaskId_t taskId;  /* タスクID       */
 
     /* デバッグトレースログ出力 */
@@ -337,7 +338,10 @@ static void OutByte( MkIoPortParam_t *pParam )
 
     /* I/Oポート出力 */
     /* [TODO]ストリング命令 */
-    IA32InstructionOutByte( pParam->portNo, *( ( uint8_t * ) pParam->pData ) );
+    for ( idx = 0; idx < pParam->count; idx++ ) {
+        IA32InstructionOutByte( pParam->portNo,
+                                ( ( uint8_t * ) pParam->pData )[ idx ] );
+    }
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

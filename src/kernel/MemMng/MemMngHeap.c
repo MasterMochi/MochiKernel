@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMngHeap.c                                             */
-/*                                                                 2019/12/03 */
-/* Copyright (C) 2019 Mcohi.                                                  */
+/*                                                                 2020/07/19 */
+/* Copyright (C) 2019-2020 Mcohi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -151,14 +151,14 @@ void MemMngHeapFree( void *pAddr )
     }
 
     /* 初期化 */
-    retMLib   = MLIB_FAILURE;
+    retMLib   = MLIB_RET_FAILURE;
     pAreaInfo = ( areaInfo_t * ) ( pAddr - offsetof( areaInfo_t, area ) );
 
     /* 使用中メモリ領域リストから削除 */
     retMLib = MLibListRemove( &gUsedList, &( pAreaInfo->nodeInfo ) );
 
     /* 削除結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return;

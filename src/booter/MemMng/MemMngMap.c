@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/MemMng/MemMngMap.c                                              */
-/*                                                                 2019/07/23 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/07/19 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -645,7 +645,7 @@ static CmnRet_t SetMemMapListBack( MemMapListEntry_t *pEntry,
                                   ( MLibListNode_t * ) pEmpty  );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         /* デバッグログ出力 */
@@ -757,7 +757,7 @@ static CmnRet_t SetMemMapListFront( MemMapListEntry_t *pEntry,
                                   ( MLibListNode_t * ) pEmpty  );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         /* デバッグログ出力 */

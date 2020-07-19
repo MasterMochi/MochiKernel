@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/MemMng/MemMngArea.c                                             */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/07/19 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -315,7 +315,7 @@ CmnRet_t AreaFree( MLibList_t *pAllocList,
 
     /* 初期化 */
     ret      = CMN_FAILURE;
-    retMLib  = MLIB_FAILURE;
+    retMLib  = MLIB_RET_FAILURE;
     pFree    = NULL;
     pInfo    = NULL;
 
@@ -341,7 +341,7 @@ CmnRet_t AreaFree( MLibList_t *pAllocList,
                               ( MLibListNode_t * ) pInfo );
 
     /* 削除結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return CMN_FAILURE;
@@ -402,7 +402,7 @@ void AreaInit( void )
     retMLib = MLibListInit( &( gAreaTbl.emptyList ) );
 
     /* 初期化結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         /* [TODO] */
@@ -422,7 +422,7 @@ void AreaInit( void )
         retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ), pEmpty );
 
         /* 挿入結果判定 */
-        if ( retMLib != MLIB_SUCCESS ) {
+        if ( retMLib != MLIB_RET_SUCCESS ) {
             /* 失敗 */
 
             /* [TODO] */
@@ -471,7 +471,7 @@ AreaInfo_t *AreaSet( MLibList_t *pFreeList,
                                       ( MLibListNode_t * ) pRet );
 
         /* 挿入結果判定 */
-        if ( retMLib != MLIB_SUCCESS ) {
+        if ( retMLib != MLIB_RET_SUCCESS ) {
             /* 失敗 */
 
             return NULL;
@@ -511,7 +511,7 @@ static void *AllocAll( MLibList_t *pAllocList,
                               ( MLibListNode_t * ) pFree );
 
     /* 削除結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         DEBUG_LOG( "%s(): MLibListRemove() error.", __func__ );
@@ -524,7 +524,7 @@ static void *AllocAll( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pFree );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
@@ -583,7 +583,7 @@ static void *AllocBack( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pEmpty );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
@@ -671,7 +671,7 @@ static void *AllocCenter( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pNext  );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         /* [TODO] */
@@ -683,7 +683,7 @@ static void *AllocCenter( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pAlloc );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
@@ -743,7 +743,7 @@ static void *AllocFront( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pEmpty );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         DEBUG_LOG( "%s(): MLibListInsertTail() error.", __func__ );
@@ -783,7 +783,7 @@ static CmnRet_t FreeMerge( MLibList_t *pAllocList,
     AreaInfo_t *pNext;  /* 結合先メモリ領域の次メモリ領域情報 */
 
     /* 初期化 */
-    retMLib = MLIB_FAILURE;
+    retMLib = MLIB_RET_FAILURE;
     pNext   = NULL;
 
     /* メモリ領域位置関係比較 */
@@ -805,7 +805,7 @@ static CmnRet_t FreeMerge( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pAlloc );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         /* [TODO]トレース情報 */
@@ -834,7 +834,7 @@ static CmnRet_t FreeMerge( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pNext );
 
         /* 削除結果判定 */
-        if ( retMLib != MLIB_SUCCESS ) {
+        if ( retMLib != MLIB_RET_SUCCESS ) {
             /* 失敗 */
 
             return CMN_FAILURE;
@@ -848,7 +848,7 @@ static CmnRet_t FreeMerge( MLibList_t *pAllocList,
                                       ( MLibListNode_t * ) pNext );
 
         /* 挿入結果判定 */
-        if ( retMLib != MLIB_SUCCESS ) {
+        if ( retMLib != MLIB_RET_SUCCESS ) {
             /* 失敗 */
 
             /* [TODO]トレース情報 */
@@ -888,7 +888,7 @@ static CmnRet_t FreePrev( MLibList_t *pAllocList,
                               ( MLibListNode_t * ) pAlloc );
 
     /* 削除結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return CMN_FAILURE;
@@ -900,7 +900,7 @@ static CmnRet_t FreePrev( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pAlloc );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return CMN_FAILURE;
@@ -936,7 +936,7 @@ static CmnRet_t FreeTail( MLibList_t *pAllocList,
                               ( MLibListNode_t * ) pAlloc );
 
     /* 削除結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return CMN_FAILURE;
@@ -947,7 +947,7 @@ static CmnRet_t FreeTail( MLibList_t *pAllocList,
                                   ( MLibListNode_t * ) pAlloc );
 
     /* 挿入結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return CMN_FAILURE;

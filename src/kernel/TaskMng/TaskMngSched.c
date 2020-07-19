@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2019/08/08 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/07/19 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -285,7 +285,7 @@ void TaskMngSchedStart( MkTaskId_t taskId )
     TblTaskInfo_t *pTaskInfo;   /* タスク管理情報 */
 
     /* 初期化 */
-    retMLib   = MLIB_FAILURE;
+    retMLib   = MLIB_RET_FAILURE;
     pTaskInfo = NULL;
 
     /* タスク管理情報取得 */
@@ -296,7 +296,7 @@ void TaskMngSchedStart( MkTaskId_t taskId )
                               &( pTaskInfo->nodeInfo )      );
 
     /* 削除結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         return;
@@ -513,7 +513,7 @@ static void EnqueueToReservedGrp( TblTaskInfo_t *pTaskInfo )
     taskType     = TASKMNG_PROC_TYPE_USER;
     pSchedQ      = NULL;
     pReservedGrp = &gSchedTbl.runGrp[ gSchedTbl.reservedGrpIdx ];
-    retMLib      = MLIB_FAILURE;
+    retMLib      = MLIB_RET_FAILURE;
 
     /* デバッグトレースログ出力 */
     /*DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );*/
@@ -552,7 +552,7 @@ static void EnqueueToReservedGrp( TblTaskInfo_t *pTaskInfo )
                                    &( pTaskInfo->nodeInfo ) );
 
     /* エンキュー結果判定 */
-    if ( retMLib != MLIB_SUCCESS ) {
+    if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
         /* [TODO] */

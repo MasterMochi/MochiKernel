@@ -1,0 +1,549 @@
+/******************************************************************************/
+/*                                                                            */
+/* docs/style.css                                                             */
+/*                                                                 2020/02/23 */
+/* Copyright (C) 2020 Mochi.                                                  */
+/*                                                                            */
+/******************************************************************************/
+/******************************************************************************/
+/* keyframes                                                                  */
+/******************************************************************************/
+@keyframes down2up {
+    0% {
+        opacity   : 0; /* 透明 */
+        transform : translateY( 50px );
+    }
+    100% {
+        opacity   : 1; /* 不透明 */
+        transform : translateY( 0px );
+    }
+}
+
+@keyframes right2left {
+    0% {
+        opacity   : 0;
+        transform : translateX( 50px );
+    }
+    100% {
+        opacity   : 1;
+        transform : translateX( 0px );
+    }
+}
+
+/******************************************************************************/
+/* base                                                                       */
+/******************************************************************************/
+html {
+    color  : #FFFFFF;
+    height : 100%;
+}
+
+body {
+    font-family      : 'Cutive Mono', 'Sawarabi Mincho', monospace, sans-serif;
+    font-size        : 14.5px;
+    height           : 100%;
+    margin           : 0px;
+    background-color : #000000;
+}
+
+a {
+    color : #FFFFFF;
+}
+
+.center {
+    text-align : center;
+}
+
+.right {
+    text-align : right;
+}
+
+
+/******************************************************************************/
+/* menu                                                                       */
+/******************************************************************************/
+#header {
+    background    : linear-gradient( 178deg,
+                                     rgba( 0,0,0,0.4 ),
+                                     rgba( 0,0,0,0.8 )  ),
+                    url( menu.png );
+    border-bottom : solid 1px #000000;
+    height        : 50px;
+}
+
+#menu {
+    margin-left   : auto;
+    margin-right  : auto;
+    text-align    : left;
+    width         : 800px;
+}
+
+#logo {
+    font-size    : 30px;
+    text-shadow  : 0px 0px 10px #FFFFFF,
+                   0px 0px 20px #FFFFFF;
+}
+
+#menu > a {
+    text-decoration: none;
+}
+
+#menu > a > div {
+    color         : #FFFFFF;
+    display       : inline;
+    font-family   : 'Cutive Mono', monospace;
+    font-size     : 20px;
+    height        : 50px;
+    line-height   : 50px;
+    padding-left  : 5px;
+    padding-right : 5px;
+}
+
+#menu > a > div:hover {
+    color       : #000000;
+    font-weight : bold;
+    text-shadow : 0px 0px 10px #FFFFFF,
+                  0px 0px 20px #FFFFFF;
+    transition  : all 0.3s ease;
+}
+
+
+/******************************************************************************/
+/* breadcrumb                                                                 */
+/******************************************************************************/
+#crumb {
+    background-color : #222222;
+    margin           : 0px;
+    padding-bottom   : 3px;
+    padding-top      : 3px;
+}
+
+#crumb > ol {
+    animation-name     : right2left;
+    animation-duration : 1s;
+    font-family        : 'Cutive Mono', monospace;
+    margin-bottom      : 3px;
+    margin-left        : auto;
+    margin-right       : auto;
+    margin-top         : 3px;
+    width              : 800px;
+}
+#crumb > ol > li {
+    display     : inline;
+    font-weight : bold;
+    list-style  : none;
+}
+
+#crumb > ol > li:after {
+    color       : #888888;
+    content     : '\f0da';
+    font-family : "Font Awesome 5 Free";
+}
+
+#crumb > ol > li:first-child:before {
+    color       : #888888;
+    content     : '\f015';
+    font-family : "Font Awesome 5 Free";
+}
+
+#crumb > ol > li:last-child:after {
+    content: '';
+}
+
+#crumb > ol > li > a {
+    color           : #888888;
+    text-decoration : none;
+}
+
+#crumb > ol > li > a:hover {
+    text-decoration : underline;
+}
+
+/******************************************************************************/
+/* home image                                                                 */
+/******************************************************************************/
+#image {
+    background    : #333333 radial-gradient( rgba( 0,0,0,0   ),
+                                             rgba( 0,0,0,0.8 )  );
+    height        : 300px;
+}
+
+/******************************************************************************/
+/* content                                                                    */
+/******************************************************************************/
+#content {
+    background-color : #222222;
+    padding-bottom   : 10px;
+    padding-left     : 10px;
+    padding-right    : 10px;
+    padding-top      : 0px;
+}
+
+#content > div {
+    animation-name     : down2up;
+    animation-duration : 1s;
+    background         : #303030;
+    border-radius      : 10px;
+    margin-bottom      : 10px;
+    margin-left        : auto;
+    margin-right       : auto;
+    margin-top         : 0px;
+    padding            : 10px;
+    width              : 800px;
+}
+
+/*********/
+/* totop */
+/*********/
+#content > div.totop {
+    background    : none;
+    border        : none;
+    padding       : 0;
+    text-align    : right;
+    width         : 800px;
+}
+
+/******/
+/* h1 */
+/******/
+#content > div > h1 {
+    background     : repeating-linear-gradient( -45deg,
+                                                #292929,
+                                                #292929 6px,
+                                                #252525 0px,
+                                                #252525 12px  );
+    border-bottom  : 2px solid #101010;
+    border-top     : 2px solid #101010;
+    color          : #FFFFFF;
+    font-size      : 17px;
+    margin-top     : 0px;
+    padding-bottom : 5px;
+    padding-left   : 5px;
+    padding-right  : 5px;
+    padding-top    : 5px;
+    position       : relative;
+}
+
+#content > div > h1:before {
+    color        : #888888;
+    content      : '\f35a';
+    font-family  : "Font Awesome 5 Free";
+    font-size    : 15px;
+    margin-left  : 5px;
+    margin-right : 10px;
+}
+
+#content > div > h1:after {
+    border     : 15px solid transparent;
+    border-top : 15px solid #000000;
+    content    : '';
+    height     : 0px;
+    left       : 30px;
+    position   : absolute;
+    top        : 100%;
+    width      : 0;
+}
+
+/******/
+/* h2 */
+/******/
+#content > div > h2 {
+    background      : repeating-linear-gradient( -45deg,
+                                                 #292929,
+                                                 #292929 6px,
+                                                 #252525 0px,
+                                                 #252525 12px );
+    border-bottom   : 1px solid #101010;
+    border-top      : 1px solid #101010;
+    color           : #FFFFFF;
+    font-size       : 16px;
+    font-weight     : normal;
+    margin-top      : 0px;
+    padding-bottom  : 2px;
+    padding-left    : 5px;
+    padding-right   : 5px;
+    padding-top     : 2px;
+    position        : relative;
+}
+
+#content > div > h2:before {
+    color        : #888888;
+    content      : '\f105';
+    font-family  : "Font Awesome 5 Free";
+    font-size    : 15px;
+    font-weight  : bold;
+    margin-left  : 5px;
+    margin-right : 10px;
+}
+
+/*****/
+/* p */
+/*****/
+#content > div > p {
+    color        : #FFFFFF;
+    margin-bottom: 0px;
+    margin-left  : 10px;
+    margin-right : 10px;
+    margin-top   : 0px;
+}
+
+#content > div > p:before {
+    content : '';
+    margin  : 7px;
+}
+
+/********/
+/* tips */
+/********/
+#content .tips {
+    background     : #444444;
+    border-radius  : 10px;
+    display        : block;
+    clear          : right;
+    float          : right;
+    margin-bottom  : 10px;
+    margin-left    : 20px;
+    margin-right   : 0px;
+    padding-bottom : 10px;
+    padding-left   : 10px;
+    padding-right  : 0px;
+    padding-top    : 20px;
+    position       : relative;
+    width          : 300px;
+  }
+
+#content .tips > h1 {
+    background     : repeating-linear-gradient( -45deg,
+                                                #292929,
+                                                #292929 6px,
+                                                #252525 0px,
+                                                #252525 12px  );
+    box-shadow     : -3px 2px 3px #000000;
+    box-sizing     : border-box;
+    color          : #FFFFFF;
+    display        : inline-block;
+    font-size      : 14.5px;
+    height         : 25px;
+    left           : 0px;
+    line-height    : 25px;
+    margin         : 0px;
+    padding-left   : 20px;
+    padding-right  : 20px;
+    padding-top    : 2px;
+    position       : absolute;
+    top            : 5px;
+}
+
+#content .tips > h1:before {
+    background     : repeating-linear-gradient( -45deg,
+                                                #292929,
+                                                #292929 6px,
+                                                #252525 0px,
+                                                #252525 12px  );
+    border        : none;
+    border-radius : 5px 0px 0px 5px;
+    color         : #888888;
+    content       : '\f058';
+    font-family   : "Font Awesome 5 Free";
+    height        : 33px;
+    left          : -7px;
+    padding-left  : 7px;
+    position      : absolute;
+    top           : 0px;
+    width         : 0px;
+}
+
+#content .tips > h1:after {
+    background    : #000000;
+    border        : none;
+    border-radius : 5px 0px 0px 5px;
+    bottom        : -7px;
+    content       : '';
+    height        : 7px;
+    left          : -5px;
+    position      : absolute;
+    width         : 5px;
+}
+
+#content .tips > p {
+    color         : #FFFFFF;
+    font-size     : 13px;
+    margin-bottom : 0px;
+    margin-left   : 10px;
+    margin-right  : 10px;
+    margin-top    : 0px;
+    padding-top   : 20px;
+}
+
+/************/
+/* ul.type1 */
+/************/
+#content ul.type1 {
+    border         : solid 3px #888888;
+    border-radius  : 3em .5em 2em .5em/.4em 2em .5em 3em;
+    margin-left    : 100px;
+    margin-right   : 100px;
+    padding-bottom : 10px;
+    padding-left   : 20px;
+    padding-right  : 20px;
+    padding-top    : 10px;
+    position       : relative;
+}
+
+#content ul.type1 > li:before {
+    color       : #888888;
+    content     : '\f138';
+    font-family : "Font Awesome 5 Free";
+    font-weight : 900;
+    left        : 20px;
+    position    : absolute;
+}
+
+#content ul.type1 > li {
+    color           : #FFFFFF;
+    line-height     : 1.5;
+    padding-bottom  : 2px;
+    padding-left    : 30px;
+    padding-right   : 2px;
+    padding-top     : 2px;
+    border-bottom   : dashed 1px #888888;
+    list-style-type : none!important;
+}
+
+#content ul.type1 > li:last-of-type {
+    border-bottom : none;
+}
+
+/************/
+/* ul.type2 */
+/************/
+#content ul.type2 {
+    padding-left   : 20px;
+    padding-right  : 20px;
+    position       : relative;
+}
+
+#content ul.type2 > li:before {
+    color       : #888888;
+    content     : '\f138';
+    font-family : "Font Awesome 5 Free";
+    font-weight : 900;
+    left        : 20px;
+    position    : absolute;
+}
+
+#content ul.type2 > li {
+    color           : #FFFFFF;
+    line-height     : 1.5;
+    padding-bottom  : 2px;
+    padding-left    : 30px;
+    padding-right   : 2px;
+    padding-top     : 2px;
+    border-bottom   : dashed 1px #888888;
+    list-style-type : none!important;
+}
+
+#content ul.type2 > li:last-of-type {
+    border-bottom : none;
+}
+
+/***********/
+/* twitter */
+/***********/
+#content .twitter-2column > .twitter-tweet {
+    float   : left;
+    padding : 5px;
+}
+
+
+/*********/
+/* table */
+/*********/
+#content table {
+    background-color: #000000;
+    border-bottom   : 2px solid #101010;
+    border-top      : 2px solid #101010;
+    margin-top      : 10px;
+    margin-left     : auto;
+    margin-right    : auto;
+    margin-bottom   : 10px;
+}
+
+#content td {
+    background-color: #303030;
+    padding-bottom  : 3px;
+    padding-left    : 10px;
+    padding-right   : 10px;
+    padding-top     : 3px;
+}
+
+#content td.title {
+    background     : repeating-linear-gradient( -45deg,
+                                                #292929,
+                                                #292929 6px,
+                                                #252525 0px,
+                                                #252525 12px );
+    color          : #FFFFFF;
+    margin-top     : 0px;
+    position       : relative;
+    text-align     : center;
+}
+
+
+/*******/
+/* img */
+/*******/
+#content img {
+    background-color : #FFFFFF;
+    margin-top       : 10px;
+    margin-bottom    : 0px;
+    padding          : 5px;
+}
+
+#content img.dark {
+    background-color : #303030;
+    margin-top       : 10px;
+    margin-bottom    : 0px;
+    padding          : 5px;
+}
+
+
+/*************/
+/* pre(code) */
+/*************/
+#content pre {
+    line-height: 40%;
+}
+
+
+/******/
+/* ol */
+/******/
+#content ol {
+    counter-reset   : section;
+    list-style-type : none;
+    padding-left    : 20px;
+}
+
+#content ol li:before {
+    counter-increment : section;
+    content           : counters( section, "." ) ". ";
+}
+
+
+/******************************************************************************/
+/* footer                                                                     */
+/******************************************************************************/
+#footer {
+    color        : #BBBBBB;
+    margin-left  : auto;
+    margin-right : auto;
+    width        : 800px;
+    margin-top   : 10px;
+}
+
+#footer > #copyright {
+    text-align : center;
+}
+
+/******************************************************************************/

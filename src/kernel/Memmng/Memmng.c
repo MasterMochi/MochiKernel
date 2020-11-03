@@ -17,7 +17,7 @@
 
 /* 内部モジュールヘッダ */
 #include "MemmngArea.h"
-#include "MemmngGdt.h"
+#include "MemmngSgmt.h"
 #include "MemmngHeap.h"
 #include "MemmngIo.h"
 #include "MemmngMap.h"
@@ -65,8 +65,8 @@ void MemmngInit( BiosE820Entry_t *pBiosE820,
     /* メモリマップ管理サブモジュール初期化 */
     MapInit( pBiosE820, biosE820Num, pMemMap, memMapNum );
 
-    /* GDT管理サブモジュール初期化 */
-    MemmngGdtInit();
+    /* セグメンテーション管理サブモジュール初期化 */
+    MemmngSgmtInit();
 
     /* ヒープ管理サブモジュール初期化 */
     HeapInit();

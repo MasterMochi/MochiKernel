@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Memmng.h                                                */
-/*                                                                 2020/08/11 */
+/*                                                                 2020/11/03 */
 /* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -16,6 +16,7 @@
 
 /* 共通ヘッダ */
 #include <firmware/bios/e820.h>
+#include <hardware/IA32/IA32Descriptor.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/config.h>
 #include <kernel/kernel.h>
@@ -30,29 +31,42 @@
 /* 定義                                                                       */
 /******************************************************************************/
 /* GDT定義 */
-#define MEMMNG_GDT_ENTRY_FULL     (  0 )        /**< GDTエントリ空き無し   */
-#define MEMMNG_GDT_ENTRY_MIN      (  1 )        /**< GDTエントリ番号最小値 */
-#define MEMMNG_GDT_ENTRY_MAX      (  9 )        /**< GDTエントリ番号最大値 */
-#define MEMMNG_GDT_ENTRY_NUM        \
-    ( MEMMNG_GDT_ENTRY_MAX + 1 )                /**< GDTエントリ数         */
+#define MEMMNG_GDT_ENTRY_FULL (  0 )    /**< GDTエントリ空き無し   */
+#define MEMMNG_GDT_ENTRY_MIN  (  1 )    /**< GDTエントリ番号最小値 */
+#define MEMMNG_GDT_ENTRY_MAX  (  9 )    /**< GDTエントリ番号最大値 */
+#define MEMMNG_GDT_ENTRY_NUM   \
+    ( MEMMNG_GDT_ENTRY_MAX + 1 )        /**< GDTエントリ数         */
 
-/* セグメントセレクタ定義 */
-#define MEMMNG_SEGSEL_KERNEL_CODE ( 1 * 8     ) /**< カーネルコードセグメント */
-#define MEMMNG_SEGSEL_KERNEL_DATA ( 2 * 8     ) /**< カーネルデータセグメント */
-#define MEMMNG_SEGSEL_APL_CODE    ( 3 * 8 + 3 ) /**< アプリコードセグメント   */
-#define MEMMNG_SEGSEL_APL_DATA    ( 4 * 8 + 3 ) /**< アプリデータセグメント   */
+/* GDTインデックス */
+#define MEMMNG_GDT_IDX_KERNEL_CODE ( 1 )    /**< カーネルコードGDTインデックス */
+#define MEMMNG_GDT_IDX_KERNEL_DATA ( 2 )    /**< カーネルデータGDTインデックス */
+#define MEMMNG_GDT_IDX_APL_CODE    ( 3 )    /**< アプリコードGDTインデックス   */
+#define MEMMNG_GDT_IDX_APL_DATA    ( 4 )    /**< アプリデータGDTインデックス   */
+
+/** カーネルコードセグメントセレクタ */
+#define MEMMNG_SEGSEL_KERNEL_CODE \
+    IA32_SEGMENT_SELECTOR( MEMMNG_GDT_IDX_KERNEL_CODE, IA32_TI_GDT, IA32_RPL_0 )
+/** カーネルデータセグメントセレクタ */
+#define MEMMNG_SEGSEL_KERNEL_DATA \
+    IA32_SEGMENT_SELECTOR( MEMMNG_GDT_IDX_KERNEL_DATA, IA32_TI_GDT, IA32_RPL_0 )
+/** アプリコードセグメントセレクタ */
+#define MEMMNG_SEGSEL_APL_CODE    \
+    IA32_SEGMENT_SELECTOR( MEMMNG_GDT_IDX_APL_CODE   , IA32_TI_GDT, IA32_RPL_3 )
+/** アプリデータセグメントセレクタ */
+#define MEMMNG_SEGSEL_APL_DATA    \
+    IA32_SEGMENT_SELECTOR( MEMMNG_GDT_IDX_APL_DATA   , IA32_TI_GDT, IA32_RPL_3 )
 
 /** ページディレクトリID */
-#define MEMMNG_PAGE_DIR_ID_IDLE   ( 0 )         /**< アイドルプロセス用PDID */
-#define MEMMNG_PAGE_DIR_ID_MIN    ( 1 )         /**< PDID最小値             */
+#define MEMMNG_PAGE_DIR_ID_IDLE ( 0 )   /**< アイドルプロセス用PDID */
+#define MEMMNG_PAGE_DIR_ID_MIN  ( 1 )   /**< PDID最小値             */
 
 /* ページディレクトリ定義 */
-#define MEMMNG_PAGE_DIR_NUM       MK_PID_NUM            /**< PD管理数   */
-#define MEMMNG_PAGE_DIR_FULL      MEMMNG_PAGE_DIR_NUM   /**< PD空き無し */
+#define MEMMNG_PAGE_DIR_NUM  MK_PID_NUM             /**< PD管理数   */
+#define MEMMNG_PAGE_DIR_FULL MEMMNG_PAGE_DIR_NUM    /**< PD空き無し */
 
 /* ページテーブル定義 */
-#define MEMMNG_PAGE_TBL_NUM       ( 4096 )              /**< PT管理数   */
-#define MEMMNG_PAGE_TBL_FULL      MEMMNG_PAGE_TBL_NUM   /**< PT空き無し */
+#define MEMMNG_PAGE_TBL_NUM  ( 4096 )               /**< PT管理数   */
+#define MEMMNG_PAGE_TBL_FULL MEMMNG_PAGE_TBL_NUM    /**< PT空き無し */
 
 
 /******************************************************************************/
@@ -78,18 +92,6 @@ extern void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
 extern void MemmngCtrlSet( void    *pPAddr,
                            uint8_t value,
                            size_t  size     );
-
-/*-------------*/
-/* MemmngGdt.c */
-/*-------------*/
-/* GDTエントリ追加 */
-extern uint16_t MemmngGdtAdd( void    *pBase,
-                              size_t  limit,
-                              uint8_t limitG,
-                              uint8_t sysFlg,
-                              uint8_t type,
-                              uint8_t level,
-                              uint8_t opSize  );
 
 /*--------------*/
 /* MemmngHeap.c */
@@ -145,6 +147,18 @@ extern void MemmngPageUnset( uint32_t dirId,
 extern void *MemmngPhysAlloc( size_t size );
 /* 物理メモリ領域解放 */
 extern CmnRet_t MemmngPhysFree( void *pAddr );
+
+/*--------------*/
+/* MemmngSgmt.c */
+/*--------------*/
+/* GDTエントリ追加 */
+extern uint16_t MemmngSgmtAdd( void    *pBase,
+                               size_t  limit,
+                               uint8_t limitG,
+                               uint8_t sysFlg,
+                               uint8_t type,
+                               uint8_t level,
+                               uint8_t opSize  );
 
 /*--------------*/
 /* MemmngVirt.c */

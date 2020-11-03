@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2019/08/13 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -88,7 +88,7 @@ const static logIdTrans_t gIdTransTbl[ CMN_MODULE_NUM + 1 ] = {
     { CMN_MODULE_DEBUG_MAIN,     "DBG-MAIN" },   /* デバッグ制御(メイン)     */
     { CMN_MODULE_DEBUG_LOG,      "DBG-LOG " },   /* デバッグ制御(ログ)       */
     { CMN_MODULE_MEMMNG_MAIN,    "MEM-MAIN" },   /* メモリ管理(メイン)       */
-    { CMN_MODULE_MEMMNG_GDT,     "MEM-GDT " },   /* メモリ管理(GDT)          */
+    { CMN_MODULE_MEMMNG_SGMT,    "MEM-SGMT" },   /* メモリ管理(セグメント)   */
     { CMN_MODULE_MEMMNG_AREA,    "MEM-AREA" },   /* メモリ管理(領域)         */
     { CMN_MODULE_MEMMNG_PAGE,    "MEM-PAGE" },   /* メモリ管理(ページ)       */
     { CMN_MODULE_MEMMNG_CTRL,    "MEM-CTRL" },   /* メモリ管理(制御)         */

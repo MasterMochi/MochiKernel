@@ -70,7 +70,7 @@ void TssInit( void )
     gTss.ss0 = MEMMNG_SEGSEL_KERNEL_DATA;
 
     /* TSSディスクリプタ設定 */
-    index = MemmngGdtAdd(
+    index = MemmngSgmtAdd(
                 &gTss,                          /* セグメントベース     */
                 sizeof ( IA32Tss_t ) - 1,       /* セグメントサイズ     */
                 IA32_DESCRIPTOR_G_BYTE,         /* リミット粒度         */

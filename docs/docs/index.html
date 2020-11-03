@@ -8,7 +8,7 @@
         <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
         <meta name="format-detection" content="email=no,telephone=no,address=no">
         <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
-        <meta property="og:title" content="msh">
+        <meta property="og:title" content="MochiKernel">
         <meta property="og:type" content="website">
         <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
         <!-- <meta property="og:image" content=""> -->
@@ -17,7 +17,7 @@
         <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
         <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
         <link rel="stylesheet" href="../style.css">
-        <link rel="canonical" href="https://MasterMochi.github.io/msh/">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
         <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
@@ -46,10 +46,41 @@
             <div>
                 <a name="external"></a>
                 <h1>外部仕様</h1>
+                <ol>
+                    <li>概要</li>
+                    <li>機能<ol>
+                        <li>メモリ管理機能<ol>
+                            <li><a href="external/memory/phys/index.html">物理メモリ管理</a></li>
+                            <li><a href="external/memory/virt/index.html">仮想メモリ管理</a></li></ol></li>
+                        <li>割込み管理機能</li>
+                        <li>タイマ管理機能</li>
+                        <li>タスク管理機能</li>
+                        <li>タスク間通信機能</li>
+                        <li>入出力制御機能</li></ol></li>
+                </ol>
             </div>
             <div>
                 <a name="internal"></a>
                 <h1>内部仕様</h1>
+                <ol>
+                    <li>モジュール構成</li>
+                    <li>モジュール<ol>
+                        <li>初期化制御</li>
+                        <li><a href="internal/Memmng/index.html">メモリ管理</a><ol>
+                            <li>メイン</li>
+                            <li>セグメンテーション管理</li>
+                            <li>ページング管理</li>
+                            <li>物理メモリ領域管理</li>
+                            <li>仮想メモリ領域管理</li>
+                            <li>メモリ領域管理</li>
+                            <li>I/Oメモリ領域管理</li>
+                            <li>ヒープ管理</li></ol></li>
+                        <li>割込み管理</li>
+                        <li>タスク管理</li>
+                        <li>タイマ管理</li>
+                        <li>タスク間通信制御</li>
+                        <li>入出力制御</li></ol></li>
+                </ol>
             </div>
         </div>
         <div id="footer">

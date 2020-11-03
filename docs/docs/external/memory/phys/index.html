@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - 外部仕様 - 物理メモリ管理</title>
+    </head>
+    <body>
+        <a name="top"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#external"><span itemprop="name">外部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#external"><span itemprop="name">メモリ管理機能</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">物理メモリ管理</span></a>
+                    <meta itemprop="position" content="5">
+                </li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>物理メモリ管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#memmap">メモリマップ情報入力</a></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>物理メモリ領域を仮想メモリの管理単位である4KB単位で管理する。</p>
+                <p>管理のために、MochiKernelを起動するブートローダはメモリマップ情報をMochiKernelに渡す必要がある。</p>
+                <br>
+                <div class="center">
+                    <img src="sequence.png"><br>
+                    メモリマップ情報入力シーケンス
+                </div>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="memmap">メモリマップ情報入力</a></h1>
+                <p>MochiKernelは、下記物理アドレスからメモリマップ情報を取得する。</p>
+                <br>
+                <div class="center">メモリマップ情報格納先</div>
+                <table>
+                    <tr>
+                        <td class="title">物理メモリアドレス</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_0CD8</td>
+                    </tr>
+                </table>
+                <br>
+                <p>メモリマップ情報は、メモリ領域のアドレス、サイズ、タイプ情報を持った1つ以上のエントリから構成される。メモリアドレスとサイズは4KBでアライメントされ、各エントリはメモリアドレスでソートされている必要がある。また、4GB全てのメモリ領域情報が格納されている必要がある。メモリマップ情報のエントリ構造を以下に示す。</p>
+                <br>
+                <div class="center">メモリマップ情報エントリ構造</div>
+                <table>
+                    <tr>
+                        <td class="title">オフセット<br>[byte]</td>
+                        <td class="title">サイズ<br>[byte]</td>
+                        <td class="title">フィールド名</td>
+                        <td class="title">値</td>
+                        <td class="title">説明</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0</td>
+                        <td class="center">4</td>
+                        <td class="center">*pAddr</td>
+                        <td class="center">0x0000_0000～<br>0xFFFF_FFFF　</td>
+                        <td>メモリ領域先頭アドレス</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td class="center">4</td>
+                        <td class="center">size</td>
+                        <td class="center">0x0000_0000～<br>0xFFFF_FFFF　</td>
+                        <td>メモリ領域サイズ</td>
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="5">8</td>
+                        <td class="center" rowspan="5">4</td>
+                        <td class="center" rowspan="5">type</td>
+                        <td class="center">0x01</td>
+                        <td>使用可能メモリ領域</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x02</td>
+                        <td>使用不可メモリ領域</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x05</td>
+                        <td>ブートデータ領域</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x06</td>
+                        <td>カーネル領域</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x07</td>
+                        <td>プロセスイメージ領域</td>
+                    </tr>
+                </table>
+                <br>
+                <p><i>[設計メモ]</i></p>
+                <p><i>BIOSから取得したE820メモリマップ情報でなく独自のメモリマップ情報を必要とした理由</i></p>
+                <i><ul>
+                    <li>E820メモリマップ情報は64bit先頭アドレスと終端アドレスとメモリ領域タイプから成る。現状のMochiKernelは32bitモードで動作するので、64bitのメモリ空間管理は不要である事と、終端アドレスではなくメモリ領域サイズの方が必要な情報であったため。</li>
+                    <li>E820メモリマップ情報はアドレスによるソートが(仕様的には)行われていないため。</li>
+                    <li>E820メモリマップ情報は各エントリのアドレスアライメントが4KB単位でないため。</li>
+                    <li>E820メモリマップ情報は未定義のメモリ領域があるため。</li>
+                    <li>MochiKernelは32bitモードで実行するので16bitで動作するBIOSコールを使用することが出来ないため。</li>
+                </ul></i>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,17 @@
+@startuml
+
+participant "Mochi\nBooter"    as booter
+database    "メモリマップ情報" as map
+participant "Mochi\nKernel"    as kernel
+
+activate booter
+
+booter -\ map: 書込み
+
+booter -> kernel: 起動
+deactivate booter
+activate kernel
+
+map -\ kernel: 読込み
+
+@enduml

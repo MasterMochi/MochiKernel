@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - 外部仕様 - 仮想メモリ管理</title>
+    </head>
+    <body>
+        <a name="top"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#external"><span itemprop="name">外部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#external"><span itemprop="name">メモリ管理機能</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">仮想メモリ管理機能</span></a>
+                    <meta itemprop="position" content="5">
+                </li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>仮想メモリ管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a><ol>
+                        <li><a href="#abstruct-segmentation">IA-32のセグメンテーション機能</a></li>
+                        <li><a href="#abstruct-paging">IA-32のページング機能</a></li></ol></li>
+                    <li><a href="#sgmt">セグメンテーション初期化</a><ol>
+                        <li><a href="#sgmt-gdt">グローバルディスクリプタテーブル設定</a></li>
+                        <li><a href="#sgmt-gdtr">GDTRレジスタ設定</a></li></ol></li>
+                    <li><a href="#initpage">ページング初期化</a><ol>
+                        <li><a href="#initpage-4kernel">カーネル空間用ページテーブル設定</a></li>
+                        <li><a href="#initpage-idle">アイドルプロセス用ページディレクトリ設定</a></li>
+                        <li><a href="#initpage-cr3">CR3レジスタ設定</a></li>
+                        <li><a href="#initpage-enable">ページング有効化</a></li>
+                        <li><a href="#initpage-pge">グローバルページ有効化</a></li></ol></li>
+                    <li><a href="#page">ページング管理</a><ol>
+                        <li><a href="#page-dir">ページディレクトリ割当と解放</a></li>
+                        <li><a href="#page-4kernel">カーネル空間用ページマッピング設定</a></li>
+                        <li><a href="#page-4user">ユーザ空間用ページマッピング設定</a></li>
+                        <li><a href="#page-switch">ページディレクトリ切替</a></li></ol></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>MochiKernel上で動作する全てのプロセスは、他プロセスからのデータ破壊、改ざん、漏洩が伴うメモリアクセスを不可能にするために物理メモリ空間でなく仮想メモリ空間上で動作させる。</p>
+                <p>MochiKernelは、IA-32の仮想メモリ方式であるセグメンテーションとページングを管理する。</p>
+                <br>
+                <br>
+                <h2><a name="abstruct-segmentation">IA-32のセグメンテーション</a></h2>
+                <p>セグメンテーションは、Global Descriptor Table(GDT)により物理メモリ領域をセグメントと呼ばれる仮想メモリ空間に分割するIA-32アーキテクチャCPUの機能である。GDTにはセグメントのベースアドレスやサイズなどから成るセグメントディスクリプタを格納し、CPUのGDTRレジスタにGDTのアドレスを設定する。プログラムはセグメントセレクタと仮想アドレス(オフセット)の論理アドレスによりメモリ位置を指定する。</p>
+                <p>セグメンテーションの概要図、セグメントセレクタの構成、セグメントディスクリプタの構成を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="segmentation.png"><br>
+                    セグメンテーション概要
+                </div>
+                <br>
+                <div class="center">セグメントセレクタ構成</div>
+                <table>
+                    <tr>
+                        <td class="title" colspan="2">オフセット</td>
+                        <td class="title" rowspan="2">フィールド</td>
+                        <td class="title" rowspan="2">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">byte</td>
+                        <td class="title">bit</td>
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="3">0-1</td>
+                        <td class="center">0-1</td>
+                        <td>要求特権レベル(RPL)</td>
+                        <td>0(最高)-3(最低)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td>テーブル・インジケータ(TI)</td>
+                        <td>
+                            0: グローバルディスクリプタテーブル<br>
+                            1: ローカルディスクリプタテーブル
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">3-15</td>
+                        <td>インデックス</td>
+                        <td>グローバル/ローカルディスクリプタテーブルのインデックス</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="center">セグメントディスクリプタ構成(コード・データ)</div>
+                <table>
+                    <tr>
+                        <td class="title" colspan="2">オフセット</td>
+                        <td class="title" colspan="3" rowspan="2">フィールド</td>
+                        <td class="title" rowspan="2">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">byte</td>
+                        <td class="title">bit</td>
+                    <tr>
+                        <td class="center">0</td>
+                        <td class="center">-</td>
+                        <td rowspan="2" colspan="3">セグメント・リミット[15:0]</td>
+                        <td rowspan="2">
+                            Gフラグ=0: 1byte単位のセグメントサイズ<br>
+                            Gフラグ=1: 4KB単位のセグメントサイズ
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">-</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">-</td>
+                        <td rowspan="2" colspan="3">セグメント・ベース・アドレス[15:0]</td>
+                        <td rowspan="3">セグメント先頭アドレス</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">-</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td class="center">-</td>
+                        <td colspan="3">セグメント・ベース・アドレス[23:16]</td>
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="7">5</td>
+                        <td class="center">0</td>
+                        <td rowspan="7">属性</td>
+                        <td rowspan="4">ディスクリプタ<br>・タイプ</td>
+                        <td>アクセス済みフラグ</td>
+                        <td>0: 未アクセス, 1: アクセス済み</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td>読書可能</td>
+                        <td>0: 読込み専用、1: 読書可能</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td>伸長方向/<br>コンフォーミング</td>
+                        <td>
+                            0: エクスパンドアップ/非コンフォーミング<br>
+                            1: エクスパンドダウン/近フォーミング
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td>データ/コード</td>
+                        <td>0: データ、1: コード</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td colspan="2">システムフラグ(S)</td>
+                        <td>1: コード・データ、0: （省略）</td>
+                    </tr>
+                    <tr>
+                        <td class="center">5-6</td>
+                        <td colspan="2">ディスクリプタ特権レベル(DPL)</td>
+                        <td>0(最高)-2(最低)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">7</td>
+                        <td colspan="2">セグメント存在フラグ(P)</td>
+                        <td>
+                            0: 無効ディスクリプタ<br>
+                            1: 有効ディスクリプタ
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="5">6</td>
+                        <td class="center">0-3</td>
+                        <td colspan="3">セグメント・リミット[19:16]</td>
+                        <td>
+                            Gフラグ=0: 1byte単位のセグメントサイズ<br>
+                            Gフラグ=1: 4KB単位のセグメントサイズ
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td rowspan="4">属性</td>
+                        <td colspan="2">システムソフトウェア利用(AVL)</td>
+                        <td>自由に利用可能</td>
+                    </tr>
+                    <tr>
+                        <td class="center">5</td>
+                        <td colspan="2">Reserved</td>
+                        <td>常に0</td>
+                    </tr>
+                    <tr>
+                        <td class="center">6</td>
+                        <td colspan="2">オぺレーション・サイズ(D/B)</td>
+                        <td>0: 16bit、1: 32bit</td>
+                    </tr>
+                    <tr>
+                        <td class="center">7</td>
+                        <td colspan="2">グラニュラリティ(G)</td>
+                        <td>
+                            0: 1byte単位セグメントサイズ<br>
+                            1: 4KB単位セグメントサイズ
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">7</td>
+                        <td class="center">-</td>
+                        <td colspan="3">セグメント・ベース・アドレス[31:24]</td>
+                        <td>セグメント先頭アドレス</td>
+                    </tr>
+                </table>
+                <br>
+                <p>詳細は、Intel(R)「IA-32 インテル(R) アーキテクチャ ソフトウェア・デベロッパーズ・マニュアル」を参照。</p>
+                <br>
+                <br>
+                <h2><a name="abstruct-paging">IA-32のページング機能</a></h2>
+                <p>ページングは仮想メモリ空間を4KBのページ単位で管理するIA-32アーキテクチャCPUの機能である。</p>
+                <p>ページはCR3レジスタ、仮想メモリアドレス、ページディレクトリ、ページテーブルによってセグメンテーションにおける仮想メモリ領域にマッピングされる。関係図と各構造を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="paging.png"><br>
+                    ページングによる仮想メモリマッピング概要
+                </div>
+                <br>
+                <div class="center">CR3構造概要</div>
+                <table>
+                    <tr>
+                        <td class="title" colspan="2">オフセット</td>
+                        <td class="title" rowspan="2">フィールド</td>
+                        <td class="title" rowspan="2" width="400">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">byte</td>
+                        <td class="title">bit</td>
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="5">0-3</td>
+                        <td class="center">0-2</td>
+                        <td>Reserved</td>
+                        <td>常に0</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td>ページレベルライトスルー<br>(PWT)</td>
+                        <td>
+                            0: ライトバックキャッシング<br>
+                            1: ライトスルーキャッシング
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
+                        <td>
+                            0: ページディレクトリのキャッシュ有効<br>
+                            1: ページディレクトリのキャッシュ無効
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">5-11</td>
+                        <td>Reserved</td>
+                        <td>常に0</td>
+                    </tr>
+                    <tr>
+                        <td class="center">12-31</td>
+                        <td>ページディレクトリ<br>ベースアドレス[31:12]</td>
+                        <td>ページディレクトリが4KBアライメントなので下位12bitは0固定となり該当フィールドが無い。</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="center">ページディレクトリエントリ構造</div>
+                <table>
+                    <tr>
+                        <td class="title" colspan="2">オフセット</td>
+                        <td class="title" rowspan="2">フィールド</td>
+                        <td class="title" rowspan="2" width="400">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">byte</td>
+                        <td class="title">bit</td>
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="11">0-3</td>
+                        <td class="center">0</td>
+                        <td>存在フラグ(P)</td>
+                        <td>0: エントリ無効、1: エントリ有効</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td>読書フラグ(R/W)</td>
+                        <td>0: 読取専用、1: 書込み可能</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td>ユーザ/スーパバイザ(U/S)</td>
+                        <td>0: スーパバイザ特権レベル、1: ユーザ特権レベル</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td>ページレベルライトスルー<br>(PWT)</td>
+                        <td>
+                            0: ライトバックキャッシング<br>
+                            1: ライトスルーキャッシング
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
+                        <td>
+                            0: ページテーブルのキャッシュ有効<br>
+                            1: ページテーブルのキャッシュ無効
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">5</td>
+                        <td>アクセス済フラグ(A)</td>
+                        <td>0: 未アクセス、1: アクセス済</td>
+                    </tr>
+                    <tr>
+                        <td class="center">6</td>
+                        <td>Reserved</td>
+                        <td>常に0</td>
+                    </tr>
+                    <tr>
+                        <td class="center">7</td>
+                        <td>ページサイズフラグ(PS)</td>
+                        <td>0: 4KBページ、1: 2/4MBページ</td>
+                    </tr>
+                    <tr>
+                        <td class="center">8</td>
+                        <td>グローバルフラグ(G)</td>
+                        <td>無効。常に0。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">9-11</td>
+                        <td>システムソフトウェア<br>利用可(AVL)</td>
+                        <td>自由に利用可能</td>
+                    </tr>
+                    <tr>
+                        <td class="center">12-31</td>
+                        <td>ページテーブル<br>ベースアドレス[31:12]</td>
+                        <td>ページテーブルが4KBアライメントなので下位12bitは0固定となり該当フィールドが無い。</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="center">ページテーブルエントリ構造</div>
+                <table>
+                    <tr>
+                        <td class="title" colspan="2">オフセット</td>
+                        <td class="title" rowspan="2">フィールド</td>
+                        <td class="title" rowspan="2" width="400">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">byte</td>
+                        <td class="title">bit</td>
+                    </tr>
+                    <tr>
+                        <td class="center" rowspan="11">0-3</td>
+                        <td class="center">0</td>
+                        <td>存在フラグ(P)</td>
+                        <td>0: エントリ無効、1: エントリ有効</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td>読書フラグ(R/W)</td>
+                        <td>0: 読取専用、1: 書込み可能</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td>ユーザ/スーパバイザ(U/S)</td>
+                        <td>0: スーパバイザ特権レベル、1: ユーザ特権レベル</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td>ページレベルライトスルー<br>(PWT)</td>
+                        <td>
+                            0: ライトバックキャッシング<br>
+                            1: ライトスルーキャッシング
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
+                        <td>
+                            0: ページのキャッシュ有効<br>
+                            1: ページのキャッシュ無効
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">5</td>
+                        <td>アクセス済フラグ(A)</td>
+                        <td>0: 未アクセス、1: アクセス済</td>
+                    </tr>
+                    <tr>
+                        <td class="center">6</td>
+                        <td>ダーティフラグ(D)</td>
+                        <td>0: ページ書込み無、ページ書込み有</td>
+                    </tr>
+                    <tr>
+                        <td class="center">7</td>
+                        <td>ページ属性テーブル<br>インデックス(PAT)</td>
+                        <td>基本的に0。詳細は省略。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">8</td>
+                        <td>グローバルフラグ(G)</td>
+                        <td>
+                            0: 非グローバルページ<br>
+                            1: グローバルページ(TLBフラッシュ抑止)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">9-11</td>
+                        <td>システムソフトウェア<br>利用可(AVL)</td>
+                        <td>自由に利用可能。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">12-31</td>
+                        <td>ページベースアドレス<br>[31:12]</td>
+                        <td>ページが4KBアライメントなので下位12bitは0固定となり該当フィールドが無い。</td>
+                    </tr>
+                </table>
+                <br>
+                <p>詳細は、Intel(R)「IA-32 インテル(R) アーキテクチャ ソフトウェア・デベロッパーズ・マニュアル」を参照。</p>
+                <br>
+             </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="sgmt">セグメンテーション初期化</a></h1>
+                <p>MochiKernelは起動時に物理メモリをフラット（分割せず）に使用する様にセグメンテーションを設定する。</p>
+                <br>
+                <br>
+                <h2><a name="sgmt-gdt">グローバルディスクリプタテーブル設定</a></h2>
+                <p>グローバルディスクリプタテーブル（GDT）は最高のCPU処理性能を発揮するために8byteアライメントでメモリに配置する。GDTの設定値を以下に示す。</p>
+                <br>
+                <div class="center">グローバルディスクリプタテーブル設定</div>
+                <table>
+                    <tr>
+                        <td class="title" rowspan="2">GDT#</td>
+                        <td class="title" rowspan="2">セグメント<br>ベース<br>アドレス</td>
+                        <td class="title" rowspan="2">セグメント<br>リミット</td>
+                        <td class="title" colspan="7">属性</td>
+                        <td class="title" rowspan="2">用途</td>
+                    </tr>
+                    <tr>
+                        <td class="title">タイプ</td>
+                        <td class="title">S</td>
+                        <td class="title">DPL</td>
+                        <td class="title">P</td>
+                        <td class="title">AVL</td>
+                        <td class="title">D/B</td>
+                        <td class="title">G</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center">0x0_0000</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td>Reserved. NULL</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center">0xF_FFFF</td>
+                        <td class="center">0x8</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td>カーネル<br>32bitコード</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center">0xF_FFFF</td>
+                        <td class="center">0x2</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td>カーネル<br>32bitデータRW</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center">0xF_FFFF</td>
+                        <td class="center">0x8</td>
+                        <td class="center">1</td>
+                        <td class="center">3</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td>ドライバ/サーバ/ユーザ<br>32bitコード</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center">0xF_FFFF</td>
+                        <td class="center">0x2</td>
+                        <td class="center">1</td>
+                        <td class="center">3</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td>ドライバ/サーバ/ユーザ<br>32bitデータRW</td>
+                    </tr>
+                    <tr>
+                        <td class="center">5-7</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center">0x0_0000</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td>NULL</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="sgmt-gdtr">GDTRレジスタ設定</a></h2>
+                <p>グローバルディスクリプタテーブルをCPUに登録するために、lgdt命令によってGDTRレジスタを設定する。lgdt命令はGDTのアドレスとサイズを示す疑似ディスクリプタへのアドレスをオペランドとして設定する。設定する疑似ディスクリプタを以下に示す。</p>
+                <br>
+                <div class="center">疑似ディスクリプタ設定</div>
+                <table>
+                    <tr>
+                        <td class="title" colspan="2">オフセット</td>
+                        <td class="title" rowspan="2">フィールド</td>
+                        <td class="title" rowspan="2">設定値</td>
+                        <td class="title" rowspan="2">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">byte</td>
+                        <td class="title">bit</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0</td>
+                        <td class="center" rowspan="2">0-15</td>
+                        <td class="center" rowspan="2">リミット</td>
+                        <td class="center" rowspan="2">63</td>
+                        <td rowspan="2">( GDTサイズ ) - 1 =<br>(GDTエントリ数)8 * (GDTエントリサイズ)8 - 1 = 63</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center" rowspan="4">16-47</td>
+                        <td class="center" rowspan="4">ベースアドレス</td>
+                        <td class="center" rowspan="4">(任意)</td>
+                        <td rowspan="4">GDTのベースアドレス</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                    </tr>
+                    <tr>
+                        <td class="center">5</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="initpage">ページング初期化</a></h1>
+                <p>MochiKernelは、プロセス間で別々のメモリ空間を提供するためプロセス毎に専用のページディレクトリを割当てる。ただし、カーネル領域はプロセス間で共通のためカーネル領域のページテーブルとページは全プロセスで共有する。概要を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="usage.png"><br>
+                    プロセス毎の仮想メモリ設定概要
+                </div>
+                <br>
+                <p>上述の仮想メモリ構成を提供するため、MochiKernelは起動時にカーネル領域用のページテーブル設定とページングの有効化を行う。</p>
+                <br>
+                <br>
+                <h2><a name="initpage-4kernel">カーネル空間用ページテーブル設定</a></h2>
+                <p>複数のプロセスが動作している時（つまり複数のページディレクトリが存在する時）にカーネル空間に動的にページテーブルを割り当てる場合に全ページディレクトリにその設定を反映させる事は非効率的であるため、未使用ページテーブルが存在するとしても、MochiKernel起動時に予めカーネル空間のページテーブルは全て割り当てる。</p>
+                <p>カーネル空間への動的な物理メモリの割当/解放時は、その割当済みのページテーブル（全プロセスで共有）のエントリを設定する事で行う。このため、カーネル空間は4,194,303Byte単位である必要がある。</p>
+                <p>有効および無効領域のページテーブルエントリの設定を以下に示す。</p>
+                <br>
+                <div class="center">カーネル空間用ページテーブルエントリ設定</div>
+                <table>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">ページ<br>ベースアドレス</td>
+                        <td class="title">AVL</td>
+                        <td class="title">G</td>
+                        <td class="title">PAT</td>
+                        <td class="title">D</td>
+                        <td class="title">A</td>
+                        <td class="title">PCD</td>
+                        <td class="title">PWT</td>
+                        <td class="title">U/S</td>
+                        <td class="title">R/W</td>
+                        <td class="title">P</td>
+                    </tr>
+                    <tr>
+                        <td class="title">有効領域</td>
+                        <td class="center">(任意)</td>
+                        <td class="center">(未使用)</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                    </tr>
+                    <tr>
+                        <td class="title">無効領域</td>
+                        <td class="center" colspan="11">0</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="initpage-idle">アイドルプロセス用ページディレクトリ設定</a></h2>
+                <p>ページングを有効化するためにMochiKernel起動時コンテキストのページング設定を行う必要があり、MochiKernel起動時のコンテキストはそのままアイドルプロセスとなるため、アイドルプロセス用のページディレクトリを設定する。</p>
+                <p>ページディレクトリの設定は、物理メモリ割当機能を用いて4KBのページディレクトリ領域を用意し、先に設定しておいたカーネル空間用ページテーブルへのアドレスを用いて各エントリは下記の通りに設定する。</p>
+                <br>
+                <div class="center">アイドルプロセス用ページディレクトリエントリ設定</div>
+                <table>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">ページテーブル<br>ベースアドレス</td>
+                        <td class="title">AVL</td>
+                        <td class="title">G</td>
+                        <td class="title">PS</td>
+                        <td class="title">A</td>
+                        <td class="title">PCD</td>
+                        <td class="title">PWT</td>
+                        <td class="title">U/S</td>
+                        <td class="title">R/W</td>
+                        <td class="title">P</td>
+                    </tr>
+                    <tr>
+                        <td class="title">カーネル領域</td>
+                        <td class="center">(任意)</td>
+                        <td class="center">(未使用)</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                    </tr>
+                    <tr>
+                        <td class="title">他領域</td>
+                        <td class="center" colspan="11">0</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="initpage-cr3">CR3レジスタ設定</a></h2>
+                <p>アイドルプロセス用ページディレクトリへのアドレスを用いて、CR3レジスタを以下の通りに設定する。</p>
+                <br>
+                <div class="center">CR3レジスタ設定値</div>
+                <table>
+                    <tr>
+                        <td class="title">ページディレクトリベースアドレス</td>
+                        <td class="title">PCD</td>
+                        <td class="title">PWT</td>
+                    </tr>
+                    <tr>
+                        <td class="center">(任意)</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="initpage-enable">ページング有効化</a></h2>
+                <p>CR3レジスタを設定した後、グローバルページを有効化する前に、ページングを有効化する。ページングの有効化はCR0レジスタの設定により行う。CR0レジスタの設定値を以下に示す。</p>
+                <br>
+                <div class="center">CR0レジスタ設定値</div>
+                <table>
+                    <tr>
+                        <td class="title">bit</td>
+                        <td class="title">31</td>
+                        <td class="title">30</td>
+                        <td class="title">29</td>
+                        <td class="title">19-28</td>
+                        <td class="title">18</td>
+                        <td class="title">17</td>
+                        <td class="title">16</td>
+                        <td class="title">6-15</td>
+                        <td class="title">5</td>
+                        <td class="title">4</td>
+                        <td class="title">3</td>
+                        <td class="title">2</td>
+                        <td class="title">1</td>
+                        <td class="title">0</td>
+                    </tr>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">PG</td>
+                        <td class="title">CD</td>
+                        <td class="title">NW</td>
+                        <td class="title">予約</td>
+                        <td class="title">AM</td>
+                        <td class="title">予約</td>
+                        <td class="title">WP</td>
+                        <td class="title">予約</td>
+                        <td class="title">NE</td>
+                        <td class="title">ET</td>
+                        <td class="title">TS</td>
+                        <td class="title">EM</td>
+                        <td class="title">MP</td>
+                        <td class="title">PE</td>
+                    </tr>
+                    <tr>
+                        <td class="title">設定値</td>
+                        <td class="center">1</td>
+                        <td class="center" colspan="13">(変更しない)</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="initpage-pge">グローバルページ有効化</a></h2>
+                <p>カーネル領域用のページディレクトリエントリ、ページは全てのページディレクトリ内で共通であるため、CR3レジスタ切替時にTLBフラッシュが行われないようグローバルページを有効にする。本機能はインテル(R) Pentium(R) Pro プロセッサから導入されており、機能が無いプロセッサの場合は実行しない。グローバルページ機能の有効はCR4レジスタの設定により行う。CR4レジスタの設定値を以下に示す。</p>
+                <br>
+                <div class="center">CR4レジスタ設定値</div>
+                <table>
+                    <tr>
+                        <td class="title">bit</td>
+                        <td class="title">31-11</td>
+                        <td class="title">10</td>
+                        <td class="title">9</td>
+                        <td class="title">8</td>
+                        <td class="title">7</td>
+                        <td class="title">6</td>
+                        <td class="title">5</td>
+                        <td class="title">4</td>
+                        <td class="title">3</td>
+                        <td class="title">2</td>
+                        <td class="title">1</td>
+                        <td class="title">0</td>
+                    </tr>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">予約</td>
+                        <td class="title">OSXMMEXCPT</td>
+                        <td class="title">OSFXSR</td>
+                        <td class="title">PCE</td>
+                        <td class="title">PGE</td>
+                        <td class="title">MCE</td>
+                        <td class="title">PAE</td>
+                        <td class="title">PSE</td>
+                        <td class="title">DE</td>
+                        <td class="title">TSD</td>
+                        <td class="title">PVI</td>
+                        <td class="title">VME</td>
+                    </tr>
+                    <tr>
+                        <td class="title">設定値</td>
+                        <td class="center" colspan="4">(変更しない)</td>
+                        <td class="center">1</td>
+                        <td class="center" colspan="7">(変更しない)</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="page">ページング管理</a></h1>
+                <p>プロセスの新規作成時にページディレクトリの割当てを行い、プロセス終了時に解放を行う。必要に応じて物理メモリのページマッピング設定を行う。また、タスクスイッチ時にページディレクトリ切替を行う。</p>
+                <br>
+                <br>
+                <h2><a name="page-dir">ページディレクトリ割当と解放</a></h2>
+                <p>ページディレクトリ割当は、物理メモリ管理機能を用いて4KBのページディレクトリ領域を割り当てた後、MochiKernel初期化時に設定したアイドルプロセス用ページディレクトリをコピーする事で行う。</p>
+                <p>ページディレクトリ解放は、プロセス空間の各ページディレクトリエントリが指すユーザ空間用ページテーブルを全て解放した後に行う。</p>
+                <br>
+                <br>
+                <h2><a name="page-4kernel">カーネル空間用ページマッピング設定</a></h2>
+                <p>カーネル空間用ページの物理メモリマッピング設定/解除時のページテーブルエントリ設定を以下に示す。</p>
+                <br>
+                <div class="center">カーネル空間用ページテーブルエントリ設定</div>
+                <table>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">ページ<br>ベースアドレス</td>
+                        <td class="title">AVL</td>
+                        <td class="title">G</td>
+                        <td class="title">PAT</td>
+                        <td class="title">D</td>
+                        <td class="title">A</td>
+                        <td class="title">PCD</td>
+                        <td class="title">PWT</td>
+                        <td class="title">U/S</td>
+                        <td class="title">R/W</td>
+                        <td class="title">P</td>
+                    </tr>
+                    <tr>
+                        <td class="title">設定時</td>
+                        <td class="center">(任意)</td>
+                        <td class="center">(未使用)</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                    </tr>
+                    <tr>
+                        <td class="title">解除時</td>
+                        <td class="center" colspan="11">0</td>
+                    </tr>
+                </table>
+                <br>
+                <p>ページテーブルエントリ設定後、新しい設定を反映させるためinvlpg命令を使ってTLBをフラッシュする。invlpg命令のオペランドにはマッピングする物理メモリアドレスを指定する。</p>
+                <br>
+                <br>
+                <h2><a name="page-4user">ユーザ空間用ページマッピング設定</a></h2>
+                <p>ユーザ空間用ページの物理メモリマッピング設定/解除時のページディレクトリエントリとページテーブルエントリ設定を以下に示す。</p>
+                <br>
+                <div class="center">ユーザ空間用ページディレクトリエントリ設定</div>
+                <table>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">ページテーブル<br>ベースアドレス</td>
+                        <td class="title">AVL</td>
+                        <td class="title">G</td>
+                        <td class="title">PS</td>
+                        <td class="title">A</td>
+                        <td class="title">PCD</td>
+                        <td class="title">PWT</td>
+                        <td class="title">U/S</td>
+                        <td class="title">R/W</td>
+                        <td class="title">P</td>
+                    </tr>
+                    <tr>
+                        <td class="title">設定時</td>
+                        <td class="center">(任意)</td>
+                        <td class="center">(未使用)</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                    </tr>
+                    <tr>
+                        <td class="title">解除時</td>
+                        <td class="center" colspan="10">0</td>
+                    </tr>
+                </table>
+                <br>
+                <div class="center">ユーザ空間用ページテーブルエントリ設定</div>
+                <table>
+                    <tr>
+                        <td class="title">フィールド</td>
+                        <td class="title">ページ<br>ベースアドレス</td>
+                        <td class="title">AVL</td>
+                        <td class="title">G</td>
+                        <td class="title">PAT</td>
+                        <td class="title">D</td>
+                        <td class="title">A</td>
+                        <td class="title">PCD</td>
+                        <td class="title">PWT</td>
+                        <td class="title">U/S</td>
+                        <td class="title">R/W</td>
+                        <td class="title">P</td>
+                    </tr>
+                    <tr>
+                        <td class="title">設定時</td>
+                        <td class="center">(任意)</td>
+                        <td class="center">(未使用)</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">0</td>
+                        <td class="center">1</td>
+                        <td class="center">1</td>
+                        <td class="center">0/1※</td>
+                        <td class="center">1</td>
+                    </tr>
+                    <tr>
+                        <td class="title">解除時</td>
+                        <td class="center" colspan="11">0</td>
+                    </tr>
+                    <tr>
+                        <td class="title">備考</td>
+                        <td colspan="11">
+                            ※ ロード時のメモリ領域の属性による。通常、プログラム領域は読込み専用、<br>　データ領域は書込み可能に設定される。
+                        </td>
+                    </tr>
+                </table>
+                <br>
+                <p>ページテーブルエントリ設定後、新しい設定を反映させるためinvlpg命令を使ってTLBをフラッシュする。invlpg命令のオペランドにはマッピングする物理メモリアドレスを指定する。</p>
+                <br>
+                <br>
+                <h2><a name="page-switch">ページディレクトリ切替</a></h2>
+                <p>ページディレクトリ切替えは、CR3レジスタのページディレクトリベースアドレスを切替先ページディレクトリに変更する事で行う。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

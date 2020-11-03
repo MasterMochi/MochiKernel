@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - Documentation</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">メモリ管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>メモリ管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#submodule">サブモジュール構成</a></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>メモリ管理モジュールは、物理メモリ管理、仮想メモリ管理、および、メモリ制御などを行う。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="submodule">サブモジュール構成</a></h1>
+                <p>メモリ管理モジュールのサブモジュール構成について以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="submodule.png"><br>
+                    サブモジュール構成図
+                </div>
+                <br>
+                <div class="center">サブモジュール概要</div>
+                <table>
+                    <tr>
+                        <td class="title" rowspan="2">#</td>
+                        <td class="title" colspan="2">サブモジュール名</td>
+                        <td class="title" rowspan="2" width="450">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="title">和名</td>
+                        <td class="title">コード名</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">メイン</td>
+                        <td class="center">Memmng</td>
+                        <td>メモリ管理モジュールの共通的な処理を行う。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td>セグメンテーション管理</td>
+                        <td>MemmngSgmt</td>
+                        <td>グローバルディスクリプタテーブルを定義しCPUに設定する。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td>ページング管理</td>
+                        <td>MemmngPage</td>
+                        <td>プロセス毎のページディレクトリテーブルとページテーブルの管理を行う。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td>物理メモリ領域管理</td>
+                        <td>MemmngPhys</td>
+                        <td>システム全体の物理メモリ領域の管理を行う。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">5</td>
+                        <td>仮想メモリ領域管理</td>
+                        <td>MemmngVirt</td>
+                        <td>プロセス毎の仮想メモリ領域の管理を行う。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">6</td>
+                        <td>メモリ領域管理</td>
+                        <td>MemmngArea</td>
+                        <td>物理メモリ領域管理と仮想メモリ領域管理の共通処理を行う。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">7</td>
+                        <td>I/Oメモリ領域管理</td>
+                        <td>MemmngIo</td>
+                        <td>ドライバプロセス向けにI/Oメモリ領域の管理を行う。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">8</td>
+                        <td>ヒープ管理</td>
+                        <td>MemmngHeap</td>
+                        <td>カーネル用ヒープ領域の管理を行う。</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

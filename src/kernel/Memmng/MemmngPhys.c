@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngIo.c                                               */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/* src/kernel/Memmng/MemmngPhys.c                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -16,6 +16,7 @@
 #include <MLib/MLibList.h>
 
 /* 共通ヘッダ */
+#include <hardware/IA32/IA32Paging.h>
 #include <kernel/kernel.h>
 
 /* 外部モジュールヘッダ */
@@ -23,7 +24,7 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "MemMngArea.h"
+#include "MemmngArea.h"
 
 
 /******************************************************************************/
@@ -32,25 +33,25 @@
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
 #define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_MEMMNG_IO,   \
+    DebugLogOutput( CMN_MODULE_MEMMNG_PHYS, \
                     __LINE__,               \
-                    __VA_ARGS__           )
+                    __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
 
-/** I/Oメモリ領域管理テーブル構造体 */
+/** 物理メモリ領域管理テーブル構造体 */
 typedef struct {
-    MLibList_t allocList;   /**< 割当中I/Oメモリ領域情報リスト */
-    MLibList_t freeList;    /**< 未割当I/Oメモリ領域情報リスト */
-} IoTbl_t;
+    MLibList_t allocList;   /**< 割当中物理メモリ領域情報リスト */
+    MLibList_t freeList;    /**< 未割当物理メモリ領域情報リスト */
+} PhysTbl_t;
 
 
 /******************************************************************************/
 /* 変数定義                                                                   */
 /******************************************************************************/
-/** I/Oメモリ領域管理テーブル */
-static IoTbl_t gIoTbl;
+/** 物理メモリ領域管理テーブル */
+static PhysTbl_t gPhysTbl;
 
 
 /******************************************************************************/
@@ -58,22 +59,20 @@ static IoTbl_t gIoTbl;
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       I/Oメモリ領域割当
- * @details     指定I/Oメモリ領域を割り当てる。
+ * @brief       物理メモリ領域割当
+ * @details     指定サイズを満たす物理メモリ領域を割り当てる。
  *
- * @param[in]   *pAddr I/Oメモリ領域先頭アドレス
- * @param[in]   size   I/Oメモリ領域サイズ
+ * @param[in]   size 割当サイズ
  *
  * @return      割当結果を返す。
  * @retval      NULL     失敗
- * @retval      NULL以外 割り当てたI/Oメモリ領域の先頭アドレス
+ * @retval      NULL以外 割り当てた物理メモリ領域の先頭アドレス
  *
- * @note        先頭アドレスと割当サイズが4Kバイトアライメントでない場合は、割
- *              り当てを行わない。
+ * @note        割当サイズが4Kバイトアライメントでない場合は、割当サイズが4Kバ
+ *              イトアライメントに合うよう加算して、物理メモリ領域を割り当てる。
  */
 /******************************************************************************/
-void *MemMngIoAlloc( void   *pAddr,
-                     size_t size    )
+void *MemmngPhysAlloc( size_t size )
 {
     void *pRet; /* 戻り値 */
 
@@ -86,13 +85,15 @@ void *MemMngIoAlloc( void   *pAddr,
 
         return NULL;
 
+    } else {
+        /* 正常 */
+
+        /* アライメント計算 */
+        size = MLIB_ALIGN( size, IA32_PAGING_PAGE_SIZE );
     }
 
     /* メモリ領域割当 */
-    pRet = AreaAllocSpecified( &( gIoTbl.allocList ),
-                               &( gIoTbl.freeList  ),
-                               pAddr,
-                               size                   );
+    pRet = AreaAlloc( &( gPhysTbl.allocList ), &( gPhysTbl.freeList ), size );
 
     return pRet;
 }
@@ -100,8 +101,8 @@ void *MemMngIoAlloc( void   *pAddr,
 
 /******************************************************************************/
 /**
- * @brief       I/Oメモリ領域解放
- * @details     割当中のI/Oメモリ領域を解放する。
+ * @brief       物理メモリ領域解放
+ * @details     割当中の物理メモリ領域を解放する。
  *
  * @param[in]   *pAddr 解放するメモリアドレス
  *
@@ -110,12 +111,12 @@ void *MemMngIoAlloc( void   *pAddr,
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t MemMngIoFree( void *pAddr )
+CmnRet_t MemmngPhysFree( void *pAddr )
 {
     CmnRet_t ret;   /* 戻り値 */
 
     /* メモリ領域解放 */
-    ret = AreaFree( &( gIoTbl.allocList ), &( gIoTbl.freeList ), pAddr );
+    ret = AreaFree( &( gPhysTbl.allocList ), &( gPhysTbl.freeList ), pAddr );
 
     return ret;
 }
@@ -126,25 +127,25 @@ CmnRet_t MemMngIoFree( void *pAddr )
 /******************************************************************************/
 /******************************************************************************/
 /**
- * @brief       I/Oメモリ領域管理初期化
- * @details     I/Oメモリ領域管理テーブルを初期化する。
+ * @brief       物理メモリ領域管理初期化
+ * @details     物理メモリ領域管理テーブルを初期化する。
  *
  * @param[in]   *pMemMap メモリマップ
  * @param[in]   entryNum メモリマップエントリ数
  */
 /******************************************************************************/
-void IoInit( MkMemMapEntry_t *pMemMap,
-             size_t          entryNum  )
+void PhysInit( MkMemMapEntry_t *pMemMap,
+               size_t          entryNum  )
 {
     uint32_t        index;      /* メモリマップエントリインデックス */
     AreaInfo_t      *pMemInfo;  /* 未割当メモリ領域情報             */
     MkMemMapEntry_t *pEntry;    /* メモリマップエントリ             */
 
-    /* 未割当I/Oメモリ領域情報リスト初期化 */
-    MLibListInit( &( gIoTbl.freeList ) );
+    /* 未割当物理メモリ領域情報リスト初期化 */
+    MLibListInit( &( gPhysTbl.freeList ) );
 
-    /* 割当中I/Oメモリ領域情報リスト初期化 */
-    MLibListInit( &( gIoTbl.allocList ) );
+    /* 割当中物理メモリ領域情報リスト初期化 */
+    MLibListInit( &( gPhysTbl.allocList ) );
 
     /* メモリマップエントリ毎に繰り返し */
     for ( index = 0; index < entryNum; index++ ) {
@@ -152,16 +153,16 @@ void IoInit( MkMemMapEntry_t *pMemMap,
         pEntry = &( pMemMap[ index ] );
 
         /* メモリ領域タイプ判定 */
-        if ( pEntry->type != MK_MEM_TYPE_RESERVED ) {
-            /* 予約済み領域でない */
+        if ( pEntry->type != MK_MEM_TYPE_AVAILABLE ) {
+            /* 使用可能メモリ領域でない */
 
             continue;
         }
 
-        /* 未割当I/Oメモリ領域情報リスト設定 */
-        pMemInfo = AreaSet( &( gIoTbl.freeList ),
+        /* 未割当メモリ領域情報リスト設定 */
+        pMemInfo = AreaSet( &( gPhysTbl.freeList ),
                             pEntry->pAddr,
-                            pEntry->size          );
+                            pEntry->size            );
 
         /* 設定結果判定 */
         if ( pMemInfo == NULL ) {

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2020/05/28 */
+/*                                                                 2020/11/03 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -28,7 +28,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <MemMng.h>
+#include <Memmng.h>
 #include <TaskMng.h>
 #include <TimerMng.h>
 
@@ -343,7 +343,7 @@ static void DoReceive( MkMsgParam_t *pParam )
 
             /* メッセージバッファ解放 */
             memset( pMsg, 0, sizeof ( pMsg->size ) );
-            MemMngHeapFree( pMsg );
+            MemmngHeapFree( pMsg );
             pMsg = NULL;
 
             return;
@@ -493,7 +493,7 @@ static void DoSendCmn( MkTaskId_t   *pTaskId,
     }
 
     /* メッセージ領域割当 */
-    pMsg = MemMngHeapAlloc( sizeof ( msg_t ) + pParam->send.size );
+    pMsg = MemmngHeapAlloc( sizeof ( msg_t ) + pParam->send.size );
 
     /* 割当結果判定 */
     if ( pMsg == NULL ) {

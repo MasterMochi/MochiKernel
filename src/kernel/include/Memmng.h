@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/include/MemMng.h                                                */
-/*                                                                 2019/08/11 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/* src/kernel/include/Memmng.h                                                */
+/*                                                                 2020/08/11 */
+/* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -59,31 +59,31 @@
 /* グローバル関数宣言                                                         */
 /******************************************************************************/
 /*----------*/
-/* MemMng.c */
+/* Memmng.c */
 /*----------*/
 /* メモリ管理初期化 */
-extern void MemMngInit( BiosE820Entry_t *pBiosE820,
+extern void MemmngInit( BiosE820Entry_t *pBiosE820,
                         size_t          biosE820Num,
                         MkMemMapEntry_t *pMemMap,
                         size_t          memMapNum    );
 
 /*--------------*/
-/* MemMngCtrl.c */
+/* MemmngCtrl.c */
 /*--------------*/
 /* メモリコピー（仮想->物理） */
-extern void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
+extern void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                                       void   *pVAddr,
                                       size_t size     );
 /* メモリ設定 */
-extern void MemMngCtrlSet( void    *pPAddr,
+extern void MemmngCtrlSet( void    *pPAddr,
                            uint8_t value,
                            size_t  size     );
 
 /*-------------*/
-/* MemMngGdt.c */
+/* MemmngGdt.c */
 /*-------------*/
 /* GDTエントリ追加 */
-extern uint16_t MemMngGdtAdd( void    *pBase,
+extern uint16_t MemmngGdtAdd( void    *pBase,
                               size_t  limit,
                               uint8_t limitG,
                               uint8_t sysFlg,
@@ -92,41 +92,41 @@ extern uint16_t MemMngGdtAdd( void    *pBase,
                               uint8_t opSize  );
 
 /*--------------*/
-/* MemMngHeap.c */
+/* MemmngHeap.c */
 /*--------------*/
 /* カーネルヒープ領域割当 */
-extern void *MemMngHeapAlloc( size_t size );
+extern void *MemmngHeapAlloc( size_t size );
 /* カーネルヒープ領域解放 */
-extern void MemMngHeapFree( void *pAddr );
+extern void MemmngHeapFree( void *pAddr );
 
 /*------------*/
-/* MemMngIo.c */
+/* MemmngIo.c */
 /*------------*/
 /* I/Oメモリ領域割当 */
-extern void *MemMngIoAlloc( void   *pAddr,
+extern void *MemmngIoAlloc( void   *pAddr,
                             size_t size    );
 /* I/Oメモリ領域解放 */
-extern CmnRet_t MemMngIoFree( void *pAddr );
+extern CmnRet_t MemmngIoFree( void *pAddr );
 
 /*-------------*/
-/* MemMngMap.c */
+/* MemmngMap.c */
 /*-------------*/
-extern CmnRet_t MemMngMapGetInfo( MkMemMapEntry_t *pInfo,
+extern CmnRet_t MemmngMapGetInfo( MkMemMapEntry_t *pInfo,
                                   uint32_t        type    );
 
 /*--------------*/
-/* MemMngPage.c */
+/* MemmngPage.c */
 /*--------------*/
 /* ページディレクトリ割当 */
-extern uint32_t MemMngPageAllocDir( void );
+extern uint32_t MemmngPageAllocDir( void );
 /* ページディレクトリ解放 */
-extern CmnRet_t MemMngPageFreeDir( uint32_t id );
+extern CmnRet_t MemmngPageFreeDir( uint32_t id );
 /* ページディレクトリID取得 */
-extern uint32_t MemMngPageGetDirId( void );
+extern uint32_t MemmngPageGetDirId( void );
 /* ページディレクトリ切替 */
-extern IA32PagingPDBR_t MemMngPageSwitchDir( uint32_t pageDirId );
+extern IA32PagingPDBR_t MemmngPageSwitchDir( uint32_t pageDirId );
 /* ページマッピング設定 */
-extern CmnRet_t MemMngPageSet( uint32_t dirId,
+extern CmnRet_t MemmngPageSet( uint32_t dirId,
                                void     *pVAddr,
                                void     *pPAddr,
                                size_t   size,
@@ -134,35 +134,35 @@ extern CmnRet_t MemMngPageSet( uint32_t dirId,
                                uint32_t attrUs,
                                uint32_t attrRw      );
 /* ページマッピング解除 */
-extern void MemMngPageUnset( uint32_t dirId,
+extern void MemmngPageUnset( uint32_t dirId,
                              void     *pVAddr,
                              size_t   size     );
 
 /*--------------*/
-/* MemMngPhys.c */
+/* MemmngPhys.c */
 /*--------------*/
 /* 物理メモリ領域割当 */
-extern void *MemMngPhysAlloc( size_t size );
+extern void *MemmngPhysAlloc( size_t size );
 /* 物理メモリ領域解放 */
-extern CmnRet_t MemMngPhysFree( void *pAddr );
+extern CmnRet_t MemmngPhysFree( void *pAddr );
 
 /*--------------*/
-/* MemMngVirt.c */
+/* MemmngVirt.c */
 /*--------------*/
 /* 仮想メモリ領域割当 */
-extern void *MemMngVirtAlloc( MkPid_t pid,
+extern void *MemmngVirtAlloc( MkPid_t pid,
                               size_t  size );
 /* 指定仮想メモリ領域割当 */
-extern void *MemMngVirtAllocSpecified( MkPid_t pid,
+extern void *MemmngVirtAllocSpecified( MkPid_t pid,
                                        void    *pAddr,
                                        size_t  size    );
 /* 仮想メモリ領域管理終了 */
-extern CmnRet_t MemMngVirtEnd( MkPid_t pid );
+extern CmnRet_t MemmngVirtEnd( MkPid_t pid );
 /* 仮想メモリ領域解放 */
-extern CmnRet_t MemMngVirtFree( MkPid_t pid,
+extern CmnRet_t MemmngVirtFree( MkPid_t pid,
                                 void    *pAddr );
 /* 仮想メモリ領域管理開始 */
-extern CmnRet_t MemMngVirtStart( MkPid_t pid );
+extern CmnRet_t MemmngVirtStart( MkPid_t pid );
 
 
 /******************************************************************************/

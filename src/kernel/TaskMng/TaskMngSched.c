@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2020/07/19 */
+/*                                                                 2020/11/03 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -26,7 +26,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 
 /* 内部モジュールヘッダ */
 #include "TaskMngSched.h"
@@ -629,7 +629,7 @@ static __attribute__ ( ( noinline ) )
     TssSetEsp0( ( uint32_t ) pKernelStack );
 
     /* ページディレクトリ切替 */
-    pdbr = MemMngPageSwitchDir( pNextProcInfo->pageDirId );
+    pdbr = MemmngPageSwitchDir( pNextProcInfo->pageDirId );
 
     /* コンテキスト退避 */
     pRunContext->eip = ( uint32_t ) SwitchTaskEnd;

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2019/08/14 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -25,7 +25,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <MemMng.h>
+#include <Memmng.h>
 #include <TaskMng.h>
 
 /* 内部モジュールヘッダ */
@@ -111,7 +111,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     }
 
     /* ページディレクトリ割当 */
-    pProcInfo->pageDirId = MemMngPageAllocDir();
+    pProcInfo->pageDirId = MemmngPageAllocDir();
 
     /* 割当結果判定 */
     if ( pProcInfo->pageDirId == MEMMNG_PAGE_DIR_FULL ) {
@@ -127,7 +127,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     }
 
     /* 仮想メモリ領域管理開始 */
-    ret = MemMngVirtStart( pProcInfo->pid );
+    ret = MemmngVirtStart( pProcInfo->pid );
 
     /* 管理開始結果判定 */
     if ( ret == CMN_FAILURE ) {
@@ -352,13 +352,13 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             /* ページ数増加 */
 
             /* 物理メモリ領域割当 */
-            pPhyAddr = MemMngPhysAlloc( IA32_PAGING_PAGE_SIZE );
+            pPhyAddr = MemmngPhysAlloc( IA32_PAGING_PAGE_SIZE );
 
             /* 割当結果判定 */
             if ( pPhyAddr == NULL ) {
                 /* 失敗 */
 
-                DEBUG_LOG( "%s(): MemMngPhysAlloc() error.", __func__ );
+                DEBUG_LOG( "%s(): MemmngPhysAlloc() error.", __func__ );
 
                 /* 戻り値設定 */
                 pParam->ret         = MK_RET_FAILURE;
@@ -369,14 +369,14 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             }
 
             /* 0初期化 */
-            MemMngCtrlSet( pPhyAddr, 0, IA32_PAGING_PAGE_SIZE );
+            MemmngCtrlSet( pPhyAddr, 0, IA32_PAGING_PAGE_SIZE );
 
             /* ページ先頭アドレス計算 */
             pVirtAddr = ( void * ) ( MLIB_ALIGN( breakPoint - 1,
                                                  IA32_PAGING_PAGE_SIZE ) );
 
             /* ページングマッピング設定 */
-            ret = MemMngPageSet( pProcInfo->pageDirId,
+            ret = MemmngPageSet( pProcInfo->pageDirId,
                                  pVirtAddr,
                                  pPhyAddr,
                                  IA32_PAGING_PAGE_SIZE,
@@ -388,7 +388,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             if ( ret != CMN_SUCCESS ) {
                 /* 失敗 */
 
-                DEBUG_LOG( "%s(): MemMngPageSet() error(%d).", __func__, ret );
+                DEBUG_LOG( "%s(): MemmngPageSet() error(%d).", __func__, ret );
 
                 /* 戻り値設定 */
                 pParam->ret         = MK_RET_FAILURE;
@@ -406,7 +406,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                                                  IA32_PAGING_PAGE_SIZE      ) );
 
             /* ページングマッピング解除 */
-            MemMngPageUnset( pProcInfo->pageDirId,
+            MemmngPageUnset( pProcInfo->pageDirId,
                              pVirtAddr,
                              IA32_PAGING_PAGE_SIZE      );
         }

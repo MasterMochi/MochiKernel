@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngCtrl.c                                             */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/* src/kernel/Memmng/MemmngCtrl.c                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,7 +24,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 
 
 /******************************************************************************/
@@ -56,7 +56,7 @@
  * @attention   引数pPAddrは4KiBアライメントであること。
  */
 /******************************************************************************/
-void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
+void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                                void   *pVAddr,
                                size_t size     )
 {
@@ -74,7 +74,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
                size );
 
     /* ページディレクトリID取得 */
-    pageDirId = MemMngPageGetDirId();
+    pageDirId = MemmngPageGetDirId();
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
@@ -99,7 +99,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
         }
 
         /* ページマッピング設定 */
-        ret = MemMngPageSet( pageDirId,
+        ret = MemmngPageSet( pageDirId,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
                              mapSize,
@@ -119,7 +119,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
     }
 
     /* ページマッピング解除 */
-    MemMngPageUnset( pageDirId,
+    MemmngPageUnset( pageDirId,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                      MK_CONFIG_SIZE_KERNEL_MAP );
 
@@ -142,7 +142,7 @@ void MemMngCtrlCopyVirtToPhys( void   *pPAddr,
  * @attention   引数pPhysAddrは4KiBアライメントであること。
  */
 /******************************************************************************/
-void MemMngCtrlSet( void    *pPAddr,
+void MemmngCtrlSet( void    *pPAddr,
                     uint8_t value,
                     size_t  size     )
 {
@@ -160,7 +160,7 @@ void MemMngCtrlSet( void    *pPAddr,
                size );
 
     /* ページディレクトリID取得 */
-    pageDirId = MemMngPageGetDirId();
+    pageDirId = MemmngPageGetDirId();
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
@@ -184,7 +184,7 @@ void MemMngCtrlSet( void    *pPAddr,
         }
 
         /* ページマッピング設定 */
-        ret = MemMngPageSet( pageDirId,
+        ret = MemmngPageSet( pageDirId,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
                              mapSize,
@@ -204,7 +204,7 @@ void MemMngCtrlSet( void    *pPAddr,
     }
 
     /* ページマッピング解除 */
-    MemMngPageUnset( pageDirId,
+    MemmngPageUnset( pageDirId,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                      MK_CONFIG_SIZE_KERNEL_MAP );
 

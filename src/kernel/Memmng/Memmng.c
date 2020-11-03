@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMng.c                                                 */
-/*                                                                 2019/08/11 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/* src/kernel/Memmng/Memmng.c                                                 */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -16,14 +16,14 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "MemMngArea.h"
-#include "MemMngGdt.h"
-#include "MemMngHeap.h"
-#include "MemMngIo.h"
-#include "MemMngMap.h"
-#include "MemMngPage.h"
-#include "MemMngPhys.h"
-#include "MemMngVirt.h"
+#include "MemmngArea.h"
+#include "MemmngGdt.h"
+#include "MemmngHeap.h"
+#include "MemmngIo.h"
+#include "MemmngMap.h"
+#include "MemmngPage.h"
+#include "MemmngPhys.h"
+#include "MemmngVirt.h"
 
 
 /******************************************************************************/
@@ -54,7 +54,7 @@
  * @param[in]   memMapNum   メモリマップエントリ数
  */
 /******************************************************************************/
-void MemMngInit( BiosE820Entry_t *pBiosE820,
+void MemmngInit( BiosE820Entry_t *pBiosE820,
                  size_t          biosE820Num,
                  MkMemMapEntry_t *pMemMap,
                  size_t          memMapNum    )
@@ -66,7 +66,7 @@ void MemMngInit( BiosE820Entry_t *pBiosE820,
     MapInit( pBiosE820, biosE820Num, pMemMap, memMapNum );
 
     /* GDT管理サブモジュール初期化 */
-    MemMngGdtInit();
+    MemmngGdtInit();
 
     /* ヒープ管理サブモジュール初期化 */
     HeapInit();
@@ -84,7 +84,7 @@ void MemMngInit( BiosE820Entry_t *pBiosE820,
     VirtInit();
 
     /* ページ管理サブモジュール初期化 */
-    MemMngPageInit();
+    MemmngPageInit();
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

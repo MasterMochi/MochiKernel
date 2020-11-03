@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2019/09/11 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -23,7 +23,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 #include <TaskMng.h>
 
 
@@ -139,7 +139,7 @@ CmnRet_t ElfLoad( void     *pAddr,
         size = MLIB_ALIGN( pEntry->p_memsz, IA32_PAGING_PAGE_SIZE );
 
         /* メモリ領域割当 */
-        pPhyAddr = MemMngPhysAlloc( size );
+        pPhyAddr = MemmngPhysAlloc( size );
 
         /* メモリ領域割当結果判定 */
         if ( pPhyAddr == NULL ) {
@@ -152,10 +152,10 @@ CmnRet_t ElfLoad( void     *pAddr,
         }
 
         /* 0初期化 */
-        MemMngCtrlSet( pPhyAddr, 0, size );
+        MemmngCtrlSet( pPhyAddr, 0, size );
 
         /* セグメントコピー */
-        MemMngCtrlCopyVirtToPhys(
+        MemmngCtrlCopyVirtToPhys(
             pPhyAddr,
             ( void * ) ( ( uint32_t ) pAddr + pEntry->p_offset ),
             pEntry->p_filesz                                      );
@@ -173,7 +173,7 @@ CmnRet_t ElfLoad( void     *pAddr,
         }
 
         /* ページマッピング設定 */
-        ret = MemMngPageSet( pageDirId,
+        ret = MemmngPageSet( pageDirId,
                              ( void * ) pEntry->p_vaddr,
                              pPhyAddr,
                              size,

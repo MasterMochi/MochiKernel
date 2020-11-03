@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlMem.c                                              */
-/*                                                                 2019/08/08 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -15,7 +15,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <MemMng.h>
+#include <Memmng.h>
 #include <TaskMng.h>
 
 
@@ -94,7 +94,7 @@ static void Alloc( MkIoMemParam_t *pParam )
     MkTaskId_t taskId;  /* タスクID             */
 
     /* 初期化 */
-    dirId  = MemMngPageGetDirId();
+    dirId  = MemmngPageGetDirId();
     taskId = TaskMngSchedGetTaskId();
     pid    = MK_TASKID_TO_PID( taskId );
     type   = TaskMngTaskGetType( taskId );
@@ -112,7 +112,7 @@ static void Alloc( MkIoMemParam_t *pParam )
     }
 
     /* I/Oメモリ領域割当 */
-    pRet = MemMngIoAlloc( pParam->pIoAddr, pParam->size );
+    pRet = MemmngIoAlloc( pParam->pIoAddr, pParam->size );
 
     /* 割当結果判定 */
     if ( pRet == NULL ) {
@@ -127,7 +127,7 @@ static void Alloc( MkIoMemParam_t *pParam )
     }
 
     /* 仮想メモリ領域割当 */
-    pParam->pVirtAddr = MemMngVirtAlloc( pid, pParam->size );
+    pParam->pVirtAddr = MemmngVirtAlloc( pid, pParam->size );
 
     /* 割当結果判定 */
     if ( pParam->pVirtAddr == NULL ) {
@@ -142,7 +142,7 @@ static void Alloc( MkIoMemParam_t *pParam )
     }
 
     /* ページマッピング設定 */
-    ret = MemMngPageSet( dirId,
+    ret = MemmngPageSet( dirId,
                          pParam->pVirtAddr,
                          pParam->pIoAddr,
                          pParam->size,

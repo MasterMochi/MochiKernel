@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngPage.c                                             */
-/*                                                                 2020/05/22 */
+/* src/kernel/Memmng/MemmngPage.c                                             */
+/*                                                                 2020/11/03 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -24,7 +24,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 
 
 /******************************************************************************/
@@ -111,7 +111,7 @@ static void PageUnset( uint32_t dirId,
  * @retval      MEMMNG_PAGE_DIR_FULL     異常終了
  */
 /******************************************************************************/
-uint32_t MemMngPageAllocDir( void )
+uint32_t MemmngPageAllocDir( void )
 {
     uint32_t id;    /* ページディレクトリID */
 
@@ -156,7 +156,7 @@ uint32_t MemMngPageAllocDir( void )
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t MemMngPageFreeDir( uint32_t id )
+CmnRet_t MemmngPageFreeDir( uint32_t id )
 {
     uint32_t idx;   /* インデックス */
 
@@ -214,7 +214,7 @@ CmnRet_t MemMngPageFreeDir( uint32_t id )
  * @return      ページディレクトリIDを返す。
  */
 /******************************************************************************/
-uint32_t MemMngPageGetDirId( void )
+uint32_t MemmngPageGetDirId( void )
 {
     return gPageMngTbl.nowDirId;
 }
@@ -230,7 +230,7 @@ uint32_t MemMngPageGetDirId( void )
  * @return      ページディレクトリベースレジスタを返す。
  */
 /******************************************************************************/
-IA32PagingPDBR_t MemMngPageSwitchDir( uint32_t pageDirId )
+IA32PagingPDBR_t MemmngPageSwitchDir( uint32_t pageDirId )
 {
     IA32PagingPDBR_t pdbr;  /* 戻り値 */
 
@@ -259,7 +259,7 @@ IA32PagingPDBR_t MemMngPageSwitchDir( uint32_t pageDirId )
  * @details     ページ管理を初期化しページングを有効化する。
  */
 /******************************************************************************/
-void MemMngPageInit( void )
+void MemmngPageInit( void )
 {
     CmnRet_t         ret;   /* 戻り値 */
     IA32PagingPDBR_t pdbr;  /* PDBR   */
@@ -275,7 +275,7 @@ void MemMngPageInit( void )
     gPageDirSize = MLIB_ALIGN( gPageDirSize, IA32_PAGING_PAGE_SIZE );
 
     /* ページディレクトリ管理テーブル割当て */
-    pgPageDir = ( IA32PagingDir_t * ) MemMngPhysAlloc( gPageDirSize );
+    pgPageDir = ( IA32PagingDir_t * ) MemmngPhysAlloc( gPageDirSize );
 
     /* 割当て結果判定 */
     if ( pgPageDir == NULL ) {
@@ -289,7 +289,7 @@ void MemMngPageInit( void )
     gPageTblSize = MLIB_ALIGN( gPageTblSize, IA32_PAGING_PAGE_SIZE );
 
     /* ページテーブル管理テーブル割当て */
-    pgPageTbl = ( IA32PagingTbl_t * ) MemMngPhysAlloc( gPageTblSize );
+    pgPageTbl = ( IA32PagingTbl_t * ) MemmngPhysAlloc( gPageTblSize );
 
     /* 割当て結果判定 */
     if ( pgPageTbl == NULL ) {
@@ -319,7 +319,7 @@ void MemMngPageInit( void )
     }
 
     /* ページディレクトリ切替 */
-    pdbr = MemMngPageSwitchDir( MEMMNG_PAGE_DIR_ID_IDLE );
+    pdbr = MemmngPageSwitchDir( MEMMNG_PAGE_DIR_ID_IDLE );
 
     /* ページディレクトリ設定 */
     IA32InstructionSetCr3( pdbr );
@@ -360,7 +360,7 @@ void MemMngPageInit( void )
  * @attention   引数pVAddr、pPAddr、sizeは4KiBアライメントであること。
  */
 /******************************************************************************/
-CmnRet_t MemMngPageSet( uint32_t dirId,
+CmnRet_t MemmngPageSet( uint32_t dirId,
                         void     *pVAddr,
                         void     *pPAddr,
                         size_t   size,
@@ -442,7 +442,7 @@ CmnRet_t MemMngPageSet( uint32_t dirId,
  * @attention   引数pVAddr、sizeは4KiBアライメントであること。
  */
 /******************************************************************************/
-void MemMngPageUnset( uint32_t dirId,
+void MemmngPageUnset( uint32_t dirId,
                       void     *pVAddr,
                       size_t   size     )
 {
@@ -764,7 +764,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
 
 #ifdef DEBUG_LOG_ENABLE
     /* デバッグ用VRAM領域マッピング */
-    ret = MemMngPageSet(
+    ret = MemmngPageSet(
               dirId,                            /* ページディレクトリID    */
               ( void * ) VGA_M3_VRAM_ADDR,      /* 仮想アドレス            */
               ( void * ) VGA_M3_VRAM_ADDR,      /* 物理アドレス            */
@@ -785,7 +785,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
 #endif
 
     /* カーネル領域情報取得 */
-    ret = MemMngMapGetInfo( &info, MK_MEM_TYPE_KERNEL );
+    ret = MemmngMapGetInfo( &info, MK_MEM_TYPE_KERNEL );
 
     /* 取得結果判定 */
     if ( ret != CMN_SUCCESS ) {
@@ -798,7 +798,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     }
 
     /* カーネル領域マッピング */
-    ret = MemMngPageSet( dirId,                 /* ページディレクトリID    */
+    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
                          info.pAddr,            /* 仮想アドレス            */
                          info.pAddr,            /* 物理アドレス            */
                          info.size,             /* サイズ                  */
@@ -817,7 +817,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     }
 
     /* ページディレクトリ管理テーブルマッピング */
-    ret = MemMngPageSet( dirId,                 /* ページディレクトリID    */
+    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
                          pgPageDir,             /* 仮想アドレス            */
                          pgPageDir,             /* 物理アドレス            */
                          gPageDirSize,          /* サイズ                  */
@@ -836,7 +836,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     }
 
     /* ページテーブル管理テーブルマッピング */
-    ret = MemMngPageSet( dirId,                 /* ページディレクトリID    */
+    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
                          pgPageTbl,             /* 仮想アドレス            */
                          pgPageTbl,             /* 物理アドレス            */
                          gPageTblSize,          /* サイズ                  */
@@ -855,7 +855,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     }
 
     /* プロセスイメージ領域情報取得 */
-    ret = MemMngMapGetInfo( &info, MK_MEM_TYPE_PROCIMG );
+    ret = MemmngMapGetInfo( &info, MK_MEM_TYPE_PROCIMG );
 
     /* 取得結果判定 */
     if ( ret != CMN_SUCCESS ) {
@@ -868,7 +868,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
     }
 
     /* プロセスイメージ領域マッピング */
-    ret = MemMngPageSet( dirId,                 /* ページディレクトリID    */
+    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
                          info.pAddr,            /* 仮想アドレス            */
                          info.pAddr,            /* 物理アドレス            */
                          info.size,             /* サイズ                  */

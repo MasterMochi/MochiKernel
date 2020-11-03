@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngHeap.c                                             */
-/*                                                                 2020/07/19 */
+/* src/kernel/Memmng/MemmngHeap.c                                             */
+/*                                                                 2020/11/03 */
 /* Copyright (C) 2019-2020 Mcohi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -19,7 +19,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 
 
 /******************************************************************************/
@@ -86,7 +86,7 @@ static MLibList_t gUsedList;
  * @retval      NULL以外 成功（ヒープ領域）
  */
 /******************************************************************************/
-void *MemMngHeapAlloc( size_t size )
+void *MemmngHeapAlloc( size_t size )
 {
     areaInfo_t *pAreaInfo;   /* 領域情報 */
 
@@ -138,7 +138,7 @@ void *MemMngHeapAlloc( size_t size )
  * @param[in]   *pAddr ヒープ領域
  */
 /******************************************************************************/
-void MemMngHeapFree( void *pAddr )
+void MemmngHeapFree( void *pAddr )
 {
     MLibRet_t  retMLib;     /* MLib関数戻り値 */
     areaInfo_t *pAreaInfo;  /* メモリ領域情報 */
@@ -435,7 +435,7 @@ static void SetBreakPoint( int quantity )
             /* ページ数増加 */
 
             /* 物理メモリ領域割当て */
-            pPhysAddr = MemMngPhysAlloc( IA32_PAGING_PAGE_SIZE );
+            pPhysAddr = MemmngPhysAlloc( IA32_PAGING_PAGE_SIZE );
 
             /* 割当て結果判定 */
             if ( pPhysAddr == NULL ) {
@@ -445,7 +445,7 @@ static void SetBreakPoint( int quantity )
             }
 
             /* 0初期化 */
-            MemMngCtrlSet( pPhysAddr, 0, IA32_PAGING_PAGE_SIZE );
+            MemmngCtrlSet( pPhysAddr, 0, IA32_PAGING_PAGE_SIZE );
 
             /* ページ先頭アドレス計算 */
             pVirtAddr = ( void * )
@@ -453,7 +453,7 @@ static void SetBreakPoint( int quantity )
                                     IA32_PAGING_PAGE_SIZE         );
 
             /* ページマッピング設定 */
-            ret = MemMngPageSet( 0,
+            ret = MemmngPageSet( 0,
                                  pVirtAddr,
                                  pPhysAddr,
                                  IA32_PAGING_PAGE_SIZE,
@@ -466,7 +466,7 @@ static void SetBreakPoint( int quantity )
                 /* 失敗 */
 
                 /* 物理メモリ領域解放 */
-                MemMngPhysFree( pPhysAddr );
+                MemmngPhysFree( pPhysAddr );
 
                 return;
             }
@@ -480,7 +480,7 @@ static void SetBreakPoint( int quantity )
                                     IA32_PAGING_PAGE_SIZE                );
 
             /* ページマッピング解除 */
-            MemMngPageUnset( 0, pVirtAddr, IA32_PAGING_PAGE_SIZE );
+            MemmngPageUnset( 0, pVirtAddr, IA32_PAGING_PAGE_SIZE );
         }
 
         /* ブレイクポイント更新 */

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngGdt.c                                              */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/* src/kernel/Memmng/MemmngGdt.c                                              */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,7 +18,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 
 
 /******************************************************************************/
@@ -111,7 +111,7 @@ static IA32Descriptor_t gGdt[ MEMMNG_GDT_ENTRY_NUM ] = {
  * @details     GDTを初期化しCPUのGDTRへGDTを設定する。
  */
 /******************************************************************************/
-void MemMngGdtInit( void )
+void MemmngGdtInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
@@ -183,7 +183,7 @@ void MemMngGdtInit( void )
  * @retval      MEMMNG_GDT_ENTRY_MAX  成功（GDTエントリ番号最大値）
  */
 /******************************************************************************/
-uint16_t MemMngGdtAdd( void    *pBase,
+uint16_t MemmngGdtAdd( void    *pBase,
                        size_t  limit,
                        uint8_t limitG,
                        uint8_t sysFlg,

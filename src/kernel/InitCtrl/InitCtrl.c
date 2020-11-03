@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/InitCtrl/InitCtrl.c                                             */
-/*                                                                 2019/07/24 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -26,7 +26,7 @@
 #include <IntMng.h>
 #include <IoCtrl.h>
 #include <ItcCtrl.h>
-#include <MemMng.h>
+#include <Memmng.h>
 #include <TaskMng.h>
 #include <TimerMng.h>
 
@@ -69,7 +69,7 @@ void InitCtrlInit( void )
     DEBUG_LOG( "Mochi Kernel start!!!" );
 
     /* メモリ管理モジュール初期化 */
-    MemMngInit( ( BiosE820Entry_t * ) 0x00000504,
+    MemmngInit( ( BiosE820Entry_t * ) 0x00000504,
                 *( ( size_t * )       0x00000500 ),
                 ( MkMemMapEntry_t * ) 0x00000CD8,
                 *( ( size_t * )       0x00000CD4 )  );

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngThread.c                                         */
-/*                                                                 2019/08/15 */
-/* Copyright (C) 2019 Mochi.                                                  */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2019-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -23,7 +23,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <MemMng.h>
+#include <Memmng.h>
 #include <TaskMng.h>
 
 /* 内部モジュールヘッダ */
@@ -395,7 +395,7 @@ static CmnRet_t SetKernelStack( TblThreadInfo_t *pThreadInfo )
     pStackInfo   = &( pThreadInfo->kernelStack );
 
     /* カーネルスタック領域割当 */
-    pKernelStack = MemMngHeapAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
+    pKernelStack = MemmngHeapAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
 
     /* 割当結果判定 */
     if ( pKernelStack == NULL ) {
@@ -440,7 +440,7 @@ static CmnRet_t SetUserStack( TblThreadInfo_t *pThreadInfo )
     pStackInfo = &( pThreadInfo->userStack );
 
     /* 物理メモリ領域割当 */
-    pPhysAddr = MemMngPhysAlloc( MK_CONFIG_SIZE_USER_STACK );
+    pPhysAddr = MemmngPhysAlloc( MK_CONFIG_SIZE_USER_STACK );
 
     /* 割当結果判定 */
     if ( pPhysAddr == NULL ) {
@@ -450,7 +450,7 @@ static CmnRet_t SetUserStack( TblThreadInfo_t *pThreadInfo )
     }
 
     /* ページマッピング */
-    ret = MemMngPageSet(
+    ret = MemmngPageSet(
               pThreadInfo->pProcInfo->pageDirId,    /* ページディレクトリID */
               ( void * ) MK_CONFIG_ADDR_USER_STACK, /* 仮想アドレス         */
               pPhysAddr,                            /* 物理アドレス         */
@@ -465,7 +465,7 @@ static CmnRet_t SetUserStack( TblThreadInfo_t *pThreadInfo )
         /* 失敗 */
 
         /* 物理メモリ領域解放 */
-        MemMngPhysFree( pPhysAddr );
+        MemmngPhysFree( pPhysAddr );
 
         return CMN_FAILURE;
     }
@@ -497,7 +497,7 @@ static void UnsetKernelStack( TblThreadInfo_t *pThreadInfo )
     pStackInfo = &( pThreadInfo->kernelStack );
 
     /* カーネルスタック領域解放 */
-    MemMngHeapFree( pStackInfo->pTopAddr );
+    MemmngHeapFree( pStackInfo->pTopAddr );
 
     /* カーネルスタック情報設定 */
     pStackInfo->pTopAddr    = NULL;
@@ -529,14 +529,14 @@ static void UnsetUserStack( TblThreadInfo_t *pThreadInfo )
         /* メインスレッド */
 
         /* マッピング解除 */
-        MemMngPageUnset(
+        MemmngPageUnset(
             pThreadInfo->pProcInfo->pageDirId,      /* ページディレクトリID */
             ( void * ) MK_CONFIG_ADDR_USER_STACK,   /* 仮想アドレス         */
             MK_CONFIG_SIZE_USER_STACK               /* マッピングサイズ     */
         );
 
         /* カーネルスタック領域解放 */
-        MemMngHeapFree( pStackInfo->pTopAddr );
+        MemmngHeapFree( pStackInfo->pTopAddr );
     }
 
     /* ユーザスタック情報設定 */

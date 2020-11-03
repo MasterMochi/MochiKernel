@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTbl.c                                            */
-/*                                                                 2019/11/21 */
-/* Copyright (C) 2019 Mochi.                                                  */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2019-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -21,7 +21,7 @@
 #include <kernel/types.h>
 
 /* 外部モジュールヘッダ */
-#include <MemMng.h>
+#include <Memmng.h>
 
 /* 内部モジュールヘッダ */
 #include "TaskMngTbl.h"
@@ -479,7 +479,7 @@ procChunk_t *AddProcChunk( void )
     }
 
     /* チャンク領域確保 */
-    pNewChunk = MemMngHeapAlloc( sizeof ( procChunk_t ) );
+    pNewChunk = MemmngHeapAlloc( sizeof ( procChunk_t ) );
 
     /* 確保結果判定 */
     if ( pNewChunk == NULL ) {
@@ -558,7 +558,7 @@ TblThreadChunk_t *AddThreadChunk( TblProcInfo_t *pProcInfo )
     }
 
     /* チャンク領域確保 */
-    pNewChunk = MemMngHeapAlloc( sizeof ( TblThreadChunk_t ) );
+    pNewChunk = MemmngHeapAlloc( sizeof ( TblThreadChunk_t ) );
 
     /* 確保結果判定 */
     if ( pNewChunk == NULL ) {

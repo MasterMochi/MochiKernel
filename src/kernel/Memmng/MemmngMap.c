@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngMap.c                                              */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/* src/kernel/Memmng/MemmngMap.c                                              */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -16,7 +16,7 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "MemMngMap.h"
+#include "MemmngMap.h"
 
 
 /******************************************************************************/
@@ -66,7 +66,7 @@ static MapTbl_t gMapTbl;
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t MemMngMapGetInfo( MkMemMapEntry_t *pInfo,
+CmnRet_t MemmngMapGetInfo( MkMemMapEntry_t *pInfo,
                            uint32_t        type    )
 {
     uint32_t        index;      /* インデックス         */

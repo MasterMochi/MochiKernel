@@ -1,8 +1,8 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2019/08/11 *#
-#* Copyright (C) 2016-2019 Mochi.                                             *#
+#*                                                                 2020/11/03 *#
+#* Copyright (C) 2016-2020 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
 #******************************************************************************#
@@ -15,16 +15,16 @@ PROG = kernel
 SRCS  = InitCtrl/InitCtrl.c
 SRCS += Debug/Debug.c
 SRCS += Debug/DebugLog.c
-SRCS += MemMng/MemMng.c
-SRCS += MemMng/MemMngGdt.c
-SRCS += MemMng/MemMngArea.c
-SRCS += MemMng/MemMngPage.c
-SRCS += MemMng/MemMngCtrl.c
-SRCS += MemMng/MemMngHeap.c
-SRCS += MemMng/MemMngMap.c
-SRCS += MemMng/MemMngPhys.c
-SRCS += MemMng/MemMngIo.c
-SRCS += MemMng/MemMngVirt.c
+SRCS += Memmng/Memmng.c
+SRCS += Memmng/MemmngGdt.c
+SRCS += Memmng/MemmngArea.c
+SRCS += Memmng/MemmngPage.c
+SRCS += Memmng/MemmngCtrl.c
+SRCS += Memmng/MemmngHeap.c
+SRCS += Memmng/MemmngMap.c
+SRCS += Memmng/MemmngPhys.c
+SRCS += Memmng/MemmngIo.c
+SRCS += Memmng/MemmngVirt.c
 SRCS += TaskMng/TaskMng.c
 SRCS += TaskMng/TaskMngElf.c
 SRCS += TaskMng/TaskMngName.c

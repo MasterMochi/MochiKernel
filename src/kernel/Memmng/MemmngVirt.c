@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/MemMng/MemMngVirt.c                                             */
-/*                                                                 2019/08/13 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/* src/kernel/Memmng/MemmngVirt.c                                             */
+/*                                                                 2020/11/03 */
+/* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -22,11 +22,11 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <MemMng.h>
+#include <Memmng.h>
 
 /* 内部モジュールヘッダ */
-#include "MemMngArea.h"
-#include "MemMngVirt.h"
+#include "MemmngArea.h"
+#include "MemmngVirt.h"
 
 
 /******************************************************************************/
@@ -75,7 +75,7 @@ static VirtTbl_t gVirtTbl[ MK_PID_MAX ];
  *              イトアライメントに合うよう加算して、仮想メモリ領域を割り当てる。
  */
 /******************************************************************************/
-void *MemMngVirtAlloc( MkPid_t pid,
+void *MemmngVirtAlloc( MkPid_t pid,
                        size_t  size )
 {
     void *pRet; /* 戻り値 */
@@ -119,7 +119,7 @@ void *MemMngVirtAlloc( MkPid_t pid,
  * @retval      NULL以外 割り当てた仮想メモリの先頭アドレス
  */
 /******************************************************************************/
-void *MemMngVirtAllocSpecified( MkPid_t pid,
+void *MemmngVirtAllocSpecified( MkPid_t pid,
                                 void    *pAddr,
                                 size_t  size    )
 {
@@ -157,7 +157,7 @@ void *MemMngVirtAllocSpecified( MkPid_t pid,
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-CmnRet_t MemMngVirtEnd( MkPid_t pid )
+CmnRet_t MemmngVirtEnd( MkPid_t pid )
 {
     /* [TODO] */
 
@@ -178,7 +178,7 @@ CmnRet_t MemMngVirtEnd( MkPid_t pid )
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t MemMngVirtFree( MkPid_t pid,
+CmnRet_t MemmngVirtFree( MkPid_t pid,
                          void    *pAddr )
 {
     CmnRet_t ret;   /* 戻り値 */
@@ -204,7 +204,7 @@ CmnRet_t MemMngVirtFree( MkPid_t pid,
  * @retval      CMN_FAILURE 失敗
  */
 /******************************************************************************/
-CmnRet_t MemMngVirtStart( MkPid_t pid )
+CmnRet_t MemmngVirtStart( MkPid_t pid )
 {
     AreaInfo_t *pInfo;  /* 未割当仮想メモリ領域情報 */
 
@@ -219,13 +219,13 @@ CmnRet_t MemMngVirtStart( MkPid_t pid )
     }
 
     /* 仮想メモリ領域設定 */
-    MemMngVirtAllocSpecified( pid,
+    MemmngVirtAllocSpecified( pid,
                               ( void * ) MK_CONFIG_ADDR_BOOTDATA,
                               MK_CONFIG_SIZE_BOOTDATA                 );
-    MemMngVirtAllocSpecified( pid,
+    MemmngVirtAllocSpecified( pid,
                               ( void * ) MK_CONFIG_ADDR_KERNEL_START,
                               MK_CONFIG_SIZE_KERNEL                   );
-    MemMngVirtAllocSpecified( pid,
+    MemmngVirtAllocSpecified( pid,
                               ( void * ) MK_CONFIG_ADDR_USER_START,
                               MK_CONFIG_SIZE_USER                     );
 

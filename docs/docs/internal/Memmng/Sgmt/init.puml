@@ -1,0 +1,20 @@
+@startuml
+
+participant "CPU" as cpu
+box "メモリ管理"
+    participant "メイン"                   as main
+    participant "セグメンテーション\n管理" as sgmt
+end box
+
+activate main
+ref over main: 初期化
+
+main -> sgmt: 初期化
+activate sgmt
+
+cpu /- sgmt: GDTR設定
+
+main <-- sgmt:
+deactivate sgmt
+
+@enduml

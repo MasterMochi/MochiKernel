@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - Documentation</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">仮想メモリマップ</span></a>
+                    <meta itemprop="position" content="4"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>仮想メモリマップ</h1>
+                <p>仮想メモリマップを以下に示す。</p>
+                <br>
+                <div class="center">仮想メモリマップ</div>
+                <table>
+                    <tr>
+                        <td class="title">先頭アドレス</td>
+                        <td class="title" colspan="2">概要</td>
+                        <td class="title" colspan="2">サイズ<br>(byte)</td>
+                        <td class="title" width="100">備考</td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center" colspan="2">ブートデータ</td>
+                        <td class="right">1,048,576</td>
+                        <td class="right" rowspan="6">1,073,741,824</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0010_0000</td>
+                        <td class="center" rowspan="5">MochiKernel</td>
+                        <td class="center"><br><br>コード/データ<br><br><br></td>
+                        <td class="right" rowspan="3">1,055,916,032</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">(end_point)</td>
+                        <td class="center">ヒープ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">(break_point)</td>
+                        <td class="center">スタック</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x3F00_0000</td>
+                        <td class="center">メモリ制御領域1</td>
+                        <td class="right">8,388,608</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x3F80_0000</td>
+                        <td class="center">メモリ制御領域2</td>
+                        <td class="right">8,388,608</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x4000_0000</td>
+                        <td class="center" colspan="2"><br><br>ユーザ空間<br><br><br></td>
+                        <td class="right" colspan="2">2,147,483,648</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0xC000_0000</td>
+                        <td class="center" colspan="2"><br>割り当て可能メモリ領域<br><br></td>
+                        <td class="right" colspan="2">1,073,741,824</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

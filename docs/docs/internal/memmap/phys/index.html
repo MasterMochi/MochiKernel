@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - Documentation</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">物理メモリマップ</span></a>
+                    <meta itemprop="position" content="4"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>物理メモリマップ</h1>
+                <p>物理メモリマップを以下に示す。</p>
+                <br>
+                <div class="center">物理メモリマップ</div>
+                <table>
+                    <tr>
+                        <td class="title">先頭<br>からの<br>サイズ</td>
+                        <td class="title">先頭アドレス</td>
+                        <td class="title" colspan="3">概要</td>
+                        <td class="title">サイズ<br>(byte)</td>
+                        <td class="title">種別</td>
+                        <td class="title" width="100">備考</td>
+                    </tr>
+                    <tr>
+                        <td class="right" rowspan="7">0B</td>
+                        <td class="center">0x0000_0000</td>
+                        <td class="center" rowspan="7">conven-<br>tional<br>memory</td>
+                        <td class="center" colspan="2">BIOS<br>割込みテーブル</td>
+                        <td class="right">768</td>
+                        <td class="center">メインメモリ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_0300</td>
+                        <td class="center" colspan="2">BIOS<br>スタック</td>
+                        <td class="right">256</td>
+                        <td class="center">メインメモリ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_0400</td>
+                        <td class="center" colspan="2">BIOS<br>データ</td>
+                        <td class="right">256</td>
+                        <td class="center">メインメモリ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_0500</td>
+                        <td class="center" colspan="2">MochiBooter<br>データ/スタック</td>
+                        <td class="right">29,952</td>
+                        <td class="center">メインメモリ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_7A00</td>
+                        <td class="center" colspan="2">IPL</td>
+                        <td class="right">512</td>
+                        <td class="center">メインメモリ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0000_7C00</td>
+                        <td class="center" colspan="2">MochiBooter</td>
+                        <td class="right">33,792</td>
+                        <td class="center">メインメモリ</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0001_0000</td>
+                        <td class="center" colspan="2">MochiKernel<br>実行ファイル<br>バッファ領域</td>
+                        <td class="right">615,424</td>
+                        <td class="center">メインメモリ</td>
+                        <td>0x0009_8000から使用できない可能性有り。</td>
+                    </tr>
+                    <tr>
+                        <td class="right" rowspan="8">640kB</td>
+                        <td class="center">0x000A_0000</td>
+                        <td class="center" rowspan="8">Upper<br>Memory<br>Area</td>
+                        <td class="center" rowspan="3">ビデオ<br>メモリ</td>
+                        <td class="center">EGA<br>VGA</td>
+                        <td class="right">65,636</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000B_0000</td>
+                        <td class="center">MDA<br>CGAカラー<br>VGAモノクロ</td>
+                        <td class="right">32,768</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000B_8000</td>
+                        <td class="center">CGA<br>EGAカラー<br>VGAカラー</td>
+                        <td class="right">32,768</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000C_0000</td>
+                        <td class="center" colspan="2">ビデオBIOS</td>
+                        <td class="right">32,768</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000C_8000</td>
+                        <td class="center" colspan="2">拡張BIOS</td>
+                        <td class="right">32,768</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000D_0000</td>
+                        <td class="center" colspan="2">拡張BIOS</td>
+                        <td class="right">65,636</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000E_0000</td>
+                        <td class="center" colspan="2">システムBIOS</td>
+                        <td class="right">65,636</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x000F_0000</td>
+                        <td class="center" colspan="2">システムBIOS</td>
+                        <td class="right">65,636</td>
+                        <td class="center">PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="right" rowspan="2">1MB</td>
+                        <td class="center">0x0010_0000</td>
+                        <td class="center" rowspan="3" colspan="3">MochiKernel</td>
+                        <td class="right" rowspan="3">65,011,712</td>
+                        <td class="center">メインメモリ<br>PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x00F0_0000</td>
+                        <td class="center">メインメモリ<br>PCI<br>ISA</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="right" rowspan="3">16MB</td>
+                        <td class="center">0x0100_0000</td>
+                        <td class="center">メインメモリ<br>PCI</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x03F0_0000</td>
+                        <td class="center" colspan="3">MochiKernel<br>スタック</td>
+                        <td class="right">1,048,576</td>
+                        <td class="center">メインメモリ<br>PCI</td>
+                        <td></td>
+                    </tr>
+                        <td class="center">0x0400_0000</td>
+                        <td class="center" colspan="3">プロセスイメージ</td>
+                        <td class="right">16,777,216</td>
+                        <td class="center">メインメモリ<br>PCI</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

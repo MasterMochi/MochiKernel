@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - 物理メモリ領域管理</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">メモリ管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">物理メモリ管理</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>物理メモリ管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#init">初期化</a><ol>
+                        <li><a href="#init-linklist">リンクリスト初期化</a></li>
+                        <li><a href="#init-unused">未使用リンクリスト追加</a></li>
+                        <li><a href="#init-free">未割当リンクリスト追加</a></li></ol></li>
+                    <li><a href="#alloc">物理メモリ領域割当</a><ol>
+                        <li><a href="#alloc-size">割当サイズアライメント</a></li>
+                        <li><a href="#alloc-alloc">メモリ領域割当</a></li></ol></li>
+                    <li><a href="#free">物理メモリ領域解放</a><ol>
+                        <li><a href="#free-free">メモリ領域解放</a></li></ol></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>物理メモリ領域管理サブモジュールは、システム全体の物理メモリ領域の使用状況を4KB単位で管理し、割当と解放機能を持つ。管理は、先頭アドレスとサイズを1ブロックの管理情報として、割当済リンクリストと未割当リンクリストにより管理する。アドレスによるソートと隣接ブロック管理情報の結合などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="init">初期化</a></h1>
+                <p>各種リンクリストを初期化し、未使用のブロック管理情報を未使用リンクリストに追加し、メモリマップを基に未割当リンクリストにブロック管理情報を追加する。</p>
+                <br>
+                <div class="center">
+                    <img src="init.png"><br>
+                    初期化シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="init-list">リンクリスト初期化</a></h2>
+                <p>物理メモリ領域管理サブモジュールで管理する下記3つのリンクリストを初期化する。</p>
+                <br>
+                <div class="center">リンクリスト一覧</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">リンクリスト名</td>
+                        <td class="title" width="500">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">未使用リンクリスト</td>
+                        <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">未割当リンクリスト</td>
+                        <td>未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td clasS="center">割当済リンクリスト</td>
+                        <td>割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。</td>
+                    </tr>
+                </table>
+                <br>
+                <p>リンクリストの初期化は、MLibライブラリのMLibListInit()を用いて行う。この関数はパラメータミスを除いてエラーが発生しないため、戻り値は確認しない。設定パラメータを以下に示す。</p>
+                <br>
+                <div class="center">MLibListInit()設定パラメータ</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">引数名</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">*pList</td>
+                        <td class="center">(各種リンクリストへのポインタ)</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
+                <p>物理メモリ領域用のブロック管理情報の割り当ては動的に行えないため、扱える最大メモリサイズ4GBを4KB単位に管理する事が可能な1,000個のブロック管理情報を静的に割り当てる。</p>
+                <p>この静的に割り当てた全てのブロック管理情報を未使用リンクリストに追加する。未使用リンクリストへの追加は、MLibライブラリのMLibListInsertTail()を用いる。この関数はパラメータミスを除いてエラーが発生しないため、戻り値は確認しない。設定パラメータを以下に示す。</p>
+                <br>
+                <div class="center">MLibListInsertTail()設定パラメータ</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">引数名</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">*pList</td>
+                        <td class="center">(未使用リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">*pNewNode</td>
+                        <td class="center">(追加するブロック管理情報へのポインタ)</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="init-free">未割当リンクリスト追加</a></h2>
+                <p>初期化時に渡されたメモリマップの全エントリについて1エントリ毎に使用可能メモリ領域か判定し、使用可能メモリ領域である場合は未割当メモリ領域としてメモリ領域管理サブモジュールのAreaAdd()を用いて未割当リンクリストに追加する。設定パラメータを以下に示す。</p>
+                <br>
+                <div class="center">AreaAdd()設定パラメータ</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">引数名</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">*pList</td>
+                        <td class="center">(追加先リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">*pUnusedList</td>
+                        <td class="center">(未使用リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">*pAddr</td>
+                        <td class="center">(使用可能メモリ領域先頭アドレス)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td class="center">size</td>
+                        <td class="center">(使用可能メモリ領域サイズ)</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="alloc">物理メモリ領域割当</a></h1>
+                <p>物理メモリ領域を4KB単位で割り当てる機能を持つ。要求された割当てサイズが4KBでない場合は要求された割当てサイズを満たす4KBにアライメントしたサイズの物理メモリ領域を割り当てる。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="alloc.png"><br>
+                    物理メモリ領域割当シーケンス
+                </div>
+                <br>
+                <h2><a name="alloc">割当てサイズアライメント</a></h2>
+                <p>割当てサイズのアライメントは、MLibライブラリのMLIB_ALIGN()マクロを使用する。設定パラメータを以下に示す。</p>
+                <br>
+                <div class="center">MLIB_ALIGN()設定パラメータ</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">引数名</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">_VALUE</td>
+                        <td class="center">(割当てサイズ格納変数)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">_ALIGNMENT</td>
+                        <td class="center">4,096</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="alloc-alloc">メモリ領域割当</a></h2>
+                <p>メモリ領域割当はメモリ領域管理サブモジュールのAreaAlloc()を用いて行う。設定パラメータを以下に示す。</p>
+                <br>
+                <div class="center">AreaAlloc()設定パラメータ</div>
+                <br>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">引数名</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">*pAllocList</td>
+                        <td class="center">(割当済リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">*pFreeList</td>
+                        <td class="center">(未割当リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">*pUnusedList</td>
+                        <td class="center">(未使用リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td class="center">size</td>
+                        <td class="center">(割当てサイズ)</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="free">物理メモリ領域解放</a></h1>
+                <p>物理メモリ領域割当機能にて割り当てた領域を解放する機能を持つ。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="free.png"><br>
+                    シーケンス
+                </div>
+                <br>
+                <h2><a name="free-free">メモリ領域解放</a></h2>
+                <p>メモリ領域の解放はメモリ領域管理サブモジュールのAreaFree()を用いて行う。設定パラメータを以下に示す。</p>
+                <br>
+                <div class="center">AreaFree()設定パラメータ</div>
+                <br>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">引数名</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">*pAllocList</td>
+                        <td class="center">(割当済リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">*pFreeList</td>
+                        <td class="center">(未割当リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">*pUnusedList</td>
+                        <td class="center">(未使用リンクリストへのポインタ)</td>
+                    </tr>
+                    <tr>
+                        <td class="center">4</td>
+                        <td class="center">*pAddr</td>
+                        <td class="center">(解放するメモリ領域のアドレス)</td>
+                    </tr>
+                </table>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

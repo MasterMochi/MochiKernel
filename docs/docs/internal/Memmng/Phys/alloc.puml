@@ -1,0 +1,31 @@
+@startuml
+
+box "メモリ管理"
+    participant "ページング管理"     as page
+    participant "物理メモリ領域管理" as phys
+    participant "メモリ領域管理"     as area
+end box
+
+activate page
+
+page -> phys: 物理メモリ領域割当( サイズ )
+activate phys
+
+break サイズ == 0
+    page <-- phys: return NULL
+end break
+
+phys -> phys: サイズ4KBアライメント
+
+phys -> area: メモリ領域割当()
+activate area
+
+ref over area: メモリ領域管理
+
+phys <-- area: return アドレス
+deactivate area
+
+page <-- phys: return アドレス
+deactivate phys
+
+@enduml

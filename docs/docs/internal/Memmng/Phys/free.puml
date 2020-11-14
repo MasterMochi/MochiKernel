@@ -1,0 +1,23 @@
+@startuml
+
+box "メモリ管理"
+    participant "ページング管理"     as page
+    participant "物理メモリ領域管理" as phys
+    participant "メモリ領域管理"     as area
+end box
+
+activate page
+
+page -> phys: 物理メモリ領域解放( アドレス )
+activate phys
+
+phys -> area: メモリ領域解放()
+activate area
+ref over area: メモリ領域管理
+phys <-- area: return 解放結果
+deactivate area
+
+page <-- phys: return 解放結果
+deactivate phys
+
+@enduml

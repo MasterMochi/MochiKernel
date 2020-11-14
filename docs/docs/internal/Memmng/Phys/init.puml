@@ -1,0 +1,52 @@
+@startuml
+
+box "メモリ管理"
+    participant "メイン"               as main
+    participant "物理メモリ\n領域管理" as phys
+    participant "メモリ領域\n管理"     as area
+end box
+participant "MLIB" as mlib
+
+activate main
+
+main -> phys: 初期化( メモリマップ )
+activate phys
+
+phys -> mlib: 割当済リンクリスト初期化
+activate mlib
+phys <-- mlib:
+deactivate mlib
+
+phys -> mlib: 未割当リンクリスト初期化
+activate mlib
+phys <-- mlib:
+deactivate mlib
+
+phys -> mlib: 未使用リンクリスト初期化
+activate mlib
+phys <-- mlib:
+deactivate mlib
+
+loop 管理情報毎
+    phys -> mlib: 未使用リンクリスト追加
+    activate mlib
+    phys <-- mlib:
+    deactivate mlib
+end loop
+
+loop メモリマップ全エントリ毎
+    alt 使用可能メモリ
+
+        phys -> area: 未割当リンクリスト追加
+        activate area
+        ref over area: リンクリスト追加
+        phys <- area:
+        deactivate area
+
+    end alt
+end loop
+
+main <-- phys:
+deactivate phys
+
+@enduml

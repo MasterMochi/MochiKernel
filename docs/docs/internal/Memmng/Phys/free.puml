@@ -11,13 +11,13 @@ activate page
 page -> phys: 物理メモリ領域解放( アドレス )
 activate phys
 
-phys -> area: メモリ領域解放()
+phys -> area: メモリ領域解放
 activate area
 ref over area: メモリ領域管理
-phys <-- area: return 解放結果
+phys <-- area: 解放結果
 deactivate area
 
-page <-- phys: return 解放結果
+page <-- phys: 解放結果
 deactivate phys
 
 @enduml

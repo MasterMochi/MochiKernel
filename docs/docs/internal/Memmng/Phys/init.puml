@@ -40,7 +40,7 @@ loop メモリマップ全エントリ毎
         phys -> area: 未割当リンクリスト追加
         activate area
         ref over area: リンクリスト追加
-        phys <- area:
+        phys <-- area:
         deactivate area
 
     end alt

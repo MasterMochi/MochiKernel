@@ -12,20 +12,20 @@ page -> phys: 物理メモリ領域割当( サイズ )
 activate phys
 
 break サイズ == 0
-    page <-- phys: return NULL
+    page <-- phys: NULL
 end break
 
 phys -> phys: サイズ4KBアライメント
 
-phys -> area: メモリ領域割当()
+phys -> area: メモリ領域割当
 activate area
 
 ref over area: メモリ領域管理
 
-phys <-- area: return アドレス
+phys <-- area: アドレス
 deactivate area
 
-page <-- phys: return アドレス
+page <-- phys: アドレス
 deactivate phys
 
 @enduml

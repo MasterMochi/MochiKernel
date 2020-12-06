@@ -1,0 +1,48 @@
+@startuml
+
+box "メモリ管理"
+    participant "各サブモジュール" as any
+    participant "メモリ領域管理"   as area
+end box
+participant "MLib" as mlib
+
+activate any
+
+any -> area: メモリ解放(\n  割当済リンクリスト,\n  未割当リンクリスト,\n  未使用リンクリスト,\n  解放領域アドレス )
+activate area
+
+area -> mlib: 先頭エントリ取得( 割当済リンクリスト )
+activate mlib
+area <-- mlib:
+deactivate mlib
+
+loop エントリ != NULL
+    break エントリの指すメモリ領域のアドレス==解放領域アドレス
+        area -> mlib: エントリ削除( 割当済リンクリスト )
+        activate mlib
+        area <-- mlib:
+        deactivate mlib
+
+        area -> mlib: リスト末尾挿入( 未使用リンクリスト )
+        activate mlib
+        area <-- mlib
+        deactivate mlib
+
+        area -> area: メモリ領域追加(\n  未割当リンクリスト,\n  未使用リンクリスト,\n  解放領域アドレス,\n  解放領域サイズ,\n  結合する )
+        activate area
+        ref over area: メモリ領域追加
+        area <-[#FFFFFF]- area:
+        deactivate area
+        ||5||
+    end break
+
+    area -> mlib: 次エントリ取得( 割当済リンクリスト )
+    activate mlib
+    area <-- mlib:
+    deactivate mlib
+end loop
+
+any <-- area:
+deactivate area
+
+@enduml

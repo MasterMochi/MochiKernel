@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - メモリ領域管理</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">メモリ管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">メモリ領域管理</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>メモリ領域管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#add">メモリ領域追加</a><ol>
+                        <li><a href="#add-new">前後エントリのメモリ領域と隣接しない場合の追加</a></li>
+                        <li><a href="#add-prev">前エントリのメモリ領域と隣接する場合の追加</a></li>
+                        <li><a href="#add-next">後エントリのメモリ領域と隣接する場合の追加</a></li>
+                        <li><a href="#add-comb">前後エントリのメモリ領域と隣接する場合の追加</a></li></ol></li>
+                    <li><a href="#alloc">メモリ領域割当</a><ol>
+                        <li><a href="#alloc-lt">エントリのメモリ領域未満のメモリ領域割当て</a></li>
+                        <li><a href="#alloc-eq">エントリのメモリ領域と等しいメモリ領域割当て</a></li></ol></li>
+                    <li><a href="#spec">指定メモリ領域割当</a><ol>
+                        <li><a href="#spec-eq">エントリのメモリ領域と指定メモリ領域が等しい場合の割当て</a></li>
+                        <li><a href="#spec-top">エントリのメモリ領域前方に指定メモリ領域が含まれる場合の割当て</a></li>
+                        <li><a href="#spec-btm">エントリのメモリ領域後方に指定メモリ領域が含まれる場合の割当て</a></li>
+                        <li><a href="#spec-mid">エントリのメモリ領域中間に指定メモリ領域が含まれる場合の割当て</a></li></ol></li>
+                    <li><a href="#free">メモリ領域解放</a></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>メモリ領域管理サブモジュールは、物理メモリ領域管理サブモジュール、仮想メモリ領域管理サブモジュール、および、I/Oメモリ領域管理サブモジュールにて行う共通のブロック管理情報のリンクリスト操作を行う。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="add">メモリ領域追加</a></h1>
+                <p>追加先リンクリストを先頭エントリから順に、追加するメモリ領域と比較して適切な位置にメモリ領域の情報を追加する。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="add.png"><br>
+                    シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="add-new">前後エントリのメモリ領域と隣接しない場合の追加</a></h2>
+                <p>追加先リンクリストの前後エントリのメモリ領域と隣接しない場合または追加方法として「結合しない」を指定されている場合は、未使用リンクリストからブロック管理情報を取り出して、追加するメモリ領域の情報を設定し、後エントリの前に挿入する。前後エントリの一方または両方が存在しない場合も同様の挿入を行う。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="add-new.png"><br>
+                    前後エントリのメモリ領域と隣接しない場合の追加
+                </div>
+                <br>
+                <br>
+                <h2><a name="add-prev">前エントリのメモリ領域と隣接する場合の追加</a></h2>
+                <p>追加方法として「結合する」を指定されており、追加先リンクリストの前エントリのメモリ領域と隣接する場合は、前エントリのブロック管理情報のサイズに追加するメモリ領域のサイズを加算する。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="add-prev.png"><br>
+                    前エントリのメモリ領域と隣接する場合の追加
+                </div>
+                <br>
+                <br>
+                <h2><a name="add-next">後エントリのメモリ領域と隣接する場合の追加</a></h2>
+                <p>追加方法として「結合する」を指定されており、追加先リンクリストの後エントリのメモリ領域と隣接する場合は、未使用リンクリストからブロック管理情報を取り出して、後エントリのメモリ領域サイズを加算した追加メモリ領域の情報を設定し、後エントリの前に挿入する。そして、後エントリを追加先エントリから削除して、未使用リンクリストの末尾に挿入する。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="add-next.png"><br>
+                    後エントリのメモリ領域と隣接する場合の追加
+                </div>
+                <br>
+                <br>
+                <h2><a name="add-comb">前後エントリのメモリ領域と隣接する場合の追加</a></h2>
+                <p>追加方法として「結合する」を指定されており、追加先リンクリストの前後エントリのメモリ領域と隣接する場合は、前エントリのブロック管理情報のサイズに追加するメモリ領域のサイズと後エントリのメモリ領域サイズを加算する。そして、後エントリを追加先エントリから削除して、未使用リンクリストの末尾に挿入する。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="add-comb.png"><br>
+                    前後エントリのメモリ領域と隣接する場合の追加
+                </div>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="alloc">メモリ領域割当</a></h1>
+                <p>未割当リンクリストを先頭から順に、エントリが指す未割当メモリ領域が割当サイズを満たすか判定し、満たす場合は適当なリンクリスト操作をしてメモリ領域を割り当てる。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="alloc.png"><br>
+                    シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="alloc-lt">エントリのメモリ領域未満のメモリ領域割当</a></h2>
+                <p>エントリ(ブロック管理情報)を編集してエントリが指す未割当メモリ領域から割当サイズ分のメモリ領域を減らし、メモリ領域追加機能を用いて割当メモリ領域を割当済リンクリストに追加する事で、メモリ領域を割り当てる。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="alloc-lt.png"><br>
+                    エントリのメモリ領域未満のメモリ領域割当
+                </div>
+                <br>
+                <br>
+                <h2><a name="alloc-eq">エントリのメモリ領域と等しいメモリ領域割当</a></h2>
+                <p>エントリを未割当リンクリストから削除して未使用リンクリストの末尾に挿入し、メモリ領域追加機能を用いて割当メモリ領域を割当済リンクリストに追加する事で、メモリ領域を割り当てる。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="alloc-eq.png"><br>
+                    エントリのメモリ領域と等しいメモリ領域割当
+                </div>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="spec">指定メモリ領域割当</a></h1>
+                <p>未割当リンクリストを先頭から順に、指定メモリ領域がエントリが指すメモリ領域に含まれるか比較して、適切な位置のメモリ領域を割り当てる。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="spec.png"><br>
+                    シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="spec-eq">エントリのメモリ領域と指定メモリ領域が等しい場合の割当て</a></h2>
+                <p>エントリを未割当リンクリストから削除した後に未使用リンクリストに挿入し、メモリ領域追加機能を用いて指定メモリ領域を割当済リンクリストに追加する事で領域を割り当てる。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="spec-eq.png"><br>
+                    エントリのメモリ領域と指定メモリ領域が等しい場合の割当て
+                </div>
+                <br>
+                <h2><a name="spec-top">エントリのメモリ領域前方に指定メモリ領域が含まれる場合の割当て</a></h2>
+                <p>エントリ(ブロック管理情報)を編集してエントリが指すメモリ領域から指定メモリ領域を減らし、メモリ領域追加機能を用いて指定メモリ領域を割当済リンクリストに追加する事で領域を割り当てる。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="spec-top.png"><br>
+                    エントリのメモリ領域前方に指定メモリ領域が含まれる場合の割当て
+                </div>
+                <br>
+                <h2><a name="spec-btm">エントリのメモリ領域後方に指定メモリ領域が含まれる場合の割当て</a></h2>
+                <p>エントリ(ブロック管理情報)を編集してエントリが指すメモリ領域から指定メモリ領域を減らし、メモリ領域追加機能を用いて指定メモリ領域を割当済リンクリストに追加する事で領域を割り当てる。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="spec-btm.png"><br>
+                    エントリのメモリ領域後方に指定メモリ領域が含まれる場合の割当て
+                </div>
+                <br>
+                <h2><a name="spec-mid">エントリのメモリ領域中間に指定メモリ領域が含まれる場合の割当て</a></h2>
+                <p>エントリ(ブロック管理情報)を編集してエントリが指すメモリ領域から指定メモリ領域を減らして前方の未割当メモリ領域とし、未使用リンクリストからブロック管理情報を取り出して後方の未割当メモリ領域を設定して未割当リンクリストに追加する。メモリ領域追加機能を用いて指定メモリ領域を割当済リンクリストに追加する事で領域を割り当てる。概要図を以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="spec-mid.png"><br>
+                    エントリのメモリ領域中間に指定メモリ領域が含まれる場合の割当て
+                </div>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="free">メモリ領域解放</a></h1>
+                <p>割当済リンクリストを先頭から順に、解放するメモリ領域の先頭アドレスと比較する。該当エントリがあった場合は割当済リンクリストから削除し、未使用リンクリストの末尾に挿入する。そして、解放するメモリ領域を未割当リンクリストにメモリ領域追加機能を用いて追加する。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="free.png"><br>
+                    シーケンス
+                </div>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

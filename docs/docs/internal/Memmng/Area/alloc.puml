@@ -1,0 +1,58 @@
+@startuml
+
+box "メモリ管理"
+    participant "各サブモジュール" as any
+    participant "メモリ領域管理"   as area
+end box
+participant "MLib" as mlib
+
+activate any
+
+any -> area: メモリ領域割当(\n  割当済リンクリスト,\n  未割当リンクリスト,\n  未使用リンクリスト,\n  割当サイズ )
+activate area
+
+area -> mlib: 先頭エントリ取得( 未割当リンクリスト )
+activate mlib
+area <-- mlib:
+deactivate mlib
+
+loop エントリ != NULL
+    break エントリの指すメモリ領域が割当サイズを満たす
+        alt サイズ < エントリが指すメモリ領域サイズ
+            area -> area: ブロック管理情報編集
+            note right area
+                アドレス = 割当サイズ加算
+                サイズ　 = 割当サイズ減算
+            end note
+
+        else サイズ == エントリが指すメモリ領域サイズ
+            area -> mlib: エントリ削除( 未割当リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+            area -> mlib: リスト末尾挿入( 未使用リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+        end alt
+
+        area -> area: メモリ領域追加(\n  割当済リンクリスト,\n  未使用リンクリスト,\n  エントリが指すメモリ領域アドレス,\n  割当サイズ,\n  結合しない )
+        activate area
+        ref over area: メモリ領域追加
+        area <-[#FFFFFF]- area:
+        deactivate area
+        ||10||
+    end break
+
+    area -> mlib: 次エントリ取得( 未割当リンクリスト )
+    activate mlib
+    area <-- mlib:
+    deactivate mlib
+end loop
+
+any <-- area: 割当アドレス
+deactivate area
+
+@enduml

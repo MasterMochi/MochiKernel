@@ -1,0 +1,85 @@
+@startuml
+
+box "メモリ管理"
+    participant "各サブモジュール" as any
+    participant "メモリ領域管理"   as area
+end box
+participant "MLib" as mlib
+
+activate any
+
+any -> area: 指定メモリ領域割当(\n  割当済リンクリスト,\n  未割当リンクリスト,\n  未使用リンクリスト,\n  割当アドレス,\n  割当サイズ )
+activate area
+
+area -> mlib: 先頭エントリ取得( 未割当リンクリスト )
+activate mlib
+area <-- mlib:
+deactivate mlib
+
+loop エントリ != NULL
+    break エントリのメモリ領域に指定メモリ領域が含まれる
+        alt エントリのメモリ領域と指定メモリ領域が等しい
+            area -> mlib: エントリ削除( 未割当リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+            area -> mlib: リスト末尾挿入( 未使用リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+        else エントリのメモリ領域前方に指定メモリ領域が含まれる
+            area -> area: ブロック管理情報編集
+            note right area
+                アドレス = 割当サイズ加算
+                サイズ　 = 割当サイズ減算
+            end note
+
+        else エントリのメモリ領域後方に指定メモリ領域が含まれる
+            area -> area: ブロック管理情報編集
+            note right area
+                サイズ = 割当サイズ減算
+            end note
+
+        else エントリのメモリ領域中間に指定メモリ領域が含まれる
+            area -> area: ブロック管理情報編集
+            note right area
+                サイズ = 先頭アドレス～割当アドレス分
+            end note
+
+            area -> mlib: 末尾エントリ取得( 未使用リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+            area -> area: 後方のブロック管理情報設定
+            note right area
+                アドレス = 割当アドレス+割当サイズ
+                サイズ　 = エントリ元サイズ-エントリサイズ-割当サイズ
+            end note
+
+            area -> mlib: 次エントリ挿入( 未割当リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+        end alt
+
+        area -> area: メモリ領域追加(\n  割当済リンクリスト,\n  未使用リンクリスト,\n  割当アドレス,\n  割当サイズ,\n  結合しない )
+        activate area
+        ref over area: メモリ領域追加
+        area <-[#FFFFFF]- area:
+        deactivate area
+        ||10||
+    end break
+
+    area -> mlib: 次エントリ取得( 未割当リンクリスト )
+    activate mlib
+    area <-- mlib:
+    deactivate mlib
+end loop
+
+any <-- area: 割当アドレス
+deactivate area
+
+@enduml

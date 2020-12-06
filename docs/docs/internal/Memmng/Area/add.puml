@@ -1,0 +1,81 @@
+@startuml
+
+box "メモリ管理"
+    participant "各サブモジュール" as any
+    participant "メモリ領域管理"   as area
+end box
+participant "MLib" as mlib
+
+activate any
+
+any -> area: メモリ領域追加(\n  追加先リンクリスト,\n  未使用リンクリスト,\n  追加領域アドレス,\n  追加領域サイズ,\n  追加方法=結合する/結合しない )
+activate area
+
+loop
+    area -> mlib: 後(次)エントリ取得( 追加先リンクリスト )
+    activate mlib
+    note left
+        現エントリが未指定
+        の場合は、先頭エン
+        トリ取得となる。
+    end note
+    area <-- mlib:
+    deactivate mlib
+
+    break ( 後エントリ == NULL ) || ( 追加領域アドレス < 後エントリの指すメモリ領域アドレス )
+        alt 前エントリが指すメモリ領域と追加メモリ領域が隣接 && 追加方法==結合する
+            rnote over area #FFFFFF: 編集ブロック管理情報 = 前エントリ
+            area -> area: ブロック管理情報編集
+            note right area
+                サイズ = 追加領域サイズ加算
+            end note
+
+        else
+            area -> mlib: 末尾エントリ取得( 未使用リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+            rnote over area #FFFFFF: 編集ブロック管理情報 = 未使用エントリ
+            area -> area: ブロック管理情報編集
+            note right area
+                アドレス = 追加領域アドレス
+                サイズ　 = 追加領域サイズ
+            end note
+
+            area -> mlib: 後エントリ前挿入( 追加先リンクリスト )
+            activate mlib
+            note left
+                後エントリが
+                NULLの場合は、
+                リスト末尾への
+                挿入となる。
+            end note
+            area <-- mlib:
+            deactivate mlib
+        end alt
+
+        opt 後エントリのメモリ領域と追加メモリ領域が隣接 && 追加方法==結合する
+            area -> area: ブロック管理情報編集
+            note right area
+                サイズ = 後エントリの指すメモリ領域サイズ加算
+            end note
+
+            area -> mlib: 後エントリ削除( 追加先リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+
+            area -> mlib: リスト末尾挿入( 追加リンクリスト )
+            activate mlib
+            area <-- mlib:
+            deactivate mlib
+        end opt
+    end break
+end loop
+
+any <-- area:
+deactivate area
+
+
+@enduml

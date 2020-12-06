@@ -37,9 +37,9 @@ end loop
 loop メモリマップ全エントリ毎
     alt 使用可能メモリ
 
-        phys -> area: 未割当リンクリスト追加
+        phys -> area: 未割当メモリ領域追加
         activate area
-        ref over area: リンクリスト追加
+        ref over area: メモリ領域追加
         phys <-- area:
         deactivate area
 

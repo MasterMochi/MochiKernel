@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngHeap.c                                             */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2019-2020 Mcohi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -15,6 +15,7 @@
 
 /* ライブラリヘッダ */
 #include <MLib/MLibList.h>
+#include <MLib/MLibUtil.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -101,7 +102,7 @@ void *MemmngHeapAlloc( size_t size )
     }
 
     /* サイズアライメント */
-    size = MLIB_ALIGN( size, 4 );
+    size = MLIB_UTIL_ALIGN( size, 4 );
 
     /* 未使用メモリ領域毎に繰り返す */
     while ( true ) {
@@ -449,8 +450,8 @@ static void SetBreakPoint( int quantity )
 
             /* ページ先頭アドレス計算 */
             pVirtAddr = ( void * )
-                        MLIB_ALIGN( ( int ) ( pgBreakPoint ) - 1,
-                                    IA32_PAGING_PAGE_SIZE         );
+                        MLIB_UTIL_ALIGN( ( int ) ( pgBreakPoint ) - 1,
+                                         IA32_PAGING_PAGE_SIZE         );
 
             /* ページマッピング設定 */
             ret = MemmngPageSet( 0,
@@ -476,8 +477,8 @@ static void SetBreakPoint( int quantity )
 
             /* ページ先頭アドレス計算 */
             pVirtAddr = ( void * )
-                        MLIB_ALIGN( ( int ) ( pgBreakPoint ) - 1 + once,
-                                    IA32_PAGING_PAGE_SIZE                );
+                        MLIB_UTIL_ALIGN( ( int ) ( pgBreakPoint ) - 1 + once,
+                                         IA32_PAGING_PAGE_SIZE                );
 
             /* ページマッピング解除 */
             MemmngPageUnset( 0, pVirtAddr, IA32_PAGING_PAGE_SIZE );

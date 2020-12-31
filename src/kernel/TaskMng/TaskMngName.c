@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngName.c                                           */
-/*                                                                 2019/11/21 */
-/* Copyright (C) 2019 Mochi.                                                  */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2019-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -10,7 +10,9 @@
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdint.h>
-#include <string.h>
+
+/* ライブラリヘッダ */
+#include <MLib/MLibUtil.h>
 
 /* カーネルヘッダ */
 #include <kernel/config.h>
@@ -96,9 +98,9 @@ void NameInit( void )
         gTaskNameTbl[ idx ].taskId = MK_TASKID_NULL;
 
         /* タスク名初期化 */
-        memset( gTaskNameTbl[ idx ].taskName,
-                0,
-                MK_CONFIG_TASKNAME_LENMAX + 1 );
+        MLibUtilSetMemory8( gTaskNameTbl[ idx ].taskName,
+                            0,
+                            MK_CONFIG_TASKNAME_LENMAX + 1 );
     }
 
     /* 割込みハンドラ設定 */
@@ -238,9 +240,9 @@ static void doRegister( MkTaskNameParam_t *pParam )
         /* 該当エントリ有り */
 
         /* タスク名変更 */
-        memcpy( pEntry->taskName,
-                pParam->pTaskName,
-                MK_CONFIG_TASKNAME_LENMAX + 1 );
+        MLibUtilCopyMemory( pEntry->taskName,
+                            pParam->pTaskName,
+                            MK_CONFIG_TASKNAME_LENMAX + 1 );
 
         /* 戻り値設定 */
         pParam->ret = MK_RET_SUCCESS;
@@ -265,9 +267,9 @@ static void doRegister( MkTaskNameParam_t *pParam )
 
     /* 登録 */
     pEntry->taskId = taskId;
-    memcpy( pEntry->taskName,
-            pParam->pTaskName,
-            MK_CONFIG_TASKNAME_LENMAX + 1 );
+    MLibUtilCopyMemory( pEntry->taskName,
+                        pParam->pTaskName,
+                        MK_CONFIG_TASKNAME_LENMAX + 1 );
 
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
@@ -325,7 +327,7 @@ static void doUnregister( MkTaskNameParam_t *pParam )
 
     /* 該当エントリ初期化 */
     pEntry->taskId = MK_TASKID_NULL;
-    memset( pEntry->taskName, 0, MK_CONFIG_TASKNAME_LENMAX + 1 );
+    MLibUtilSetMemory8( pEntry->taskName, 0, MK_CONFIG_TASKNAME_LENMAX + 1 );
 
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
@@ -480,9 +482,9 @@ static TaskNameEntry_t *SearchTaskName( char *pTaskName )
     /* タスク名管理テーブルエントリ毎に繰り返す */
     for ( idx = 0; idx < MK_CONFIG_TASKNAME_NUM; idx++ ) {
         /* タスク名比較 */
-        ret = strncmp( gTaskNameTbl[ idx ].taskName,
-                       pTaskName,
-                       MK_CONFIG_TASKNAME_LENMAX + 1 );
+        ret = MLibUtilCmpString( gTaskNameTbl[ idx ].taskName,
+                                 pTaskName,
+                                 MK_CONFIG_TASKNAME_LENMAX + 1 );
 
         /* 比較結果判定 */
         if ( ret == 0 ) {

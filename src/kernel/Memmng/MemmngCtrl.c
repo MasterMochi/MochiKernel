@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngCtrl.c                                             */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -12,10 +12,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Paging.h>
@@ -95,7 +95,7 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
             copySize = size - idx;
 
             /* マッピングサイズ設定 */
-            mapSize = MLIB_ALIGN( copySize, IA32_PAGING_PAGE_SIZE );
+            mapSize = MLIB_UTIL_ALIGN( copySize, IA32_PAGING_PAGE_SIZE );
         }
 
         /* ページマッピング設定 */
@@ -115,7 +115,9 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
         }
 
         /* コピー */
-        memcpy( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, pVAddr + idx, copySize );
+        MLibUtilCopyMemory( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
+                            pVAddr + idx,
+                            copySize                               );
     }
 
     /* ページマッピング解除 */
@@ -180,7 +182,7 @@ void MemmngCtrlSet( void    *pPAddr,
             setSize = size - idx;
 
             /* マッピングサイズ設定 */
-            mapSize = MLIB_ALIGN( setSize, IA32_PAGING_PAGE_SIZE );
+            mapSize = MLIB_UTIL_ALIGN( setSize, IA32_PAGING_PAGE_SIZE );
         }
 
         /* ページマッピング設定 */
@@ -200,7 +202,7 @@ void MemmngCtrlSet( void    *pPAddr,
         }
 
         /* メモリ設定 */
-        memset( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, value, setSize );
+        MLibUtilSetMemory8( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1, value, setSize );
     }
 
     /* ページマッピング解除 */

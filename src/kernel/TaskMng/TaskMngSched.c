@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -12,11 +12,11 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
 #include <MLib/MLibList.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
@@ -471,7 +471,7 @@ void SchedInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* スケジューラテーブル初期化 */
-    memset( &gSchedTbl, 0, sizeof ( schedTbl_t ) );
+    MLibUtilSetMemory8( &gSchedTbl, 0, sizeof ( schedTbl_t ) );
 
     /* 実行可能タスクグループIDX設定 */
     gSchedTbl.runningGrpIdx  = 0;

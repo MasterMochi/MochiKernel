@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTss.c                                            */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -10,7 +10,9 @@
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdarg.h>
-#include <string.h>
+
+/* ライブラリヘッダ */
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32.h>
@@ -64,7 +66,7 @@ void TssInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* TSS初期化 */
-    memset( &gTss, 0, sizeof ( IA32Tss_t ) );
+    MLibUtilSetMemory8( &gTss, 0, sizeof ( IA32Tss_t ) );
 
     /* TSS設定 */
     gTss.ss0 = MEMMNG_SEGSEL_KERNEL_DATA;

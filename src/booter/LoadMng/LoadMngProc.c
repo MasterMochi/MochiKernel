@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/LoadMng/LoadMngProc.c                                           */
-/*                                                                 2019/07/24 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <kernel/kernel.h>
@@ -67,7 +67,7 @@ void LoadMngProcLoad( void )
     /* 初期化 */
     pDstAddr   = ( void * ) MK_ADDR_PROCIMG;
     srcLbaAddr = gLoadMngPt[ 1 ].lbaFirstAddr;
-    srcLbaSize = MLIB_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
+    srcLbaSize = MLIB_UTIL_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
     size       = srcLbaSize;
 
     /* カーネルイメージヘッダ読込み */
@@ -77,7 +77,7 @@ void LoadMngProcLoad( void )
 
     /* 読込み元LBAアドレス設定 */
     srcLbaAddr += srcLbaSize;
-    srcLbaAddr += MLIB_ALIGN( kernelHeader.fileSize, 512 ) / 512;
+    srcLbaAddr += MLIB_UTIL_ALIGN( kernelHeader.fileSize, 512 ) / 512;
 
     /* ファイル毎に繰り返し */
     do {
@@ -106,7 +106,7 @@ void LoadMngProcLoad( void )
         /* アドレス・サイズ設定 */
         pDstAddr   += srcLbaSize * 512;
         srcLbaAddr += srcLbaSize;
-        srcLbaSize  = MLIB_ALIGN( pHeader->fileSize, 512 ) / 512;
+        srcLbaSize  = MLIB_UTIL_ALIGN( pHeader->fileSize, 512 ) / 512;
         size       += srcLbaSize;
 
         /* ファイル読込み */
@@ -117,15 +117,15 @@ void LoadMngProcLoad( void )
         /* アドレス・サイズ設定 */
         pDstAddr   += srcLbaSize * 512;
         srcLbaAddr += srcLbaSize;
-        srcLbaSize  = MLIB_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
+        srcLbaSize  = MLIB_UTIL_ALIGN( sizeof ( MkImgHdr_t ), 512 ) / 512;
         size       += srcLbaSize;
 
     } while ( true );
 
     /* メモリマップリスト設定 */
     ret = MemMngMapSetList( ( void * ) MK_ADDR_PROCIMG,
-                            MLIB_ALIGN( size * 512, 4096 ),
-                            MK_MEM_TYPE_PROCIMG             );
+                            MLIB_UTIL_ALIGN( size * 512, 4096 ),
+                            MK_MEM_TYPE_PROCIMG                  );
 
     /* 設定結果判定 */
     if ( ret != CMN_SUCCESS ) {

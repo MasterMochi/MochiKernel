@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/Driver/DriverAta.c                                              */
-/*                                                                 2019/07/23 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/ATA/ATA.h>
@@ -217,7 +217,7 @@ CmnRet_t DriverAtaRead( void     *pAddr,
             gInterruptFlag = ATA_INT_FLAG_OFF;
 
             /* データ転送要求有無判定 */
-            if ( MLIB_HAVE_FLAG( status, ATA_STATUS_DRQ ) ) {
+            if ( MLIB_UTIL_HAVE_FLAG( status, ATA_STATUS_DRQ ) ) {
                 /* データ転送要求有 */
 
                 /* デバッグトレースログ出力 */

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/DebugLog.c                                                */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,7 +11,9 @@
 /* 標準ヘッダ */
 #include <stdarg.h>
 #include <stdint.h>
-#include <string.h>
+
+/* ライブラリヘッダ */
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/Vga/Vga.h>
@@ -189,7 +191,7 @@ void DebugLogInit( void )
     uint32_t column;    /* 列 */
 
     /* ログ管理テーブル初期化 */
-    memset( &gLogTbl, 0, sizeof ( logTbl_t ) );
+    MLibUtilSetMemory8( &gLogTbl, 0, sizeof ( logTbl_t ) );
 
     /* 文字属性設定 */
     gLogTbl.attr = VGA_M3_ATTR_FG_WHITE  |  /* 白色文字属性 */
@@ -280,9 +282,9 @@ void DebugLogOutput( uint32_t moduleId,
         /* 画面スクロール */
         for ( row = 0; row < ( VGA_M3_ROW - 1 ); row++ ) {
             /* 一行コピー */
-            memcpy( LOG_CURSOR_ADDR( row, 0 ),
-                    LOG_CURSOR_ADDR( row + 1, 0 ),
-                    VGA_M3_COLUMN * 2 );
+            MLibUtilCopyMemory( LOG_CURSOR_ADDR( row, 0 ),
+                                LOG_CURSOR_ADDR( row + 1, 0 ),
+                                VGA_M3_COLUMN * 2              );
         }
 
         /* 最下行初期化 */
@@ -549,7 +551,7 @@ static void LogOutputNumber( uint32_t value,
     uint32_t idx;                       /* インデックス     */
 
     /* 初期化 */
-    memset( buffer, '0', sizeof ( buffer ) );
+    MLibUtilSetMemory8( buffer, '0', sizeof ( buffer ) );
     length = 0;
     tmp    = value;
 

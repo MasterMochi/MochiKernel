@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/MemMng/MemMngMap.c                                              */
-/*                                                                 2020/07/19 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,10 +11,10 @@
 /* 標準ヘッダ */
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLibList.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <firmware/bios/e820.h>
@@ -383,7 +383,7 @@ static void InitMemMapList( void )
     pPrev  = NULL;
 
     /* メモリマップリストエントリ初期化 */
-    memset( &gListEntry, 0, sizeof ( gListEntry ) );
+    MLibUtilSetMemory8( &gListEntry, 0, sizeof ( gListEntry ) );
 
     /* リスト初期化 */
     MLibListInit( &gEmptyList  );

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTask.c                                           */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,10 +11,9 @@
 /* 標準ヘッダ */
 #include <stdarg.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
@@ -143,7 +142,7 @@ uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
     type1 = TaskMngTaskGetType( taskId1 );
     type2 = TaskMngTaskGetType( taskId2 );
 
-    return MLIB_MAX( type1, type2 ) - MLIB_MIN( type1, type2 );
+    return MLIB_UTIL_MAX( type1, type2 ) - MLIB_UTIL_MIN( type1, type2 );
 }
 
 

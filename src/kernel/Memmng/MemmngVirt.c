@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngVirt.c                                             */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -14,6 +14,7 @@
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
 #include <MLib/MLibList.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Paging.h>
@@ -93,7 +94,7 @@ void *MemmngVirtAlloc( MkPid_t pid,
         /* 正常 */
 
         /* アライメント計算 */
-        size = MLIB_ALIGN( size, IA32_PAGING_PAGE_SIZE );
+        size = MLIB_UTIL_ALIGN( size, IA32_PAGING_PAGE_SIZE );
     }
 
     /* メモリ領域割当 */

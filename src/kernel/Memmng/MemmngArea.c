@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngArea.c                                             */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,7 +11,9 @@
 /* 標準ヘッダ */
 #include <stdarg.h>
 #include <stdbool.h>
-#include <string.h>
+
+/* ライブラリヘッダ */
+#include <MLib/MLibUtil.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -409,7 +411,7 @@ void AreaInit( void )
     }
 
     /* メモリ領域情報初期化 */
-    memset( gAreaTbl.areaInfo, 0, sizeof ( gAreaTbl.areaInfo ) );
+    MLibUtilSetMemory8( gAreaTbl.areaInfo, 0, sizeof ( gAreaTbl.areaInfo ) );
 
     for ( index = 0; index < AREA_INFO_NUM; index++ ) {
         /* メモリ領域情報設定 */
@@ -798,7 +800,7 @@ static CmnRet_t FreeMerge( MLibList_t *pAllocList,
     pFree->size += pAlloc->size;
 
     /* 割当中メモリ領域情報初期化 */
-    memset( pAlloc, 0, sizeof ( AreaInfo_t ) );
+    MLibUtilSetMemory8( pAlloc, 0, sizeof ( AreaInfo_t ) );
 
     /* 空メモリ領域情報リストに挿入 */
     retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ),
@@ -841,7 +843,7 @@ static CmnRet_t FreeMerge( MLibList_t *pAllocList,
         }
 
         /* 次メモリ領域情報初期化 */
-        memset( pNext, 0, sizeof ( AreaInfo_t ) );
+        MLibUtilSetMemory8( pNext, 0, sizeof ( AreaInfo_t ) );
 
         /* 空メモリ領域情報リストに挿入 */
         retMLib = MLibListInsertTail( &( gAreaTbl.emptyList ),

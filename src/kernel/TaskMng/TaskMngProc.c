@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,10 +11,9 @@
 /* 標準ヘッダ */
 #include <stdarg.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <kernel/config.h>
@@ -171,8 +170,8 @@ MkPid_t TaskMngProcAdd( uint8_t type,
 
     /* ブレイクポイント設定 */
     pProcInfo->pBreakPoint =
-        ( void * ) MLIB_ALIGN( ( uint32_t ) pProcInfo->pEndPoint - 1,
-                               IA32_PAGING_PAGE_SIZE                  );
+        ( void * ) MLIB_UTIL_ALIGN( ( uint32_t ) pProcInfo->pEndPoint - 1,
+                                    IA32_PAGING_PAGE_SIZE                  );
 
     /* スレッド追加 */
     tid = ThreadAddMain( pProcInfo );
@@ -372,8 +371,8 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             MemmngCtrlSet( pPhyAddr, 0, IA32_PAGING_PAGE_SIZE );
 
             /* ページ先頭アドレス計算 */
-            pVirtAddr = ( void * ) ( MLIB_ALIGN( breakPoint - 1,
-                                                 IA32_PAGING_PAGE_SIZE ) );
+            pVirtAddr = ( void * ) ( MLIB_UTIL_ALIGN( breakPoint - 1,
+                                                      IA32_PAGING_PAGE_SIZE ) );
 
             /* ページングマッピング設定 */
             ret = MemmngPageSet( pProcInfo->pageDirId,
@@ -402,8 +401,9 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             /* ページ数減少 */
 
             /* ページ先頭アドレス計算 */
-            pVirtAddr = ( void * ) ( MLIB_ALIGN( breakPoint - 1 + quantity,
-                                                 IA32_PAGING_PAGE_SIZE      ) );
+            pVirtAddr = ( void * )
+                        ( MLIB_UTIL_ALIGN( breakPoint - 1 + quantity,
+                                           IA32_PAGING_PAGE_SIZE      ) );
 
             /* ページングマッピング解除 */
             MemmngPageUnset( pProcInfo->pageDirId,

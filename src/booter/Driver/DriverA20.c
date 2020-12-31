@@ -1,15 +1,15 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/Driver/DriverA20.c                                              */
-/*                                                                 2019/07/23 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
 /* インクルード                                                               */
 /******************************************************************************/
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32.h>
@@ -227,7 +227,7 @@ static void A20EnableByKbc( void )
         /* IBF設定値取得 */
         IA32InstructionInByte( &value, 0x64 );
 
-    } while ( !MLIB_HAVE_FLAG( value, 0x02 ) );
+    } while ( !MLIB_UTIL_HAVE_FLAG( value, 0x02 ) );
 
     /* コマンド書き込み */
     IA32InstructionOutByte( 0x64, 0xD1 );
@@ -237,7 +237,7 @@ static void A20EnableByKbc( void )
         /* IBF設定値取得 */
         IA32InstructionInByte( &value, 0x64 );
 
-    } while ( !MLIB_HAVE_FLAG( value, 0x02 ) );
+    } while ( !MLIB_UTIL_HAVE_FLAG( value, 0x02 ) );
 
     /* A20ライン有効化 */
     IA32InstructionOutByte( 0x60, 0xDF );
@@ -247,7 +247,7 @@ static void A20EnableByKbc( void )
         /* IBF設定値取得 */
         IA32InstructionInByte( &value, 0x64 );
 
-    } while ( !MLIB_HAVE_FLAG( value, 0x02 ) );
+    } while ( !MLIB_UTIL_HAVE_FLAG( value, 0x02 ) );
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

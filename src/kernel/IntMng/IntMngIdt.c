@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IntMng/IntMngIdt.c                                              */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -10,7 +10,9 @@
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdarg.h>
-#include <string.h>
+
+/* ライブラリヘッダ */
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Descriptor.h>
@@ -61,7 +63,7 @@ void IntMngIdtInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* IDT初期化 */
-    memset( gIdt, 0, sizeof ( gIdt ) );
+    MLibUtilSetMemory8( gIdt, 0, sizeof ( gIdt ) );
 
     /* IDTR設定 */
     IA32InstructionLidt( ( IA32Descriptor_t * ) gIdt, sizeof ( gIdt ) - 1 );

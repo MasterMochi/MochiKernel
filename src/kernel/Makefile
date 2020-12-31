@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2020/11/03 *#
+#*                                                                 2020/12/31 *#
 #* Copyright (C) 2016-2020 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -70,6 +70,7 @@ CFLAGS  += -I$(BUILD_DIR)/include
 ifdef BASE_CFLAGS
 CFLAGS  += $(BASE_CFLAGS)
 endif
+
 # LDフラグ
 LDFLAGS  = -T kernel.lds
 LDFLAGS += -melf_i386
@@ -77,9 +78,9 @@ LDFLAGS += -L$(BUILD_DIR)/lib
 ifdef BASE_LDFLAGS
 LDFLAGS += $(BASE_LDFLAGS)
 endif
+
 # LDライブラリフラグ
-LIBS     = -lc
-LIBS    += -lMLib
+LIBS     = -lMLib_fe
 
 
 #******************************************************************************#

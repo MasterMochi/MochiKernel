@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/tool/makeimg/makeimg.c                                                 */
-/*                                                                 2019/04/04 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -23,6 +23,7 @@
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* カーネルヘッダ */
 #include <kernel.h>
@@ -262,10 +263,10 @@ static void addFile( int  imgFd,
         size += ( uint32_t ) readSize;
 
         /* 書込み */
-        writeSize = write( imgFd, buffer, MLIB_ALIGN( readSize, 512 ) );
+        writeSize = write( imgFd, buffer, MLIB_UTIL_ALIGN( readSize, 512 ) );
 
         /* 書込み結果判定 */
-        if ( writeSize != MLIB_ALIGN( readSize, 512 ) ) {
+        if ( writeSize != MLIB_UTIL_ALIGN( readSize, 512 ) ) {
             /* 失敗 */
 
             /* アボート */

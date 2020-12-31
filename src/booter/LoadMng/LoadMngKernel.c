@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/LoadMng/LoadMngKernel.c                                         */
-/*                                                                 2019/07/24 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2020/12/31 */
+/* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -10,10 +10,10 @@
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdarg.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <elf.h>
@@ -78,7 +78,7 @@ void LoadMngKernelLoad( void )
     /* カーネル読込み */
     DriverAtaRead( ( void * ) MB_CONFIG_ADDR_KERNEL,
                    gLoadMngPt[ 1 ].lbaFirstAddr + size,
-                   MLIB_ALIGN( header.fileSize, 512 ) / 512 );
+                   MLIB_UTIL_ALIGN( header.fileSize, 512 ) / 512 );
 
     /* ELF操作用変数設定 */
     pElfHdr = ( Elf32_Ehdr * ) MB_CONFIG_ADDR_KERNEL;
@@ -99,14 +99,15 @@ void LoadMngKernelLoad( void )
         }
 
         /* セグメント初期化 */
-        memset( ( void * ) pEntry->p_vaddr,
-                0,
-                pEntry->p_memsz             );
+        MLibUtilSetMemory8( ( void * ) pEntry->p_vaddr,
+                            0,
+                            pEntry->p_memsz             );
 
         /* セグメントコピー */
-        memcpy( ( void * ) pEntry->p_vaddr,
-                ( void * ) ( uint32_t ) pElfHdr + pEntry->p_offset,
-                pEntry->p_filesz                                    );
+        MLibUtilCopyMemory(
+            ( void * ) pEntry->p_vaddr,
+            ( void * ) ( uint32_t ) pElfHdr + pEntry->p_offset,
+            pEntry->p_filesz                                    );
 
         /* メモリマップリスト設定 */
         ret = MemMngMapSetList( ( void * ) pEntry->p_vaddr,

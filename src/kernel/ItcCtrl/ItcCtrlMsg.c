@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2018-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -11,11 +11,11 @@
 /* 標準ヘッダ */
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
 #include <MLib/MLibList.h>
+#include <MLib/MLibUtil.h>
 
 /* カーネルヘッダ */
 #include <kernel/message.h>
@@ -328,7 +328,7 @@ static void DoReceive( MkMsgParam_t *pParam )
             pDstInfo->timerId = TIMERMNG_TIMERID_NULL;
 
             /* コピーサイズ設定 */
-            size = MLIB_MIN( pMsg->size, pParam->recv.bufferSize );
+            size = MLIB_UTIL_MIN( pMsg->size, pParam->recv.bufferSize );
 
             /* 戻り値設定 */
             pParam->ret       = MK_RET_SUCCESS;
@@ -337,12 +337,12 @@ static void DoReceive( MkMsgParam_t *pParam )
             pParam->recv.src  = pMsg->src;
 
             /* メッセージコピー */
-            memcpy( pParam->recv.pBuffer,
-                    pMsg->msg,
-                    size                  );
+            MLibUtilCopyMemory( pParam->recv.pBuffer,
+                                pMsg->msg,
+                                size                  );
 
             /* メッセージバッファ解放 */
-            memset( pMsg, 0, sizeof ( pMsg->size ) );
+            MLibUtilSetMemory8( pMsg, 0, sizeof ( pMsg->size ) );
             MemmngHeapFree( pMsg );
             pMsg = NULL;
 
@@ -515,7 +515,7 @@ static void DoSendCmn( MkTaskId_t   *pTaskId,
     pMsg->size  = pParam->send.size;
 
     /* メッセージコピー */
-    memcpy( pMsg->msg, pParam->send.pMsg, pParam->send.size );
+    MLibUtilCopyMemory( pMsg->msg, pParam->send.pMsg, pParam->send.size );
 
     /* キューイング */
     MLibListInsertTail( &( gMngTbl[ pParam->send.dst ].list ),

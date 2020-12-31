@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPage.c                                             */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -10,10 +10,10 @@
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdarg.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32.h>
@@ -125,7 +125,9 @@ uint32_t MemmngPageAllocDir( void )
             /* 未使用 */
 
             /* ページディレクトリ初期化 */
-            memset( &pgPageDir[ id ], 0, sizeof ( IA32PagingDir_t ) );
+            MLibUtilSetMemory8( &pgPageDir[ id ],
+                                0,
+                                sizeof ( IA32PagingDir_t ) );
 
             /* カーネル領域設定 */
             SetKernelPageDir( id );
@@ -197,7 +199,7 @@ CmnRet_t MemmngPageFreeDir( uint32_t id )
     gPageMngTbl.usedDir[ id ] = CMN_UNUSED;
 
     /* ページテーブル初期化 */
-    memset( &pgPageDir[ id ], 0, sizeof ( IA32PagingDir_t ) );
+    MLibUtilSetMemory8( &pgPageDir[ id ], 0, sizeof ( IA32PagingDir_t ) );
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
@@ -272,7 +274,7 @@ void MemmngPageInit( void )
 
     /* ページディレクトリ管理テーブルサイズ設定 */
     gPageDirSize = MEMMNG_PAGE_DIR_NUM * sizeof ( IA32PagingDir_t );
-    gPageDirSize = MLIB_ALIGN( gPageDirSize, IA32_PAGING_PAGE_SIZE );
+    gPageDirSize = MLIB_UTIL_ALIGN( gPageDirSize, IA32_PAGING_PAGE_SIZE );
 
     /* ページディレクトリ管理テーブル割当て */
     pgPageDir = ( IA32PagingDir_t * ) MemmngPhysAlloc( gPageDirSize );
@@ -286,7 +288,7 @@ void MemmngPageInit( void )
 
     /* ページテーブル管理テーブルサイズ設定 */
     gPageTblSize = MEMMNG_PAGE_TBL_NUM * sizeof ( IA32PagingTbl_t );
-    gPageTblSize = MLIB_ALIGN( gPageTblSize, IA32_PAGING_PAGE_SIZE );
+    gPageTblSize = MLIB_UTIL_ALIGN( gPageTblSize, IA32_PAGING_PAGE_SIZE );
 
     /* ページテーブル管理テーブル割当て */
     pgPageTbl = ( IA32PagingTbl_t * ) MemmngPhysAlloc( gPageTblSize );
@@ -301,9 +303,9 @@ void MemmngPageInit( void )
     DEBUG_LOG( "pgPageDir=%p, pgPageTbl=%p", pgPageDir, pgPageTbl );
 
     /* テーブル初期化 */
-    memset( &gPageMngTbl, 0, sizeof ( gPageMngTbl ) );
-    memset( pgPageDir,    0, gPageDirSize           );
-    memset( pgPageTbl,    0, gPageTblSize           );
+    MLibUtilSetMemory8( &gPageMngTbl, 0, sizeof ( gPageMngTbl ) );
+    MLibUtilSetMemory8( pgPageDir,    0, gPageDirSize           );
+    MLibUtilSetMemory8( pgPageTbl,    0, gPageTblSize           );
 
     /* アイドルプロセス用ページディレクトリ設定 */
     gPageMngTbl.usedDir[ MEMMNG_PAGE_DIR_ID_IDLE ] = CMN_USED;
@@ -517,7 +519,9 @@ static uint32_t PageAllocTbl( void )
             /* 未使用 */
 
             /* ページテーブル初期化 */
-            memset( &pgPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );
+            MLibUtilSetMemory8( &pgPageTbl[ id ],
+                                0,
+                                sizeof ( IA32PagingTbl_t ) );
 
             /* ページテーブル使用中設定 */
             gPageMngTbl.usedTbl[ id ] = CMN_USED;
@@ -574,7 +578,7 @@ static CmnRet_t PageFreeTbl( uint32_t id )
     gPageMngTbl.usedTbl[ id ] = CMN_UNUSED;
 
     /* ページテーブル初期化 */
-    memset( &pgPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );
+    MLibUtilSetMemory8( &pgPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
@@ -655,7 +659,7 @@ static CmnRet_t PageSet( uint32_t dirId,
         }
 
         /* PDE設定 */
-        memset( pPde, 0, sizeof ( IA32PagingPDE_t ) );
+        MLibUtilSetMemory8( pPde, 0, sizeof ( IA32PagingPDE_t ) );
         IA32_PAGING_SET_BASE( pPde, &pgPageTbl[ tblId ] );
         pPde->attr_g   = IA32_PAGING_G_NO;
         pPde->attr_ps  = IA32_PAGING_PS_4K;
@@ -681,7 +685,7 @@ static CmnRet_t PageSet( uint32_t dirId,
     }
 
     /* PTE設定 */
-    memset( pPte, 0, sizeof ( IA32PagingPTE_t ) );
+    MLibUtilSetMemory8( pPte, 0, sizeof ( IA32PagingPTE_t ) );
     IA32_PAGING_SET_BASE( pPte, pPAddr );
     pPte->attr_g   = attrGlobal;
     pPte->attr_a   = IA32_PAGING_A_NO;
@@ -750,7 +754,7 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
 
     /* 初期化 */
     ret = CMN_FAILURE;
-    memset( &info, 0, sizeof ( MkMemMapEntry_t ) );
+    MLibUtilSetMemory8( &info, 0, sizeof ( MkMemMapEntry_t ) );
 
     /* ページテーブル存在チェック */
     if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
@@ -902,10 +906,10 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
 /******************************************************************************/
 static void SetKernelPageDir( uint32_t dirId )
 {
-    memcpy( &pgPageDir[ dirId                   ],
-            &pgPageDir[ MEMMNG_PAGE_DIR_ID_IDLE ],
-            IA32_PAGING_GET_PDE_IDX( MK_CONFIG_SIZE_USER ) *
-                sizeof( IA32PagingPDE_t )                    );
+    MLibUtilCopyMemory( &pgPageDir[ dirId                   ],
+                        &pgPageDir[ MEMMNG_PAGE_DIR_ID_IDLE ],
+                        IA32_PAGING_GET_PDE_IDX( MK_CONFIG_SIZE_USER ) *
+                            sizeof( IA32PagingPDE_t )                    );
 
     return;
 }
@@ -969,7 +973,7 @@ static void PageUnset( uint32_t dirId,
     IA32InstructionInvlpg( pVAddr );
 
     /* PTE初期化 */
-    memset( pPte, 0, sizeof ( IA32PagingPTE_t ) );
+    MLibUtilSetMemory8( pPte, 0, sizeof ( IA32PagingPTE_t ) );
 
     /* ページテーブル内全エントリ繰り返し */
     for ( pteIdx = 0; pteIdx < IA32_PAGING_PTE_NUM; pteIdx++ ) {
@@ -1001,7 +1005,7 @@ static void PageUnset( uint32_t dirId,
     }
 
     /* PDE初期化 */
-    memset( pPde, 0, sizeof ( IA32PagingPDE_t ) );
+    MLibUtilSetMemory8( pPde, 0, sizeof ( IA32PagingPDE_t ) );
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() end.", __func__ );*/

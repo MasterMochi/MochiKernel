@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2017-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -13,7 +13,7 @@
 #include <stddef.h>
 
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <elf.h>
@@ -136,7 +136,7 @@ CmnRet_t ElfLoad( void     *pAddr,
         }
 
         /* セグメントサイズ取得 */
-        size = MLIB_ALIGN( pEntry->p_memsz, IA32_PAGING_PAGE_SIZE );
+        size = MLIB_UTIL_ALIGN( pEntry->p_memsz, IA32_PAGING_PAGE_SIZE );
 
         /* メモリ領域割当 */
         pPhyAddr = MemmngPhysAlloc( size );
@@ -161,7 +161,7 @@ CmnRet_t ElfLoad( void     *pAddr,
             pEntry->p_filesz                                      );
 
         /* フラグ判定 */
-        if ( MLIB_HAVE_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
+        if ( MLIB_UTIL_HAVE_FLAG( pEntry->p_flags, PF_R | PF_W ) ) {
             /* 読書可能セグメント */
 
             attrRw = IA32_PAGING_RW_RW;
@@ -472,9 +472,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         }
 
         /* フラグチェック */
-        if ( !( MLIB_HAVE_FLAG( pEntry->p_flags, PF_X ) ||
-                MLIB_HAVE_FLAG( pEntry->p_flags, PF_W ) ||
-                MLIB_HAVE_FLAG( pEntry->p_flags, PF_R )    ) ) {
+        if ( !( MLIB_UTIL_HAVE_FLAG( pEntry->p_flags, PF_X ) ||
+                MLIB_UTIL_HAVE_FLAG( pEntry->p_flags, PF_W ) ||
+                MLIB_UTIL_HAVE_FLAG( pEntry->p_flags, PF_R )    ) ) {
             /* 不正値 */
 
             /* デバッグトレースログ出力 */

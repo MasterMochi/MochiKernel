@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTbl.c                                            */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2019-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -12,10 +12,10 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLibList.h>
+#include <MLib/MLibUtil.h>
 
 /* カーネルヘッダ */
 #include <kernel/types.h>
@@ -236,9 +236,12 @@ void TblFreeThreadInfo( TblThreadInfo_t *pThreadInfo )
     /* スレッド管理情報初期化 */
     pThreadInfo->used  = false;
     pThreadInfo->state = 0;
-    memset( &( pThreadInfo->context     ), 0, sizeof ( TblContext_t   ) );
-    memset( &( pThreadInfo->userStack   ), 0, sizeof ( TblStackInfo_t ) );
-    memset( &( pThreadInfo->kernelStack ), 0, sizeof ( TblStackInfo_t ) );
+    MLibUtilSetMemory8(
+        &( pThreadInfo->context     ), 0, sizeof ( TblContext_t   ) );
+    MLibUtilSetMemory8(
+        &( pThreadInfo->userStack   ), 0, sizeof ( TblStackInfo_t ) );
+    MLibUtilSetMemory8(
+        &( pThreadInfo->kernelStack ), 0, sizeof ( TblStackInfo_t ) );
 
     return;
 }
@@ -489,7 +492,7 @@ procChunk_t *AddProcChunk( void )
     }
 
     /* チャンク初期化 */
-    memset( pNewChunk, 0, sizeof ( procChunk_t ) );
+    MLibUtilSetMemory8( pNewChunk, 0, sizeof ( procChunk_t ) );
 
     /* チャンク内プロセス管理情報毎に繰り返す */
     for ( idx = 0; idx < CHUNK_PROCINFO_NUM; idx++ ) {
@@ -568,7 +571,7 @@ TblThreadChunk_t *AddThreadChunk( TblProcInfo_t *pProcInfo )
     }
 
     /* チャンク初期化 */
-    memset( pNewChunk, 0, sizeof ( TblThreadChunk_t ) );
+    MLibUtilSetMemory8( pNewChunk, 0, sizeof ( TblThreadChunk_t ) );
 
     /* チャンク内スレッド管理情報毎に繰り返す */
     for ( idx = 0; idx < TBL_CHUNK_THREADINFO_NUM; idx++ ) {

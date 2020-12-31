@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/InitCtrl/InitCtrl.c                                             */
-/*                                                                 2020/11/03 */
+/*                                                                 2020/12/31 */
 /* Copyright (C) 2016-2020 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -12,7 +12,7 @@
 #include <stdarg.h>
 
 /* ライブラリヘッダ */
-#include <MLib/MLib.h>
+#include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
@@ -186,7 +186,7 @@ static void LoadProcImg( void )
         }
 
         /* アドレス更新 */
-        pAddr   = pAddr + MLIB_ALIGN( pHeader->fileSize, 512 );
+        pAddr   = pAddr + MLIB_UTIL_ALIGN( pHeader->fileSize, 512 );
         pHeader = ( MkImgHdr_t * ) pAddr;
     }
 

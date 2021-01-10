@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - I/Oメモリ領域管理</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">メモリ管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">I/Oメモリ領域管理</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>I/Oメモリ領域管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#init">初期化</a><ol>
+                        <li><a href="#init-linklist">リンクリスト初期化</a></li>
+                        <li><a href="#init-dynamicarray">動的配列初期化</a></li>
+                        <li><a href="#init-add">未使用ブロック管理情報追加</a></li>
+                        <li><a href="#init-unused">未使用リンクリスト追加</a></li>
+                        <li><a href="#init-free">未割当メモリ領域追加</a></li></ol></li>
+                    <li><a href="#alloc">I/Oメモリ領域割当</a><ol>
+                        <li><a href="#alloc-check">アライメントチェック</a></li>
+                        <li><a href="#alloc-add">未使用ブロック管理情報追加</a></li>
+                        <li><a href="#alloc-alloc">メモリ領域割当</a></li></ol></li>
+                    <li><a href="#free">I/Oメモリ領域解放</a><ol>
+                        <li><a href="#free-free">メモリ領域解放</a></li></ol></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>システム全体のI/Oメモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
+                <br>
+                <div class="center">リンクリスト一覧</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">リンクリスト名</td>
+                        <td class="title" width="500">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">未使用リンクリスト</td>
+                        <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">未割当リンクリスト</td>
+                        <td>未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td clasS="center">割当済リンクリスト</td>
+                        <td>割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                    </tr>
+                </table>
+                <br>
+                <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="init">初期化</a></h1>
+                <p>I/Oメモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="init.png"><br>
+                    初期化シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="init-list">リンクリスト初期化</a></h2>
+                <p>概要で記載した3つ全てのリンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
+                <br>
+                <br>
+                <h2><a name="init-dynamicarray">動的配列初期化</a></h2>
+                <p>ブロック管理情報はMLibライブラリの動的配列を使ってヒープ領域に動的に確保する。そのために、動的配列を下記パラメータで初期化する。</p>
+                <br>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">パラメータ</td>
+                        <td class="title">設定値</td>
+                        <td class="title">備考</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">チャンクサイズ</td>
+                        <td class="center">1</td>
+                        <td>チャンク内1エントリ</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">エントリサイズ</td>
+                        <td class="center">(ブロック管理情報のサイズ * 256)</td>
+                        <td>
+                            1エントリに256個のブロック管理情報を<br>
+                            持たせる。
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">最大エントリ数</td>
+                        <td class="center">4,096</td>
+                        <td>
+                            4GBを4KB単位で必要なブロック管理情報数を<br>
+                            256で1エントリとした時の最大エントリ数。<br>
+                            =(4GB/4KB)/256
+                        </td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="init-add">未使用ブロック管理情報追加</a></h2>
+                <p>MLibライブラリの動的配列を使って、ヒープ領域からブロック管理情報を256個(動的配列1エントリ分)割り当てておく。初期化後は、必要に応じてヒープ領域から追加のブロック管理情報を割当てる。</p>
+                <br>
+                <br>
+                <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
+                <p>ヒープ領域に確保したブロック管理情報全てを未使用リンクリストに追加する。</p>
+                <br>
+                <br>
+                <h2><a name="init-free">未割当メモリ領域追加</a></h2>
+                <p>初期化時に渡されたメモリマップの全エントリについて1エントリ毎に予約済みメモリ領域か判定し、予約済メモリ領域である場合は未割当メモリ領域としてメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="alloc">I/Oメモリ領域割当</a></h1>
+                <p>I/Oメモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="alloc.png"><br>
+                    物理メモリ領域割当シーケンス
+                </div>
+                <br>
+                <h2><a name="alloc-check">アライメントチェック</a></h2>
+                <p>要求されたメモリ領域の先頭アドレスとサイズが4KB単位でない場合は、割当てを行わない。</p>
+                <br>
+                <br>
+                <h2><a name="alloc-add">未使用ブロック管理情報追加</a></h2>
+                <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
+                <br>
+                <br>
+                <h2><a name="alloc-alloc">指定メモリ領域割当</a></h2>
+                <p>指定メモリ領域割当は、各種リンクリストと割当て先頭アドレスとサイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="free">I/Oメモリ領域解放</a></h1>
+                <p>I/Oメモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="free.png"><br>
+                    シーケンス
+                </div>
+                <br>
+                <h2><a name="free-free">メモリ領域解放</a></h2>
+                <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
+                <br>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

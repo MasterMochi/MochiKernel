@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPhys.c                                             */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/01/09 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -41,10 +41,15 @@
 #define DEBUG_LOG( ... )
 #endif
 
-/** 物理メモリ領域管理テーブル構造体 */
+/** ブロック管理情報数 */
+#define AREAINFO_NUM ( 1000 )
+
+/** 物理メモリ領域管理テーブル */
 typedef struct {
-    MLibList_t allocList;   /**< 割当中物理メモリ領域情報リスト */
-    MLibList_t freeList;    /**< 未割当物理メモリ領域情報リスト */
+    MLibList_t allocList;                   /**< 割当済リンクリスト */
+    MLibList_t freeList;                    /**< 未割当リンクリスト */
+    MLibList_t unusedList;                  /**< 未使用リンクリスト */
+    AreaInfo_t areaInfo[ AREAINFO_NUM ];    /**< ブロック管理情報   */
 } PhysTbl_t;
 
 
@@ -65,9 +70,9 @@ static PhysTbl_t gPhysTbl;
  *
  * @param[in]   size 割当サイズ
  *
- * @return      割当結果を返す。
+ * @return      割当先の物理メモリアドレスを返す。
  * @retval      NULL     失敗
- * @retval      NULL以外 割り当てた物理メモリ領域の先頭アドレス
+ * @retval      NULL以外 成功
  *
  * @note        割当サイズが4Kバイトアライメントでない場合は、割当サイズが4Kバ
  *              イトアライメントに合うよう加算して、物理メモリ領域を割り当てる。
@@ -94,7 +99,10 @@ void *MemmngPhysAlloc( size_t size )
     }
 
     /* メモリ領域割当 */
-    pRet = AreaAlloc( &( gPhysTbl.allocList ), &( gPhysTbl.freeList ), size );
+    pRet = AreaAlloc( &( gPhysTbl.allocList  ),
+                      &( gPhysTbl.freeList   ),
+                      &( gPhysTbl.unusedList ),
+                      size                      );
 
     return pRet;
 }
@@ -108,8 +116,8 @@ void *MemmngPhysAlloc( size_t size )
  * @param[in]   *pAddr 解放するメモリアドレス
  *
  * @return      解放結果を返す。
- * @retval      CMN_SUCCESS 正常終了
- * @retval      CMN_FAILURE 異常終了
+ * @retval      CMN_FAILURE 成功
+ * @retval      CMN_SUCCESS 失敗
  */
 /******************************************************************************/
 CmnRet_t MemmngPhysFree( void *pAddr )
@@ -117,7 +125,10 @@ CmnRet_t MemmngPhysFree( void *pAddr )
     CmnRet_t ret;   /* 戻り値 */
 
     /* メモリ領域解放 */
-    ret = AreaFree( &( gPhysTbl.allocList ), &( gPhysTbl.freeList ), pAddr );
+    ret = AreaFree( &( gPhysTbl.allocList  ),
+                    &( gPhysTbl.freeList   ),
+                    &( gPhysTbl.unusedList ),
+                    pAddr                     );
 
     return ret;
 }
@@ -138,38 +149,39 @@ CmnRet_t MemmngPhysFree( void *pAddr )
 void PhysInit( MkMemMapEntry_t *pMemMap,
                size_t          entryNum  )
 {
-    uint32_t        index;      /* メモリマップエントリインデックス */
-    AreaInfo_t      *pMemInfo;  /* 未割当メモリ領域情報             */
-    MkMemMapEntry_t *pEntry;    /* メモリマップエントリ             */
+    uint32_t idx;   /* インデックス */
 
-    /* 未割当物理メモリ領域情報リスト初期化 */
-    MLibListInit( &( gPhysTbl.freeList ) );
+    /* 初期化 */
+    idx = 0;
 
-    /* 割当中物理メモリ領域情報リスト初期化 */
+    /* 割当済リンクリスト初期化 */
     MLibListInit( &( gPhysTbl.allocList ) );
 
+    /* 未割当リンクリスト初期化 */
+    MLibListInit( &( gPhysTbl.freeList ) );
+
+    /* 未使用リンクリスト初期化 */
+    MLibListInit( &( gPhysTbl.unusedList ) );
+
+    /* ブロック管理情報毎に繰り返す */
+    for ( idx = 0; idx < AREAINFO_NUM; idx++ ) {
+        /* 未使用リンクリスト追加 */
+        MLibListInsertTail( &( gPhysTbl.unusedList      ),
+                            &( gPhysTbl.areaInfo[ idx ] )  );
+    }
+
     /* メモリマップエントリ毎に繰り返し */
-    for ( index = 0; index < entryNum; index++ ) {
-        /* メモリマップ参照設定 */
-        pEntry = &( pMemMap[ index ] );
-
+    for ( idx = 0; idx < entryNum; idx++ ) {
         /* メモリ領域タイプ判定 */
-        if ( pEntry->type != MK_MEM_TYPE_AVAILABLE ) {
-            /* 使用可能メモリ領域でない */
+        if ( pMemMap[ idx ].type == MK_MEM_TYPE_AVAILABLE ) {
+            /* 使用可能メモリ領域 */
 
-            continue;
-        }
-
-        /* 未割当メモリ領域情報リスト設定 */
-        pMemInfo = AreaSet( &( gPhysTbl.freeList ),
-                            pEntry->pAddr,
-                            pEntry->size            );
-
-        /* 設定結果判定 */
-        if ( pMemInfo == NULL ) {
-            /* 失敗 */
-
-            /* [TODO] */
+            /* 未割当メモリ領域追加 */
+            AreaAdd( &( gPhysTbl.freeList   ),
+                     &( gPhysTbl.unusedList ),
+                     pMemMap[ idx ].pAddr,
+                     pMemMap[ idx ].size,
+                     true                      );
         }
     }
 

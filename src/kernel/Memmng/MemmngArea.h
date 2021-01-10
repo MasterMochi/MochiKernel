@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngArea.h                                             */
-/*                                                                 2020/11/03 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/*                                                                 2021/01/09 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef MEMMNG_AREA_H
@@ -11,10 +11,10 @@
 /* インクルード                                                               */
 /******************************************************************************/
 /* 標準ヘッダ */
+#include <stdbool.h>
 #include <stddef.h>
 
 /* 共通ヘッダ */
-#include <MLib/MLib.h>
 #include <MLib/MLibList.h>
 
 /* 共通ヘッダ */
@@ -25,10 +25,9 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** メモリ領域情報構造体 */
+/** ブロック管理情報 */
 typedef struct {
     MLibListNode_t node;    /**< 連結リストノード情報 */
-    uint32_t       used;    /**< 使用フラグ           */
     void           *pAddr;  /**< 先頭アドレス         */
     size_t         size;    /**< サイズ               */
     MkTaskId_t     taskId;  /**< タスクID             */
@@ -38,29 +37,32 @@ typedef struct {
 /******************************************************************************/
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
+/* メモリ領域追加 */
+extern void AreaAdd( MLibList_t *pAddList,
+                     MLibList_t *pUnusedList,
+                     void       *pAddr,
+                     size_t     size,
+                     bool       merge         );
+
 /* メモリ領域割当 */
 extern void *AreaAlloc( MLibList_t *pAllocList,
                         MLibList_t *pFreeList,
-                        size_t     size         );
+                        MLibList_t *pUnusedList,
+                        size_t     size          );
 
 /* 指定メモリ領域割当 */
-extern void *AreaAllocSpecified( MLibList_t *pAllocList,
-                                 MLibList_t *pFreeList,
-                                 void       *pAddr,
-                                 size_t     size         );
+extern void *AreaAllocSpec( MLibList_t *pAllocList,
+                            MLibList_t *pFreeList,
+                            MLibList_t *pUnusedList,
+                            void       *pAddr,
+                            size_t     size          );
 
 /* メモリ領域解放 */
 extern CmnRet_t AreaFree( MLibList_t *pAllocList,
                           MLibList_t *pFreeList,
-                          void       *pAddr       );
+                          MLibList_t *pUnusedList,
+                          void       *pAddr        );
 
-/* メモリ領域管理初期化 */
-extern void AreaInit( void );
-
-/* メモリ領域情報リスト設定 */
-extern AreaInfo_t *AreaSet( MLibList_t *pFreeList,
-                            void       *pAddr,
-                            size_t     size        );
 
 /******************************************************************************/
 #endif

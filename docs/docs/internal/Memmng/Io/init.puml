@@ -1,0 +1,60 @@
+@startuml
+
+box "メモリ管理"
+    participant "メイン"              as main
+    participant "I/Oメモリ\n領域管理" as io
+    participant "メモリ領域\n管理"    as area
+end box
+participant "MLIB" as mlib
+
+activate main
+
+main -> io: 初期化( メモリマップ )
+activate io
+
+io -> mlib: 割当済リンクリスト初期化
+activate mlib
+io <-- mlib:
+deactivate mlib
+
+io -> mlib: 未割当リンクリスト初期化
+activate mlib
+io <-- mlib:
+deactivate mlib
+
+io -> mlib: 未使用リンクリスト初期化
+activate mlib
+io <-- mlib:
+deactivate mlib
+
+io -> mlib: 動的配列初期化
+activate mlib
+io <-- mlib:
+deactivate mlib
+
+io -> mlib: 動的配列エントリ割当
+activate mlib
+io <-- mlib:
+deactivate mlib
+
+loop ブロック管理情報毎
+    io -> mlib: 未使用リンクリスト追加
+    activate mlib
+    io <-- mlib:
+    deactivate mlib
+end loop
+
+loop メモリマップ全エントリ毎
+    alt 予約済メモリ領域
+        io -> area: 未割当メモリ領域追加
+        activate area
+        ref over area: メモリ領域追加
+        io <-- area:
+        deactivate area
+    end alt
+end loop
+
+main <-- io:
+deactivate io
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+
+box "メモリ管理"
+    participant "ページング管理"    as page
+    participant "I/Oメモリ領域管理" as io
+    participant "メモリ領域管理"    as area
+end box
+
+activate page
+
+page -> io: I/Oメモリ領域解放( アドレス )
+activate io
+
+io -> area: メモリ領域解放
+activate area
+ref over area: メモリ領域管理
+io <-- area: 解放結果
+deactivate area
+
+note over io
+    [TODO]
+    256+5以上の過剰な未使用ブロック管理情報
+    がある場合は、動的配列エントリを解放する。
+end note
+
+page <-- io: 解放結果
+deactivate io
+
+@enduml

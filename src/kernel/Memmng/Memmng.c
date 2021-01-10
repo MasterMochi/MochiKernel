@@ -71,9 +71,6 @@ void MemmngInit( BiosE820Entry_t *pBiosE820,
     /* ヒープ管理サブモジュール初期化 */
     HeapInit();
 
-    /* メモリ領域管理サブモジュール初期化 */
-    AreaInit();
-
     /* 物理メモリ領域管理サブモジュール初期化 */
     PhysInit( pMemMap, memMapNum );
 

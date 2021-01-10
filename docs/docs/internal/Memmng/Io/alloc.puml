@@ -1,0 +1,48 @@
+@startuml
+
+box "メモリ管理"
+    participant "ページング管理"    as page
+    participant "I/Oメモリ領域管理" as io
+    participant "メモリ領域管理"    as area
+end box
+participant "MLib" as mlib
+
+activate page
+
+page -> io: I/Oメモリ領域割当( アドレス, サイズ )
+activate io
+
+break サイズ == 0
+    page <-- io: NULL
+end break
+
+break ( ( アドレス % 4KB ) != 0 ) ||\n ( ( サイズ　 % 4KB ) != 0 )
+    page <-- io: NULL
+end break
+
+opt 未使用リンクリストエントリ数 < 5
+    io -> mlib: 動的配列エントリ割当て
+    activate mlib
+    io <-- mlib:
+    deactivate mlib
+
+    loop 全ブロック管理情報毎
+        io -> mlib: 未使用リンクリスト追加
+        activate mlib
+        io <-- mlib:
+        deactivate mlib
+    end loop
+end opt
+
+io -> area: 指定メモリ領域割当
+activate area
+
+ref over area: メモリ領域管理
+
+io <-- area: アドレス
+deactivate area
+
+page <-- io: アドレス
+deactivate io
+
+@enduml

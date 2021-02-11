@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/InitCtrl/InitCtrl.c                                             */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2016-2020 Mochi.                                             */
+/*                                                                 2021/02/01 */
+/* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -13,6 +13,7 @@
 
 /* ライブラリヘッダ */
 #include <MLib/MLibUtil.h>
+#include <MLib/MLibWrapper.h>
 
 /* 共通ヘッダ */
 #include <hardware/IA32/IA32Instruction.h>
@@ -44,10 +45,19 @@
 #define DEBUG_LOG( ... )
 #endif
 
+/** ラッパー関数テーブル */
+static const MLibWrapperFunc_t gMLibFunc =
+    {
+        &MLibUtilCopyMemoryCmpt,    /* memcpy */
+        &MLibUtilSetMemoryCmpt,     /* memset */
+        &MemmngHeapAlloc,           /* malloc */
+        &MemmngHeapFree             /* free   */
+    };
 
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
+/* プロセスイメージ読込 */
 static void LoadProcImg( void );
 
 
@@ -62,6 +72,9 @@ static void LoadProcImg( void );
 /******************************************************************************/
 void InitCtrlInit( void )
 {
+    /* MLIB初期化 */
+    MLibWrapperInit( gMLibFunc );
+
     /* デバッグ制御初期化 */
     DebugInit();
 

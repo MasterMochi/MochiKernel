@@ -166,8 +166,8 @@ void PhysInit( MkMemMapEntry_t *pMemMap,
     /* ブロック管理情報毎に繰り返す */
     for ( idx = 0; idx < AREAINFO_NUM; idx++ ) {
         /* 未使用リンクリスト追加 */
-        MLibListInsertTail( &( gPhysTbl.unusedList      ),
-                            &( gPhysTbl.areaInfo[ idx ] )  );
+        MLibListInsertTail( &( gPhysTbl.unusedList           ),
+                            &( gPhysTbl.areaInfo[ idx ].node )  );
     }
 
     /* メモリマップエントリ毎に繰り返し */

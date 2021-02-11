@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngArea.c                                             */
-/*                                                                 2021/01/04 */
+/*                                                                 2021/02/06 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -118,7 +118,7 @@ void AreaAdd( MLibList_t *pAddList,
     } while ( !( pAddr < pNext->pAddr ) );
 
     /* 前後エントリ間に追加 */
-    Add( pAddList, pUnusedList, pPrev, pNext, pAddr, size );
+    Add( pAddList, pUnusedList, pPrev, pNext, pAddr, size, merge );
 
     return;
 }
@@ -159,7 +159,7 @@ void *AreaAlloc( MLibList_t *pAllocList,
     while ( pFree != NULL ) {
 
         /* エントリサイズ判定 */
-        if ( pFree->size <= size ) {
+        if ( pFree->size >= size ) {
             /* 未割当エントリの指すメモリ領域が割当サイズを満たす */
 
             /* 未割当エントリから割当て */
@@ -231,7 +231,8 @@ void *AreaAllocSpec( MLibList_t *pAllocList,
         }
 
         /* 次エントリ取得 */
-        pFree = ( AreaInfo_t * ) MLibListGetNextNode( pFreeList, pFree->node );
+        pFree = ( AreaInfo_t * )
+                MLibListGetNextNode( pFreeList, &( pFree->node ) );
     }
 
     return NULL;
@@ -256,7 +257,8 @@ void *AreaAllocSpec( MLibList_t *pAllocList,
 /******************************************************************************/
 CmnRet_t AreaFree( MLibList_t *pAllocList,
                    MLibList_t *pFreeList,
-                   void       *pAddr       )
+                   MLibList_t *pUnusedList,
+                   void       *pAddr        )
 {
     size_t     size;        /* 解放領域サイズ */
     AreaInfo_t *pAlloc;     /* 割当済エントリ */
@@ -266,7 +268,7 @@ CmnRet_t AreaFree( MLibList_t *pAllocList,
     pAlloc = NULL;
 
     /* 先頭割当済エントリ取得 */
-    pAlloc = MLibListGetNext( pAllocList, NULL );
+    pAlloc = ( AreaInfo_t * ) MLibListGetNextNode( pAllocList, NULL );
 
     /* 割当済エントリ有無判定 */
     while ( pAlloc != NULL ) {
@@ -290,7 +292,8 @@ CmnRet_t AreaFree( MLibList_t *pAllocList,
         }
 
         /* 次エントリ取得 */
-        pAlloc = MLibListGetNext( pAllocList, &( pAlloc->node ) );
+        pAlloc = ( AreaInfo_t * )
+                 MLibListGetNextNode( pAllocList, &( pAlloc->node ) );
     }
 
     return CMN_FAILURE;
@@ -355,14 +358,14 @@ static void Add( MLibList_t *pAddList,
         /* 隣接しないまたは結合しない */
 
         /* 未使用エントリ取得 */
-        pEdit = MLibListRemoveTail( pUnusedList );
+        pEdit = ( AreaInfo_t * ) MLibListRemoveTail( pUnusedList );
 
         /* 未使用エントリ編集 */
         pEdit->pAddr = pAddr;
         pEdit->size  = size;
 
         /* 後エントリ前挿入 */
-        MLibListInsertPrev( pAddList, ( MLibListNode_t * ) pPrev );
+        MLibListInsertPrev( pAddList, ( MLibListNode_t * ) pNext, &( pEdit->node ) );
     }
 
     /* 後エントリ有無判定 */
@@ -515,7 +518,7 @@ static void *AllocSpec( MLibList_t *pAllocList,
         /* 未割当エントリのメモリ領域中間に割当メモリ領域が含まれる */
 
        /* 未使用エントリ取得 */
-        pUnused = MLibListRemoveTail( pUnusedList );
+        pUnused = ( AreaInfo_t * ) MLibListRemoveTail( pUnusedList );
 
         /* 後方の未割当エントリ編集 */
         pUnused->pAddr = pEndSpec;

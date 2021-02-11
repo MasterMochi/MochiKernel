@@ -1,0 +1,35 @@
+@startuml
+
+participant "I/O制御" as ioctrl
+box "メモリ管理"
+    participant "仮想メモリ領域管理" as virt
+    participant "メモリ領域管理"     as area
+end box
+participant "MLIB" as mlib
+
+activate ioctrl
+
+ioctrl -> virt: 仮想メモリ領域解放( アドレス )
+activate virt
+
+virt -> mlib: プロセス管理情報取得
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> area: メモリ領域解放
+activate area
+ref over area: メモリ領域管理
+virt <-- area: 解放結果
+deactivate area
+
+note over virt
+    [TODO]
+    256+5以上の過剰な未使用ブロック管理情報
+    がある場合は、動的配列エントリを解放する。
+end note
+
+ioctrl <-- virt: 解放結果
+deactivate virt
+
+@enduml

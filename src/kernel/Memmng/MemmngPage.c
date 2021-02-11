@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPage.c                                             */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/*                                                                 2021/02/11 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -766,6 +766,39 @@ static CmnRet_t PageSetDefault( uint32_t dirId )
         return CMN_FAILURE;
     }
 
+    /* ブートデータ領域情報取得 */
+    ret = MemmngMapGetInfo( &info, MK_MEM_TYPE_BOOTDATA );
+
+    /* 取得結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+
+        return CMN_FAILURE;
+    }
+
+    /* ブートデータ領域マッピング */
+    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
+                         info.pAddr,            /* 仮想アドレス            */
+                         info.pAddr,            /* 物理アドレス            */
+                         info.size,             /* サイズ                  */
+                         IA32_PAGING_G_YES,     /* グローバルページ属性    */
+                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
+                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
+
+    /* マッピング結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+
+        return CMN_FAILURE;
+    }
+
+    /* ページディレクトリ管理テーブルマッピング */
 #ifdef DEBUG_LOG_ENABLE
     /* デバッグ用VRAM領域マッピング */
     ret = MemmngPageSet(

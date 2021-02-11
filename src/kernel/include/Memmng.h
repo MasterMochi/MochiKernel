@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Memmng.h                                                */
-/*                                                                 2020/11/03 */
-/* Copyright (C) 2016-2020 Mochi.                                             */
+/*                                                                 2021/01/31 */
+/* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -166,10 +166,6 @@ extern uint16_t MemmngSgmtAdd( void    *pBase,
 /* 仮想メモリ領域割当 */
 extern void *MemmngVirtAlloc( MkPid_t pid,
                               size_t  size );
-/* 指定仮想メモリ領域割当 */
-extern void *MemmngVirtAllocSpecified( MkPid_t pid,
-                                       void    *pAddr,
-                                       size_t  size    );
 /* 仮想メモリ領域管理終了 */
 extern CmnRet_t MemmngVirtEnd( MkPid_t pid );
 /* 仮想メモリ領域解放 */

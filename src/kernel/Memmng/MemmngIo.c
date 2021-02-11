@@ -17,6 +17,7 @@
 
 /* 共通ヘッダ */
 #include <kernel/kernel.h>
+#include <hardware/IA32/IA32Paging.h>
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
@@ -251,8 +252,8 @@ static void AllocUnusedAreaInfo( void )
     retMLib = MLibDynamicArrayAlloc(
                   &( gIoTbl.array ),
                   &dummy,
-                  &pAreaInfo,
-                  NULL               );
+                  ( void ** ) &pAreaInfo,
+                  NULL                    );
 
     /* 割当て結果判定 */
     if ( retMLib != MLIB_RET_SUCCESS ) {
@@ -268,7 +269,7 @@ static void AllocUnusedAreaInfo( void )
                             &( pAreaInfo[ idx ].node ) );
     }
 
-    return
+    return;
 }
 
 

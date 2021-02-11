@@ -1,0 +1,62 @@
+@startuml
+
+participant "タスク管理" as taskmng
+box "メモリ管理"
+    participant "仮想メモリ\n領域管理" as virt
+    participant "メモリ領域管理"       as area
+end box
+participant "MLIB" as mlib
+
+activate taskmng
+
+taskmng -> virt: 仮想メモリ領域管理終了(プロセスID)
+activate virt
+
+virt -> mlib: プロセス管理情報取得
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> mlib: 割当済リンクリスト末尾削除
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+loop 削除成功
+    virt -> mlib: 未使用リンクリスト追加
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+
+    virt -> mlib: 割当済リンクリスト末尾削除
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+end loop
+
+virt -> mlib: 未割当リンクリスト末尾削除
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+loop 削除成功
+    virt -> mlib: 未使用リンクリスト追加
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+
+    virt -> mlib: 未割当リンクリスト末尾削除
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+end loop
+
+virt -> mlib: プロセス管理情報解放
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+taskmng <-- virt:
+deactivate virt
+
+@enduml

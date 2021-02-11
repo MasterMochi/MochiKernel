@@ -1,0 +1,51 @@
+@startuml
+
+participant "I/O制御" as ioctrl
+box "メモリ管理"
+    participant "仮想メモリ領域管理" as virt
+    participant "メモリ領域管理"     as area
+end box
+participant "MLib" as mlib
+
+activate ioctrl
+
+ioctrl -> virt: 仮想メモリ領域割当( プロセスID,  サイズ )
+activate virt
+
+break サイズ == 0
+    ioctrl <-- virt: NULL
+end break
+
+virt -> mlib: プロセス管理情報取得
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> virt: サイズ4KBアライメント
+
+opt 未使用リンクリストエントリ数 < 5
+    virt -> mlib: 未使用ブロック管理情報用\n動的配列エントリ割当て
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+
+    loop 全ブロック管理情報毎
+        virt -> mlib: 未使用リンクリスト追加
+        activate mlib
+        virt <-- mlib:
+        deactivate mlib
+    end loop
+end opt
+
+virt -> area: メモリ領域割当
+activate area
+
+ref over area: メモリ領域管理
+
+virt <-- area: アドレス
+deactivate area
+
+ioctrl <-- virt: アドレス
+deactivate virt
+
+@enduml

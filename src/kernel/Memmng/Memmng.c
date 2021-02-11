@@ -74,14 +74,14 @@ void MemmngInit( BiosE820Entry_t *pBiosE820,
     /* 物理メモリ領域管理サブモジュール初期化 */
     PhysInit( pMemMap, memMapNum );
 
+    /* ページ管理サブモジュール初期化 */
+    MemmngPageInit();
+
     /* I/Oメモリ領域管理サブモジュール初期化 */
     IoInit( pMemMap, memMapNum );
 
     /* 仮想メモリ領域管理サブモジュール初期化 */
     VirtInit();
-
-    /* ページ管理サブモジュール初期化 */
-    MemmngPageInit();
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );

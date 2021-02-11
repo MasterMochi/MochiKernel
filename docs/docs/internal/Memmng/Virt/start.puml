@@ -1,0 +1,72 @@
+@startuml
+
+participant "タスク管理" as taskmng
+box "メモリ管理"
+    participant "仮想メモリ\n領域管理" as virt
+    participant "メモリ領域管理"       as area
+end box
+participant "MLIB" as mlib
+
+activate taskmng
+
+taskmng -> virt: 仮想メモリ領域管理開始(プロセスID)
+activate virt
+
+virt -> mlib: プロセス管理情報割当
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> mlib: 割当済リンクリスト初期化
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> mlib: 未割当リンクリスト初期化
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+opt 未使用リンクリストエントリ数 < 5
+    virt -> mlib: 未使用ブロック管理情報用\n動的配列エントリ割当て
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+
+    loop 全ブロック管理情報毎
+        virt -> mlib: 未使用リンクリスト追加
+        activate mlib
+        virt <-- mlib:
+        deactivate mlib
+    end loop
+end opt
+
+virt -> area: 全メモリ領域を未割当リンクリストに追加
+activate area
+ref over area: メモリ領域追加
+virt <-- area:
+deactivate area
+
+virt -> area: ブートデータ領域割当
+activate area
+ref over area: 指定メモリ領域割当
+virt <-- area:
+deactivate area
+
+virt -> area: カーネル領域割当
+activate area
+ref over area: 指定メモリ領域割当
+virt <-- area:
+deactivate area
+
+virt -> area: ユーザ領域割当
+activate area
+ref over area: 指定メモリ領域割当
+virt <-- area:
+deactivate area
+
+
+taskmng <-- virt:
+deactivate virt
+
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+
+box "メモリ管理"
+    participant "メイン"               as main
+    participant "仮想メモリ\n領域管理" as virt
+end box
+participant "MLIB" as mlib
+
+activate main
+
+main -> virt: 初期化
+activate virt
+
+virt -> mlib: 未使用リンクリスト初期化
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> mlib: プロセス管理情報用動的配列初期化
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> mlib: 未使用ブロック管理情報用動的配列初期化
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+virt -> mlib: 未使用ブロック管理情報用動的配列エントリ割当
+activate mlib
+virt <-- mlib:
+deactivate mlib
+
+loop ブロック管理情報毎
+    virt -> mlib: 未使用リンクリスト追加
+    activate mlib
+    virt <-- mlib:
+    deactivate mlib
+end loop
+
+main <-- virt:
+deactivate virt
+
+@enduml

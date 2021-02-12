@@ -21,7 +21,7 @@
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
         <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-        <title>MochiKernel - メモリ管理(セグメンテーション管理)</title>
+        <title>MochiKernel - メモリ管理(メイン)</title>
     </head>
     <body>
         <a name="totop"></a>
@@ -46,38 +46,36 @@
                     <a itemprop="item" href="../index.html"><span itemprop="name">メモリ管理</span></a>
                     <meta itemprop="position" content="4"></li>
                 <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
-                    <a itemprop="item" href="./index.html"><span itemprop="name">セグメンテーション管理</span></a>
+                    <a itemprop="item" href="./index.html"><span itemprop="name">メイン</span></a>
                     <meta itemprop="position" content="5"></li>
             </ol>
         </div>
         <div id="content">
             <div>
-                <h1>セグメンテーション管理 - 目次</h1>
+                <h1>I/Oメモリ領域管理 - 目次</h1>
                 <ol>
-                    <li><a href="#init">初期化</a><ol>
-                        <li><a href="#init-gdtr">GDTR設定</a></li></ol></li>
-                    <li><a href="#add">GDTエントリ追加</a></li>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#init">初期化</a></li>
                 </ol>
             </div>
             <div class="totop"><a href="#top">▲上へ</a></div>
             <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <p>サブモジュールを初期化してメモリ管理機能を有効にする。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
                 <h1><a name="init">初期化</a></h1>
-                <p>GDTR設定を行う。シーケンスを以下に示す。</p>
+                <p>各サブモジュールの初期化を行う。シーケンスを以下に示す。</p>
                 <br>
                 <div class="center">
                     <img src="init.png"><br>
                     初期化シーケンス
                 </div>
                 <br>
+                <p>ページング管理サブモジュールは、物理メモリ領域管理機能を使用するため、物理メモリ領域管理サブモジュールの後に初期化する。I/Oメモリ領域管理と仮想メモリ領域管理サブモジュールは、ページングを有効にしたヒープ領域で管理するため、ヒープ管理とページング管理サブモジュールの後に初期化する。</p>
                 <br>
-                <h2><a name="init-gdtr">GDTR設定</a></h2>
-                <p>GDTRの設定を行う。詳細は<a href="../../../external/memory/virt/index.html#sgmt-gdtr">外部仕様(仮想メモリ管理)のGDTRレジスタ設定</a>を参照のこと。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="add">GDTエントリ追加</a></h1>
-                <p>GDTの未使用エントリに動的にエントリを追加する機能を持つ。未使用エントリの検索は、インデックス1から(0はNULLで使用のため)Pフラグが0のエントリを判定する事で行う。エントリフォーマットの詳細は<a href="../../../external/memory/virt/index.html#abstruct-segmentation">外部仕様(仮想メモリ管理)のIA-32のセグメンテーション機能</a>を参照のこと。</p>
                 <br>
             </div>
             <div class="totop"><a href="#top">▲上へ</a></div>

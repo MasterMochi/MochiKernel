@@ -1,0 +1,58 @@
+@startuml
+
+participant "初期化制御" as initctrl
+box "メモリ管理"
+    participant "メイン"                     as main
+    participant "メモリ\nマップ\n管理"       as map
+    participant "セグメン\nテーション\n管理" as sgmt
+    participant "ヒープ\n管理"               as heap
+    participant "物理メモリ\n領域管理"       as phys
+    participant "ページング\n管理"           as page
+    participant "I/Oメモリ\n領域管理"        as io
+    participant "仮想メモリ\n領域管理"       as virt
+end box
+
+activate initctrl
+
+initctrl -> main: 初期化(\n  BIOS-E820メモリマップ,\n  メモリマップ )
+activate main
+
+main -> map: 初期化(\n  BIOS-E820メモリマップ,\n  メモリマップ )
+activate map
+main <-- map:
+deactivate map
+
+main -> sgmt: 初期化
+activate sgmt
+main <-- sgmt:
+deactivate sgmt
+
+main -> heap: 初期化
+activate heap
+main <-- heap:
+deactivate heap
+
+main -> phys: 初期化( メモリマップ )
+activate phys
+main <-- phys:
+deactivate phys
+
+main -> page: 初期化
+activate page
+main <-- page:
+deactivate page
+
+main -> io: 初期化( メモリマップ )
+activate io
+main <-- io:
+deactivate io
+
+main -> virt: 初期化
+activate virt
+main <-- virt:
+deactivate virt
+
+initctrl <-- main:
+deactivate main
+
+@enduml

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngArea.c                                             */
-/*                                                                 2021/02/06 */
+/*                                                                 2021/05/05 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -440,7 +440,7 @@ static void *Alloc( MLibList_t *pAllocList,
         /* エントリが指すメモリ領域と等しい */
 
         /* 未割当リンクリストから削除 */
-        MLibListRemove( pAllocList, &( pFree->node ) );
+        MLibListRemove( pFreeList, &( pFree->node ) );
 
         /* 未使用リンクリスト末尾挿入 */
         MLibListInsertTail( pUnusedList, &( pFree->node ) );

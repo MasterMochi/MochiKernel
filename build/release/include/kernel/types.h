@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/types.h                                                             */
-/*                                                                 2020/04/30 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/04/27 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __KERNEL_TYPES_H_
@@ -24,9 +24,10 @@
 /* プロセスID定義 */
 /*----------------*/
 #define MK_PID_MAX  MK_CONFIG_PID_MASK  /**< プロセスID最大値           */
-#define MK_PID_MIN  0                   /**< プロセスID最小値(変更禁止) */
+#define MK_PID_MIN  ( 0 )               /**< プロセスID最小値(変更禁止) */
 #define MK_PID_NUM  ( MK_PID_MAX + 1 )  /**< プロセスID数               */
 #define MK_PID_NULL ( MK_PID_MAX + 1 )  /**< プロセスID無効値           */
+#define MK_PID_IDLE ( 0 )               /**< アイドルプロセスID         */
 
 /** プロセスID */
 typedef uint32_t MkPid_t;
@@ -36,7 +37,7 @@ typedef uint32_t MkPid_t;
 /* スレッドID定義 */
 /*----------------*/
 #define MK_TID_MAX  MK_CONFIG_TID_MASK  /**< スレッドID最大値           */
-#define MK_TID_MIN  0                   /**< スレッドID最小値(変更禁止) */
+#define MK_TID_MIN  ( 0 )               /**< スレッドID最小値(変更禁止) */
 #define MK_TID_NUM  ( MK_TID_MAX + 1 )  /**< スレッドID数               */
 #define MK_TID_NULL ( MK_TID_MAX + 1 )  /**< スレッドID無効値           */
 

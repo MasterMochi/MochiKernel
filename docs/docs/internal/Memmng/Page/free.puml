@@ -1,0 +1,60 @@
+@startuml
+
+participant "タスク管理" as taskmng
+box "メモリ管理"
+    participant "ページング\n管理"     as page
+    participant "物理メモリ\n領域管理" as phys
+end box
+participant "MLIB" as mlib
+
+activate taskmng
+
+taskmng -> page: ページディレクトリ解放\n  ( ページディレクトリID )
+activate page
+
+page -> mlib: 管理情報取得
+activate mlib
+ref over mlib: 動的配列
+page <-- mlib:
+deactivate mlib
+
+page -> page: ページディレクトリ操作領域マッピング設定
+activate page
+ref over page: マッピング設定
+page /[#DDDDDD]-- page:
+deactivate page
+
+loop カーネル領域以外の全有効エントリ毎
+    page -> page: ページテーブル操作領域マッピング設定
+    activate page
+    ref over page: マッピング設定
+    page /[#DDDDDD]-- page:
+    deactivate page
+
+    page -> page: ページテーブル0初期化
+
+    page -> phys: ページテーブル解放
+    activate phys
+    ref over phys: 物理メモリ領域解放
+    page <-- phys:
+    deactivate phys
+end loop
+
+page -> page: ページディレクトリ0初期化
+
+page -> phys: ページディレクトリ解放
+activate phys
+ref over phys: 物理メモリ領域割当
+page <-- phys:
+deactivate phys
+
+page -> mlib: 管理情報解放
+activate mlib
+ref over mlib: 動的配列
+page <-- mlib
+deactivate mlib
+
+taskmng <-- page:
+deactivate page
+
+@enduml

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngThread.c                                         */
-/*                                                                 2020/11/03 */
-/* Copyright (C) 2019-2020 Mochi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -93,6 +93,9 @@ MkTid_t ThreadAddMain( TblProcInfo_t *pProcInfo )
     pThreadInfo  = NULL;
 
     DEBUG_LOG( "%s(): start. pProcInfo=%p", __func__, pProcInfo );
+
+    /* [TODO]スレッド管理テーブルチャンクリスト初期化 */
+    MLibListInit( &( pProcInfo->threadChunkList ) );
 
     /* スレッド管理情報割当 */
     pThreadInfo = TblAllocThreadInfo( pProcInfo );
@@ -188,6 +191,9 @@ void ThreadInit( void )
 
     /* アイドルプロセス管理情報取得 */
     pIdleProcInfo = TblGetProcInfo( TASKMNG_PID_IDLE );
+
+    /* [TODO]スレッド管理テーブルチャンクリスト初期化 */
+    MLibListInit( &( pIdleProcInfo->threadChunkList ) );
 
     /* アイドルスレッド管理情報割当 */
     TblAllocThreadInfo( pIdleProcInfo );
@@ -451,7 +457,7 @@ static CmnRet_t SetUserStack( TblThreadInfo_t *pThreadInfo )
 
     /* ページマッピング */
     ret = MemmngPageSet(
-              pThreadInfo->pProcInfo->pageDirId,    /* ページディレクトリID */
+              pThreadInfo->pProcInfo->dirId,        /* ページディレクトリID */
               ( void * ) MK_CONFIG_ADDR_USER_STACK, /* 仮想アドレス         */
               pPhysAddr,                            /* 物理アドレス         */
               MK_CONFIG_SIZE_USER_STACK,            /* マッピングサイズ     */
@@ -530,7 +536,7 @@ static void UnsetUserStack( TblThreadInfo_t *pThreadInfo )
 
         /* マッピング解除 */
         MemmngPageUnset(
-            pThreadInfo->pProcInfo->pageDirId,      /* ページディレクトリID */
+            pThreadInfo->pProcInfo->dirId,          /* ページディレクトリID */
             ( void * ) MK_CONFIG_ADDR_USER_STACK,   /* 仮想アドレス         */
             MK_CONFIG_SIZE_USER_STACK               /* マッピングサイズ     */
         );

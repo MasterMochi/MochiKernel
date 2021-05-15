@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlMem.c                                              */
-/*                                                                 2020/11/03 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -86,12 +86,12 @@ void MemInit( void )
 /******************************************************************************/
 static void Alloc( MkIoMemParam_t *pParam )
 {
-    void       *pRet;   /* 戻り値(アドレス)     */
-    uint8_t    type;    /* プロセスタイプ       */
-    MkPid_t    pid;     /* プロセスID           */
-    CmnRet_t   ret;     /* 戻り値               */
-    uint32_t   dirId;   /* ページディレクトリID */
-    MkTaskId_t taskId;  /* タスクID             */
+    void              *pRet;    /* 戻り値(アドレス)     */
+    uint8_t           type;     /* プロセスタイプ       */
+    MkPid_t           pid;      /* プロセスID           */
+    CmnRet_t          ret;      /* 戻り値               */
+    MkTaskId_t        taskId;   /* タスクID             */
+    MemmngPageDirId_t dirId;    /* ページディレクトリID */
 
     /* 初期化 */
     dirId  = MemmngPageGetDirId();

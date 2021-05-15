@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/05/15 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -110,10 +110,10 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     }
 
     /* ページディレクトリ割当 */
-    pProcInfo->pageDirId = MemmngPageAllocDir();
+    pProcInfo->dirId = MemmngPageAllocDir( pProcInfo->pid );
 
     /* 割当結果判定 */
-    if ( pProcInfo->pageDirId == MEMMNG_PAGE_DIR_FULL ) {
+    if ( pProcInfo->dirId == MEMMNG_PAGE_DIR_ID_NULL ) {
         /* 失敗 */
 
         /* プロセス管理情報解放 */
@@ -124,6 +124,9 @@ MkPid_t TaskMngProcAdd( uint8_t type,
 
         return MK_PID_NULL;
     }
+
+    /* ページディレクトリベースレジスタ値取得 */
+    pProcInfo->pdbr = MemmngPageGetPdbr( pProcInfo->dirId );
 
     /* 仮想メモリ領域管理開始 */
     ret = MemmngVirtStart( pProcInfo->pid );
@@ -146,7 +149,7 @@ MkPid_t TaskMngProcAdd( uint8_t type,
     /* ELFファイル読込 */
     ret = ElfLoad( pAddr,
                    size,
-                   pProcInfo->pageDirId,
+                   pProcInfo->dirId,
                    &( pProcInfo->pEntryPoint ),
                    &( pProcInfo->pEndPoint   )  );
 
@@ -225,7 +228,8 @@ void ProcInit( void )
 
     /* アイドルプロセス管理情報設定 */
     pIdleProcInfo->type        = TASKMNG_PROC_TYPE_KERNEL;
-    pIdleProcInfo->pageDirId   = MEMMNG_PAGE_DIR_ID_IDLE;
+    pIdleProcInfo->dirId       = MEMMNG_PAGE_DIR_ID_IDLE;
+    pIdleProcInfo->pdbr        = MemmngPageGetPdbr( MEMMNG_PAGE_DIR_ID_IDLE );
     pIdleProcInfo->pEntryPoint = NULL;
     pIdleProcInfo->pEndPoint   = NULL;
     pIdleProcInfo->pBreakPoint = NULL;
@@ -375,7 +379,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                                                       IA32_PAGING_PAGE_SIZE ) );
 
             /* ページングマッピング設定 */
-            ret = MemmngPageSet( pProcInfo->pageDirId,
+            ret = MemmngPageSet( pProcInfo->dirId,
                                  pVirtAddr,
                                  pPhyAddr,
                                  IA32_PAGING_PAGE_SIZE,
@@ -406,9 +410,9 @@ static void SetBreakPoint( MkProcParam_t *pParam )
                                            IA32_PAGING_PAGE_SIZE      ) );
 
             /* ページングマッピング解除 */
-            MemmngPageUnset( pProcInfo->pageDirId,
+            MemmngPageUnset( pProcInfo->dirId,
                              pVirtAddr,
-                             IA32_PAGING_PAGE_SIZE      );
+                             IA32_PAGING_PAGE_SIZE );
         }
 
         /* ブレイクポイント更新 */

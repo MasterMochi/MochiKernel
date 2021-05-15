@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngHeap.c                                             */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2019-2020 Mcohi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2019-2021 Mcohi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -454,13 +454,13 @@ static void SetBreakPoint( int quantity )
                                          IA32_PAGING_PAGE_SIZE         );
 
             /* ページマッピング設定 */
-            ret = MemmngPageSet( 0,
+            ret = MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
                                  pVirtAddr,
                                  pPhysAddr,
                                  IA32_PAGING_PAGE_SIZE,
-                                 IA32_PAGING_G_NO,
+                                 IA32_PAGING_G_YES,
                                  IA32_PAGING_US_SV,
-                                 IA32_PAGING_RW_RW      );
+                                 IA32_PAGING_RW_RW        );
 
             /* 設定結果判定 */
             if ( ret != CMN_SUCCESS ) {
@@ -481,7 +481,9 @@ static void SetBreakPoint( int quantity )
                                          IA32_PAGING_PAGE_SIZE                );
 
             /* ページマッピング解除 */
-            MemmngPageUnset( 0, pVirtAddr, IA32_PAGING_PAGE_SIZE );
+            MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
+                             pVirtAddr,
+                             IA32_PAGING_PAGE_SIZE    );
         }
 
         /* ブレイクポイント更新 */

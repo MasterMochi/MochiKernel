@@ -1,0 +1,41 @@
+@startuml
+
+participant "タスク管理" as taskmng
+box "メモリ管理"
+    participant "ページング\n管理" as page
+    participant "物理メモリ\n管理" as phys
+end box
+participant "MLIB" as mlib
+
+activate taskmng
+
+taskmng -> page: ページディレクトリ割当( プロセスID )
+activate page
+
+page -> mlib: 管理情報割当
+activate mlib
+ref over mlib: 動的配列
+page <-- mlib:
+deactivate mlib
+
+page -> phys: ページディレクトリ割当
+activate phys
+ref over phys: 物理メモリ領域割当
+page <-- phys:
+deactivate phys
+
+page -> page: 管理情報設定
+
+page -> page: ページディレクトリ操作領域マッピング設定
+activate page
+ref over page: ページマッピング設定
+page /[#DDDDDD]-- page:
+deactivate page
+
+page -> page: ページディレクトリ初期化
+page -> page: カーネル領域マッピング設定
+
+taskmng <-- page: return ページディレクトリID
+deactivate page
+
+@enduml

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -607,11 +607,10 @@ static __attribute__ ( ( noinline ) )
     void SwitchTask( TblTaskInfo_t *pRunTaskInfo,
                      TblTaskInfo_t *pNextTaskInfo )
 {
-    void             *pKernelStack;     /* カーネルスタック     */
-    TblContext_t     *pRunContext;      /* 現タスクコンテキスト */
-    TblContext_t     *pNextContext;     /* 次タスクコンテキスト */
-    TblProcInfo_t    *pNextProcInfo;    /* 次プロセス管理情報 */
-    IA32PagingPDBR_t pdbr;              /* PDBR                 */
+    void          *pKernelStack;    /* カーネルスタック     */
+    TblContext_t  *pRunContext;     /* 現タスクコンテキスト */
+    TblContext_t  *pNextContext;    /* 次タスクコンテキスト */
+    TblProcInfo_t *pNextProcInfo;   /* 次プロセス管理情報   */
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. runTaskId=%u, nextTaskId=%u",
@@ -629,7 +628,7 @@ static __attribute__ ( ( noinline ) )
     TssSetEsp0( ( uint32_t ) pKernelStack );
 
     /* ページディレクトリ切替 */
-    pdbr = MemmngPageSwitchDir( pNextProcInfo->pageDirId );
+    MemmngPageSwitchDir( pNextProcInfo->dirId );
 
     /* コンテキスト退避 */
     pRunContext->eip = ( uint32_t ) SwitchTaskEnd;
@@ -644,14 +643,14 @@ static __attribute__ ( ( noinline ) )
                            "mov cr3, eax\n"
                            "jmp ebx"
                            :
-                           : "m" ( pdbr ),
-                             "m" ( pNextContext->eip ),
-                             "m" ( pNextContext->esp ),
-                             "m" ( pNextContext->ebp )
+                           : "m" ( pNextProcInfo->pdbr ),
+                             "m" ( pNextContext->eip   ),
+                             "m" ( pNextContext->esp   ),
+                             "m" ( pNextContext->ebp   )
                            : "eax",
                              "ebx",
                              "ebp",
-                             "esp"                    );
+                             "esp"                        );
 
     /* ラベル */
     __asm__ __volatile__ ( "SwitchTaskEnd:" );

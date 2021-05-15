@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Memmng.h                                                */
-/*                                                                 2021/01/31 */
+/*                                                                 2021/05/05 */
 /* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -57,16 +57,12 @@
     IA32_SEGMENT_SELECTOR( MEMMNG_GDT_IDX_APL_DATA   , IA32_TI_GDT, IA32_RPL_3 )
 
 /** ページディレクトリID */
-#define MEMMNG_PAGE_DIR_ID_IDLE ( 0 )   /**< アイドルプロセス用PDID */
-#define MEMMNG_PAGE_DIR_ID_MIN  ( 1 )   /**< PDID最小値             */
+#define MEMMNG_PAGE_DIR_ID_NULL ( 0 )   /**< 無効ページディレクトリID   */
+#define MEMMNG_PAGE_DIR_ID_IDLE ( 0 )   /**< アイドルプロセス用PDID     */
+#define MEMMNG_PAGE_DIR_ID_MIN  ( 1 )   /**< ページディレクトリID最小値 */
 
-/* ページディレクトリ定義 */
-#define MEMMNG_PAGE_DIR_NUM  MK_PID_NUM             /**< PD管理数   */
-#define MEMMNG_PAGE_DIR_FULL MEMMNG_PAGE_DIR_NUM    /**< PD空き無し */
-
-/* ページテーブル定義 */
-#define MEMMNG_PAGE_TBL_NUM  ( 4096 )               /**< PT管理数   */
-#define MEMMNG_PAGE_TBL_FULL MEMMNG_PAGE_TBL_NUM    /**< PT空き無し */
+/** ページディレクトリID */
+typedef uint32_t MemmngPageDirId_t;
 
 
 /******************************************************************************/
@@ -120,25 +116,27 @@ extern CmnRet_t MemmngMapGetInfo( MkMemMapEntry_t *pInfo,
 /* MemmngPage.c */
 /*--------------*/
 /* ページディレクトリ割当 */
-extern uint32_t MemmngPageAllocDir( void );
+extern MemmngPageDirId_t MemmngPageAllocDir( MkPid_t pid );
 /* ページディレクトリ解放 */
-extern CmnRet_t MemmngPageFreeDir( uint32_t id );
+extern CmnRet_t MemmngPageFreeDir( MemmngPageDirId_t dirId );
 /* ページディレクトリID取得 */
-extern uint32_t MemmngPageGetDirId( void );
-/* ページディレクトリ切替 */
-extern IA32PagingPDBR_t MemmngPageSwitchDir( uint32_t pageDirId );
+extern MemmngPageDirId_t MemmngPageGetDirId( void );
+/* ページディレクトリベースレジスタ値取得 */
+extern IA32PagingPDBR_t MemmngPageGetPdbr( MemmngPageDirId_t dirId );
 /* ページマッピング設定 */
-extern CmnRet_t MemmngPageSet( uint32_t dirId,
-                               void     *pVAddr,
-                               void     *pPAddr,
-                               size_t   size,
-                               uint32_t attrGlobal,
-                               uint32_t attrUs,
-                               uint32_t attrRw      );
+extern CmnRet_t MemmngPageSet( MemmngPageDirId_t dirId,
+                               void              *pVirtAddr,
+                               void              *pPhysAddr,
+                               size_t            size,
+                               uint32_t          attrGlobal,
+                               uint32_t          attrUs,
+                               uint32_t          attrRw      );
+/* ページディレクトリ切替 */
+extern void MemmngPageSwitchDir( MemmngPageDirId_t dirId );
 /* ページマッピング解除 */
-extern void MemmngPageUnset( uint32_t dirId,
-                             void     *pVAddr,
-                             size_t   size     );
+extern CmnRet_t MemmngPageUnset( MemmngPageDirId_t dirId,
+                                 void              *pVirtAddr,
+                                 size_t            size        );
 
 /*--------------*/
 /* MemmngPhys.c */

@@ -74,6 +74,9 @@
 #define IA32_PAGING_PS_4K       ( 0 )       /**< 4KiBページサイズ           */
 #define IA32_PAGING_PS_4M2M     ( 1 )       /**< 4MiBまたは2MiBページサイズ */
 
+/** ページテーブル属性インデックス未使用 */
+#define IA32_PAGING_PAT_UNUSED  ( 0 )
+
 /* グローバルフラグ */
 #define IA32_PAGING_G_NO        ( 0 )       /**< 非グローバルページ */
 #define IA32_PAGING_G_YES       ( 1 )       /**< グローバルページ   */

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - メモリ管理(ページング管理)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">メモリ管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">ページング管理</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>ページング管理 - 目次</h1>
+                <ol>
+                    <li><a href="#abstruct">概要</a></li>
+                    <li><a href="#init">初期化</a><ol>
+                        <li><a href="#init-mapinfo">操作領域マッピング情報初期化</a></li>
+                        <li><a href="#init-idledir">アイドルプロセス用ページディレクトリ初期化</a></li>
+                        <li><a href="#init-idletbl">アイドルプロセス用ページテーブル初期化</a></li>
+                        <li><a href="#init-cr3">ページディレクトリ設定</a></li>
+                        <li><a href="#init-pgon">ページング有効化</a></li>
+                        <li><a href="#init-global">グローバルページ有効化</a></li>
+                        <li><a href="#init-table">ページディレクトリ管理テーブル初期化</a></li>
+                        <li><a href="#init-idleget">アイドルプロセス用管理情報取得</a></li>
+                        <li><a href="#init-idleset">アイドルプロセス用管理情報設定</a></li></ol></li>
+                    <li><a href="#set">ページマッピング設定</a><ol>
+                        <li><a href="#set-mapdir">ページディレクトリ操作領域マッピング</a></li>
+                        <li><a href="#set-alloctbl">ページテーブル割当て</a></li>
+                        <li><a href="#set-maptbl">ページテーブル操作領域マッピング</a></li>
+                        <li><a href="#set-tbl">ページテーブルエントリ設定</a></li>
+                        <li><a href="#set-invlgp">TLBフラッシュ</a></li></ol></li>
+                    <li><a href="#unset">ページマッピング解除</a><ol>
+                        <li><a href="#unset-mapdir">ページディレクトリ操作領域マッピング</a></li>
+                        <li><a href="#unset-maptbl">ページテーブル操作領域マッピング</a></li>
+                        <li><a href="#unset-tbl">ページテーブルエントリ設定</a></li>
+                        <li><a href="#unset-invlpg">TLBフラッシュ</a></li>
+                        <li><a href="#unset-freetbl">ページテーブル解放</a></li></ol></li>
+                    <li><a href="#alloc">ページディレクトリ割当</a><ol>
+                        <li><a href="#alloc-entry">管理情報割当</a></li>
+                        <li><a href="#alloc-dir">ページディレクトリ割当</a></li>
+                        <li><a href="#alloc-set">管理情報設定</a></li>
+                        <li><a href="#alloc-edit">ページディレクトリ操作領域マッピング設定</a></li>
+                        <li><a href="#alloc-init">ページディレクトリ初期化</a></li>
+                        <li><a href="#alloc-kernel">カーネル領域マッピング設定</a></li></ol></li>
+                    <li><a href="#free">ページディレクトリ解放</a><ol>
+                        <li><a href="#free-get">管理情報取得</a></li>
+                        <li><a href="#free-mapdir">ページディレクトリ操作領域マッピング設定</a></li>
+                        <li><a href="#free-maptbl">ページテーブル操作領域マッピング設定</a></li>
+                        <li><a href="#free-tbl">ページテーブル解放</a></li>
+                        <li><a href="#free-dir">ページディレクトリ解放</a></li>
+                        <li><a href="#free-entry">管理情報解放</a></li></ol></li>
+                </ol>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="abstruct">概要</a></h1>
+                <ul>
+                    <li>ページ管理サブモジュールは、ページング有効化、および、各プロセス毎のページディレクトリおよびページテーブルの割当てや解放、切替などの管理を行う。</li>
+                    <li>プロセス毎に必要となるページディレクトリおよびページテーブルの管理は、静的に行うことが実装において容易であるが管理数(つまりプロセス数)の制約が発生することに加えて必要なメモリサイズの大幅な増大や非効率的なメモリ使用となるため、動的な管理を行う。</li>
+                    <li>但し、動的な管理にはカーネルヒープが必要でありヒープ管理はページング有効化が前提であるため、カーネル起動時コンテキスト(アイドルプロセス)用のページディレクトリとカーネル領域のページテーブルのみを静的に管理しページング有効化した後に、その他を動的に管理する。
+                        <table>
+                            <tr>
+                                <td class="title">#</td>
+                                <td class="title">静的領域</td>
+                                <td class="title">仮想/物理アドレス</td>
+                                <td class="title">サイズ</td>
+                            </tr>
+                            <tr>
+                                <td class="center">1</td>
+                                <td class="center">アイドルプロセス用ページディレクトリ</td>
+                                <td class="right">0x0500_0000</td>
+                                <td class="right">0x1000</td>
+                            </tr>
+                            <tr>
+                                <td class="center">2</td>
+                                <td class="center">カーネル領域ページテーブル</td>
+                                <td class="right">0x0500_1000</td>
+                                <td class="right">0x10_0000</td>
+                            </tr>
+                        </table></li>
+                    <li>また、ヒープによる領域確保は(管理上、確保領域の先頭に管理情報が入るため)4KBアライメントが難しいため、実際のページディレクトリおよびページテーブルの割当は物理メモリ機能を用いて行い、その領域のアドレスなどの管理はヒープ領域を使って行う。</li>
+                    <li>物理メモリ上にあるページディレクトリおよびページテーブルのアクセスは、仮想メモリ空間のカーネル領域内で行う必要があるが、領域の位置やサイズの関係上、物理アドレスと仮想アドレスを等しくマッピングする事ができないため、アクセス用の領域を静的に設けてその領域のマッピングを切替えながらアクセスする。
+                        <table>
+                            <tr>
+                                <td class="title">#</td>
+                                <td class="title">操作領域</td>
+                                <td class="title">仮想アドレス</td>
+                                <td class="title">サイズ</td>
+                            </tr>
+                            <tr>
+                                <td class="center">1</td>
+                                <td class="center">ページディレクトリ</td>
+                                <td class="right">0x3EFF_E000</td>
+                                <td class="right">0x1000</td>
+                            </tr>
+                            <tr>
+                                <td class="center">2</td>
+                                <td class="center">ページテーブル</td>
+                                <td class="right">0x3EFF_F000</td>
+                                <td class="right">0x1000</td>
+                            </tr>
+                        </table></li>
+                </ul>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="init">初期化</a></h1>
+                <p>ページング管理機能を有効にするために、初期化を行う。初期化シーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="init.png"><br>
+                    初期化シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="init-mapinfo">操作領域マッピング情報初期化</a></h2>
+                <p>操作領域（物理メモリ上にあるページディレクトリおよびページテーブルにアクセスするために使用する仮想メモリ領域）の下記マッピング情報を初期化する。この情報は、今どこの物理メモリ領域が操作領域にマッピングされているかを管理するために使用する。</p>
+                <br>
+                <div class="center">操作領域マッピング情報</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">情報</td>
+                        <td class="title">初期値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td>マッピング中のページディレクトリ物理アドレス</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td>マッピング中のページテーブル物理アドレス</td>
+                        <td>0</td>
+                    </tr>
+                </table>
+                <br>
+                <br>
+                <h2><a name="init-idledir">アイドルプロセス用ページディレクトリ初期化</a></h2>
+                <p>アイドルプロセス(起動時コンテキスト)用のページディレクトリを0初期化した後、ページディレクトリ内のカーネル領域部の全エントリをページテーブルにリンクするよう初期化する。ページ属性などの設定値は外部仕様の仮想メモリ管理を参照のこと。</p>
+                <br>
+                <br>
+                <h2><a name="init-idletbl">アイドルプロセス用ページテーブル初期化</a></h2>
+                <p>アイドルプロセス(起動時コンテキスト)用のページテーブルを0初期化した後、カーネル領域部のページテーブルの全エントリを物理アドレスと仮想メモリアドレスが等しくなるように初期化する。ページ属性などの設定値は外部仕様の仮想メモリ管理を参照のこと。</p>
+                <br>
+                <br>
+                <h2><a name="init-cr3">ぺージディレクトリ設定</a></h2>
+                <p>CPUにアイドルプロセス用ページディレクトリを設定する。詳細は外部仕様「仮想メモリ管理機能」を参照のこと。</p>
+                <br>
+                <br>
+                <h2><a name="init-pgon">ページング有効化</a></h2>
+                <p>CPUにページング有効化を設定する。詳細は外部仕様「仮想メモリ管理機能」を参照のこと。</p>
+                <br>
+                <br>
+                <h2><a name="init-global">グローバルページ有効化</a></h2>
+                <p>CPUにグローバルページ有効化を設定する。詳細は外部使用「仮想メモリ管理機能」を参照のこと。</p>
+                <br>
+                <br>
+                <h2><a name="init-table">ページディレクトリ管理テーブル初期化</a></h2>
+                <p>ページディレクトリ管理テーブルをMLibライブラリの動的配列機能を用いて下記パラメータで初期化する。</p>
+                <br>
+                <div class="center">動的配列パラメータ</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">パラメータ</td>
+                        <td class="title">設定値</td>
+                        <td class="title">備考</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">チャンクサイズ</td>
+                        <td class="center">128</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">エントリサイズ</td>
+                        <td class="center">(ページディレクトリ管理情報のサイズ)</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">3</td>
+                        <td class="center">最大エントリ数</td>
+                        <td class="center">UINT32_MAX</td>
+                        <td>制限無し</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="init-idleget">アイドルプロセス用管理情報取得</a></h2>
+                <p>MLibライブラリの動的配列機能を用いて、ページディレクトリ管理テーブルからアイドルプロセス用の管理情報(ページディレクトリID = 0)を取得する。</p>
+                <br>
+                <br>
+                <h2><a name="init-idleset">アイドルプロセス用管理情報設定</a></h2>
+                <p>取得したアイドルプロセス用の管理情報を下記の通り設定する。</p>
+                <br>
+                <div class="center">アイドルプロセス用管理情報</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">メンバ</td>
+                        <td class="title">サイズ<br>(byte)</td>
+                        <td class="title">概要</td>
+                        <td class="title">設定値</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">pid</td>
+                        <td class="right">4</td>
+                        <td>ページディレクトリを<br>使用するプロセスID</td>
+                        <td class="right">0</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">pPhysAddr</td>
+                        <td class="right">4</td>
+                        <td>ページディレクトリの<br>物理アドレス</td>
+                        <td class="right">0x0500_0000</td>
+                    </tr>
+                </table>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="set">ページマッピング設定</a></h1>
+                <p>物理アドレスと仮想アドレスのマッピングを行うために、ページディレクトリとページテーブルの設定を行う。ページマッピング設定のシーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="set.png"><br>
+                    ページマッピング設定シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="set-mapdir">ページディレクトリ操作領域マッピング</a></h2>
+                <p>ページディレクトリIDがアイドルプロセス用ページディレクトリIDでない場合は、ページディレクトリIDを基にページディレクトリ管理テーブルの動的配列からMLibライブラリを用いて管理情報を取得し、ページディレクトリ操作用仮想メモリ領域に管理情報から取得したページディレクトリの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新し、マッピングは本機能を再帰的に使用する。</p>
+                <br>
+                <br>
+                <h2><a name="set-alloctbl">ページテーブル割当て</a></h2>
+                <p>仮想アドレスに該当するページテーブルが存在しない場合は、物理メモリ領域管理サブモジュールの機能を使って物理メモリからページテーブルを割り当て、ページディレクトリエントリに設定する。</p>
+                <p>ページディレクトリエントリの設定値は外部仕様の仮想メモリ管理（ユーザ空間用ページマッピング設定）※を参照のこと。</p>
+                <p>※カーネル領域のページテーブルは初期化時に全て割り当てるため、ここでのページテーブル割当はユーザ領域用のみとなる。</p>
+                <br>
+                <br>
+                <h2><a name="set-maptbl">ページテーブル操作領域マッピング</a></h2>
+                <p>仮想アドレスがユーザ領域の場合は、該当するページテーブルエントリを編集するためにページテーブル操作用仮想メモリ領域にページテーブルの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新し、マッピングは本機能を再帰的に使用する。</p>
+                <br>
+                <br>
+                <h2><a name="set-tbl">ページテーブルエントリ設定</a></h2>
+                <p>仮想アドレスに該当するページテーブルエントリを設定する。</p>
+                <p>ページテーブルエントリの設定値は外部使用の仮想メモリ管理（カーネル空間用ページマッピング設定およびユーザ空間用ページマッピング設定）を参照のこと。</p>
+                <br>
+                <br>
+                <h2><a name="set-invlpg">TLBフラッシュ</a></h2>
+                <p>マッピングを反映するために、invlpg命令を使用して仮想アドレスに該当するTLBエントリをフラッシュする。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="unset">ページマッピング解除</a></h1>
+                <p>物理アドレスと仮想アドレスのマッピングを解除するために、ページディレクトリとページテーブルの設定を行う。ページマッピング解除のシーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="unset.png"><br>
+                    ページマッピング解除シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="unset-mapdir">ページディレクトリ操作領域マッピング</a></h2>
+                <p>ページディレクトリIDがアイドルプロセス用ページディレクトリIDでない場合は、ページディレクトリIDを基にページディレクトリ管理テーブルの動的配列からMLibライブラリを用いて管理情報を取得し、ページディレクトリ操作用仮想メモリ領域に管理情報から取得したページディレクトリの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新し、マッピングは本機能を再帰的に使用する。</p>
+                <br>
+                <br>
+                <h2><a name="unset-maptbl">ページテーブル操作領域マッピング</a></h2>
+                <p>仮想アドレスがユーザ領域の場合は、該当するページテーブルエントリを編集するためにページテーブル操作用仮想メモリ領域にページテーブルの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新し、マッピングは本機能を再帰的に使用する。</p>
+                <br>
+                <br>
+                <h2><a name="unset-tbl">ページテーブルエントリ0初期化</a></h2>
+                <p>仮想アドレスに該当するページテーブルエントリを0初期化する。</p>
+                <br>
+                <br>
+                <h2><a name="unset-invlpg">TLBフラッシュ</a></h2>
+                <p>マッピング解除を反映するために、invlpg命令を使用して仮想アドレスに該当するTLBエントリをフラッシュする。</p>
+                <br>
+                <br>
+                <h2><a name="unset-freetbl">ページテーブル解放</a></h2>
+                <p>仮想アドレスがユーザ領域、かつ、仮想アドレスに該当するページテーブルの全エントリが存在しない場合、物理メモリ領域管理サブモジュールのメモリ解放機能を用いてページテーブルを解放する。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="alloc">ページディレクトリ割当</a></h1>
+                <p>プロセス毎にページディレクトリを割り当てる。ページディレクトリ割当のシーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="alloc.png"><br>
+                    ページディレクトリ割当シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="alloc-entry">管理情報割当</a></h2>
+                <p>ページディレクトリ管理テーブルの動的配列からMLibライブラリを用いて新しく管理情報を割り当てる。割り当てたエントリインデックスはページディレクトリIDとして使用する。</p>
+                <br>
+                <br>
+                <h2><a name="alloc-dir">ページディレクトリ割当</a></h2>
+                <p>物理メモリ管理サブモジュールの機能を用いて、ページディレクトリ用の物理メモリ領域を割り当てる。</p>
+                <br>
+                <br>
+                <h2><a name="alloc-set">管理情報設定</a></h2>
+                <p>管理情報を下記の通り設定する。</p>
+                <br>
+                <div class="center">管理情報</div>
+                <table>
+                    <tr>
+                        <td class="title">#</td>
+                        <td class="title">メンバ</td>
+                        <td class="title">サイズ<br>(byte)</td>
+                        <td class="title">概要</td>
+                    </tr>
+                    <tr>
+                        <td class="center">1</td>
+                        <td class="center">pid</td>
+                        <td class="right">4</td>
+                        <td>ページディレクトリを使用するプロセスID</td>
+                    </tr>
+                    <tr>
+                        <td class="center">2</td>
+                        <td class="center">pPhysAddr</td>
+                        <td class="right">4</td>
+                        <td>ページディレクトリの物理アドレス</td>
+                    </tr>
+                </table>
+                <br>
+                <h2><a name="alloc-edit">ページディレクトリ操作領域マッピング設定</a></h2>
+                <p>割り当てたページディレクトリを初期化するために、ページディレクトリ操作用仮想メモリ領域にページディレクトリの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新する。</p>
+                <br>
+                <br>
+                <h2><a name="alloc-init">ページディレクトリ初期化</a></h2>
+                <p>仮想アドレスで操作可能になったページディレクトリを0初期化する。</p>
+                <br>
+                <br>
+                <h2><a name="alloc-kernel">カーネル領域マッピング設定</a></h2>
+                <p>仮想アドレスで操作可能になったページディレクトリのカーネル領域部エントリをアイドルプロセス用ページディレクトリからコピーする。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <h1><a name="free">ページディレクトリ解放</a></h1>
+                <p>割当て済のページディレクトリを解放する。ページディレクトリ解放のシーケンスを以下に示す。</p>
+                <br>
+                <div class="center">
+                    <img src="free.png"><br>
+                    ページディレクトリ解放シーケンス
+                </div>
+                <br>
+                <br>
+                <h2><a name="free-get">管理情報取得</a></h2>
+                <p>ページディレクトリIDを基にページディレクトリ管理テーブルの動的配列からMLibライブラリを用いて解放するページディレクトリの管理情報を取得する。</p>
+                <br>
+                <br>
+                <h2><a name="free-mapdir">ページディレクトリ操作領域マッピング設定</a></h2>
+                <p>ページディレクトリを編集するためにページディレクトリ操作用仮想メモリ領域に管理情報から取得したページディレクトリの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新する。</p>
+                <br>
+                <br>
+                <h2><a name="free-maptbl">ページテーブル操作領域マッピング</a></h2>
+                <p>ユーザ領域のページテーブルを初期化するためにページテーブル操作用仮想メモリ領域にページテーブルの物理メモリ領域をマッピングする。</p>
+                <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定はしない。マッピングする場合は、操作領域マッピング情報を更新する。</p>
+                <br>
+                <br>
+                <h2><a name="free-tbl">ページテーブル解放</a></h2>
+                <p>ユーザ領域のページテーブルを0で初期化した後、物理メモリ領域管理サブモジュールの機能を用いて解放する。</p>
+                <br>
+                <br>
+                <h2><a name="free-dir">ページディレクトリ解放</a></h2>
+                <p>ユーザ領域のページディレクトリを0で初期化した後、物理メモリ領域管理サブモジュールの機能を用いて解放する。</p>
+                <br>
+                <br>
+                <h2><a name="free-entry">管理情報解放</a></h2>
+                <p>MLibライブラリの動的配列を用いて、管理情報を解放する。</p>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/kernel.lds                                                      */
-/*                                                                 2019/08/13 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                 2021/02/20 */
+/* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 OUTPUT_FORMAT( elf32-i386 )
@@ -13,16 +13,21 @@ PHDRS {
 }
 
 MEMORY {
-    kernel (wxai): ORIGIN = 0x00100000,
-                   LENGTH = 0x03F00000 - 0x00100000
+    KERNEL  (wxai): ORIGIN = 0x00100000,
+                    LENGTH = 0x03F00000 - 0x00100000
+    STACK   (wa)  : ORIGIN = 0x03F00000,
+                    LENGTH = 0x04000000 - 0x03F00000
+    PROCIMG (wa)  : ORIGIN = 0x04000000,
+                    LENGTH = 0x05000000 - 0x04000000
 }
 
 SECTIONS {
-    .text   : { *( .text   ) } > kernel : load
-    .rodata : { *( .rodata ) } > kernel : load
-    .data   : { *( .data   ) } > kernel : load
-    .bss    : { *( .bss    ) } > kernel : load
-    __end_point = .;
+    .text   : { *( .text   ) } > KERNEL : load
+    .rodata : { *( .rodata ) } > KERNEL : load
+    .data   : { *( .data   ) } > KERNEL : load
+    .bss    : { *( .bss    ) } > KERNEL : load
+
+    __end_point = ORIGIN( PROCIMG ) + LENGTH( PROCIMG );
 }
 
 

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTbl.h                                            */
-/*                                                                 2019/08/15 */
-/* Copyright (C) 2019 Mochi.                                                  */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef TASKMNG_TBL_H
@@ -19,6 +19,9 @@
 
 /* カーネルヘッダ */
 #include <kernel/types.h>
+
+/* モジュールヘッダ */
+#include <Memmng.h>
 
 
 /******************************************************************************/
@@ -40,14 +43,15 @@ typedef struct {
 
 /** プロセス管理情報 */
 typedef struct {
-    MkPid_t    pid;             /**< プロセスID                         */
-    bool       used;            /**< 使用フラグ                         */
-    uint8_t    type;            /**< プロセスタイプ                     */
-    uint32_t   pageDirId;       /**< ページディレクトリID               */
-    void       *pEntryPoint;    /**< エントリポイント                   */
-    void       *pEndPoint;      /**< エンドポイント                     */
-    void       *pBreakPoint;    /**< ブレイクポイント                   */
-    MLibList_t threadChunkList; /**< スレッド管理テーブルチャンクリスト */
+    MkPid_t           pid;              /**< プロセスID                         */
+    bool              used;             /**< 使用フラグ                         */
+    uint8_t           type;             /**< プロセスタイプ                     */
+    MemmngPageDirId_t dirId;            /**< ページディレクトリID               */
+    IA32PagingPDBR_t  pdbr;             /**< ページディレクトリベースレジスタ   */
+    void              *pEntryPoint;     /**< エントリポイント                   */
+    void              *pEndPoint;       /**< エンドポイント                     */
+    void              *pBreakPoint;     /**< ブレイクポイント                   */
+    MLibList_t        threadChunkList;  /**< スレッド管理テーブルチャンクリスト */
 } TblProcInfo_t;
 
 /** スレッド管理情報 */

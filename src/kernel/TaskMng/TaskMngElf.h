@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngElf.h                                            */
-/*                                                                 2019/08/09 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef TASKMNG_ELF_H
@@ -16,17 +16,18 @@
 
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
+#include <Memmng.h>
 
 
 /******************************************************************************/
 /* モジュール内グローバル関数宣言                                             */
 /******************************************************************************/
 /* ELFファイル読込 */
-extern CmnRet_t ElfLoad( void     *pAddr,
-                         size_t   size,
-                         uint32_t pageDirId,
-                         void     **ppEntryPoint,
-                         void     **ppEndPoint    );
+extern CmnRet_t ElfLoad( void              *pAddr,
+                         size_t            size,
+                         MemmngPageDirId_t dirId,
+                         void              **ppEntryPoint,
+                         void              **ppEndPoint    );
 
 
 /******************************************************************************/

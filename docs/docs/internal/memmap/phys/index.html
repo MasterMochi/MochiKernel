@@ -63,7 +63,7 @@
                         <td class="title" width="100">備考</td>
                     </tr>
                     <tr>
-                        <td class="right" rowspan="7">0B</td>
+                        <td class="center" rowspan="7">0B<br>～<br>640kB</td>
                         <td class="center">0x0000_0000</td>
                         <td class="center" rowspan="7">conven-<br>tional<br>memory</td>
                         <td class="center" colspan="2">BIOS<br>割込みテーブル</td>
@@ -114,7 +114,7 @@
                         <td>0x0009_8000から使用できない可能性有り。</td>
                     </tr>
                     <tr>
-                        <td class="right" rowspan="8">640kB</td>
+                        <td class="center" rowspan="8">640kB<br>～<br>1MB</td>
                         <td class="center">0x000A_0000</td>
                         <td class="center" rowspan="8">Upper<br>Memory<br>Area</td>
                         <td class="center" rowspan="3">ビデオ<br>メモリ</td>
@@ -173,7 +173,7 @@
                         <td></td>
                     </tr>
                     <tr>
-                        <td class="right" rowspan="2">1MB</td>
+                        <td class="center" rowspan="2">1MB<br>～<br>16MB</td>
                         <td class="center">0x0010_0000</td>
                         <td class="center" rowspan="3" colspan="3">MochiKernel</td>
                         <td class="right" rowspan="3">65,011,712</td>
@@ -186,22 +186,32 @@
                         <td></td>
                     </tr>
                     <tr>
-                        <td class="right" rowspan="3">16MB</td>
+                        <td class="center" rowspan="5">16MB<br>～</td>
                         <td class="center">0x0100_0000</td>
-                        <td class="center">メインメモリ<br>PCI</td>
+                        <td class="center" rowspan="5">メインメモリ<br>PCI</td>
                         <td></td>
                     </tr>
                     <tr>
                         <td class="center">0x03F0_0000</td>
                         <td class="center" colspan="3">MochiKernel<br>スタック</td>
                         <td class="right">1,048,576</td>
-                        <td class="center">メインメモリ<br>PCI</td>
                         <td></td>
                     </tr>
                         <td class="center">0x0400_0000</td>
                         <td class="center" colspan="3">プロセスイメージ</td>
                         <td class="right">16,777,216</td>
-                        <td class="center">メインメモリ<br>PCI</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0500_0000</td>
+                        <td class="center" colspan="3">アイドルプロセス用<br>ページディレクトリ</td>
+                        <td class="right">4,096</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="center">0x0500_1000</td>
+                        <td class="center" colspan="3">カーネル領域ページテーブル</td>
+                        <td class="right">1,048,576</td>
                         <td></td>
                     </tr>
                 </table>

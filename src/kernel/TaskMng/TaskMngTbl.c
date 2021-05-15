@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngTbl.c                                            */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2019-2020 Mochi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -211,7 +211,7 @@ void TblFreeProcInfo( TblProcInfo_t *pProcInfo )
     /* プロセス管理情報初期化 */
     pProcInfo->used        = false;
     pProcInfo->type        = 0;
-    pProcInfo->pageDirId   = MEMMNG_PAGE_DIR_FULL;
+    pProcInfo->dirId       = MEMMNG_PAGE_DIR_ID_NULL;
     pProcInfo->pEntryPoint = NULL;
     pProcInfo->pEndPoint   = NULL;
     pProcInfo->pBreakPoint = NULL;
@@ -497,9 +497,9 @@ procChunk_t *AddProcChunk( void )
     /* チャンク内プロセス管理情報毎に繰り返す */
     for ( idx = 0; idx < CHUNK_PROCINFO_NUM; idx++ ) {
         /* プロセス管理情報初期化 */
-        pNewChunk->procInfo[ idx ].pid       = pid;
-        pNewChunk->procInfo[ idx ].used      = false;
-        pNewChunk->procInfo[ idx ].pageDirId = MEMMNG_PAGE_DIR_FULL;
+        pNewChunk->procInfo[ idx ].pid   = pid;
+        pNewChunk->procInfo[ idx ].used  = false;
+        pNewChunk->procInfo[ idx ].dirId = MEMMNG_PAGE_DIR_ID_NULL;
 
         /* スレッド管理テーブルチャンクリスト初期化 */
         MLibListInit( &( pNewChunk->procInfo[ idx ].threadChunkList ) );

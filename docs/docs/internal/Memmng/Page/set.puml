@@ -1,0 +1,64 @@
+@startuml
+
+box "メモリ管理"
+    participant "ページング\n管理"     as page
+    participant "物理メモリ\n領域管理" as phys
+end box
+participant "MLIB" as mlib
+participant "CPU"  as cpu
+
+-> page: ページマッピング設定(\n  ページディレクトリID,\n  仮想アドレス@ページアライメント,\n  物理アドレス@ページアライメント,\n  サイズ@ページアライメント,\n  ページ属性 )
+activate page
+
+opt アイドルプロセス用ページディレクトリIDでない
+    page -> mlib: 管理情報取得
+    activate mlib
+    ref over mlib: 動的配列
+    page <-- mlib:
+    deactivate mlib
+
+    page -> page: ページディレクトリ操作領域マッピング
+    activate page
+    ref over page: マッピング設定
+    page /[#FFFFFF]-- page:
+    deactivate page
+end opt
+
+loop 1ページ(4KBサイズ)毎に繰り返し
+    opt 仮想アドレスがユーザ領域
+
+        alt ページテーブルが存在しない
+            page -> phys: ページテーブル割当
+            activate phys
+            ref over phys: 物理メモリ領域割当
+            page <-- phys:
+            deactivate phys
+
+            page -> page: ページディレクトリエントリ設定
+
+            page -> page: ページテーブル操作領域マッピング
+            activate page
+            ref over page: マッピング設定
+            page /[#FFFFFF]-- page:
+            deactivate page
+
+            page -> page: ページテーブル初期化
+
+        else ページテーブルが存在する
+            page -> page: ページテーブル操作領域マッピング
+            activate page
+            ref over page: マッピング設定
+            page /[#FFFFFF]-- page:
+            deactivate page
+        end alt
+
+    end opt
+
+    page -> page: ページテーブルエントリ設定
+    page -> cpu: TLBフラッシュ
+end loop
+
+<-- page:
+deactivate page
+
+@enduml

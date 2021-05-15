@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TaskMng/TaskMngElf.c                                            */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/*                                                                 2021/05/05 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -63,20 +63,20 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
  *
  * @param[in]   *pAddr         ELFファイルアドレス
  * @param[in]   size           ELFファイルサイズ
- * @param[in]   pageDirId      ページディレクトリID
+ * @param[in]   dirId          ページディレクトリID
  * @param[out]  **ppEntryPoint エントリポイント
- * @param[out]  **ppEndPoint エンドポイント
+ * @param[out]  **ppEndPoint   エンドポイント
  *
  * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t ElfLoad( void     *pAddr,
-                  size_t   size,
-                  uint32_t pageDirId,
-                  void     **ppEntryPoint,
-                  void     **ppEndPoint    )
+CmnRet_t ElfLoad( void              *pAddr,
+                  size_t            size,
+                  MemmngPageDirId_t dirId,
+                  void              **ppEntryPoint,
+                  void              **ppEndPoint    )
 {
     void       *pPhyAddr;   /* 物理アドレス                     */
     uint32_t   index;       /* インデックス                     */
@@ -87,9 +87,9 @@ CmnRet_t ElfLoad( void     *pAddr,
     Elf32_Phdr *pEntry;     /* プログラムヘッダテーブルエントリ */
 
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.",                       __func__                );
-    DEBUG_LOG( " pAddr=%010p, size=%u",             pAddr,     size         );
-    DEBUG_LOG( " pageDirId=%u, ppEntryPoint=%010p", pageDirId, ppEntryPoint );
+    DEBUG_LOG( "%s() start.",                   __func__            );
+    DEBUG_LOG( " pAddr=%010p, size=%u",         pAddr, size         );
+    DEBUG_LOG( " dirId=%u, ppEntryPoint=%010p", dirId, ppEntryPoint );
 
     /* 初期化 */
     pElfHdr = ( Elf32_Ehdr * ) pAddr;
@@ -173,7 +173,7 @@ CmnRet_t ElfLoad( void     *pAddr,
         }
 
         /* ページマッピング設定 */
-        ret = MemmngPageSet( pageDirId,
+        ret = MemmngPageSet( dirId,
                              ( void * ) pEntry->p_vaddr,
                              pPhyAddr,
                              size,

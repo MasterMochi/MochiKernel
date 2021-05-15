@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPage.c                                             */
-/*                                                                 2021/02/11 */
+/*                                                                 2021/05/05 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -10,9 +10,11 @@
 /******************************************************************************/
 /* 標準ヘッダ */
 #include <stdarg.h>
+#include <stdint.h>
 
 /* ライブラリヘッダ */
 #include <MLib/MLib.h>
+#include <MLib/MLibDynamicArray.h>
 #include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
@@ -40,62 +42,84 @@
 #define DEBUG_LOG( ... )
 #endif
 
-/** ページ管理テーブル構造体 */
+/** アイドルプロセス用ページディレクトリアドレス */
+#define IDLE_PAGE_DIR_ADDR ( 0x05000000 )
+
+/** カーネル領域サイズ */
+#define KERNEL_AREA_SIZE    ( 0x40000000 )
+/** カーネル領域用ページディレクトリエントリ数 */
+#define KERNEL_AREA_PDE_NUM ( ( ( ( KERNEL_AREA_SIZE ) - 1 ) >> 22 ) + 1 )
+/** カーネル領域用ページディレクトリエントリサイズ */
+#define KERNEL_AREA_PAGE_DIR_SIZE \
+    ( KERNEL_AREA_PDE_NUM * sizeof ( IA32PagingPDE_t ) )
+
+/** カーネル領域用ページテーブルアドレス */
+#define KERNEL_AREA_PAGE_TBL_ADDR ( 0x05001000 )
+/** カーネル領域用ページテーブルサイズ */
+#define KERNEL_AREA_PAGE_TBL_SIZE \
+    ( KERNEL_AREA_PDE_NUM * sizeof ( IA32PagingTbl_t ) )
+
+/* ページング操作領域 */
+#define MAP_PAGE_DIR_ADDR ( 0x3EFFE000 ) /**< ページディレクトリ操作領域 */
+#define MAP_PAGE_TBL_ADDR ( 0x3EFFF000 ) /**< ページテーブル操作領域     */
+
+/* ユーザ空間先頭アドレス */
+#define USER_AREA_ADDR ( 0x40000000 )
+
+/** 操作領域マッピング情報 */
 typedef struct {
-    uint32_t nowDirId;                      /**< 現ページディレクトリID       */
-    uint8_t  usedDir[ MEMMNG_PAGE_DIR_NUM ];/**< ページディレクトリ使用フラグ */
-    uint8_t  usedTbl[ MEMMNG_PAGE_TBL_NUM ];/**< ページテーブル使用フラグ     */
-} PageTbl_t;
+    IA32PagingDir_t *pPageDirPhys;  /**< ページディレクトリ(物理アドレス) */
+    IA32PagingTbl_t *pPageTblPhys;  /**< ページテーブル(物理アドレス)     */
+} mapInfo_t;
+
+/** ページディレクトリ管理情報 */
+typedef struct {
+    MkPid_t         pid;            /**< ページディレクトリ使用PID      */
+    IA32PagingDir_t *pPageDirPhys;  /**< ページディレクトリ物理アドレス */
+} mngInfo_t;
 
 
 /******************************************************************************/
 /* 変数定義                                                                   */
 /******************************************************************************/
-/** ページ管理テーブル */
-static PageTbl_t gPageMngTbl;
+/** 操作領域マッピング情報 */
+static mapInfo_t gMapInfo;
 
 /** ページディレクトリ管理テーブル */
-static IA32PagingDir_t *pgPageDir;
+static MLibDynamicArray_t gMngTbl;
 
-/** ページディレクトリ管理テーブルサイズ */
-static size_t gPageDirSize;
-
-/** ページテーブル管理テーブル */
-static IA32PagingTbl_t *pgPageTbl;
-
-/** ページテーブル管理テーブルサイズ */
-static size_t gPageTblSize;
+/** 現ページディレクトリID */
+static MemmngPageDirId_t gNowDirId;
 
 
 /******************************************************************************/
 /* ローカル関数プロトタイプ宣言                                               */
 /******************************************************************************/
 /* ページテーブル割当 */
-static uint32_t PageAllocTbl( void );
-
+static IA32PagingTbl_t *AllocPageTbl( IA32PagingPDE_t *pPde );
 /* ページテーブル解放 */
-static CmnRet_t PageFreeTbl( uint32_t id );
-
-/* 4KiBページマッピング */
-static CmnRet_t PageSet( uint32_t dirId,
-                         void     *pVAddr,
-                         void     *pPAddr,
-                         uint32_t attrGlobal,
-                         uint32_t attrUs,
-                         uint32_t attrRw      );
-
-/* 全ページディレクトリ設定（カーネル領域） */
-static void SetAllKernelPageDir( void );
-
-/* ページマッピングデフォルト設定 */
-static CmnRet_t PageSetDefault( uint32_t dirId );
-
-/* ページディレクトリ設定（カーネル領域） */
-static void SetKernelPageDir( uint32_t dirId );
-
-/* 4KiBページマッピング解除 */
-static void PageUnset( uint32_t dirId,
-                       void     *pVAddr );
+static void FreePageTbl( IA32PagingTbl_t *pPageTblPhys );
+/* アイドルプロセス用管理情報初期化 */
+static void InitIdleInfo( void );
+/* アイドルプロセス用ページディレクトリ初期化 */
+static void InitIdlePageDir( void );
+/* アイドルプロセス用ページテーブル初期化 */
+static void InitIdlePageTbl( void );
+/* 4KBページマッピング設定 */
+static CmnRet_t Set( void     *pVirtAddr,
+                     void     *pPhysAddr,
+                     uint32_t attrGlobal,
+                     uint32_t attrUs,
+                     uint32_t attrRw      );
+/* ページディレクトリ操作領域マッピング設定 */
+static void SetPageDirMap( IA32PagingDir_t *pPageDirPhys );
+/* ページテーブル操作領域マッピング設定 */
+static void SetPageTblMap( IA32PagingTbl_t *pPageTblPhys );
+/* ページテーブル解放試行 */
+static void TryToFreePageTbl( IA32PagingPDE_t *pPde,
+                              IA32PagingTbl_t *pPageTbl );
+/* 4KBページマッピング解除 */
+static void Unset( void *pVirtAddr );
 
 
 /******************************************************************************/
@@ -104,105 +128,147 @@ static void PageUnset( uint32_t dirId,
 /******************************************************************************/
 /**
  * @brief       ページディレクトリ割当
- * @details     未使用のページディレクトリを割り当てる。
+ * @details     ページディレクトリを割り当てる。
  *
- * @return      割り当てたページディレクトリIDを返す。
- * @retval      MEMMNG_PAGE_DIR_FULL以外 正常終了
- * @retval      MEMMNG_PAGE_DIR_FULL     異常終了
+ * @param[in]   pid プロセスID
+ *
+ * @return      ページディレクトリIDを返す。
+ * @retval      MEMMNG_PAGE_DIR_ID_NULL以外 正常終了
+ * @retval      MEMMNG_PAGE_DIR_ID_NULL     異常終了
  */
 /******************************************************************************/
-uint32_t MemmngPageAllocDir( void )
+MemmngPageDirId_t MemmngPageAllocDir( MkPid_t pid )
 {
-    uint32_t id;    /* ページディレクトリID */
+    mngInfo_t         *pMngInfo;        /* 管理情報                         */
+    MLibRet_t         retMLib;          /* MLib戻り値                       */
+    MLibErr_t         errMLib;          /* MLibエラー値                     */
+    IA32PagingDir_t   *pPageDir;        /* ページディレクトリ               */
+    IA32PagingDir_t   *pPageDirPhys;    /* ページディレクトリ(物理アドレス) */
+    MemmngPageDirId_t dirId;            /* ページディレクトリID             */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    /* 初期化 */
+    pMngInfo     = NULL;
+    retMLib      = MLIB_RET_FAILURE;
+    errMLib      = MLIB_ERR_NONE;
+    pPageDir     = ( IA32PagingDir_t * ) MAP_PAGE_DIR_ADDR;
+    pPageDirPhys = NULL;
+    dirId        = 0;
 
-    /* 1ページディレクトリ毎に繰り返し */
-    for ( id = MEMMNG_PAGE_DIR_ID_MIN; id < MEMMNG_PAGE_DIR_NUM; id++ ) {
-        /* 使用中判定 */
-        if ( gPageMngTbl.usedDir[ id ] == CMN_UNUSED ) {
-            /* 未使用 */
+    /* 管理情報割当 */
+    retMLib = MLibDynamicArrayAlloc( &gMngTbl,
+                                     &dirId,
+                                     ( void ** ) &pMngInfo,
+                                     &errMLib );
 
-            /* ページディレクトリ初期化 */
-            MLibUtilSetMemory8( &pgPageDir[ id ],
-                                0,
-                                sizeof ( IA32PagingDir_t ) );
+    /* 割当結果判定 */
+    if ( retMLib != MLIB_RET_SUCCESS ) {
+        /* 失敗 */
 
-            /* カーネル領域設定 */
-            SetKernelPageDir( id );
-
-            /* ページディレクトリ使用中設定 */
-            gPageMngTbl.usedDir[ id ] = CMN_USED;
-
-            break;
-        }
+        return MEMMNG_PAGE_DIR_ID_NULL;
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%u", __func__, id );
+    /* ページディレクトリ割当 */
+    pPageDirPhys = ( IA32PagingDir_t * )
+                   MemmngPhysAlloc( sizeof ( IA32PagingDir_t ) );
 
-    return id;
+    /* 割当結果判定 */
+    if ( pPageDirPhys == NULL ) {
+        /* 失敗 */
+
+        /* 管理情報解放 */
+        MLibDynamicArrayFree( &gMngTbl, dirId, &errMLib );
+
+        return MEMMNG_PAGE_DIR_ID_NULL;
+    }
+
+    /* 管理情報設定 */
+    pMngInfo->pid          = pid;
+    pMngInfo->pPageDirPhys = pPageDirPhys;
+
+    /* ページディレクトリ操作領域マッピング設定 */
+    SetPageDirMap( pPageDirPhys );
+
+    /* ページディレクトリ初期化 */
+    MLibUtilSetMemory32( pPageDir, 0, sizeof ( IA32PagingDir_t ) );
+
+    /* カーネル領域マッピング設定 */
+    MLibUtilCopyMemory( pPageDir,
+                        ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR,
+                        KERNEL_AREA_PAGE_DIR_SIZE                 );
+
+    return dirId;
 }
 
 
 /******************************************************************************/
 /**
  * @brief       ページディレクトリ解放
- * @details     使用済みページディレクトリを解放する。
+ * @details     ページディレクトリを解放する。
  *
- * @param[in]   id ページディレクトリID
+ * @param[in]   dirId ページディレクトリID
  *
  * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  */
 /******************************************************************************/
-CmnRet_t MemmngPageFreeDir( uint32_t id )
+CmnRet_t MemmngPageFreeDir( MemmngPageDirId_t dirId )
 {
-    uint32_t idx;   /* インデックス */
+    uint32_t        idx;            /* インデックス                 */
+    mngInfo_t       *pMngInfo;      /* 管理情報                     */
+    MLibErr_t       errMLib;        /* MLIBライブラリエラー値       */
+    MLibRet_t       retMLib;        /* MLIBライブラリ戻り値         */
+    IA32PagingDir_t *pPageDir;      /* ページディレクトリ           */
+    IA32PagingTbl_t *pPageTblPhys;  /* ページテーブル(物理アドレス) */
+    /* 初期化 */
+    pMngInfo     = NULL;
+    errMLib      = MLIB_ERR_NONE;
+    retMLib      = MLIB_RET_FAILURE;
+    pPageDir     = ( IA32PagingDir_t * ) MAP_PAGE_DIR_ADDR;
+    pPageTblPhys = NULL;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. id=%u", __func__, id );
+    /* 管理情報取得 */
+    retMLib = MLibDynamicArrayGet( &gMngTbl,
+                                   dirId,
+                                   ( void ** ) &pMngInfo,
+                                   &errMLib               );
 
-    /* 識別子チェック */
-    if ( id >= MEMMNG_PAGE_DIR_NUM ) {
-        /* 範囲異常 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+    /* 管理情報取得結果判定 */
+    if ( retMLib != MLIB_RET_SUCCESS ) {
+        /* 失敗 */
 
         return CMN_FAILURE;
     }
 
-    /* 使用中判定 */
-    if ( gPageMngTbl.usedDir[ id ] == CMN_UNUSED ) {
-        /* 未使用 */
+    /* ページディレクトリ操作領域マッピング */
+    SetPageDirMap( pMngInfo->pPageDirPhys );
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+    /* ユーザ領域のページディレクトリエントリ毎に繰り返し */
+    for ( idx = KERNEL_AREA_PDE_NUM; idx < IA32_PAGING_PDE_NUM; idx++ ) {
+        /* ページテーブル存在判定 */
+        if ( pPageDir->entry[ idx ].attr_p == IA32_PAGING_P_YES ) {
+            /* 存在する */
 
-        return CMN_FAILURE;
-    }
+            /* ページテーブル物理アドレス取得 */
+            pPageTblPhys = ( IA32PagingTbl_t * )
+                           IA32_PAGING_GET_BASE( &( pPageDir->entry[ idx ] ) );
 
-    /* 1ページディレクトリエントリ毎に繰り返し */
-    for ( idx = 0; idx < IA32_PAGING_PDE_NUM; idx++ ) {
-        /* 存在フラグ判定 */
-        if ( pgPageDir[ id ].entry[ idx ].attr_p == IA32_PAGING_P_YES ) {
-            /* 存在 */
+            /* ページテーブル操作領域マッピング設定 */
+            SetPageTblMap( pPageTblPhys );
 
-            /* [TODO]ページテーブル解放 */
+            /* ページテーブル解放 */
+            FreePageTbl( pPageTblPhys );
         }
     }
 
-    /* ページディレクトリ未使用設定 */
-    gPageMngTbl.usedDir[ id ] = CMN_UNUSED;
+    /* ページディレクトリ初期化 */
+    MLibUtilSetMemory32( pPageDir, 0, sizeof ( IA32PagingDir_t ) );
 
-    /* ページテーブル初期化 */
-    MLibUtilSetMemory8( &pgPageDir[ id ], 0, sizeof ( IA32PagingDir_t ) );
+    /* ページディレクトリ解放 */
+    MemmngPhysFree( pMngInfo->pPageDirPhys );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
+    /* 管理情報解放 */
+    MLibDynamicArrayFree( &gMngTbl, dirId, &errMLib );
 
     return CMN_SUCCESS;
 }
@@ -216,40 +282,36 @@ CmnRet_t MemmngPageFreeDir( uint32_t id )
  * @return      ページディレクトリIDを返す。
  */
 /******************************************************************************/
-uint32_t MemmngPageGetDirId( void )
+MemmngPageDirId_t MemmngPageGetDirId( void )
 {
-    return gPageMngTbl.nowDirId;
+    return gNowDirId;
 }
 
 
 /******************************************************************************/
 /**
- * @brief       ページディレクトリ切替
- * @details     指定したページディレクトリに切り替える。
+ * @brief       ページディレクトリベースレジスタ値取得
+ * @details     ページディレクトリIDのページディレクトリベースレジスタ値を取得
+ *              する。
  *
- * @param[in]   pageDirId ページディレクトリID
+ * @param[in]   dirId ページディレクトリID
  *
- * @return      ページディレクトリベースレジスタを返す。
+ * @return      ページディレクトリベースレジスタ値を返す。
  */
 /******************************************************************************/
-IA32PagingPDBR_t MemmngPageSwitchDir( uint32_t pageDirId )
+IA32PagingPDBR_t MemmngPageGetPdbr( MemmngPageDirId_t dirId )
 {
-    IA32PagingPDBR_t pdbr;  /* 戻り値 */
+    mngInfo_t        *pMngInfo; /* 管理情報 */
+    IA32PagingPDBR_t pdbr;      /* 戻り値   */
 
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start. pageDirId=%u", __func__, pageDirId );*/
-
-    /* 現ページディレクトリID設定 */
-    gPageMngTbl.nowDirId = pageDirId;
+    /* 管理情報取得 */
+    MLibDynamicArrayGet( &gMngTbl, dirId, ( void ** ) &pMngInfo, NULL );
 
     /* PDBR作成 */
     IA32_PAGING_SET_PDBR( pdbr,
-                          &pgPageDir[ pageDirId ],
+                          pMngInfo->pPageDirPhys,
                           IA32_PAGING_PCD_ENABLE,
-                          IA32_PAGING_PWT_WB );
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
+                          IA32_PAGING_PWT_WT      );
 
     return pdbr;
 }
@@ -257,94 +319,13 @@ IA32PagingPDBR_t MemmngPageSwitchDir( uint32_t pageDirId )
 
 /******************************************************************************/
 /**
- * @brief       ページ管理初期化
- * @details     ページ管理を初期化しページングを有効化する。
- */
-/******************************************************************************/
-void MemmngPageInit( void )
-{
-    CmnRet_t         ret;   /* 戻り値 */
-    IA32PagingPDBR_t pdbr;  /* PDBR   */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-
-    /* 初期化 */
-    ret = CMN_FAILURE;
-
-    /* ページディレクトリ管理テーブルサイズ設定 */
-    gPageDirSize = MEMMNG_PAGE_DIR_NUM * sizeof ( IA32PagingDir_t );
-    gPageDirSize = MLIB_UTIL_ALIGN( gPageDirSize, IA32_PAGING_PAGE_SIZE );
-
-    /* ページディレクトリ管理テーブル割当て */
-    pgPageDir = ( IA32PagingDir_t * ) MemmngPhysAlloc( gPageDirSize );
-
-    /* 割当て結果判定 */
-    if ( pgPageDir == NULL ) {
-        /* 失敗 */
-
-        /* [TODO] */
-    }
-
-    /* ページテーブル管理テーブルサイズ設定 */
-    gPageTblSize = MEMMNG_PAGE_TBL_NUM * sizeof ( IA32PagingTbl_t );
-    gPageTblSize = MLIB_UTIL_ALIGN( gPageTblSize, IA32_PAGING_PAGE_SIZE );
-
-    /* ページテーブル管理テーブル割当て */
-    pgPageTbl = ( IA32PagingTbl_t * ) MemmngPhysAlloc( gPageTblSize );
-
-    /* 割当て結果判定 */
-    if ( pgPageTbl == NULL ) {
-        /* 失敗 */
-
-        /* [TODO] */
-    }
-
-    DEBUG_LOG( "pgPageDir=%p, pgPageTbl=%p", pgPageDir, pgPageTbl );
-
-    /* テーブル初期化 */
-    MLibUtilSetMemory8( &gPageMngTbl, 0, sizeof ( gPageMngTbl ) );
-    MLibUtilSetMemory8( pgPageDir,    0, gPageDirSize           );
-    MLibUtilSetMemory8( pgPageTbl,    0, gPageTblSize           );
-
-    /* アイドルプロセス用ページディレクトリ設定 */
-    gPageMngTbl.usedDir[ MEMMNG_PAGE_DIR_ID_IDLE ] = CMN_USED;
-
-    /* ページマッピングデフォルト設定 */
-    ret = PageSetDefault( MEMMNG_PAGE_DIR_ID_IDLE );
-
-    /* 設定結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* [TODO] */
-    }
-
-    /* ページディレクトリ切替 */
-    pdbr = MemmngPageSwitchDir( MEMMNG_PAGE_DIR_ID_IDLE );
-
-    /* ページディレクトリ設定 */
-    IA32InstructionSetCr3( pdbr );
-
-    /* ページング有効化 */
-    IA32InstructionSetCr0( IA32_CR0_PG, IA32_CR0_PG );
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
  * @brief       ページマッピング設定
- * @details     物理メモリをページにマッピングする。
+ * @details     物理アドレスと仮想アドレスのマッピング設定を行う。
  *
- * @param[in]   dirId      ページディレクトリID
- * @param[in]   *pVAddr    仮想アドレス
- * @param[in]   *pPAddr    物理アドレス
- * @param[in]   size       サイズ
+ * @param[in]   dirId       ページディレクトリID
+ * @param[in]   *pVirtAddr  仮想アドレス
+ * @param[in]   *pPhysAddr  物理アドレス
+ * @param[in]   size        マッピングサイズ
  * @param[in]   attrGlobal グローバルページ属性
  *                  - IA32_PAGING_G_NO  非グローバルページ
  *                  - IA32_PAGING_G_YES グローバルページ
@@ -359,74 +340,83 @@ void MemmngPageInit( void )
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  *
- * @attention   引数pVAddr、pPAddr、sizeは4KiBアライメントであること。
+ * @attention   引数pVirtAddr、pPhysAddr、sizeは4KiBアライメントであること。
  */
 /******************************************************************************/
-CmnRet_t MemmngPageSet( uint32_t dirId,
-                        void     *pVAddr,
-                        void     *pPAddr,
-                        size_t   size,
-                        uint32_t attrGlobal,
-                        uint32_t attrUs,
-                        uint32_t attrRw      )
+CmnRet_t MemmngPageSet( MemmngPageDirId_t dirId,
+                        void              *pVirtAddr,
+                        void              *pPhysAddr,
+                        size_t            size,
+                        uint32_t          attrGlobal,
+                        uint32_t          attrUs,
+                        uint32_t          attrRw      )
 {
-    CmnRet_t ret;   /* 関数戻り値 */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( " dirId=%u, pVAddr=%010p, pPAddr=%010p,",
-               dirId,
-               pVAddr,
-               pPAddr );
-    DEBUG_LOG( " size=%#x, attrGlobal=%u, attrUs=%u, attrRw=%u",
-               size,
-               attrGlobal,
-               attrUs,
-               attrRw );
+    void      *pNextVirtAddr;   /* 次仮想アドレス         */
+    void      *pNextPhysAddr;   /* 次物理アドレス         */
+    size_t    remain;           /* 残マッピングサイズ     */
+    CmnRet_t  ret;              /* 関数戻り値             */
+    mngInfo_t *pMngInfo;        /* 管理情報               */
+    MLibErr_t errMLib;          /* MLIBライブラリエラー値 */
+    MLibRet_t retMLib;          /* MLIBライブラリ戻り値   */
 
     /* 初期化 */
-    ret = CMN_FAILURE;
+    pNextVirtAddr = pVirtAddr;
+    pNextPhysAddr = pPhysAddr;
+    remain        = size;
+    ret           = CMN_SUCCESS;
+    pMngInfo      = NULL;
+    errMLib       = MLIB_ERR_NONE;
+    retMLib       = MLIB_RET_FAILURE;
 
-    /* 使用中判定 */
-    if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
-        /* 未使用 */
+    /* ページディレクトリID判定 */
+    if ( dirId != MEMMNG_PAGE_DIR_ID_IDLE ) {
+        /* 非アイドルプロセス用 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        /* 管理情報取得 */
+        retMLib = MLibDynamicArrayGet( &gMngTbl,
+                                       dirId,
+                                       ( void ** ) &pMngInfo,
+                                       &errMLib               );
 
-        return CMN_FAILURE;
-    }
-
-    /* 4KiB毎に繰り返し */
-    while ( size >= IA32_PAGING_PAGE_SIZE ) {
-        /* 4KiBページマッピング設定 */
-        ret = PageSet( dirId, pVAddr, pPAddr, attrGlobal, attrUs, attrRw );
-
-        /* ページマッピング結果判定 */
-        if ( ret == CMN_FAILURE ) {
+        /* 管理情報取得結果判定 */
+        if ( retMLib != MLIB_RET_SUCCESS ) {
             /* 失敗 */
 
+            DEBUG_LOG( "dirID( %d ) failure.", dirId );
+
+            return CMN_FAILURE;
+        }
+
+        /* ページディレクトリ操作領域マッピング */
+        SetPageDirMap( pMngInfo->pPageDirPhys );
+    }
+
+    /* 4KB毎に繰り返し */
+    while ( remain >= IA32_PAGING_PAGE_SIZE ) {
+        /* 4KBページマッピング設定 */
+        ret = Set( pNextVirtAddr, pNextPhysAddr, attrGlobal, attrUs, attrRw );
+
+        /* 設定結果判定 */
+        if ( ret != CMN_SUCCESS ) {
+            /* 失敗 */
             break;
         }
 
-        /* アドレス更新 */
-        pVAddr += IA32_PAGING_PAGE_SIZE;
-        pPAddr += IA32_PAGING_PAGE_SIZE;
+        /* 次アドレス更新 */
+        pNextVirtAddr += IA32_PAGING_PAGE_SIZE;
+        pNextPhysAddr += IA32_PAGING_PAGE_SIZE;
 
-        /* サイズ更新 */
-        size -= IA32_PAGING_PAGE_SIZE;
+        /* 残マッピングサイズ更新 */
+        remain -= IA32_PAGING_PAGE_SIZE;
     }
 
-    /* ページディレクトリ判定 */
-    if ( dirId == MEMMNG_PAGE_DIR_ID_IDLE ) {
-        /* アイドルプロセス */
+    /* 結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
 
-        /* 全ページディレクトリ設定 */
-        SetAllKernelPageDir();
+        /* マッピング解除 */
+        MemmngPageUnset( dirId, pVirtAddr, size - remain );
     }
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%d", __func__, ret );
 
     return ret;
 }
@@ -434,59 +424,140 @@ CmnRet_t MemmngPageSet( uint32_t dirId,
 
 /******************************************************************************/
 /**
- * @brief       ページマッピング設定
- * @details     物理メモリとページのマッピングを解除する。
+ * @brief       ページディレクトリ切替
+ * @details     指定したページディレクトリに切り替える。
  *
- * @param[in]   dirId  ページディレクトリID
- * @param[in]   pVAddr 仮想アドレス
- * @param[in]   size   サイズ
- *
- * @attention   引数pVAddr、sizeは4KiBアライメントであること。
+ * @param[in]   dirId ページディレクトリID
  */
 /******************************************************************************/
-void MemmngPageUnset( uint32_t dirId,
-                      void     *pVAddr,
-                      size_t   size     )
+void MemmngPageSwitchDir( MemmngPageDirId_t dirId )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( " dirId=%u, pVAddr=%010p, size=%#X",
-               dirId,
-               pVAddr,
-               size );
+    /* 現ページディレクトリID設定 */
+    gNowDirId = dirId;
 
-    /* 使用中判定 */
-    if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
-        /* 未使用 */
+    return;
+}
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end.", __func__ );
 
-        return;
+/******************************************************************************/
+/**
+ * @brief       ページマッピング解除
+ * @details     物理アドレスと仮想アドレスのマッピング設定を解除する。
+ *
+ * @param[in]   dirId      ページディレクトリID
+ * @param[in]   *pVirtAddr 仮想アドレス
+ * @param[in]   size       マッピングサイズ
+ *
+ * @return      処理結果を返す。
+ * @retval      CMN_SUCCESS 正常終了
+ * @retval      CMN_FAILURE 異常終了
+ *
+ * @attention   引数pVirtAddr、sizeは4KiBアライメントであること。
+ */
+/******************************************************************************/
+CmnRet_t MemmngPageUnset( MemmngPageDirId_t dirId,
+                          void              *pVirtAddr,
+                          size_t            size        )
+{
+    mngInfo_t *pMngInfo;    /* 管理情報               */
+    MLibErr_t errMLib;      /* MLIBライブラリエラー値 */
+    MLibRet_t retMLib;      /* MLIBライブラリ戻り値   */
+
+    /* 初期化 */
+    pMngInfo = NULL;
+    errMLib  = MLIB_ERR_NONE;
+    retMLib  = MLIB_RET_FAILURE;
+
+    /* ページディレクトリID判定 */
+    if ( dirId != MEMMNG_PAGE_DIR_ID_IDLE ) {
+        /* 非アイドルプロセス用 */
+
+        /* 管理情報取得 */
+        retMLib = MLibDynamicArrayGet( &gMngTbl,
+                                       dirId,
+                                       ( void ** ) &pMngInfo,
+                                       &errMLib               );
+
+        /* 取得結果判定 */
+        if ( retMLib != MLIB_RET_SUCCESS ) {
+            /* 失敗 */
+
+            return CMN_FAILURE;
+        }
+
+        /* ページディレクトリ操作領域マッピング */
+        SetPageDirMap( pMngInfo->pPageDirPhys );
     }
 
-    /* 4KiB毎に繰り返し */
+    /* 4KB毎に繰り返し */
     while ( size >= IA32_PAGING_PAGE_SIZE ) {
-        /* 4KiBページマッピング */
-        PageUnset( dirId, pVAddr );
+        /* 4KBページマッピング解除 */
+        Unset( pVirtAddr );
 
         /* アドレス更新 */
-        pVAddr += IA32_PAGING_PAGE_SIZE;
+        pVirtAddr += IA32_PAGING_PAGE_SIZE;
 
         /* サイズ更新 */
         size -= IA32_PAGING_PAGE_SIZE;
     }
 
-    /* ページディレクトリ判定 */
-    if ( dirId == MEMMNG_PAGE_DIR_ID_IDLE ) {
-        /* アイドルプロセス */
+    return CMN_SUCCESS;
+}
 
-        /* 全ページディレクトリ設定 */
-        SetAllKernelPageDir();
-    }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+/******************************************************************************/
+/* モジュール内向けグローバル関数定義                                         */
+/******************************************************************************/
+/******************************************************************************/
+/**
+ * @brief       ページング管理サブモジュール初期化
+ * @details     ページング管理機能を初期化してページングを有効化する。
+ */
+/******************************************************************************/
+void PageInit( void )
+{
+    MLibErr_t        errMLib;   /* MLIBライブラリエラー値 */
+    IA32PagingPDBR_t pdbr;      /* PDBR                   */
+
+    /* 初期化 */
+    errMLib = MLIB_ERR_NONE;
+
+    /* 操作領域マッピング情報初期化 */
+    MLibUtilSetMemory32( &gMapInfo, 0, sizeof ( mapInfo_t ) );
+
+    /* アイドルプロセス用ページディレクトリ初期化 */
+    InitIdlePageDir();
+
+    /* アイドルプロセス用ページテーブル初期化 */
+    InitIdlePageTbl();
+
+    /* 現ページディレクトリID設定 */
+    gNowDirId = 0;
+
+    /* ページディレクトリベースレジスタ値作成 */
+    IA32_PAGING_SET_PDBR( pdbr,
+                          IDLE_PAGE_DIR_ADDR,
+                          IA32_PAGING_PCD_ENABLE,
+                          IA32_PAGING_PWT_WT      );
+
+    /* ページディレクトリ設定 */
+    IA32InstructionSetCr3( pdbr );
+
+    /* ページング有効化 */
+    IA32InstructionSetCr0( IA32_CR0_PG, IA32_CR0_PG );
+
+    /* グローバルページ有効化 */
+    /* TODO */
+
+    /* ページディレクトリ管理テーブル初期化 */
+    MLibDynamicArrayInit( &gMngTbl,
+                          128,
+                          sizeof ( mngInfo_t ),
+                          UINT32_MAX,
+                          &errMLib              );
+
+    /* アイドルプロセス用管理情報初期化 */
+    InitIdleInfo();
 
     return;
 }
@@ -498,103 +569,214 @@ void MemmngPageUnset( uint32_t dirId,
 /******************************************************************************/
 /**
  * @brief       ページテーブル割当
- * @details     未使用のページテーブルを割り当てる。
+ * @details     ページテーブルを割り当てる。
  *
- * @return      ページテーブルIDを返す。
- * @retval      MEMMNG_PAGE_TBL_FULL以外 正常終了
- * @retval      MEMMNG_PAGE_TBL_FULL     異常終了
+ * @param[in]   *pPde ページディレクトリエントリ
+ *
+ * @return      割り当てたページテーブルの物理アドレスを返す。
+ * @retval      NULL     失敗
+ * @retval      NULL以外 成功
  */
 /******************************************************************************/
-static uint32_t PageAllocTbl( void )
+static IA32PagingTbl_t *AllocPageTbl( IA32PagingPDE_t *pPde )
 {
-    uint32_t id;    /* ページテーブルID */
+    IA32PagingTbl_t *pPageTblPhys; /* ページテーブル(物理アドレス) */
 
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start.", __func__ );*/
+    /* ページテーブル割当 */
+    pPageTblPhys = ( IA32PagingTbl_t * )
+                   MemmngPhysAlloc( sizeof ( IA32PagingTbl_t ) );
 
-    /* 1ページテーブル毎に繰り返し */
-    for ( id = 0; id < MEMMNG_PAGE_TBL_NUM; id++ ) {
-        /* 使用中判定 */
-        if ( gPageMngTbl.usedTbl[ id ] == CMN_UNUSED ) {
-            /* 未使用 */
+    /* 割当結果判定 */
+    if ( pPageTblPhys == NULL ) {
+        /* 失敗 */
 
-            /* ページテーブル初期化 */
-            MLibUtilSetMemory8( &pgPageTbl[ id ],
-                                0,
-                                sizeof ( IA32PagingTbl_t ) );
-
-            /* ページテーブル使用中設定 */
-            gPageMngTbl.usedTbl[ id ] = CMN_USED;
-
-            break;
-        }
+        return NULL;
     }
 
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end. ret=%u", __func__, id );*/
+    /* ページディレクトリエントリ初期化 */
+    MLibUtilSetMemory32( pPde, 0, sizeof ( IA32PagingPDE_t ) );
 
-    return id;
+    /* ページディレクトリエントリ設定 */
+    IA32_PAGING_SET_BASE( pPde, pPageTblPhys );
+    pPde->attr_avl = 0;
+    pPde->attr_g   = IA32_PAGING_G_NO;
+    pPde->attr_ps  = IA32_PAGING_PS_4K;
+    pPde->attr_a   = IA32_PAGING_A_NO;
+    pPde->attr_pcd = IA32_PAGING_PCD_DISABLE;
+    pPde->attr_pwt = IA32_PAGING_PWT_WT;
+    pPde->attr_us  = IA32_PAGING_US_USER;
+    pPde->attr_rw  = IA32_PAGING_RW_RW;
+    pPde->attr_p   = IA32_PAGING_P_YES;
+
+    /* ページテーブル操作領域マッピング */
+    SetPageTblMap( pPageTblPhys );
+
+    /* ページテーブル初期化 */
+    MLibUtilSetMemory32( ( IA32PagingTbl_t * ) MAP_PAGE_TBL_ADDR,
+                         0,
+                         sizeof ( IA32PagingTbl_t )               );
+
+    return pPageTblPhys;
 }
 
 
 /******************************************************************************/
 /**
  * @brief       ページテーブル解放
- * @details     指定したページテーブルを解放する。
+ * @details     ページテーブルを解放する。
  *
- * @param[in]   id ページテーブルID
- *
- * @return      処理結果を返す。
- * @retval      CMN_SUCCESS 正常終了
- * @retval      CMN_FAILURE 異常終了
+ * @param[in]   *pPageTblPhys ページテーブル(物理アドレス)
  */
 /******************************************************************************/
-static CmnRet_t PageFreeTbl( uint32_t id )
+static void FreePageTbl( IA32PagingTbl_t *pPageTblPhys )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. id=%u", __func__, id );
-
-    /* 識別子チェック */
-    if ( id >= MEMMNG_PAGE_TBL_NUM ) {
-        /* 範囲異常 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* 使用中判定 */
-    if ( gPageMngTbl.usedTbl[ id ] == CMN_UNUSED ) {
-        /* 未使用 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* ページテーブル未使用設定 */
-    gPageMngTbl.usedTbl[ id ] = CMN_UNUSED;
-
     /* ページテーブル初期化 */
-    MLibUtilSetMemory8( &pgPageTbl[ id ], 0, sizeof ( IA32PagingTbl_t ) );
+    MLibUtilSetMemory32( ( IA32PagingTbl_t * ) MAP_PAGE_TBL_ADDR,
+                         0,
+                         sizeof ( IA32PagingTbl_t )               );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
+    /* ページテーブル解放 */
+    MemmngPhysFree( pPageTblPhys );
 
-    return CMN_SUCCESS;
+    return;
 }
 
 
 /******************************************************************************/
 /**
- * @brief       4KiBページマッピング設定
- * @details     4KiBの物理メモリをページにマッピングする。
+ * @brief       アイドルプロセス用管理情報初期化
+ * @details     アイドルプロセス用のページング管理情報を初期化する。
+ */
+/******************************************************************************/
+static void InitIdleInfo( void )
+{
+    mngInfo_t *pMngInfo;    /* アイドルプロセス用管理情報 */
+
+    /* 初期化 */
+    pMngInfo = NULL;
+
+    /* アイドルプロセス用管理情報割当 */
+    MLibDynamicArrayAllocSpec( &gMngTbl,
+                               MEMMNG_PAGE_DIR_ID_IDLE,
+                               ( void ** ) &pMngInfo,
+                               NULL                     );
+
+    /* アイドルプロセス用管理情報設定 */
+    pMngInfo->pid          = MK_PID_IDLE;
+    pMngInfo->pPageDirPhys = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @breif       アイドルプロセス用ページディレクトリ初期化
+ * @details     カーネル領域に対応する全エントリをアイドルプロセス用ページテー
+ *              ブルにリンクする様に初期化する。
+ */
+/******************************************************************************/
+static void InitIdlePageDir( void )
+{
+    uint32_t        idx;        /* PDEインデックス            */
+    IA32PagingDir_t *pPageDir;  /* ページディレクトリ         */
+    IA32PagingTbl_t *pPageTbl;  /* ページテーブル             */
+    IA32PagingPDE_t *pPde;      /* ページディレクトリエントリ */
+
+    /* 初期化 */
+    idx      = 0;
+    pPageDir = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+    pPageTbl = ( IA32PagingTbl_t * ) KERNEL_AREA_PAGE_TBL_ADDR;
+    pPde     = NULL;
+
+    /* アイドルプロセス用ページディレクトリ0初期化 */
+    MLibUtilSetMemory32( pPageDir, 0, sizeof ( IA32PagingDir_t ) );
+
+    /* カーネル領域に対応するエントリ毎に繰り返し */
+    for ( idx = 0; idx < KERNEL_AREA_PDE_NUM; idx++ ) {
+
+        /* アドレス設定 */
+        pPde = &( pPageDir->entry[ idx ] );
+
+        /* ページディレクトリエントリ設定 */
+        IA32_PAGING_SET_BASE( pPde, &( pPageTbl[ idx ] ) );
+        pPde->attr_avl = 0;
+        pPde->attr_g   = IA32_PAGING_G_NO;
+        pPde->attr_ps  = IA32_PAGING_PS_4K;
+        pPde->attr_a   = IA32_PAGING_A_NO;
+        pPde->attr_pcd = IA32_PAGING_PCD_DISABLE;
+        pPde->attr_pwt = IA32_PAGING_PWT_WT;
+        pPde->attr_us  = IA32_PAGING_US_SV;
+        pPde->attr_rw  = IA32_PAGING_RW_RW;
+        pPde->attr_p   = IA32_PAGING_P_YES;
+    }
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       アイドルプロセス用ページテーブル初期化
+ * @details     カーネル領域に対応する全エントリを物理アドレスと仮想アドレスが
+ *              等しくなる様に初期化する。
+ */
+/******************************************************************************/
+static void InitIdlePageTbl( void )
+{
+    void            *pPhysAddr; /* 物理アドレス           */
+    uint32_t        pdeIdx;     /* PDEインデックス        */
+    uint32_t        pteIdx;     /* PTEインデックス        */
+    IA32PagingTbl_t *pPageTbl;  /* ページテーブル         */
+    IA32PagingPTE_t *pPte;      /* ページテーブルエントリ */
+
+    /* 初期化 */
+    pPhysAddr  = NULL;
+    pdeIdx     = 0;
+    pteIdx     = 0;
+    pPageTbl   = ( IA32PagingTbl_t * ) KERNEL_AREA_PAGE_TBL_ADDR;
+    pPte       = NULL;
+
+    /* アイドルプロセス用ページテーブル0初期化 */
+    MLibUtilSetMemory32( pPageTbl, 0, KERNEL_AREA_PAGE_TBL_SIZE );
+
+    /* カーネル領域に対応するエントリ毎に繰り返し */
+    for ( pdeIdx = 0; pdeIdx < KERNEL_AREA_PDE_NUM; pdeIdx++ ) {
+        for ( pteIdx = 0; pteIdx < IA32_PAGING_PTE_NUM; pteIdx++ ) {
+
+            /* アドレス設定 */
+            pPte      = &( pPageTbl[ pdeIdx ].entry[ pteIdx ] );
+            pPhysAddr =
+                ( void * )
+                ( pdeIdx * IA32_PAGING_PAGE_SIZE * IA32_PAGING_PTE_NUM +
+                  pteIdx * IA32_PAGING_PAGE_SIZE                         );
+
+            /* ページテーブルエントリ設定 */
+            IA32_PAGING_SET_BASE( pPte, pPhysAddr );
+            pPte->attr_avl = 0;
+            pPte->attr_g   = IA32_PAGING_G_YES;
+            pPte->attr_pat = IA32_PAGING_PAT_UNUSED;
+            pPte->attr_d   = IA32_PAGING_D_NO;
+            pPte->attr_a   = IA32_PAGING_A_NO;
+            pPte->attr_pcd = IA32_PAGING_PCD_DISABLE;
+            pPte->attr_pwt = IA32_PAGING_PWT_WT;
+            pPte->attr_us  = IA32_PAGING_US_SV;
+            pPte->attr_rw  = IA32_PAGING_RW_RW;
+            pPte->attr_p   = IA32_PAGING_P_YES;
+        }
+    }
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       4KBページマッピング設定
+ * @details     物理アドレスを仮想アドレスの4KBページにマッピングする。
  *
- * @param[in]   dirId      ページディレクトリID
- * @param[in]   *pVAddr    仮想アドレス
- * @param[in]   *pPAddr    物理アドレス
+ * @param[in]   *pVirtAddr 仮想アドレス
+ * @param[in]   *pPhysAddr 物理アドレス
  * @param[in]   attrGlobal グローバルページ属性
  *                  - IA32_PAGING_G_NO  非グローバルページ
  *                  - IA32_PAGING_G_YES グローバルページ
@@ -609,439 +791,273 @@ static CmnRet_t PageFreeTbl( uint32_t id )
  * @retval      CMN_SUCCESS 正常終了
  * @retval      CMN_FAILURE 異常終了
  *
- * @attention   引数pVAddr、pPAddr、sizeは4KiBアライメントであること。
+ * @attention   引数pVirtAddr、pPhysAddrは4KBアライメントされていること。
  */
 /******************************************************************************/
-static CmnRet_t PageSet( uint32_t dirId,
-                         void     *pVAddr,
-                         void     *pPAddr,
-                         uint32_t attrGlobal,
-                         uint32_t attrUs,
-                         uint32_t attrRw      )
+static CmnRet_t Set( void     *pVirtAddr,
+                     void     *pPhysAddr,
+                     uint32_t attrGlobal,
+                     uint32_t attrUs,
+                     uint32_t attrRw      )
 {
-    uint32_t        pdeIdx; /* PDEインデックス      */
-    uint32_t        pteIdx; /* PTEインデックス      */
-    uint32_t        tblId;  /* ページテーブル識別子 */
-    IA32PagingPDE_t *pPde;  /* PDE参照              */
-    IA32PagingPTE_t *pPte;  /* PTE参照              */
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( " dirId=%u, pVAddr=%010p, pPAddr=%010p,",
-               dirId,
-               pVAddr,
-               pPAddr );
-    DEBUG_LOG( " attrGlobal=%u, attrUs=%u, attrRw=%u",
-               attrGlobal,
-               attrUs,
-               attrRw );*/
+    uint32_t        pdeIdx;         /* ページディレクトリエントリインデックス */
+    uint32_t        pteIdx;         /* ページテーブルエントリインデックス     */
+    IA32PagingDir_t *pPageDir;      /* ページディレクトリ                     */
+    IA32PagingTbl_t *pPageTbl;      /* ページテーブル                         */
+    IA32PagingTbl_t *pPageTblPhys;  /* ページテーブル(物理アドレス)           */
+    IA32PagingPDE_t *pPde;          /* ページディレクトリエントリ             */
+    IA32PagingPTE_t *pPte;          /* ページテーブルエントリ                 */
 
     /* 初期化 */
-    pdeIdx = IA32_PAGING_GET_PDE_IDX( pVAddr );         /* PDEインデックス */
-    pteIdx = IA32_PAGING_GET_PTE_IDX( pVAddr );         /* PTEインデックス */
-    pPde   = &( pgPageDir[ dirId ].entry[ pdeIdx ] );   /* PDE参照         */
+    pdeIdx       = IA32_PAGING_GET_PDE_IDX( pVirtAddr );
+    pteIdx       = IA32_PAGING_GET_PTE_IDX( pVirtAddr );
+    pPageDir     = NULL;
+    pPageTbl     = NULL;
+    pPageTblPhys = NULL;
+    pPde         = NULL;
 
-    /* ページテーブル存在チェック */
-    if ( pPde->attr_p == IA32_PAGING_P_NO ) {
-        /* 存在しない */
+    /* カーネル領域判定 */
+    if ( pVirtAddr < ( void * ) USER_AREA_ADDR ) {
+        /* カーネル領域 */
 
-        /* ページテーブル割当 */
-        tblId = PageAllocTbl();
-
-        /* 割当結果判定 */
-        if ( tblId == MEMMNG_PAGE_TBL_FULL ) {
-            /* 失敗 */
-
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-            return CMN_FAILURE;
-        }
-
-        /* PDE設定 */
-        MLibUtilSetMemory8( pPde, 0, sizeof ( IA32PagingPDE_t ) );
-        IA32_PAGING_SET_BASE( pPde, &pgPageTbl[ tblId ] );
-        pPde->attr_g   = IA32_PAGING_G_NO;
-        pPde->attr_ps  = IA32_PAGING_PS_4K;
-        pPde->attr_a   = IA32_PAGING_A_NO;
-        pPde->attr_pcd = IA32_PAGING_PCD_ENABLE;
-        pPde->attr_pwt = IA32_PAGING_PWT_WB;
-        pPde->attr_us  = IA32_PAGING_US_USER;
-        pPde->attr_rw  = IA32_PAGING_RW_RW;
-        pPde->attr_p   = IA32_PAGING_P_YES;
-
-        /* PTE参照変数設定 */
-        pPte = &( pgPageTbl[ tblId ].entry[ pteIdx ] );
+        /* アドレス設定 */
+        pPageDir = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+        pPde     = &( pPageDir->entry[ pdeIdx ] );
+        pPageTbl = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
 
     } else {
-        /* 存在する */
+        /* ユーザ領域 */
 
-        /* TLBフラッシュ */
-        IA32InstructionInvlpg( pVAddr );
+        /* アドレス設定 */
+        pPageDir = ( IA32PagingDir_t * ) MAP_PAGE_DIR_ADDR;
+        pPde     = &( pPageDir->entry[ pdeIdx ] );
+        pPageTbl = ( IA32PagingTbl_t * ) MAP_PAGE_TBL_ADDR;
 
-        /* PTE参照変数設定 */
-        pPte = &( ( ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde ) )->
-                  entry[ pteIdx ] );
+
+        /* ページテーブル存在チェック */
+        if ( pPde->attr_p == IA32_PAGING_P_NO ) {
+            /* 存在しない */
+
+            /* ページテーブル割当 */
+            pPageTblPhys = AllocPageTbl( pPde );
+
+            /* 割当結果判定 */
+            if ( pPageTblPhys == NULL ) {
+                /* 失敗 */
+
+                return CMN_FAILURE;
+            }
+
+        } else {
+            /* 存在する */
+
+            /* ページテーブルアドレス取得 */
+            pPageTblPhys = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
+
+            /* ページテーブル操作領域マッピング */
+            SetPageTblMap( pPageTblPhys );
+        }
     }
 
-    /* PTE設定 */
-    MLibUtilSetMemory8( pPte, 0, sizeof ( IA32PagingPTE_t ) );
-    IA32_PAGING_SET_BASE( pPte, pPAddr );
+    /* ページテーブルエントリアドレス取得 */
+    pPte = &( pPageTbl->entry[ pteIdx ] );
+
+    /* ページテーブルエントリ初期化 */
+    MLibUtilSetMemory32( pPte, 0, sizeof ( IA32PagingPTE_t ) );
+
+    /* ページテーブルエントリ設定 */
+    IA32_PAGING_SET_BASE( pPte, pPhysAddr );
+    pPte->attr_avl = 0;
     pPte->attr_g   = attrGlobal;
+    pPte->attr_pat = IA32_PAGING_PAT_UNUSED;
+    pPte->attr_d   = IA32_PAGING_D_NO;
     pPte->attr_a   = IA32_PAGING_A_NO;
     pPte->attr_pcd = IA32_PAGING_PCD_ENABLE;
-    pPte->attr_pwt = IA32_PAGING_PWT_WB;
+    pPte->attr_pwt = IA32_PAGING_PWT_WT;
     pPte->attr_us  = attrUs;
     pPte->attr_rw  = attrRw;
     pPte->attr_p   = IA32_PAGING_P_YES;
 
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );*/
-
-    return CMN_SUCCESS;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       全ページディレクトリ設定（カーネル領域）
- * @details     全ページディレクトリにアイドルプロセス用ページディレクトリの一
- *              部をコピーすることで、カーネルが使用するメモリ空間を設定する。
- */
-/******************************************************************************/
-static void SetAllKernelPageDir( void )
-{
-    uint32_t dirId;
-
-    /* 全ページディレクトリ毎に繰り返す */
-    for ( dirId = MEMMNG_PAGE_DIR_ID_MIN;
-          dirId < MEMMNG_PAGE_DIR_NUM;
-          dirId++                         ) {
-        /* 使用中判定 */
-        if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
-            /* 未使用 */
-
-            continue;
-        }
-
-        /* カーネル領域ページディレクトリ設定 */
-        SetKernelPageDir( dirId );
-    }
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       ページマッピングデフォルト設定
- * @details     カーネル領域をページにマッピングする。
- *
- * @param[in]   dirId ページディレクトリID
- *
- * @return      処理結果を返す。
- * @retval      CMN_SUCCESS 正常終了
- * @retval      CMN_FAILURE 異常終了
- */
-/******************************************************************************/
-static CmnRet_t PageSetDefault( uint32_t dirId )
-{
-    CmnRet_t        ret;    /* 戻り値               */
-    MkMemMapEntry_t info;   /* メモリマップ領域情報 */
-
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. dirId=%u", __func__, dirId );
-
-    /* 初期化 */
-    ret = CMN_FAILURE;
-    MLibUtilSetMemory8( &info, 0, sizeof ( MkMemMapEntry_t ) );
-
-    /* ページテーブル存在チェック */
-    if ( gPageMngTbl.usedDir[ dirId ] == CMN_UNUSED ) {
-        /* 存在しない */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* ブートデータ領域情報取得 */
-    ret = MemmngMapGetInfo( &info, MK_MEM_TYPE_BOOTDATA );
-
-    /* 取得結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* ブートデータ領域マッピング */
-    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
-                         info.pAddr,            /* 仮想アドレス            */
-                         info.pAddr,            /* 物理アドレス            */
-                         info.size,             /* サイズ                  */
-                         IA32_PAGING_G_YES,     /* グローバルページ属性    */
-                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
-                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* ページディレクトリ管理テーブルマッピング */
-#ifdef DEBUG_LOG_ENABLE
-    /* デバッグ用VRAM領域マッピング */
-    ret = MemmngPageSet(
-              dirId,                            /* ページディレクトリID    */
-              ( void * ) VGA_M3_VRAM_ADDR,      /* 仮想アドレス            */
-              ( void * ) VGA_M3_VRAM_ADDR,      /* 物理アドレス            */
-              VGA_M3_VRAM_SIZE,                 /* サイズ                  */
-              IA32_PAGING_G_YES,                /* グローバルページ属性    */
-              IA32_PAGING_US_USER,              /* ユーザ/スーパバイザ属性 */
-              IA32_PAGING_RW_RW            );   /* 読込/書込許可属性       */
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-#endif
-
-    /* カーネル領域情報取得 */
-    ret = MemmngMapGetInfo( &info, MK_MEM_TYPE_KERNEL );
-
-    /* 取得結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* カーネル領域マッピング */
-    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
-                         info.pAddr,            /* 仮想アドレス            */
-                         info.pAddr,            /* 物理アドレス            */
-                         info.size,             /* サイズ                  */
-                         IA32_PAGING_G_YES,     /* グローバルページ属性    */
-                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
-                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* ページディレクトリ管理テーブルマッピング */
-    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
-                         pgPageDir,             /* 仮想アドレス            */
-                         pgPageDir,             /* 物理アドレス            */
-                         gPageDirSize,          /* サイズ                  */
-                         IA32_PAGING_G_NO,      /* グローバルページ属性    */
-                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
-                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* ページテーブル管理テーブルマッピング */
-    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
-                         pgPageTbl,             /* 仮想アドレス            */
-                         pgPageTbl,             /* 物理アドレス            */
-                         gPageTblSize,          /* サイズ                  */
-                         IA32_PAGING_G_NO,      /* グローバルページ属性    */
-                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
-                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* プロセスイメージ領域情報取得 */
-    ret = MemmngMapGetInfo( &info, MK_MEM_TYPE_PROCIMG );
-
-    /* 取得結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    /* プロセスイメージ領域マッピング */
-    ret = MemmngPageSet( dirId,                 /* ページディレクトリID    */
-                         info.pAddr,            /* 仮想アドレス            */
-                         info.pAddr,            /* 物理アドレス            */
-                         info.size,             /* サイズ                  */
-                         IA32_PAGING_G_YES,     /* グローバルページ属性    */
-                         IA32_PAGING_US_SV,     /* ユーザ/スーパバイザ属性 */
-                         IA32_PAGING_RW_RW  );  /* 読込/書込許可属性       */
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-
-        return CMN_FAILURE;
-    }
-
-    return CMN_SUCCESS;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       ページディレクトリ設定（カーネル領域）
- * @details     引数dirIdのページディレクトリにアイドルプロセス用ページディレク
- *              トリの一部をコピーすることで、カーネルが使用するメモリ空間を設
- *              定する。
- *
- * @param[in]   dirId ページディレクトリID
- */
-/******************************************************************************/
-static void SetKernelPageDir( uint32_t dirId )
-{
-    MLibUtilCopyMemory( &pgPageDir[ dirId                   ],
-                        &pgPageDir[ MEMMNG_PAGE_DIR_ID_IDLE ],
-                        IA32_PAGING_GET_PDE_IDX( MK_CONFIG_SIZE_USER ) *
-                            sizeof( IA32PagingPDE_t )                    );
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       4KiBページマッピング解除
- * @details     4KiB物理メモリのページマッピングを解除する。
- *
- * @param[in]   dirId   ページディレクトリID
- * @param[in]   *pVAddr 仮想アドレス
- *
- * @attention   引数pVAddrは4KiBアライメントであること。
- */
-/******************************************************************************/
-static void PageUnset( uint32_t dirId,
-                       void     *pVAddr )
-{
-    uint32_t        id;         /* ページテーブルID   */
-    uint32_t        pdeIdx;     /* PDEインデックス    */
-    uint32_t        pteIdx;     /* PTEインデックス    */
-    IA32PagingPDE_t *pPde;      /* PDE参照            */
-    IA32PagingPTE_t *pPte;      /* PTE参照            */
-    IA32PagingTbl_t *pPageTbl;  /* ページテーブル参照 */
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start. dirId=%u, pVAddr=%010p",
-               __func__,
-               dirId,
-               pVAddr );*/
-
-    /* 初期化 */
-    pdeIdx   = IA32_PAGING_GET_PDE_IDX( pVAddr );
-    pteIdx   = IA32_PAGING_GET_PTE_IDX( pVAddr );
-    pPde     = &( pgPageDir[ dirId ].entry[ pdeIdx ] );
-    pPageTbl = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
-    pPte     = &( pPageTbl->entry[ pteIdx ] );
-
-    /* ページテーブル存在チェック */
-    if ( pPde->attr_p == IA32_PAGING_P_NO ) {
-        /* 存在しない */
-
-        /* デバッグトレースログ出力 *//*
-        DEBUG_LOG( "%s() end.", __func__ );*/
-
-        return;
-    }
-
-    /* ページ存在チェック */
-    if ( pPte->attr_p == IA32_PAGING_P_NO ) {
-        /* 存在しない */
-
-        /* デバッグトレースログ出力 *//*
-        DEBUG_LOG( "%s() end.", __func__ );*/
-
-        return;
-    }
-
     /* TLBフラッシュ */
-    IA32InstructionInvlpg( pVAddr );
+    IA32InstructionInvlpg( pVirtAddr );
 
-    /* PTE初期化 */
-    MLibUtilSetMemory8( pPte, 0, sizeof ( IA32PagingPTE_t ) );
+    return CMN_SUCCESS;
+}
 
-    /* ページテーブル内全エントリ繰り返し */
-    for ( pteIdx = 0; pteIdx < IA32_PAGING_PTE_NUM; pteIdx++ ) {
-        /* PTE参照変数設定 */
-        pPte = &( pPageTbl->entry[ pteIdx ] );
 
-        /* 使用中判定 */
-        if ( pPte->attr_p == IA32_PAGING_P_YES ) {
-            /* 使用中 */
+/******************************************************************************/
+/*
+ * @brief       ページディレクトリ操作領域マッピング設定
+ * @details     ページディレクトリを操作領域にマッピング設定する。
+ *
+ * @param[in]   *pPageDirPhys ページディレクトリ(物理アドレス)
+ */
+/******************************************************************************/
+static void SetPageDirMap( IA32PagingDir_t *pPageDirPhys )
+{
+    /* マッピング中アドレス比較 */
+    if ( gMapInfo.pPageDirPhys != pPageDirPhys ) {
+        /* 不一致 */
 
-            /* デバッグトレースログ出力 *//*
-            DEBUG_LOG( "%s() end.", __func__ );*/
+        /* マッピング中アドレス設定 */
+        gMapInfo.pPageDirPhys = pPageDirPhys;
 
+        /* マッピング */
+        MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
+                       ( IA32PagingDir_t * ) MAP_PAGE_DIR_ADDR,
+                       pPageDirPhys,
+                       sizeof ( IA32PagingDir_t ),
+                       IA32_PAGING_G_NO,
+                       IA32_PAGING_US_SV,
+                       IA32_PAGING_RW_RW                        );
+    }
+
+    return;
+}
+
+
+/******************************************************************************/
+/*
+ * @brief       ページテーブル操作領域マッピング設定
+ * @details     ページテーブルを操作領域にマッピング設定する。
+ *
+ * @param[in]   *pPageTblPhys ページテーブル(物理アドレス)
+ */
+/******************************************************************************/
+static void SetPageTblMap( IA32PagingTbl_t *pPageTblPhys )
+{
+    /* マッピング中アドレス比較 */
+    if ( gMapInfo.pPageTblPhys != pPageTblPhys ) {
+        /* 不一致 */
+
+        /* マッピング中アドレス設定 */
+        gMapInfo.pPageTblPhys = pPageTblPhys;
+
+        /* マッピング */
+        MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
+                       ( IA32PagingTbl_t * ) MAP_PAGE_TBL_ADDR,
+                       pPageTblPhys,
+                       sizeof ( IA32PagingTbl_t ),
+                       IA32_PAGING_G_NO,
+                       IA32_PAGING_US_SV,
+                       IA32_PAGING_RW_RW                        );
+    }
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ページテーブル解放試行
+ * @details     ページテーブル内のエントリが全て存在しない場合は、ページテーブ
+ *              ルを解放し、リンク元のページディレクトリエントリをクリアする。
+ *
+ * @param[in]   *pPde         ページディレクトリエントリ
+ * @param[in]   *pPageTblPhys ページテーブル(物理アドレス)
+ */
+/******************************************************************************/
+static void TryToFreePageTbl( IA32PagingPDE_t *pPde,
+                              IA32PagingTbl_t *pPageTblPhys )
+{
+    uint32_t        idx;        /* ページテーブルエントリインデックス */
+    IA32PagingTbl_t *pPageTbl;  /* ページテーブル                     */
+
+    /* 初期化 */
+    pPageTbl = ( IA32PagingTbl_t * ) MAP_PAGE_TBL_ADDR;
+
+    /* ページテーブル毎に繰り返す */
+    for ( idx = 0; idx < IA32_PAGING_PTE_NUM; idx++ ) {
+        /* 存在フラグ判定 */
+        if ( pPageTbl->entry[ idx ].attr_p == IA32_PAGING_P_YES ) {
+            /* 存在する */
             return;
         }
     }
 
-    /* 1ページテーブル毎に繰り返し */
-    for ( id = 0; id < MEMMNG_PAGE_TBL_NUM; id++ ) {
-        /* ページテーブルアドレス比較 */
-        if ( &pgPageTbl[ id ] == pPageTbl ) {
-            /* 一致 */
+    /* ページテーブル解放 */
+    FreePageTbl( pPageTblPhys );
 
-            /* ページテーブル解放 */
-            PageFreeTbl( id );
+    /* ページディレクトリエントリ初期化 */
+    MLibUtilSetMemory32( pPde, 0, sizeof ( IA32PagingTbl_t ) );
 
-            break;
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       4KBページマッピング解除
+ * @details     物理アドレスと仮想アドレスの4KBページをマッピング解除する。
+ *
+ * @param[in]   *pVirtAddr 仮想アドレス
+ *
+ * @attention   引数pVirtAddrは4KBアライメントされていること。
+ */
+/******************************************************************************/
+static void Unset( void *pVirtAddr )
+{
+    uint32_t        pdeIdx;         /* ページディレクトリエントリインデックス */
+    uint32_t        pteIdx;         /* ページテーブルエントリインデックス     */
+    IA32PagingDir_t *pPageDir;      /* ページディレクトリ                     */
+    IA32PagingTbl_t *pPageTbl;      /* ページテーブル                         */
+    IA32PagingTbl_t *pPageTblPhys;  /* ページテーブル(物理アドレス)           */
+    IA32PagingPDE_t *pPde;          /* ページディレクトリエントリ             */
+
+    /* 初期化 */
+    pdeIdx       = IA32_PAGING_GET_PDE_IDX( pVirtAddr );
+    pteIdx       = IA32_PAGING_GET_PTE_IDX( pVirtAddr );
+    pPageDir     = NULL;
+    pPageTbl     = NULL;
+    pPageTblPhys = NULL;
+    pPde         = NULL;
+
+    /* カーネル領域判定 */
+    if ( pVirtAddr < ( void * ) USER_AREA_ADDR ) {
+        /* カーネル領域 */
+
+        /* アドレス設定 */
+        pPageDir = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+        pPde     = &( pPageDir->entry[ pdeIdx ] );
+        pPageTbl = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
+
+    } else {
+        /* ユーザ領域 */
+
+        /* アドレス設定 */
+        pPageDir = ( IA32PagingDir_t * ) MAP_PAGE_DIR_ADDR;
+        pPde     = &( pPageDir->entry[ pdeIdx ] );
+        pPageTbl = ( IA32PagingTbl_t * ) MAP_PAGE_TBL_ADDR;
+
+        /* ページテーブル存在チェック */
+        if ( pPde->attr_p == IA32_PAGING_P_NO ) {
+            /* 存在しない */
+
+            return;
         }
+
+        /* ページテーブルアドレス取得 */
+        pPageTblPhys = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
+
+        /* ページテーブル操作領域マッピング */
+        SetPageTblMap( pPageTblPhys );
     }
 
-    /* PDE初期化 */
-    MLibUtilSetMemory8( pPde, 0, sizeof ( IA32PagingPDE_t ) );
+    /* ページテーブルエントリ初期化 */
+    MLibUtilSetMemory32( &( pPageTbl->entry[ pteIdx ] ),
+                         0,
+                         sizeof ( IA32PagingPTE_t )      );
 
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
+    /* TLBフラッシュ */
+    IA32InstructionInvlpg( pVirtAddr );
+
+    /* カーネル領域判定 */
+    if ( pVirtAddr >= ( void * ) USER_AREA_ADDR ) {
+        /* ユーザ領域 */
+
+        /* ページテーブル解放試行 */
+        TryToFreePageTbl( pPde, pPageTblPhys );
+    }
 
     return;
 }

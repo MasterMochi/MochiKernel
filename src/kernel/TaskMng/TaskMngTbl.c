@@ -77,7 +77,7 @@ static MLibList_t gProcChunkList;
 /******************************************************************************/
 /**
  * @brief       プロセス管理情報割当て
- * @detais      プロセス管理テーブルチャンクからの最初に見つかった未使用プロセ
+ * @details     プロセス管理テーブルチャンクからの最初に見つかった未使用プロセ
  *              ス管理情報を返す。全てのチャンクに未使用のプロセス管理情報が無
  *              かった場合、新しいチャンクを追加して割り当てる。
  *
@@ -136,7 +136,7 @@ TblProcInfo_t *TblAllocProcInfo( void )
 /******************************************************************************/
 /**
  * @brief       スレッド管理情報割当て
- * @detais      プロセス管理情報*pProcInfo内のスレッド管理テーブルチャンクから
+ * @details     プロセス管理情報*pProcInfo内のスレッド管理テーブルチャンクから
  *              最初に見つかった未使用スレッド管理情報を返す。全てのチャンクに
  *              未使用のスレッド管理情報が無かった場合、新しいチャンクを追加し
  *              て割り当てる。
@@ -200,7 +200,7 @@ TblThreadInfo_t *TblAllocThreadInfo( TblProcInfo_t *pProcInfo )
  * @brief       プロセス管理情報解放
  * @details     プロセス管理情報を解放する。
  *
- * @params[in]  *pProcInfo プロセス管理情報
+ * @param[in]   *pProcInfo プロセス管理情報
  */
 /******************************************************************************/
 void TblFreeProcInfo( TblProcInfo_t *pProcInfo )
@@ -225,7 +225,7 @@ void TblFreeProcInfo( TblProcInfo_t *pProcInfo )
  * @brief       スレッド管理情報解放
  * @details     スレッド管理情報を解放する。
  *
- * @params[in]  *pThreadInfo スレッド管理情報
+ * @param[in]   *pThreadInfo スレッド管理情報
  */
 /******************************************************************************/
 void TblFreeThreadInfo( TblThreadInfo_t *pThreadInfo )

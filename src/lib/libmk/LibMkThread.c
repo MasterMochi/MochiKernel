@@ -33,7 +33,7 @@
  * @param[in]   *pArg       スレッドエントリ関数引数
  * @param[in]   *pStackAddr スタックアドレス
  * @param[in]   stackSize   スタックサイズ
- * @param[out]  *pTadkId    タスクID
+ * @param[out]  *pTaskId    タスクID
  * @param[out]  *pErr       エラー内容
  *                  - MK_ERR_NONE        エラー無し
  *                  - MK_ERR_NO_RESOURCE リソース不足

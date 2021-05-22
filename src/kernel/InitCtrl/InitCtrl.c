@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/InitCtrl/InitCtrl.c                                             */
-/*                                                                 2021/02/01 */
+/*                                                                 2021/05/22 */
 /* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -28,7 +28,7 @@
 #include <IoCtrl.h>
 #include <ItcCtrl.h>
 #include <Memmng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 #include <TimerMng.h>
 
 
@@ -91,7 +91,7 @@ void InitCtrlInit( void )
     IntMngInit();
 
     /* タスク管理モジュール初期化 */
-    TaskMngInit();
+    TaskmngInit();
 
     /* タイマ管理モジュール初期化 */
     TimerMngInit();
@@ -180,7 +180,7 @@ static void LoadProcImg( void )
         }
 
         /* プロセス追加 */
-        pid = TaskMngProcAdd( type,
+        pid = TaskmngProcAdd( type,
                               pAddr,
                               pHeader->fileSize );
 
@@ -189,13 +189,13 @@ static void LoadProcImg( void )
             /* 失敗 */
 
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "TaskMngProcAdd() error." );
+            DEBUG_LOG( "TaskmngProcAdd() error." );
 
         } else {
             /* 成功 */
 
             /* デバッグトレースログ出力 */
-            DEBUG_LOG( "TaskMngProcAdd() OK. pid=%d", pid );
+            DEBUG_LOG( "TaskmngProcAdd() OK. pid=%d", pid );
         }
 
         /* アドレス更新 */

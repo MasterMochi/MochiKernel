@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMngProc.c                                           */
-/*                                                                 2021/05/15 */
+/* src/kernel/Taskmng/TaskmngProc.c                                           */
+/*                                                                 2021/05/22 */
 /* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -25,14 +25,14 @@
 #include <Debug.h>
 #include <IntMng.h>
 #include <Memmng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngElf.h"
-#include "TaskMngSched.h"
-#include "TaskMngTask.h"
-#include "TaskMngTbl.h"
-#include "TaskMngThread.h"
+#include "TaskmngElf.h"
+#include "TaskmngSched.h"
+#include "TaskmngTask.h"
+#include "TaskmngTbl.h"
+#include "TaskmngThread.h"
 
 
 /******************************************************************************/
@@ -80,7 +80,7 @@ static void SetBreakPoint( MkProcParam_t *pParam );
  * @retval      MK_PID_MAX  タスクID最大値
  */
 /******************************************************************************/
-MkPid_t TaskMngProcAdd( uint8_t type,
+MkPid_t TaskmngProcAdd( uint8_t type,
                         void    *pAddr,
                         size_t  size    )
 {

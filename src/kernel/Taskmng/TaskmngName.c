@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMngName.c                                           */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2019-2020 Mochi.                                             */
+/* src/kernel/Taskmng/TaskmngName.c                                           */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -25,7 +25,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 
 /******************************************************************************/
@@ -191,10 +191,10 @@ static void doRegister( MkTaskNameParam_t *pParam )
     }
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     if ( type == TASKMNG_PROC_TYPE_USER ) {
         /* ユーザプロセス　*/
@@ -295,10 +295,10 @@ static void doUnregister( MkTaskNameParam_t *pParam )
     TaskNameEntry_t *pEntry;    /* エントリ       */
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type == TASKMNG_PROC_TYPE_USER ) {

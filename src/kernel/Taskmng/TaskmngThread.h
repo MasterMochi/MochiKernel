@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMngThread.h                                         */
-/*                                                                 2019/08/08 */
-/* Copyright (C) 2019 Mochi.                                                  */
+/* src/kernel/Taskmng/TaskmngThread.h                                         */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef TASKMNG_THREAD_H
@@ -14,7 +14,7 @@
 #include <kernel/types.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngTbl.h"
+#include "TaskmngTbl.h"
 
 
 /******************************************************************************/

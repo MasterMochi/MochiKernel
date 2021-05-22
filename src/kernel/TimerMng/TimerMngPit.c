@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TimerMng/TimerMngPit.c                                          */
-/*                                                                 2019/07/22 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -22,7 +22,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 #include <TimerMng.h>
 
 /* 内部モジュールヘッダ */
@@ -71,7 +71,7 @@ void TimerMngPitHdlInt( uint32_t        intNo,
     CtrlRun();
 
     /* スケジューラ実行 */
-    TaskMngSchedExec();
+    TaskmngSchedExec();
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() end.", __func__ );*/

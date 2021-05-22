@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/ItcCtrl/ItcCtrlMsg.c                                            */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -29,7 +29,7 @@
 #include <Debug.h>
 #include <IntMng.h>
 #include <Memmng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 #include <TimerMng.h>
 
 
@@ -206,7 +206,7 @@ static bool CheckValid( MkTaskId_t self,
     *pErr = MK_ERR_NONE;
 
     /* 他タスク存在確認 */
-    exist = TaskMngTaskCheckExist( other );
+    exist = TaskmngTaskCheckExist( other );
 
     /* 確認結果判定 */
     if ( exist == false ) {
@@ -219,7 +219,7 @@ static bool CheckValid( MkTaskId_t self,
     }
 
     /* プロセス階層差取得 */
-    diff = TaskMngTaskGetTypeDiff( self, other );
+    diff = TaskmngTaskGetTypeDiff( self, other );
 
     /* 階層差判定 */
     if ( diff > 1 ) {
@@ -263,7 +263,7 @@ static void DoReceive( MkMsgParam_t *pParam )
     size     = 0;
     err      = MK_ERR_NONE;
     tick     = 0;
-    taskId   = TaskMngSchedGetTaskId();
+    taskId   = TaskmngSchedGetTaskId();
     pDstInfo = &( gMngTbl[ taskId ] );
 
     /* 受信ループ */
@@ -317,7 +317,7 @@ static void DoReceive( MkMsgParam_t *pParam )
                 /* 送信待ち状態 */
 
                 /* 送信元タスクスケジュール開始 */
-                TaskMngSchedStart( pMsg->src );
+                TaskmngSchedStart( pMsg->src );
             }
 
             /* タイマ解除 */
@@ -385,10 +385,10 @@ static void DoReceive( MkMsgParam_t *pParam )
         pDstInfo->state = STATE_RECVWAIT;
 
         /* スケジュール停止 */
-        TaskMngSchedStop( taskId );
+        TaskmngSchedStop( taskId );
 
         /* スケジュール実行 */
-        TaskMngSchedExec();
+        TaskmngSchedExec();
 
         /* タイムアウト判定 */
         if ( pDstInfo->state == STATE_RECVTIMEOUT ) {
@@ -438,10 +438,10 @@ static void DoSend( MkMsgParam_t *pParam )
     gMngTbl[ taskId ].state = STATE_SENDWAIT;
 
     /* スケジュール停止 */
-    TaskMngSchedStop( taskId );
+    TaskmngSchedStop( taskId );
 
     /* スケジュール実行 */
-    TaskMngSchedExec();
+    TaskmngSchedExec();
 
     /* 状態初期化 */
     gMngTbl[ taskId ].state = STATE_INIT;
@@ -476,7 +476,7 @@ static void DoSendCmn( MkTaskId_t   *pTaskId,
     /* 初期化 */
     valid    = false;
     err      = MK_ERR_NONE;
-    *pTaskId = TaskMngSchedGetTaskId();
+    *pTaskId = TaskmngSchedGetTaskId();
 
     /* タスク有効チェック */
     valid = CheckValid( *pTaskId, pParam->send.dst, &err );
@@ -531,7 +531,7 @@ static void DoSendCmn( MkTaskId_t   *pTaskId,
             /* 自タスクIDまたはANY */
 
             /* 送信先タスクスケジュール開始 */
-            TaskMngSchedStart( pParam->send.dst );
+            TaskmngSchedStart( pParam->send.dst );
         }
     }
 
@@ -655,10 +655,10 @@ static void TimeoutReceive( uint32_t timerId,
     pDstInfo->timerId = TIMERMNG_TIMERID_NULL;
 
     /* スケジュール開始 */
-    TaskMngSchedStart( taskId );
+    TaskmngSchedStart( taskId );
 
     /* スケジューラ実行 */
-    TaskMngSchedExec();
+    TaskmngSchedExec();
 
     return;
 }

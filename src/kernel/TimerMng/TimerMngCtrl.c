@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/TimerMng/TimerMngCtrl.c                                         */
-/*                                                                 2020/05/28 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,7 +24,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 #include <TimerMng.h>
 
 
@@ -162,7 +162,7 @@ uint32_t TimerMngCtrlSet( uint32_t       tick,
     pTimerInfo->type   = type;
     pTimerInfo->pFunc  = pFunc;
     pTimerInfo->pArg   = pArg;
-    pTimerInfo->taskId = TaskMngSchedGetTaskId();
+    pTimerInfo->taskId = TaskmngSchedGetTaskId();
 
     /* 使用中タイマ情報リスト設定 */
     Set( pTimerInfo );
@@ -464,10 +464,10 @@ static void Sleep( MkTimerParam_t *pParam )
     }
 
     /* スケジュール停止 */
-    TaskMngSchedStop( gTimerInfoTbl[ timerId ].taskId );
+    TaskmngSchedStop( gTimerInfoTbl[ timerId ].taskId );
 
     /* スケジューラ実行 */
-    TaskMngSchedExec();
+    TaskmngSchedExec();
 
     /* アウトプットパラメータ設定 */
     pParam->ret = MK_RET_SUCCESS;
@@ -490,10 +490,10 @@ static void SleepTimeout( uint32_t timerId,
                           void     *pArg    )
 {
     /* スケジュール開始 */
-    TaskMngSchedStart( gTimerInfoTbl[ timerId ].taskId );
+    TaskmngSchedStart( gTimerInfoTbl[ timerId ].taskId );
 
     /* スケジューラ実行 */
-    TaskMngSchedExec();
+    TaskmngSchedExec();
 
     return;
 }

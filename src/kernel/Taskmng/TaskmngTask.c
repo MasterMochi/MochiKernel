@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMngTask.c                                           */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/* src/kernel/Taskmng/TaskmngTask.c                                           */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -26,12 +26,12 @@
 #include <Debug.h>
 #include <IntMng.h>
 #include <Memmng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngSched.h"
-#include "TaskMngTbl.h"
-#include "TaskMngTask.h"
+#include "TaskmngSched.h"
+#include "TaskmngTbl.h"
+#include "TaskmngTask.h"
 
 
 /******************************************************************************/
@@ -75,7 +75,7 @@ static void Start( void );
  * @retval      false タスク無
  */
 /******************************************************************************/
-bool TaskMngTaskCheckExist( MkTaskId_t taskId )
+bool TaskmngTaskCheckExist( MkTaskId_t taskId )
 {
     return ( TblGetTaskInfo( taskId ) != NULL );
 }
@@ -97,7 +97,7 @@ bool TaskMngTaskCheckExist( MkTaskId_t taskId )
  * @retval      TASKMNG_PROC_TYPE_USER   ユーザ
  */
 /******************************************************************************/
-uint8_t TaskMngTaskGetType( MkTaskId_t taskId )
+uint8_t TaskmngTaskGetType( MkTaskId_t taskId )
 {
     TblProcInfo_t *pProcInfo;   /* プロセス管理情報 */
 
@@ -132,15 +132,15 @@ uint8_t TaskMngTaskGetType( MkTaskId_t taskId )
  * @retval      3 差3
  */
 /******************************************************************************/
-uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
+uint8_t TaskmngTaskGetTypeDiff( MkTaskId_t taskId1,
                                 MkTaskId_t taskId2  )
 {
     uint8_t type1;  /* プロセスタイプ */
     uint8_t type2;  /* プロセスタイプ */
 
     /* プロセスタイプ取得 */
-    type1 = TaskMngTaskGetType( taskId1 );
-    type2 = TaskMngTaskGetType( taskId2 );
+    type1 = TaskmngTaskGetType( taskId1 );
+    type2 = TaskmngTaskGetType( taskId2 );
 
     return MLIB_UTIL_MAX( type1, type2 ) - MLIB_UTIL_MIN( type1, type2 );
 }
@@ -246,7 +246,7 @@ void TaskInit( void )
 static void DoGetId( MkTaskParam_t *pParam )
 {
     /* タスクID取得 */
-    pParam->taskId = TaskMngSchedGetTaskId();
+    pParam->taskId = TaskmngSchedGetTaskId();
 
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;

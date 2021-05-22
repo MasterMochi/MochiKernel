@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlMem.c                                              */
-/*                                                                 2021/05/05 */
+/*                                                                 2021/05/22 */
 /* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -16,7 +16,7 @@
 #include <Debug.h>
 #include <IntMng.h>
 #include <Memmng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 
 /******************************************************************************/
@@ -95,9 +95,9 @@ static void Alloc( MkIoMemParam_t *pParam )
 
     /* 初期化 */
     dirId  = MemmngPageGetDirId();
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
     pid    = MK_TASKID_TO_PID( taskId );
-    type   = TaskMngTaskGetType( taskId );
+    type   = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {

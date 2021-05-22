@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IntMngCtrl/IntMngCtrl.c                                         */
-/*                                                                 2019/08/30 */
+/*                                                                 2021/05/22 */
 /* Copyright (C) 2018-2019 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -22,7 +22,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 /* 内部モジュールヘッダ */
 
@@ -452,10 +452,10 @@ static void HdlSwInt( uint32_t        intNo,
     }
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {
@@ -551,7 +551,7 @@ static void HdlHwInt( uint32_t        intNo,
         /* 待ち状態 */
 
         /* スケジュール開始 */
-        TaskMngSchedStart( gWaitInfo[ index ].taskId );
+        TaskmngSchedStart( gWaitInfo[ index ].taskId );
     }
 
     return;
@@ -717,10 +717,10 @@ static void Wait( MkTaskId_t   taskId,
         gWaitInfo[ index ].state = STATE_WAIT;
 
         /* スケジュール停止 */
-        TaskMngSchedStop( taskId );
+        TaskmngSchedStop( taskId );
 
         /* スケジューラ実行 */
-        TaskMngSchedExec();
+        TaskmngSchedExec();
     }
 
     /* 戻り値設定 */

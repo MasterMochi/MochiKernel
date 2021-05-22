@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMng.c                                               */
-/*                                                                 2019/08/09 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/* src/kernel/Taskmng/Taskmng.c                                               */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -17,13 +17,13 @@
 #include <Debug.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngName.h"
-#include "TaskMngProc.h"
-#include "TaskMngSched.h"
-#include "TaskMngTask.h"
-#include "TaskMngTbl.h"
-#include "TaskMngThread.h"
-#include "TaskMngTss.h"
+#include "TaskmngName.h"
+#include "TaskmngProc.h"
+#include "TaskmngSched.h"
+#include "TaskmngTask.h"
+#include "TaskmngTbl.h"
+#include "TaskmngThread.h"
+#include "TaskmngTss.h"
 
 
 /******************************************************************************/
@@ -49,7 +49,7 @@
  * @details     タスク管理内サブモジュールの初期化を行う。
  */
 /******************************************************************************/
-void TaskMngInit( void )
+void TaskmngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );

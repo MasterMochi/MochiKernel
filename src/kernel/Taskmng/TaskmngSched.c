@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMngSched.c                                          */
-/*                                                                 2021/05/05 */
+/* src/kernel/Taskmng/TaskmngSched.c                                          */
+/*                                                                 2021/05/22 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -29,9 +29,9 @@
 #include <Memmng.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngSched.h"
-#include "TaskMngTbl.h"
-#include "TaskMngTss.h"
+#include "TaskmngSched.h"
+#include "TaskmngTbl.h"
+#include "TaskmngTss.h"
 
 
 /******************************************************************************/
@@ -118,7 +118,7 @@ static schedTbl_t gSchedTbl;
  * @details     スケジューラを実行して次に実行可能なタスクにタスクスイッチする。
  */
 /******************************************************************************/
-void TaskMngSchedExec( void )
+void TaskmngSchedExec( void )
 {
     uint32_t      level;            /* 実行中レベル           */
     TblProcInfo_t *pRunProcInfo;    /* 実行中プロセス管理情報 */
@@ -264,7 +264,7 @@ void TaskMngSchedExec( void )
  * @retval      MK_TASKID_MAX タスクID最大値
  */
 /******************************************************************************/
-MkTaskId_t TaskMngSchedGetTaskId( void )
+MkTaskId_t TaskmngSchedGetTaskId( void )
 {
     /* タスクID返却 */
     return gSchedTbl.pRunTaskInfo->taskId;
@@ -279,7 +279,7 @@ MkTaskId_t TaskMngSchedGetTaskId( void )
  * @param[in]   taskId タスクID
  */
 /******************************************************************************/
-void TaskMngSchedStart( MkTaskId_t taskId )
+void TaskmngSchedStart( MkTaskId_t taskId )
 {
     MLibRet_t     retMLib;      /* MLib関数戻り値 */
     TblTaskInfo_t *pTaskInfo;   /* タスク管理情報 */
@@ -317,7 +317,7 @@ void TaskMngSchedStart( MkTaskId_t taskId )
  * @param[in]   taskId タスクID
  */
 /******************************************************************************/
-void TaskMngSchedStop( MkTaskId_t taskId )
+void TaskmngSchedStop( MkTaskId_t taskId )
 {
     MLibList_t    *pTaskQ0;     /* タスクキュー     */
     MLibList_t    *pTaskQ1;     /* タスクキュー     */

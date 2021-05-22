@@ -1,8 +1,8 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2020/12/31 *#
-#* Copyright (C) 2016-2020 Mochi.                                             *#
+#*                                                                 2021/05/22 *#
+#* Copyright (C) 2016-2021 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
 #******************************************************************************#
@@ -25,15 +25,15 @@ SRCS += Memmng/MemmngMap.c
 SRCS += Memmng/MemmngPhys.c
 SRCS += Memmng/MemmngIo.c
 SRCS += Memmng/MemmngVirt.c
-SRCS += TaskMng/TaskMng.c
-SRCS += TaskMng/TaskMngElf.c
-SRCS += TaskMng/TaskMngName.c
-SRCS += TaskMng/TaskMngProc.c
-SRCS += TaskMng/TaskMngSched.c
-SRCS += TaskMng/TaskMngTask.c
-SRCS += TaskMng/TaskMngTbl.c
-SRCS += TaskMng/TaskMngThread.c
-SRCS += TaskMng/TaskMngTss.c
+SRCS += Taskmng/Taskmng.c
+SRCS += Taskmng/TaskmngElf.c
+SRCS += Taskmng/TaskmngName.c
+SRCS += Taskmng/TaskmngProc.c
+SRCS += Taskmng/TaskmngSched.c
+SRCS += Taskmng/TaskmngTask.c
+SRCS += Taskmng/TaskmngTbl.c
+SRCS += Taskmng/TaskmngThread.c
+SRCS += Taskmng/TaskmngTss.c
 SRCS += IntMng/IntMng.c
 SRCS += IntMng/IntMngIdt.c
 SRCS += IntMng/IntMngHdl.c

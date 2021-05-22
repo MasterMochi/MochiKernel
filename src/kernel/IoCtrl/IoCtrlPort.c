@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlPort.c                                             */
-/*                                                                 2020/07/18 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,7 +18,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <IntMng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 
 /******************************************************************************/
@@ -179,10 +179,10 @@ static void InByte( MkIoPortParam_t *pParam )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {
@@ -225,10 +225,10 @@ static void InWord( MkIoPortParam_t *pParam )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {
@@ -271,10 +271,10 @@ static void InDword( MkIoPortParam_t *pParam )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {
@@ -318,10 +318,10 @@ static void OutByte( MkIoPortParam_t *pParam )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {
@@ -367,10 +367,10 @@ static void OutWord( MkIoPortParam_t *pParam )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {
@@ -413,10 +413,10 @@ static void OutDword( MkIoPortParam_t *pParam )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* タスクID取得 */
-    taskId = TaskMngSchedGetTaskId();
+    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
-    type = TaskMngTaskGetType( taskId );
+    type = TaskmngTaskGetType( taskId );
 
     /* プロセスタイプチェック */
     if ( type != TASKMNG_PROC_TYPE_DRIVER ) {

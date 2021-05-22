@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/include/TaskMng.h                                               */
-/*                                                                 2019/08/09 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/* src/kernel/include/Taskmng.h                                               */
+/*                                                                 2021/05/22 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef TASKMNG_H
@@ -39,40 +39,40 @@
 /* グローバル関数プロトタイプ宣言                                             */
 /******************************************************************************/
 /*-----------*/
-/* TaskMng.c */
+/* Taskmng.c */
 /*-----------*/
 /* タスク管理初期化 */
-extern void TaskMngInit( void );
+extern void TaskmngInit( void );
 
 /*----------------*/
-/* TaskMngSched.c */
+/* TaskmngSched.c */
 /*----------------*/
 /* スケジューラ実行 */
-extern void TaskMngSchedExec( void );
+extern void TaskmngSchedExec( void );
 /* タスクID取得 */
-extern MkTaskId_t TaskMngSchedGetTaskId( void );
+extern MkTaskId_t TaskmngSchedGetTaskId( void );
 /* スケジュール開始 */
-extern void TaskMngSchedStart( MkTaskId_t taskId );
+extern void TaskmngSchedStart( MkTaskId_t taskId );
 /* スケジュール停止 */
-extern void TaskMngSchedStop( MkTaskId_t taskId );
+extern void TaskmngSchedStop( MkTaskId_t taskId );
 
 /*---------------*/
-/* TaskMngProc.c */
+/* TaskmngProc.c */
 /*---------------*/
 /* プロセス追加 */
-extern MkPid_t TaskMngProcAdd( uint8_t type,
+extern MkPid_t TaskmngProcAdd( uint8_t type,
                                void    *pAddr,
                                size_t  size    );
 
 /*---------------*/
-/* TaskMngTask.c */
+/* TaskmngTask.c */
 /*---------------*/
 /* タスク存在確認 */
-extern bool TaskMngTaskCheckExist( MkTaskId_t taskId );
+extern bool TaskmngTaskCheckExist( MkTaskId_t taskId );
 /* タスクタイプ取得 */
-extern uint8_t TaskMngTaskGetType( MkTaskId_t taskId );
+extern uint8_t TaskmngTaskGetType( MkTaskId_t taskId );
 /* プロセス階層差取得 */
-extern uint8_t TaskMngTaskGetTypeDiff( MkTaskId_t taskId1,
+extern uint8_t TaskmngTaskGetTypeDiff( MkTaskId_t taskId1,
                                        MkTaskId_t taskId2  );
 
 

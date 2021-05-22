@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
-/* src/kernel/TaskMng/TaskMngThread.c                                         */
-/*                                                                 2021/05/05 */
+/* src/kernel/Taskmng/TaskmngThread.c                                         */
+/*                                                                 2021/05/22 */
 /* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -24,13 +24,13 @@
 #include <Debug.h>
 #include <IntMng.h>
 #include <Memmng.h>
-#include <TaskMng.h>
+#include <Taskmng.h>
 
 /* 内部モジュールヘッダ */
-#include "TaskMngSched.h"
-#include "TaskMngTask.h"
-#include "TaskMngTbl.h"
-#include "TaskMngThread.h"
+#include "TaskmngSched.h"
+#include "TaskmngTask.h"
+#include "TaskmngTbl.h"
+#include "TaskmngThread.h"
 
 
 /******************************************************************************/

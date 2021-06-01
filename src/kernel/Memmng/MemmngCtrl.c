@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngCtrl.c                                             */
-/*                                                                 2021/05/05 */
+/*                                                                 2021/05/30 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -154,12 +154,12 @@ void MemmngCtrlSet( void    *pPAddr,
     CmnRet_t          ret;      /* 関数戻り値           */
     MemmngPageDirId_t dirId;    /* ページディレクトリID */
 
-    /* デバッグトレースログ出力 */
+    /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. pPAddr=%010p, value=%0#4X, size=%#X",
                __func__,
                pPAddr,
                value,
-               size );
+               size );*/
 
     /* ページディレクトリID取得 */
     dirId = MemmngPageGetDirId();
@@ -212,8 +212,8 @@ void MemmngCtrlSet( void    *pPAddr,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                      MK_CONFIG_SIZE_KERNEL_MAP );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() end.", __func__ );*/
 
     return;
 }

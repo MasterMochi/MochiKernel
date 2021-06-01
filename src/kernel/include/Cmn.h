@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2020/11/03 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/*                                                                 2021/05/29 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef CMN_H
@@ -47,7 +47,6 @@
 #define CMN_MODULE_TASKMNG_PROC   ( 0x0406 )/**< タスク管理(プロセス)         */
 #define CMN_MODULE_TASKMNG_NAME   ( 0x0407 )/**< タスク管理(名前管理)         */
 #define CMN_MODULE_TASKMNG_THREAD ( 0x0408 )/**< タスク管理(スレッド)         */
-#define CMN_MODULE_TASKMNG_TBL    ( 0x0409 )/**< タスク管理(テーブル)         */
 #define CMN_MODULE_INTMNG_MAIN    ( 0x0501 )/**< 割込み管理(メイン)           */
 #define CMN_MODULE_INTMNG_PIC     ( 0x0502 )/**< 割込み管理(PIC)              */
 #define CMN_MODULE_INTMNG_IDT     ( 0x0503 )/**< 割込み管理(IDT)              */

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/Taskmng.c                                               */
-/*                                                                 2021/05/22 */
+/*                                                                 2021/05/29 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -21,7 +21,6 @@
 #include "TaskmngProc.h"
 #include "TaskmngSched.h"
 #include "TaskmngTask.h"
-#include "TaskmngTbl.h"
 #include "TaskmngThread.h"
 #include "TaskmngTss.h"
 
@@ -53,9 +52,6 @@ void TaskmngInit( void )
 {
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-
-    /* テーブル管理初期化 */
-    TblInit();
 
     /* プロセス制御初期化 */
     ProcInit();

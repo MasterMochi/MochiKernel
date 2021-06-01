@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2021/05/22 *#
+#*                                                                 2021/05/29 *#
 #* Copyright (C) 2016-2021 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -31,7 +31,6 @@ SRCS += Taskmng/TaskmngName.c
 SRCS += Taskmng/TaskmngProc.c
 SRCS += Taskmng/TaskmngSched.c
 SRCS += Taskmng/TaskmngTask.c
-SRCS += Taskmng/TaskmngTbl.c
 SRCS += Taskmng/TaskmngThread.c
 SRCS += Taskmng/TaskmngTss.c
 SRCS += IntMng/IntMng.c

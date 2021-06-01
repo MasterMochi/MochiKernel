@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.c                                           */
-/*                                                                 2021/05/22 */
+/*                                                                 2021/05/29 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -30,7 +30,6 @@
 
 /* 内部モジュールヘッダ */
 #include "TaskmngSched.h"
-#include "TaskmngTbl.h"
 #include "TaskmngTask.h"
 
 
@@ -77,7 +76,7 @@ static void Start( void );
 /******************************************************************************/
 bool TaskmngTaskCheckExist( MkTaskId_t taskId )
 {
-    return ( TblGetTaskInfo( taskId ) != NULL );
+    return ( TaskGetInfo( taskId ) != NULL );
 }
 
 
@@ -99,10 +98,10 @@ bool TaskmngTaskCheckExist( MkTaskId_t taskId )
 /******************************************************************************/
 uint8_t TaskmngTaskGetType( MkTaskId_t taskId )
 {
-    TblProcInfo_t *pProcInfo;   /* プロセス管理情報 */
+    ProcInfo_t *pProcInfo;  /* プロセス管理情報 */
 
     /* プロセス管理情報取得 */
-    pProcInfo = TblGetProcInfo( MK_TASKID_TO_PID( taskId ) );
+    pProcInfo = ProcGetInfo( MK_TASKID_TO_PID( taskId ) );
 
     /* 取得結果判定 */
     if ( pProcInfo == NULL ) {
@@ -163,7 +162,7 @@ uint8_t TaskmngTaskGetTypeDiff( MkTaskId_t taskId1,
  * @retval      MK_TASKID_MAX  タスクID最大値
  */
 /******************************************************************************/
-MkTaskId_t TaskAdd( TblTaskInfo_t *pTaskInfo )
+MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
 {
     CmnRet_t ret;   /* 関数戻り値 */
 
@@ -200,13 +199,52 @@ MkTaskId_t TaskAdd( TblTaskInfo_t *pTaskInfo )
 
 /******************************************************************************/
 /**
+ * @brief       タスク管理情報取得
+ * @details     タスクIDのタスク管理情報を取得する。
+ *
+ * @param[in]   taskId タスクID
+ *
+ * @return      タスク管理情報を返す。
+ * @retval      NULL     失敗
+ * @retval      NULL以外 成功(タスク管理情報)
+ */
+/******************************************************************************/
+TaskInfo_t *TaskGetInfo( MkTaskId_t taskId )
+{
+    ProcInfo_t   *pProcInfo;    /* プロセス管理情報 */
+    ThreadInfo_t *pThreadInfo;  /* スレッド管理情報 */
+
+    /* 初期化 */
+    pProcInfo   = NULL;
+    pThreadInfo = NULL;
+
+    /* プロセス管理情報取得 */
+    pProcInfo = ProcGetInfo( MK_TASKID_TO_PID( taskId ) );
+
+    /* 取得結果判定 */
+    if ( pProcInfo == NULL ) {
+        /* 失敗 */
+
+        return NULL;
+    }
+
+    /* スレッド管理情報取得 */
+    pThreadInfo = ThreadGetInfo( pProcInfo,
+                                 MK_TASKID_TO_TID( taskId ) );
+
+    return ( TaskInfo_t * ) pThreadInfo;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       タスク制御初期化
  * @details     アイドルタスク管理情報を設定する。
  */
 /******************************************************************************/
 void TaskInit( void )
 {
-    TblTaskInfo_t *pIdleTaskInfo;   /* アイドルタスク管理情報 */
+    TaskInfo_t *pIdleTaskInfo;  /* アイドルタスク管理情報 */
 
     /* 初期化 */
     pIdleTaskInfo = NULL;
@@ -215,7 +253,7 @@ void TaskInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* アイドルタスク管理情報取得 */
-    pIdleTaskInfo = TblGetTaskInfo( TASKMNG_TASKID_IDLE );
+    pIdleTaskInfo = TaskGetInfo( TASKMNG_TASKID_IDLE );
 
     /* アイドルタスク管理情報設定 */
     pIdleTaskInfo->state = 0;
@@ -317,12 +355,12 @@ static void HdlInt( uint32_t        intNo,
 /******************************************************************************/
 static void Start( void )
 {
-    void          *pEntryPoint; /* エントリポイント         */
-    void          *pStack;      /* スタックアドレス         */
-    uint32_t      codeSegSel;   /* コードセグメントセレクタ */
-    uint32_t      dataSegSel;   /* データセグメントセレクタ */
-    TblTaskInfo_t *pTaskInfo;   /* タスク管理情報           */
-    TblProcInfo_t *pProcInfo;   /* プロセス管理情報         */
+    void       *pEntryPoint;    /* エントリポイント         */
+    void       *pStack;         /* スタックアドレス         */
+    uint32_t   codeSegSel;      /* コードセグメントセレクタ */
+    uint32_t   dataSegSel;      /* データセグメントセレクタ */
+    TaskInfo_t *pTaskInfo;      /* タスク管理情報           */
+    ProcInfo_t *pProcInfo;      /* プロセス管理情報         */
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );

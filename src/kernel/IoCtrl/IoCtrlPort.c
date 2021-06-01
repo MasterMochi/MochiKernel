@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IoCtrl/IoCtrlPort.c                                             */
-/*                                                                 2021/05/22 */
+/*                                                                 2021/05/30 */
 /* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -175,8 +175,8 @@ static void InByte( MkIoPortParam_t *pParam )
     uint8_t    type;    /* プロセスタイプ */
     MkTaskId_t taskId;  /* タスクID       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() start.", __func__ );*/
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -201,8 +201,8 @@ static void InByte( MkIoPortParam_t *pParam )
     /* [TODO]ストリング命令 */
     IA32InstructionInByte( pParam->pData, pParam->portNo );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() end.", __func__ );*/
 
     return;
 }
@@ -314,8 +314,8 @@ static void OutByte( MkIoPortParam_t *pParam )
     uint32_t   idx;     /* インデックス   */
     MkTaskId_t taskId;  /* タスクID       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() start.", __func__ );*/
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -343,8 +343,8 @@ static void OutByte( MkIoPortParam_t *pParam )
                                 ( ( uint8_t * ) pParam->pData )[ idx ] );
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    /* デバッグトレースログ出力 *//*
+    DEBUG_LOG( "%s() end.", __func__ );*/
 
     return;
 }

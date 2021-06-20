@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.c                                           */
-/*                                                                 2021/05/29 */
+/*                                                                 2021/06/15 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -154,7 +154,7 @@ uint8_t TaskmngTaskGetTypeDiff( MkTaskId_t taskId1,
  * @details     タスクのカーネルスタック領域を割当てて、タスク管理情報pTaskInfo
  *              に必要な情報を設定し、タスクをスケジューラに登録する。
  *
- * @param[in]   *pTaskInfo   タスク(スレッド)管理情報
+ * @param[in]   *pTaskInfo   タスク管理情報
  *
  * @return      追加時したタスクIDを返す。
  * @retval      MK_TASKID_NULL 失敗
@@ -174,9 +174,11 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
     DEBUG_LOG( "  pid=%u, tid=%u, pAddr=%010p",
                pTaskInfo->pProcInfo->pid,
                pTaskInfo->tid,
-               pTaskInfo->pEntryPoint           );
+               pTaskInfo->startInfo.pEntryPoint );
 
-    /* タスク基本設定 */
+    /* タスク管理情報設定 */
+    pTaskInfo->taskId      = MK_TASKID_MAKE( pTaskInfo->pProcInfo->pid,
+                                             pTaskInfo->tid             );
     pTaskInfo->context.eip = ( uint32_t ) &Start;
     pTaskInfo->context.esp = ( uint32_t ) pTaskInfo->kernelStack.pBottomAddr;
 
@@ -200,7 +202,7 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
 /******************************************************************************/
 /**
  * @brief       タスク管理情報取得
- * @details     タスクIDのタスク管理情報を取得する。
+ * @details     タスクIDに該当するタスク管理情報を取得する。
  *
  * @param[in]   taskId タスクID
  *
@@ -229,8 +231,7 @@ TaskInfo_t *TaskGetInfo( MkTaskId_t taskId )
     }
 
     /* スレッド管理情報取得 */
-    pThreadInfo = ThreadGetInfo( pProcInfo,
-                                 MK_TASKID_TO_TID( taskId ) );
+    pThreadInfo = ThreadGetInfo( pProcInfo, MK_TASKID_TO_TID( taskId ) );
 
     return ( TaskInfo_t * ) pThreadInfo;
 }
@@ -239,24 +240,13 @@ TaskInfo_t *TaskGetInfo( MkTaskId_t taskId )
 /******************************************************************************/
 /**
  * @brief       タスク制御初期化
- * @details     アイドルタスク管理情報を設定する。
+ * @details     タスク制御提供カーネルコール用の割込みハンドラを設定する。
  */
 /******************************************************************************/
 void TaskInit( void )
 {
-    TaskInfo_t *pIdleTaskInfo;  /* アイドルタスク管理情報 */
-
-    /* 初期化 */
-    pIdleTaskInfo = NULL;
-
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
-
-    /* アイドルタスク管理情報取得 */
-    pIdleTaskInfo = TaskGetInfo( TASKMNG_TASKID_IDLE );
-
-    /* アイドルタスク管理情報設定 */
-    pIdleTaskInfo->state = 0;
 
     /* 割込みハンドラ設定 */
     IntMngHdlSet( MK_CONFIG_INTNO_TASK,     /* 割込み番号     */
@@ -356,29 +346,29 @@ static void HdlInt( uint32_t        intNo,
 static void Start( void )
 {
     void       *pEntryPoint;    /* エントリポイント         */
-    void       *pStack;         /* スタックアドレス         */
+    void       *pStackPointer;  /* スタックポインタ         */
     uint32_t   codeSegSel;      /* コードセグメントセレクタ */
     uint32_t   dataSegSel;      /* データセグメントセレクタ */
-    TaskInfo_t *pTaskInfo;      /* タスク管理情報           */
     ProcInfo_t *pProcInfo;      /* プロセス管理情報         */
+    TaskInfo_t *pTaskInfo;      /* タスク管理情報           */
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* 初期化 */
-    pTaskInfo   = SchedGetTaskInfo();
-    pProcInfo   = pTaskInfo->pProcInfo;
-    pEntryPoint = pTaskInfo->pEntryPoint;
-    pStack      = pTaskInfo->userStack.pBottomAddr;
-    codeSegSel  = 0;
-    dataSegSel  = 0;
+    pTaskInfo     = SchedGetTaskInfo();
+    pProcInfo     = pTaskInfo->pProcInfo;
+    pEntryPoint   = pTaskInfo->startInfo.pEntryPoint;
+    pStackPointer = pTaskInfo->startInfo.pStackPointer;
+    codeSegSel    = 0;
+    dataSegSel    = 0;
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG(
-        "pid=%u, pEntryPoint=%p, pStack=%p",
+        "pid=%u, pEntryPoint=%p, pStackPointer=%p",
         pProcInfo->pid,
         pEntryPoint,
-        pStack
+        pStackPointer
     );
 
     /* タスクタイプ判定 */
@@ -397,32 +387,36 @@ static void Start( void )
     }
 
     /* iretd命令用スタック設定 */
-    __asm__ __volatile__ ( "push %0\n"              /* ss     */
-                           "push %1\n"              /* esp    */
-                           "push 0x00003202\n"      /* eflags */
-                           "push %2\n"              /* cs     */
-                           "push %3\n"              /* eip    */
-                           :
-                           : "a" ( dataSegSel ),
-                             "b" ( ( uint32_t ) pStack - 16 ),
-                             "c" ( codeSegSel ),
-                             "d" ( ( uint32_t ) pEntryPoint )  );
+    __asm__ __volatile__ (
+        "push %0\n"              /* ss     */
+        "push %1\n"              /* esp    */
+        "push 0x00003202\n"      /* eflags */
+        "push %2\n"              /* cs     */
+        "push %3\n"              /* eip    */
+        :
+        : "a" ( dataSegSel ),
+          "b" ( ( uint32_t ) pStackPointer - 16 ),
+          "c" ( codeSegSel ),
+          "d" ( ( uint32_t ) pEntryPoint )
+    );
 
     /* セグメントレジスタ設定用スタック設定 */
-    __asm__ __volatile__ ( "push eax\n"             /* gs */
-                           "push eax\n"             /* fs */
-                           "push eax\n"             /* es */
-                           "push eax\n" );          /* ds */
+    __asm__ __volatile__ (
+        "push eax\n"    /* gs */
+        "push eax\n"    /* fs */
+        "push eax\n"    /* es */
+        "push eax\n"    /* ds */
+    );
 
     /* 汎用レジスタ設定用スタック設定 */
-    IA32InstructionPush( 0 );                       /* eax           */
-    IA32InstructionPush( 0 );                       /* ecx           */
-    IA32InstructionPush( 0 );                       /* edx           */
-    IA32InstructionPush( 0 );                       /* ebx           */
-    IA32InstructionPush( 0 );                       /* esp( 未使用 ) */
-    IA32InstructionPush( 0 );                       /* ebp           */
-    IA32InstructionPush( 0 );                       /* esi           */
-    IA32InstructionPush( 0 );                       /* edi           */
+    IA32InstructionPush( 0 );   /* eax           */
+    IA32InstructionPush( 0 );   /* ecx           */
+    IA32InstructionPush( 0 );   /* edx           */
+    IA32InstructionPush( 0 );   /* ebx           */
+    IA32InstructionPush( 0 );   /* esp( 未使用 ) */
+    IA32InstructionPush( 0 );   /* ebp           */
+    IA32InstructionPush( 0 );   /* esi           */
+    IA32InstructionPush( 0 );   /* edi           */
 
     /* 汎用レジスタ設定 */
     IA32InstructionPopad();

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngSched.c                                          */
-/*                                                                 2021/05/29 */
+/*                                                                 2021/06/15 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -149,7 +149,7 @@ void TaskmngSchedExec( void )
         /* アイドルプロセス以外 */
 
         /* 実行中タスク状態判定 */
-        if ( pRunTaskInfo->state == STATE_RUN ) {
+        if ( pRunTaskInfo->schedInfo.state == STATE_RUN ) {
             /* 実行状態 */
 
             /* 実行予約タスクグループにキューイング */
@@ -283,7 +283,7 @@ void TaskmngSchedStart( MkTaskId_t taskId )
     TaskInfo_t *pTaskInfo;  /* タスク管理情報 */
 
     /* 初期化 */
-    retMLib   = MLIB_RET_FAILURE;
+    retMLib     = MLIB_RET_FAILURE;
     pTaskInfo = NULL;
 
     /* タスク管理情報取得 */
@@ -291,7 +291,7 @@ void TaskmngSchedStart( MkTaskId_t taskId )
 
     /* 待ちキューから削除 */
     retMLib = MLibListRemove( &( gSchedTbl.waitGrp.waitQ ),
-                              &( pTaskInfo->nodeInfo )      );
+                              &( pTaskInfo->schedInfo.nodeInfo ) );
 
     /* 削除結果判定 */
     if ( retMLib != MLIB_RET_SUCCESS ) {
@@ -375,16 +375,16 @@ void TaskmngSchedStop( MkTaskId_t taskId )
         }
 
         /* タスクキューから削除 */
-        MLibListRemove( pTaskQ0, &( pTaskInfo->nodeInfo ) );
-        MLibListRemove( pTaskQ1, &( pTaskInfo->nodeInfo ) );
+        MLibListRemove( pTaskQ0, &( pTaskInfo->schedInfo.nodeInfo ) );
+        MLibListRemove( pTaskQ1, &( pTaskInfo->schedInfo.nodeInfo ) );
     }
 
     /* 待ちキューにエンキュー */
     MLibListInsertHead( &( gSchedTbl.waitGrp.waitQ ),
-                        &( pTaskInfo->nodeInfo )      );
+                        &( pTaskInfo->schedInfo.nodeInfo ) );
 
     /* 実行状態設定 */
-    pTaskInfo->state = STATE_WAIT;
+    pTaskInfo->schedInfo.state = STATE_WAIT;
 
     return;
 }
@@ -438,20 +438,6 @@ ProcInfo_t *SchedGetProcInfo( void )
  */
 /******************************************************************************/
 TaskInfo_t *SchedGetTaskInfo( void )
-{
-    return gSchedTbl.pRunTaskInfo;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       実行中スレッド管理情報取得
- * @details     現在実行中のタスクのスレッド管理情報を取得する。
- *
- * @return      スレッド管理情報を返す。
- */
-/******************************************************************************/
-ThreadInfo_t *SchedGetThreadInfo( void )
 {
     return gSchedTbl.pRunTaskInfo;
 }
@@ -547,7 +533,7 @@ static void EnqueueToReservedGrp( TaskInfo_t *pTaskInfo )
 
     /* エンキュー */
     retMLib =  MLibListInsertHead( pSchedQ,
-                                   &( pTaskInfo->nodeInfo ) );
+                                   &( pTaskInfo->schedInfo.nodeInfo ) );
 
     /* エンキュー結果判定 */
     if ( retMLib != MLIB_RET_SUCCESS ) {
@@ -557,7 +543,7 @@ static void EnqueueToReservedGrp( TaskInfo_t *pTaskInfo )
     }
 
     /* 実行状態設定 */
-    pTaskInfo->state = STATE_RUN;
+    pTaskInfo->schedInfo.state = STATE_RUN;
 
     /* デバッグトレースログ出力 */
     /*DEBUG_LOG( "%s() end.", __func__ );*/

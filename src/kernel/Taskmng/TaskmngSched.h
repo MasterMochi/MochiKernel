@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngSched.h                                          */
-/*                                                                 2021/05/29 */
+/*                                                                 2021/06/20 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -15,8 +15,15 @@
 
 /* 内部モジュールヘッダ */
 #include "TaskmngProc.h"
-#include "TaskmngThread.h"
 #include "TaskmngTask.h"
+#include "TaskmngThread.h"
+
+
+/******************************************************************************/
+/* 定義                                                                       */
+/******************************************************************************/
+/** スケジュール情報 */
+typedef ThreadSchedInfo_t SchedInfo_t;
 
 
 /******************************************************************************/
@@ -28,8 +35,6 @@ extern CmnRet_t SchedAdd( TaskInfo_t *pTaskInfo );
 extern ProcInfo_t *SchedGetProcInfo( void );
 /* 実行中タスク管理情報取得 */
 extern TaskInfo_t *SchedGetTaskInfo( void );
-/* 実行中スレッド管理情報取得 */
-extern ThreadInfo_t *SchedGetThreadInfo( void );
 /* スケジューラ初期化 */
 extern void SchedInit( void );
 

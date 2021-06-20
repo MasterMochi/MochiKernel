@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngProc.c                                           */
-/*                                                                 2021/05/29 */
+/*                                                                 2021/06/13 */
 /* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -55,11 +55,19 @@
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
+/* プロセス管理情報割当 */
+static ProcInfo_t *AllocProcInfo( uint8_t type );
+/* プロセス管理情報解放 */
+static void FreeProcInfo( ProcInfo_t *pProcInfo );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
 /* ブレイクポイント設定 */
 static void SetBreakPoint( MkProcParam_t *pParam );
+/* ユーザスタック情報設定 */
+static CmnRet_t SetUserStack( ProcInfo_t *pProcInfo );
+/* ユーザスタック情報削除 */
+static void UnsetUserStack( ProcInfo_t *pProcInfo );
 
 
 /******************************************************************************/
@@ -94,53 +102,43 @@ MkPid_t TaskmngProcAdd( uint8_t type,
                         void    *pAddr,
                         size_t  size    )
 {
-    CmnRet_t   ret;         /* 関数戻り値               */
-    MkPid_t    pid;         /* プロセスID               */
-    MkTid_t    tid;         /* スレッドID               */
-    MLibErr_t  errMLib;     /* MLibライブラリエラー要因 */
-    MLibRet_t  retMLib;     /* MLibライブラリ戻り値     */
-    ProcInfo_t *pProcInfo;  /* プロセス管理情報         */
+    void       *pEndPoint;      /* エンドポイント   */
+    CmnRet_t   ret;             /* 関数戻り値       */
+    MkTid_t    tid;             /* スレッドID       */
+    ProcInfo_t *pProcInfo;      /* プロセス管理情報 */
 
     /* 初期化 */
-    ret       = CMN_FAILURE;
-    pid       = MK_PID_NULL;
-    tid       = MK_TID_NULL;
-    errMLib   = MLIB_ERR_NONE;
-    retMLib   = MLIB_RET_FAILURE;
-    pProcInfo = NULL;
+    pEndPoint   = NULL;
+    ret         = CMN_FAILURE;
+    tid         = MK_TID_NULL;
+    pProcInfo   = NULL;
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.",                    __func__          );
     DEBUG_LOG( " type=%u, pAddr=%010p, size=%d", type, pAddr, size );
 
     /* プロセス管理情報割当 */
-    retMLib = MLibDynamicArrayAlloc( &gProcTbl,
-                                     ( uint_t *  ) &pid,
-                                     ( void   ** ) &pProcInfo,
-                                     &errMLib                  );
+    pProcInfo = AllocProcInfo( type );
 
     /* 割当結果判定 */
-    if ( retMLib != MLIB_RET_SUCCESS ) {
+    if ( pProcInfo == NULL ) {
         /* 失敗 */
 
         /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL, err=%X", __func__, errMLib );
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
         return MK_PID_NULL;
     }
 
-    /* プロセスID設定 */
-    pProcInfo->pid = pid;
-
     /* ページディレクトリ割当 */
-    pProcInfo->dirId = MemmngPageAllocDir( pid );
+    pProcInfo->dirId = MemmngPageAllocDir( pProcInfo->pid );
 
     /* 割当結果判定 */
     if ( pProcInfo->dirId == MEMMNG_PAGE_DIR_ID_NULL ) {
         /* 失敗 */
 
         /* プロセス管理情報解放 */
-        MLibDynamicArrayFree( &gProcTbl, ( uint_t ) pid, NULL );
+        FreeProcInfo( pProcInfo );
 
         /* デバッグトレースログ出力 */
         DEBUG_LOG( "%s() end. ret=NULL", __func__ );
@@ -152,17 +150,14 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     pProcInfo->pdbr = MemmngPageGetPdbr( pProcInfo->dirId );
 
     /* 仮想メモリ領域管理開始 */
-    ret = MemmngVirtStart( pid );
+    ret = MemmngVirtStart( pProcInfo->pid );
 
     /* 管理開始結果判定 */
     if ( ret == CMN_FAILURE ) {
         /* 失敗 */
 
-        /* ページディレクトリ解放 */
-        MemmngPageFreeDir( pProcInfo->dirId );
-
         /* プロセス管理情報解放 */
-        MLibDynamicArrayFree( &gProcTbl, ( uint_t ) pid, NULL );
+        FreeProcInfo( pProcInfo );
 
         /* デバッグトレースログ出力 */
         DEBUG_LOG( "%s() end. ret=NULL", __func__ );
@@ -175,17 +170,14 @@ MkPid_t TaskmngProcAdd( uint8_t type,
                    size,
                    pProcInfo->dirId,
                    &( pProcInfo->pEntryPoint ),
-                   &( pProcInfo->pEndPoint   )  );
+                   &pEndPoint                   );
 
     /* 読込結果判定 */
     if ( ret != CMN_SUCCESS ) {
         /* 失敗 */
 
-        /* ページディレクトリ解放 */
-        MemmngPageFreeDir( pProcInfo->dirId );
-
         /* プロセス管理情報解放 */
-        MLibDynamicArrayFree( &gProcTbl, ( uint_t ) pid, NULL );
+        FreeProcInfo( pProcInfo );
 
         /* デバッグトレースログ出力 */
         DEBUG_LOG( "%s() end. ret=NULL", __func__ );
@@ -193,13 +185,27 @@ MkPid_t TaskmngProcAdd( uint8_t type,
         return MK_PID_NULL;
     }
 
-    /* プロセスタイプ設定 */
-    pProcInfo->type = type;
-
     /* ブレイクポイント設定 */
-    pProcInfo->pBreakPoint =
-        ( void * ) MLIB_UTIL_ALIGN( ( uint32_t ) pProcInfo->pEndPoint - 1,
-                                    IA32_PAGING_PAGE_SIZE                  );
+    pProcInfo->userHeap.pEndPoint   = pEndPoint;
+    pProcInfo->userHeap.pBreakPoint =
+        ( void * ) MLIB_UTIL_ALIGN( ( uint32_t ) pEndPoint - 1,
+                                    IA32_PAGING_PAGE_SIZE       );
+
+    /* ユーザスタック設定 */
+    ret = SetUserStack( pProcInfo );
+
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        /* プロセス管理情報解放 */
+        FreeProcInfo( pProcInfo );
+
+        /* デバッグトレースログ出力 */
+        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+
+        return MK_PID_NULL;
+    }
 
     /* スレッド追加 */
     tid = ThreadAddMain( pProcInfo );
@@ -208,13 +214,8 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( tid == MK_TID_NULL ) {
         /* 失敗 */
 
-        /* [TODO]ELFロード領域解放 */
-
-        /* ページディレクトリ解放 */
-        MemmngPageFreeDir( pProcInfo->dirId );
-
         /* プロセス管理情報解放 */
-        MLibDynamicArrayFree( &gProcTbl, ( uint_t ) pid, NULL );
+        FreeProcInfo( pProcInfo );
 
         /* デバッグトレースログ出力 */
         DEBUG_LOG( "%s() end. ret=NULL", __func__ );
@@ -223,9 +224,9 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     }
 
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%d", __func__, pid );
+    DEBUG_LOG( "%s() end. ret=%d", __func__, pProcInfo->pid );
 
-    return pid;
+    return pProcInfo->pid;
 }
 
 
@@ -282,13 +283,15 @@ ProcInfo_t *ProcGetInfo( MkPid_t pid )
 /******************************************************************************/
 void ProcInit( void )
 {
-    ProcInfo_t *pProcInfo;  /* アイドルプロセス管理情報 */
+    ProcInfo_t     *pProcInfo;  /* アイドルプロセス管理情報 */
+    ProcHeapInfo_t *pUserHeap;  /* ユーザヒープ情報         */
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* 初期化 */
     pProcInfo = NULL;
+    pUserHeap = NULL;
 
     /* プロセス管理情報動的配列初期化 */
     MLibDynamicArrayInit( &gProcTbl,
@@ -298,18 +301,17 @@ void ProcInit( void )
                           NULL                   );
 
     /* アイドルプロセス管理情報割当 */
-    MLibDynamicArrayAllocSpec( &gProcTbl,
-                               ( uint_t  ) MK_PID_IDLE,
-                               ( void ** ) &pProcInfo,
-                               NULL                     );
+    pProcInfo = AllocProcInfo( TASKMNG_PROC_TYPE_KERNEL );
 
     /* アイドルプロセス管理情報設定 */
-    pProcInfo->type        = TASKMNG_PROC_TYPE_KERNEL;
+    pProcInfo->pEntryPoint = NULL;
     pProcInfo->dirId       = MEMMNG_PAGE_DIR_ID_IDLE;
     pProcInfo->pdbr        = MemmngPageGetPdbr( MEMMNG_PAGE_DIR_ID_IDLE );
-    pProcInfo->pEntryPoint = NULL;
-    pProcInfo->pEndPoint   = NULL;
-    pProcInfo->pBreakPoint = NULL;
+
+    /* ユーザヒープ情報設定 */
+    pUserHeap              = &( pProcInfo->userHeap );
+    pUserHeap->pEndPoint   = NULL;
+    pUserHeap->pBreakPoint = NULL;
 
     /* アイドルプロセス用スレッド情報設定 */
     ThreadAddMainIdle( pProcInfo );
@@ -329,6 +331,93 @@ void ProcInit( void )
 /******************************************************************************/
 /* ローカル関数定義                                                           */
 /******************************************************************************/
+/******************************************************************************/
+/**
+ * @brief       プロセス管理情報割当
+ * @details     プロセス管理情報を割り当てて、初期化する。
+ *
+ * @param[in]   type プロセスタイプ
+ *                  - MK_PROCESS_TYPE_DRIVER ドライバプロセス
+ *                  - MK_PROCESS_TYPE_SERVER サーバプロセス
+ *                  - MK_PROCESS_TYPE_USER   ユーザプロセス
+ *
+ * @return      プロセス管理情報を返す。
+ * @retval      NULL     失敗
+ * @retval      NULL以外 成功(プロセス管理情報)
+ */
+/******************************************************************************/
+static ProcInfo_t *AllocProcInfo( uint8_t type )
+{
+    MkPid_t    pid;         /* プロセスID             */
+    MLibErr_t  errMLib;     /* MLibライブラリエラー値 */
+    MLibRet_t  retMLib;     /* MLibライブラリ戻り値   */
+    ProcInfo_t *pProcInfo;  /* プロセス管理情報       */
+
+    /* 初期化 */
+    pid       = MK_PID_NULL;
+    errMLib   = MLIB_ERR_NONE;
+    retMLib   = MLIB_RET_FAILURE;
+    pProcInfo = NULL;
+
+    /* プロセス管理情報割当 */
+    retMLib = MLibDynamicArrayAlloc( &gProcTbl,
+                                     ( uint_t *  ) &pid,
+                                     ( void   ** ) &pProcInfo,
+                                     &errMLib                  );
+
+    /* 割当結果判定 */
+    if ( retMLib != MLIB_RET_SUCCESS ) {
+        /* 失敗 */
+
+        return NULL;
+    }
+
+    /* プロセス管理情報初期化 */
+    MLibUtilSetMemory8( pProcInfo, 0, sizeof ( ProcInfo_t ) );
+    pProcInfo->pid  = pid;
+    pProcInfo->type = type;
+
+    return pProcInfo;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       プロセス管理情報解放
+ * @details     プロセス管理情報を解放する。
+ *
+ * @param[in]   *pProcInfo プロセス管理情報
+ */
+/******************************************************************************/
+static void FreeProcInfo( ProcInfo_t *pProcInfo )
+{
+    MLibErr_t errMLib;  /* MLibライブラリエラー値 */
+
+    /* 初期化 */
+    errMLib = MLIB_ERR_NONE;
+
+    /* ユーザスタック削除 */
+    UnsetUserStack( pProcInfo );
+
+    /* [TODO] ELFロード領域解放 */
+
+    /* ページディレクトリ割当済判定 */
+    if ( pProcInfo->dirId != MEMMNG_PAGE_DIR_ID_NULL ) {
+        /* 割当済 */
+
+        /* ページディレクトリ解放 */
+        MemmngPageFreeDir( pProcInfo->dirId );
+    }
+
+    /* プロセス管理情報解放 */
+    MLibDynamicArrayFree( &gProcTbl,
+                          ( uint_t ) pProcInfo->pid,
+                          &errMLib                   );
+
+    return;
+}
+
+
 /******************************************************************************/
 /**
  * @brief       割込みハンドラ
@@ -402,7 +491,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
     newPageNum = 0;
     ret        = CMN_SUCCESS;
     pProcInfo  = SchedGetProcInfo();
-    breakPoint = ( uint32_t ) pProcInfo->pBreakPoint;
+    breakPoint = ( uint32_t ) pProcInfo->userHeap.pBreakPoint;
 
     while ( remain != 0 ) {
         /* 残増減量比較 */
@@ -500,12 +589,113 @@ static void SetBreakPoint( MkProcParam_t *pParam )
     }
 
     /* ブレイクポイント設定 */
-    pProcInfo->pBreakPoint = ( void * ) breakPoint;
+    pProcInfo->userHeap.pBreakPoint = ( void * ) breakPoint;
 
     /* 戻り値設定 */
     pParam->ret         = MK_RET_SUCCESS;
     pParam->err         = MK_ERR_NONE;
     pParam->pBreakPoint = ( void * ) breakPoint;
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ユーザスタック設定
+ * @details     ユーザスタック領域を割り当てて、プロセス管理情報に設定する。
+ *
+ * @param[in]   *pProcInfo プロセス管理情報
+ *
+ * @return      処理結果を返す。
+ * @retval      CMN_SUCCESS 成功
+ * @retval      CMN_FIALURE 失敗
+ */
+/******************************************************************************/
+static CmnRet_t SetUserStack( ProcInfo_t *pProcInfo )
+{
+    void            *pPhysAddr;     /* 物理メモリ領域 */
+    CmnRet_t        ret;            /* 戻り値         */
+    ProcStackInfo_t *pStackInfo;    /* スタック情報   */
+
+    /* 初期化 */
+    pPhysAddr  = NULL;
+    ret        = CMN_FAILURE;
+    pStackInfo = &( pProcInfo->userStack );
+
+    /* 物理メモリ領域割当 */
+    pPhysAddr = MemmngPhysAlloc( MK_CONFIG_SIZE_USER_STACK );
+
+    /* 割当結果判定 */
+    if ( pPhysAddr == NULL ) {
+        /* 失敗 */
+
+        return CMN_FAILURE;
+    }
+
+    /* ページマッピング設定 */
+    ret = MemmngPageSet(
+              pProcInfo->dirId,                     /* ページディレクトリID */
+              ( void * ) MK_CONFIG_ADDR_USER_STACK, /* 仮想アドレス         */
+              pPhysAddr,                            /* 物理アドレス         */
+              MK_CONFIG_SIZE_USER_STACK,            /* マッピングサイズ     */
+              IA32_PAGING_G_NO,                     /* グローバルフラグ     */
+              IA32_PAGING_US_USER,                  /* ユーザ/スーパバイザ  */
+              IA32_PAGING_RW_RW                     /* 読込/書込許可        */
+          );
+
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        /* 物理メモリ領域解放 */
+        MemmngPhysFree( pPhysAddr );
+
+        return CMN_FAILURE;
+    }
+
+    /* ユーザスタック情報設定 */
+    pStackInfo->pPhysAddr   = pPhysAddr;
+    pStackInfo->pTopAddr    = ( void * ) MK_CONFIG_ADDR_USER_STACK;
+    pStackInfo->pBottomAddr = ( void * ) ( MK_CONFIG_ADDR_USER_STACK +
+                                           MK_CONFIG_SIZE_USER_STACK -
+                                           sizeof ( uint32_t )         );
+    pStackInfo->size        = MK_CONFIG_SIZE_USER_STACK;
+
+    return CMN_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       ユーザスタック削除
+ * @details     ユーザスタック領域のマッピング解除と物理メモリ領域の解放を行う。
+ *
+ * @param[in]   *pProcInfo プロセス管理情報
+ */
+/******************************************************************************/
+static void UnsetUserStack( ProcInfo_t *pProcInfo )
+{
+    /* スタック設定済判定 */
+    if ( pProcInfo->userStack.pPhysAddr != NULL ) {
+        /* スタック設定済 */
+
+        /* メモリマッピング解除 */
+        MemmngPageUnset(
+            pProcInfo->dirId,               /* ページディレクトリID */
+            pProcInfo->userStack.pTopAddr,  /* 仮想アドレス         */
+            pProcInfo->userStack.size       /* マッピングサイズ     */
+        );
+
+        /* 物理メモリ領域解放 */
+        MemmngHeapFree( pProcInfo->userStack.pPhysAddr );
+
+        /* スタック管理情報初期化 */
+        pProcInfo->userStack.pPhysAddr   = NULL;
+        pProcInfo->userStack.pTopAddr    = NULL;
+        pProcInfo->userStack.pBottomAddr = NULL;
+        pProcInfo->userStack.size        = 0;
+    }
 
     return;
 }

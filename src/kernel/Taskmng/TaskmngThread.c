@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngThread.c                                         */
-/*                                                                 2021/05/31 */
+/*                                                                 2021/06/20 */
 /* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -15,6 +15,7 @@
 
 /* ライブラリ */
 #include <MLib/MLibDynamicArray.h>
+#include <MLib/MLibUtil.h>
 
 /* カーネルヘッダ */
 #include <kernel/thread.h>
@@ -31,6 +32,7 @@
 #include <Taskmng.h>
 
 /* 内部モジュールヘッダ */
+#include "TaskmngProc.h"
 #include "TaskmngSched.h"
 #include "TaskmngTask.h"
 #include "TaskmngThread.h"
@@ -49,10 +51,15 @@
 #define DEBUG_LOG( ... )
 #endif
 
+/** スレッド管理情報動的配列チャンクサイズ */
+#define THREAD_TBL_CHUNK_SIZE ( 4 )
+
 
 /******************************************************************************/
 /* ローカル関数宣言                                                           */
 /******************************************************************************/
+/* スレッド管理情報初期化 */
+static ThreadInfo_t *AllocThreadInfo( ProcInfo_t *pProcInfo );
 /* スレッド生成 */
 static void DoCreate( MkThreadParam_t *pParam );
 /* 割込みハンドラ */
@@ -60,12 +67,8 @@ static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
 /* カーネルスタック設定 */
 static CmnRet_t SetKernelStack( ThreadInfo_t *pThreadInfo );
-/* ユーザスタック設定 */
-static CmnRet_t SetUserStack( ThreadInfo_t *pThreadInfo );
 /* カーネルスタック削除 */
 static void UnsetKernelStack( ThreadInfo_t *pThreadInfo );
-/* ユーザスタック削除 */
-static void UnsetUserStack( ThreadInfo_t *pThreadInfo );
 
 
 /******************************************************************************/
@@ -75,7 +78,7 @@ static void UnsetUserStack( ThreadInfo_t *pThreadInfo );
 /**
  * @brief       メインスレッド追加
  * @details     プロセス管理情報pProcInfoにメインスレッド用のスレッド管理情報を
- *              追加し、メインスレッド用のユーザ空間スタック領域を割り当てる。
+ *              追加し、メインスレッド用のユーザスタック領域を割り当てる。
  *
  * @param[in]   *pProcInfo プロセス管理情報
  *
@@ -86,7 +89,6 @@ static void UnsetUserStack( ThreadInfo_t *pThreadInfo );
 /******************************************************************************/
 MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
 {
-    MkTid_t      tid;           /* スレッドID             */
     CmnRet_t     ret;           /* 関数戻り値             */
     MLibErr_t    errMLib;       /* MLIBライブラリエラー値 */
     MLibRet_t    retMLib;       /* MLIBライブラリ戻り値   */
@@ -94,12 +96,11 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
     ThreadInfo_t *pThreadInfo;  /* スレッド管理情報       */
 
     /* 初期化 */
-    tid          = MK_TID_NULL;
-    ret          = CMN_FAILURE;
-    errMLib      = MLIB_ERR_NONE;
-    retMLib      = MLIB_RET_FAILURE;
-    taskId       = MK_TASKID_NULL;
-    pThreadInfo  = NULL;
+    ret         = CMN_FAILURE;
+    errMLib     = MLIB_ERR_NONE;
+    retMLib     = MLIB_RET_FAILURE;
+    taskId      = MK_TASKID_NULL;
+    pThreadInfo = NULL;
 
     DEBUG_LOG( "%s(): start. pProcInfo=%p", __func__, pProcInfo );
 
@@ -118,13 +119,10 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
     }
 
     /* スレッド管理情報割当 */
-    retMLib = MLibDynamicArrayAlloc( &( pProcInfo->threadTbl ),
-                                     ( uint_t *  ) &tid,
-                                     ( void   ** ) &pThreadInfo,
-                                     &errMLib                    );
+    pThreadInfo = AllocThreadInfo( pProcInfo );
 
     /* 割当結果判定 */
-    if ( retMLib != MLIB_RET_SUCCESS ) {
+    if ( pThreadInfo == NULL ) {
         /* 失敗 */
 
         /* スレッド管理情報動的配列削除 */
@@ -132,11 +130,6 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
 
         return MK_TID_NULL;
     }
-
-    /* スレッド管理情報設定 */
-    pThreadInfo->tid       = tid;
-    pThreadInfo->taskId    = MK_TASKID_MAKE( pProcInfo->pid, tid );
-    pThreadInfo->pProcInfo = pProcInfo;
 
     /* カーネルスタック設定 */
     ret = SetKernelStack( pThreadInfo );
@@ -145,31 +138,10 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
     if ( ret != CMN_SUCCESS ) {
         /* 失敗 */
 
-        /* スレッド管理情報動的配列削除 */
-        MLibDynamicArrayExit( &( pProcInfo->threadTbl ), NULL );
-
         /* スレッド管理情報解放 */
         MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
-                              ( uint_t ) tid,
-                              &errMLib                   );
-
-        return MK_TID_NULL;
-    }
-
-    /* ユーザスタック設定 */
-    ret = SetUserStack( pThreadInfo );
-
-    /* 設定結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* カーネルスタック削除 */
-        UnsetKernelStack( pThreadInfo );
-
-        /* スレッド管理情報解放 */
-        MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
-                              ( uint_t ) tid,
-                              &errMLib                   );
+                              ( uint_t ) pThreadInfo->tid,
+                              &errMLib                     );
 
         /* スレッド管理情報動的配列削除 */
         MLibDynamicArrayExit( &( pProcInfo->threadTbl ), NULL );
@@ -177,8 +149,9 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
         return MK_TID_NULL;
     }
 
-    /* エントリポイント設定 */
-    pThreadInfo->pEntryPoint = pThreadInfo->pProcInfo->pEntryPoint;
+    /* 起動時情報設定 */
+    pThreadInfo->startInfo.pEntryPoint   = pProcInfo->pEntryPoint;
+    pThreadInfo->startInfo.pStackPointer = pProcInfo->userStack.pBottomAddr;
 
     /* タスク追加 */
     taskId = TaskAdd( pThreadInfo );
@@ -187,16 +160,13 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
     if ( taskId == MK_TASKID_NULL ) {
         /* 失敗 */
 
-        /* ユーザスタック削除 */
-        UnsetUserStack( pThreadInfo );
-
         /* カーネルスタック削除 */
         UnsetKernelStack( pThreadInfo );
 
         /* スレッド管理情報解放 */
         MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
-                              ( uint_t ) tid,
-                              &errMLib                   );
+                              ( uint_t ) pThreadInfo->tid,
+                              &errMLib                     );
 
         /* スレッド管理情報動的配列削除 */
         MLibDynamicArrayExit( &( pProcInfo->threadTbl ), NULL );
@@ -214,7 +184,7 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
 /**
  * @brief       アイドルプロセス用メインスレッド追加
  * @details     プロセス管理情報pProcInfoにメインスレッド用のスレッド管理情報を
- *              追加し、メインスレッド用のユーザ空間スタック領域を割り当てる。
+ *              追加し、メインスレッド用のユーザスタック領域を割り当てる。
  *
  * @param[in]   *pProcInfo プロセス管理情報
  *
@@ -225,13 +195,11 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
 /******************************************************************************/
 MkTid_t ThreadAddMainIdle( ProcInfo_t *pProcInfo )
 {
-    MkTid_t      tid;           /* スレッドID             */
     MLibErr_t    errMLib;       /* MLIBライブラリエラー値 */
     MLibRet_t    retMLib;       /* MLIBライブラリ戻り値   */
     ThreadInfo_t *pThreadInfo;  /* スレッド管理情報       */
 
     /* 初期化 */
-    tid         = MK_TID_NULL;
     errMLib     = MLIB_ERR_NONE;
     retMLib     = MLIB_RET_FAILURE;
     pThreadInfo = NULL;
@@ -251,13 +219,10 @@ MkTid_t ThreadAddMainIdle( ProcInfo_t *pProcInfo )
     }
 
     /* スレッド管理情報割当 */
-    retMLib = MLibDynamicArrayAlloc( &( pProcInfo->threadTbl ),
-                                     &tid,
-                                     ( void ** ) &pThreadInfo,
-                                     &errMLib                   );
+    pThreadInfo = AllocThreadInfo( pProcInfo );
 
     /* 割当結果判定 */
-    if ( retMLib != MLIB_RET_SUCCESS ) {
+    if ( pThreadInfo == NULL ) {
         /* 失敗 */
 
         /* スレッド管理情報動的配列削除 */
@@ -266,19 +231,14 @@ MkTid_t ThreadAddMainIdle( ProcInfo_t *pProcInfo )
         return MK_TID_NULL;
     }
 
-    /* スレッド管理情報設定 */
-    pThreadInfo->tid       = tid;
-    pThreadInfo->taskId    = MK_TASKID_MAKE( pProcInfo->pid, tid );
-    pThreadInfo->pProcInfo = pProcInfo;
-
-    return tid;
+    return pThreadInfo->tid;
 }
 
 
 /******************************************************************************/
 /**
  * @brief       スレッド管理情報取得
- * @details     引数tidのスレッド管理情報を取得する。
+ * @details     スレッドIDに該当するスレッド管理情報を取得する。
  *
  * @param[in]   *pProcInfo プロセス管理情報
  * @param[in]   tid        スレッドID
@@ -302,7 +262,7 @@ ThreadInfo_t *ThreadGetInfo( ProcInfo_t *pProcInfo,
 
     /* スレッド管理情報取得 */
     retMLib = MLibDynamicArrayGet( &( pProcInfo->threadTbl ),
-                                   tid,
+                                   ( uint_t ) tid,
                                    ( void ** ) &pThreadInfo,
                                    &errMLib                   );
 
@@ -343,6 +303,51 @@ void ThreadInit( void )
 /******************************************************************************/
 /******************************************************************************/
 /**
+ * @brief       スレッド管理情報割当
+ * @details     スレッド管理情報を割当てて初期化する。
+ *
+ * @param[in]   *pProcInfo プロセス管理情報
+ *
+ * @return      スレッド管理情報を返す。
+ * @retval      NULL     失敗
+ * @retval      NULL以外 成功(スレッド管理情報)
+ */
+/******************************************************************************/
+static ThreadInfo_t *AllocThreadInfo( ProcInfo_t *pProcInfo )
+{
+    MkTid_t      tid;           /* スレッドID             */
+    MLibErr_t    errMLib;       /* MLibライブラリエラー値 */
+    MLibRet_t    retMLib;       /* MLibライブラリ戻り値   */
+    ThreadInfo_t *pThreadInfo;  /* スレッド管理情報       */
+
+    /* 初期化 */
+    errMLib = MLIB_ERR_NONE;
+    retMLib = MLIB_RET_FAILURE;
+
+    /* スレッド管理情報割当 */
+    retMLib = MLibDynamicArrayAlloc( &( pProcInfo->threadTbl ),
+                                     ( uint_t *  ) &tid,
+                                     ( void   ** ) &pThreadInfo,
+                                     &errMLib                    );
+
+    /* 割当結果判定 */
+    if ( retMLib != MLIB_RET_SUCCESS ) {
+        /* 失敗 */
+
+        return NULL;
+    }
+
+    /* スレッド管理情報初期化 */
+    MLibUtilSetMemory8( pThreadInfo, 0, sizeof ( ThreadInfo_t ) );
+    pThreadInfo->tid       = tid;
+    pThreadInfo->pProcInfo = pProcInfo;
+
+    return pThreadInfo;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       スレッド生成
  * @details     スレッドを生成する。
  *
@@ -351,24 +356,16 @@ void ThreadInit( void )
 /******************************************************************************/
 static void DoCreate( MkThreadParam_t *pParam )
 {
-    MkTid_t           tid;          /* スレッドID             */
-    CmnRet_t          ret;          /* 関数戻り値             */
-    MLibErr_t         errMLib;      /* MLIBライブラリエラー値 */
-    MLibRet_t         retMLib;      /* MLIBライブラリ戻り値   */
-    MkTaskId_t        taskId;       /* タスクID               */
-    ProcInfo_t        *pProcInfo;   /* プロセス管理情報       */
-    ThreadInfo_t      *pThreadInfo; /* スレッド管理情報       */
-    ThreadStackInfo_t *pStackInfo;  /* ユーザスタック情報     */
+    CmnRet_t     ret;           /* 関数戻り値       */
+    MkTaskId_t   taskId;        /* タスクID         */
+    ProcInfo_t   *pProcInfo;    /* プロセス管理情報 */
+    ThreadInfo_t *pThreadInfo;  /* スレッド管理情報 */
 
     /* 初期化 */
-    tid         = MK_TID_NULL;
     ret         = CMN_FAILURE;
-    errMLib     = MLIB_ERR_NONE;
-    retMLib     = MLIB_RET_FAILURE;
     taskId      = MK_TASKID_NULL;
     pProcInfo   = NULL;
     pThreadInfo = NULL;
-    pStackInfo  = NULL;
 
     /* パラメータチェック */
     if ( ( pParam->pStackAddr == NULL ) ||
@@ -386,13 +383,10 @@ static void DoCreate( MkThreadParam_t *pParam )
     pProcInfo = SchedGetProcInfo();
 
     /* スレッド管理情報割当 */
-    retMLib = MLibDynamicArrayAlloc( &( pProcInfo->threadTbl ),
-                                     &tid,
-                                     ( void ** ) &pThreadInfo,
-                                     &errMLib                   );
+    pThreadInfo = AllocThreadInfo( pProcInfo );
 
-    /* 割当て結果判定 */
-    if ( retMLib != MLIB_RET_SUCCESS ) {
+    /* 割当結果判定 */
+    if ( pThreadInfo == NULL ) {
         /* 失敗 */
 
         /* 戻り値設定 */
@@ -401,11 +395,6 @@ static void DoCreate( MkThreadParam_t *pParam )
 
         return;
     }
-
-    /* スレッド管理情報設定 */
-    pThreadInfo->tid       = tid;
-    pThreadInfo->taskId    = MK_TASKID_MAKE( pProcInfo->pid, tid );
-    pThreadInfo->pProcInfo = pProcInfo;
 
     /* カーネルスタック設定 */
     ret = SetKernelStack( pThreadInfo );
@@ -415,7 +404,9 @@ static void DoCreate( MkThreadParam_t *pParam )
         /* 失敗 */
 
         /* スレッド管理情報解放 */
-        MLibDynamicArrayFree( &( pProcInfo->threadTbl ), ( uint_t ) tid, NULL );
+        MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
+                              ( uint_t ) pThreadInfo->tid,
+                              NULL                         );
 
         /* 戻り値設定 */
         pParam->ret = MK_RET_FAILURE;
@@ -424,16 +415,12 @@ static void DoCreate( MkThreadParam_t *pParam )
         return;
     }
 
-    /* ユーザスタック情報設定 */
-    pStackInfo              = &( pThreadInfo->userStack );
-    pStackInfo->pTopAddr    = pParam->pStackAddr;
-    pStackInfo->pBottomAddr = ( void * )( ( uint32_t ) pParam->pStackAddr +
-                                          pParam->stackSize               -
-                                          sizeof ( uint32_t )               );
-    pStackInfo->size        = pParam->stackSize;
-
-    /* エントリポイント設定 */
-    pThreadInfo->pEntryPoint = pParam->pFunc;
+    /* 起動時情報設定 */
+    pThreadInfo->startInfo.pEntryPoint   = pParam->pFunc;
+    pThreadInfo->startInfo.pStackPointer =
+        ( void * ) ( ( uint32_t ) pParam->pStackAddr +
+                                  pParam->stackSize  -
+                                  sizeof ( uint32_t )  );
 
     /* タスク追加 */
     taskId = TaskAdd( pThreadInfo );
@@ -442,14 +429,13 @@ static void DoCreate( MkThreadParam_t *pParam )
     if ( taskId == MK_TASKID_NULL ) {
         /* 失敗 */
 
-        /* ユーザスタック削除 */
-        UnsetUserStack( pThreadInfo );
-
         /* カーネルスタック削除 */
         UnsetKernelStack( pThreadInfo );
 
         /* スレッド管理情報解放 */
-        MLibDynamicArrayFree( &( pProcInfo->threadTbl ), tid, NULL );
+        MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
+                              ( uint_t ) pThreadInfo->tid,
+                              NULL                         );
 
         /* 戻り値設定 */
         pParam->ret = MK_RET_FAILURE;
@@ -566,72 +552,6 @@ static CmnRet_t SetKernelStack( ThreadInfo_t *pThreadInfo )
 
 /******************************************************************************/
 /**
- * @brief       ユーザスタック設定
- * @details     ユーザスタック領域を新たに割当てて、pThreadInfoにスタック情報を
- *              設定する。
- *
- * @param[in]   *pThreadInfo スレッド管理情報
- *
- * @return      処理結果を返す。
- * @retval      CMN_SUCCESS 成功
- * @retval      CMN_FAILURE 失敗
- */
-/******************************************************************************/
-static CmnRet_t SetUserStack( ThreadInfo_t *pThreadInfo )
-{
-    void              *pPhysAddr;   /* 物理メモリ領域 */
-    CmnRet_t          ret;          /* 関数戻り値     */
-    ThreadStackInfo_t *pStackInfo;  /* スタック情報   */
-
-    /* 初期化 */
-    pPhysAddr  = NULL;
-    ret        = CMN_FAILURE;
-    pStackInfo = &( pThreadInfo->userStack );
-
-    /* 物理メモリ領域割当 */
-    pPhysAddr = MemmngPhysAlloc( MK_CONFIG_SIZE_USER_STACK );
-
-    /* 割当結果判定 */
-    if ( pPhysAddr == NULL ) {
-        /* 失敗 */
-
-        return CMN_FAILURE;
-    }
-
-    /* ページマッピング */
-    ret = MemmngPageSet(
-              pThreadInfo->pProcInfo->dirId,        /* ページディレクトリID */
-              ( void * ) MK_CONFIG_ADDR_USER_STACK, /* 仮想アドレス         */
-              pPhysAddr,                            /* 物理アドレス         */
-              MK_CONFIG_SIZE_USER_STACK,            /* マッピングサイズ     */
-              IA32_PAGING_G_NO,                     /* グローバルフラグ     */
-              IA32_PAGING_US_USER,                  /* ユーザ/スーパバイザ  */
-              IA32_PAGING_RW_RW                     /* 読込/書込許可        */
-          );
-
-    /* マッピング結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* 物理メモリ領域解放 */
-        MemmngPhysFree( pPhysAddr );
-
-        return CMN_FAILURE;
-    }
-
-    /* ユーザスタック情報設定 */
-    pStackInfo->pTopAddr    = ( void * ) MK_CONFIG_ADDR_USER_STACK;
-    pStackInfo->pBottomAddr = ( void * ) ( MK_CONFIG_ADDR_USER_STACK +
-                                           MK_CONFIG_SIZE_USER_STACK -
-                                           sizeof ( uint32_t )         );
-    pStackInfo->size        = MK_CONFIG_SIZE_USER_STACK;
-
-    return CMN_SUCCESS;
-}
-
-
-/******************************************************************************/
-/**
  * @brief       カーネルスタック削除
  * @details     カーネルスタック領域を解放する。
  *
@@ -640,58 +560,13 @@ static CmnRet_t SetUserStack( ThreadInfo_t *pThreadInfo )
 /******************************************************************************/
 static void UnsetKernelStack( ThreadInfo_t *pThreadInfo )
 {
-    ThreadStackInfo_t *pStackInfo;  /* スタック情報 */
-
-    /* 初期化 */
-    pStackInfo = &( pThreadInfo->kernelStack );
-
     /* カーネルスタック領域解放 */
-    MemmngHeapFree( pStackInfo->pTopAddr );
+    MemmngHeapFree( pThreadInfo->kernelStack.pTopAddr );
 
     /* カーネルスタック情報設定 */
-    pStackInfo->pTopAddr    = NULL;
-    pStackInfo->pBottomAddr = NULL;
-    pStackInfo->size        = 0;
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       ユーザスタック削除
- * @details     メインスレッドの場合はユーザスタック領域の解放とメモリマッピン
- *              グ解除を行う。
- *
- * @param[in]   pThreadInfo スレッド管理情報
- */
-/******************************************************************************/
-static void UnsetUserStack( ThreadInfo_t *pThreadInfo )
-{
-    ThreadStackInfo_t *pStackInfo;  /* スタック情報 */
-
-    /* 初期化 */
-    pStackInfo = &( pThreadInfo->userStack );
-
-    /* スレッドID判定 */
-    if ( pThreadInfo->tid == 0 ) {
-        /* メインスレッド */
-
-        /* マッピング解除 */
-        MemmngPageUnset(
-            pThreadInfo->pProcInfo->dirId,          /* ページディレクトリID */
-            ( void * ) MK_CONFIG_ADDR_USER_STACK,   /* 仮想アドレス         */
-            MK_CONFIG_SIZE_USER_STACK               /* マッピングサイズ     */
-        );
-
-        /* カーネルスタック領域解放 */
-        MemmngHeapFree( pStackInfo->pTopAddr );
-    }
-
-    /* ユーザスタック情報設定 */
-    pStackInfo->pTopAddr    = NULL;
-    pStackInfo->pBottomAddr = NULL;
-    pStackInfo->size        = 0;
+    pThreadInfo->kernelStack.pTopAddr    = NULL;
+    pThreadInfo->kernelStack.pBottomAddr = NULL;
+    pThreadInfo->kernelStack.size        = 0;
 
     return;
 }

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - はじめに</title>
+    </head>
+    <body>
+        <a name="top"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html#external"><span itemprop="name">外部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">はじめに</span></a>
+                    <meta itemprop="position" content="4">
+                </li>
+            </ol>
+        </div>
+        <div id="content">
+            <div>
+                <h1>はじめに</h1>
+                <div class="tips">
+                    <h1>カーネル</h1>
+                    <p>オペレーティングシステムを構成する中核となるプログラムのこと。</p>
+                </div>
+                <p>MochiKernelは、PC/AT互換機上で動作するフルスクラッチ開発のマイクロカーネルです。</p>
+                <p>マイクロカーネルとは、デバイスドライバやファイルシステムなどをカーネル上のユーザ空間で動作するプロセスとしてカーネルから分離してカーネルを小さくする事で、安全で信頼性の高いカーネルの設計を容易にします。逆に、デバイスドライバやファイルシステムなどを含めるカーネルをモノリシックカーネルと呼び、カーネルの複雑さが増す一方で機能間のインタフェースが単純のため高い性能の実現が容易に行えます。モノリシックカーネルはLinuxやWindows9x系などで採用されており、マイクロカーネルはMachやMinixなどで採用されています。MochiKernelは、性能よりも安全で信頼性を重視するためにマイクロカーネルを選択しています。</p>
+                <p>MochiKernel上で動作するプログラム（タスク）は、ユーザ、サーバ、ドライバの3つのレベルで管理され、MochiKernelが提供する機能によって隣り合ったレベル間でのみタスク間通信が行えます。また、ドライバタスクだけがデバイスからの割込み通知を受信でき、デバイスにアクセス出来ます。</p>
+                <p>MochiKernelを用いたオペレーティングシステムの構成例を以下に示します。</p>
+                <div class="center">
+                    <img class="dark" src="ex.png"><br>
+                    MochiKernelを用いたオペレーティングシステム構成例<br>
+                </div>
+                <br>
+            </div>
+            <div class="totop"><a href="#top">▲上へ</a></div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

@@ -47,82 +47,92 @@
                     <meta itemprop="position" content="4"></li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <h1>仮想メモリマップ</h1>
-                <p>仮想メモリマップを以下に示す。</p>
-                <br>
-                <div class="center">仮想メモリマップ</div>
-                <table>
-                    <tr>
-                        <td class="title">先頭アドレス</td>
-                        <td class="title" colspan="2">概要</td>
-                        <td class="title" colspan="2">サイズ<br>(byte)</td>
-                        <td class="title" width="100">備考</td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0000_0000</td>
-                        <td class="center" colspan="2">ブートデータ</td>
-                        <td class="right">1,048,576</td>
-                        <td class="right" rowspan="8">1,073,741,824</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0010_0000</td>
-                        <td class="center" rowspan="7">MochiKernel</td>
-                        <td class="center"><br><br>コード/データ<br><br><br></td>
-                        <td class="right" rowspan="3">1,055,916,032</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">(end_point)</td>
-                        <td class="center">ヒープ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">(break_point)</td>
-                        <td class="center">スタック</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x3EFF_E000</td>
-                        <td class="center">ページ<br>ディレクトリ<br>操作領域</td>
-                        <td class="right">4,096</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x3EFF_F000</td>
-                        <td class="center">ページテーブル<br>操作領域</td>
-                        <td class="right">4,096</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x3F00_0000</td>
-                        <td class="center">メモリ制御領域1</td>
-                        <td class="right">8,388,608</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x3F80_0000</td>
-                        <td class="center">メモリ制御領域2</td>
-                        <td class="right">8,388,608</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x4000_0000</td>
-                        <td class="center" colspan="2"><br><br>ユーザ空間<br><br><br></td>
-                        <td class="right" colspan="2">2,147,483,648</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0xC000_0000</td>
-                        <td class="center" colspan="2"><br>割り当て可能メモリ領域<br><br></td>
-                        <td class="right" colspan="2">1,073,741,824</td>
-                        <td></td>
-                    </tr>
-                </table>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1>仮想メモリマップ</h1>
+                    <p>仮想メモリマップを以下に示す。</p>
+                    <br>
+                    <div class="center">仮想メモリマップ</div>
+                    <table>
+                        <tr>
+                            <td class="title">先頭アドレス</td>
+                            <td class="title" colspan="2">概要</td>
+                            <td class="title" colspan="2">サイズ<br>(byte)</td>
+                            <td class="title" width="100">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0000_0000</td>
+                            <td class="center" colspan="2">ブートデータ</td>
+                            <td class="right">1,048,576</td>
+                            <td class="right" rowspan="8">1,073,741,824</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0010_0000</td>
+                            <td class="center" rowspan="7">MochiKernel</td>
+                            <td class="center"><br><br>コード/データ<br><br><br></td>
+                            <td class="right" rowspan="3">1,055,916,032</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">(end_point)</td>
+                            <td class="center">ヒープ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">(break_point)</td>
+                            <td class="center">スタック</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x3EFF_E000</td>
+                            <td class="center">ページ<br>ディレクトリ<br>操作領域</td>
+                            <td class="right">4,096</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x3EFF_F000</td>
+                            <td class="center">ページテーブル<br>操作領域</td>
+                            <td class="right">4,096</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x3F00_0000</td>
+                            <td class="center">メモリ制御領域1</td>
+                            <td class="right">8,388,608</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x3F80_0000</td>
+                            <td class="center">メモリ制御領域2</td>
+                            <td class="right">8,388,608</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x4000_0000</td>
+                            <td class="center" colspan="2"><br><br>ユーザ空間<br><br><br></td>
+                            <td class="right" colspan="2">2,147,483,648</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0xC000_0000</td>
+                            <td class="center" colspan="2"><br>割り当て可能メモリ領域<br><br></td>
+                            <td class="right" colspan="2">1,073,741,824</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
             </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="virtmap"><li>仮想メモリマップ</li></a>
+                    </ol>
+                </div>
+            </div>
         </div>
         <div id="footer">
             <div id="copyright">

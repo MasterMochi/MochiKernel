@@ -50,309 +50,312 @@
                     <meta itemprop="position" content="5"></li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <h1>仮想メモリ領域管理 - 目次</h1>
-                <ol>
-                    <li><a href="#abstruct">概要</a></li>
-                    <li><a href="#init">初期化</a><ol>
-                        <li><a href="#init-list">リンクリスト初期化</a></li>
-                        <li><a href="#init-procinfo">プロセス管理情報用動的配列初期化</a></li>
-                        <li><a href="#init-areainfo">未使用ブロック管理情報用動的配列初期化</a></li>
-                        <li><a href="#init-add">未使用ブロック管理情報追加</a></li>
-                        <li><a href="#init-unused">未使用リンクリスト追加</a></li></ol></li>
-                    <li><a href="#start">仮想メモリ領域管理開始</a><ol>
-                        <li><a href="#start-procinfo">プロセス毎管理情報割当て</a></li>
-                        <li><a href="#start-list">リンクリスト初期化</a></li>
-                        <li><a href="#start-add">未使用ブロック管理情報追加</a></li>
-                        <li><a href="#start-free">未割当メモリ領域追加</a></li>
-                        <li><a href="#start-alloc">割当済メモリ領域追加</a></li></ol></li>
-                    <li><a href="#end">仮想メモリ領域管理終了</a><ol>
-                        <li><a href="#end-procinfo">プロセス管理情報取得</a></li>
-                        <li><a href="#end-list">リンクリストエントリ解放</a></li>
-                        <li><a href="#end-free">プロセス管理情報解放</a></li></ol></li>
-                    <li><a href="#alloc">仮想メモリ領域割当</a><ol>
-                        <li><a href="#alloc-procinfo">プロセス管理情報取得</a></li>
-                        <li><a href="#alloc-align">割当サイズアライメント</a></li>
-                        <li><a href="#alloc-add">未使用ブロック管理情報追加</a></li>
-                        <li><a href="#alloc-alloc">メモリ領域割当</a></li></ol></li>
-                    <li><a href="#free">仮想メモリ領域解放</a><ol>
-                        <li><a href="#free-procinfo">プロセス管理情報取得</a></li>
-                        <li><a href="#free-free">メモリ領域解放</a></li></ol></li>
-                </ol>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="abstruct">概要</a></h1>
-                <p>プロセス毎の仮想メモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
-                <br>
-                <div class="center">リンクリスト一覧</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">リンクリスト名</td>
-                        <td class="title" width="500">概要</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">未使用リンクリスト</td>
-                        <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">未割当リンクリスト</td>
-                        <td>プロセス毎に未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td clasS="center">割当済リンクリスト</td>
-                        <td>プロセス毎に割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
-                    </tr>
-                </table>
-                <br>
-                <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="init">初期化</a></h1>
-                <p>仮想メモリ領域の割当と解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="init.png"><br>
-                    初期化シーケンス
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>プロセス毎の仮想メモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
+                    <br>
+                    <div class="center">リンクリスト一覧</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">リンクリスト名</td>
+                            <td class="title" width="500">概要</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">未使用リンクリスト</td>
+                            <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">未割当リンクリスト</td>
+                            <td>プロセス毎に未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td clasS="center">割当済リンクリスト</td>
+                            <td>プロセス毎に割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="init-list">リンクリスト初期化</a></h2>
-                <p>未使用リンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
-                <br>
-                <br>
-                <h2><a name="init-procinfo">プロセス管理情報用動的配列初期化</a></h2>
-                <p>MLibライブラリの動的配列を用いてプロセス毎の仮想メモリ領域情報を管理するため、動的配列を下記パラメータで初期化する。</p>
-                <br>
-                <div class="center">プロセス毎管理用動的配列パラメータ</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">パラメータ</td>
-                        <td class="title">設定値</td>
-                        <td class="title">備考</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">チャンクサイズ</td>
-                        <td class="center">128</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">エントリサイズ</td>
-                        <td class="center">(プロセス毎管理情報サイズ)</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td class="center">最大エントリ数</td>
-                        <td class="center">1,024</td>
-                        <td>カーネルにおける最大プロセス数</td>
-                    </tr>
-                </table>
-                <br>
-                <br>
-                <h2><a name="init-areainfo">未使用ブロック管理情報用動的配列初期化</a></h2>
-                <p>MLibライブラリの動的配列を用いてヒープ領域にブロック管理情報を確保するため、動的配列を下記パラメータで初期化する。</p>
-                <br>
-                <div class="center">未使用ブロック管理情報用動的配列パラメータ</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">パラメータ</td>
-                        <td class="title">設定値</td>
-                        <td class="title">備考</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">チャンクサイズ</td>
-                        <td class="center">1</td>
-                        <td>チャンク内1エントリ</td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">エントリサイズ</td>
-                        <td class="center">(ブロック管理情報のサイズ * 256)</td>
-                        <td>
-                            1エントリに256個のブロック管理情報を<br>
-                            持たせる。
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td class="center">最大エントリ数</td>
-                        <td class="center">4,096</td>
-                        <td>
-                            4GBを4KBで必要なブロック管理情報数を<br>
-                            256で1エントリとした時の最大エントリ数。<br>
-                            =(4GB/4KB)/256
-                        </td>
-                    </tr>
-                </table>
-                <br>
-                <h2><a name="init-add">未使用ブロック管理情報追加</a></h2>
-                <p>MLibライブラリの動的配列を使って、ヒープ領域からブロック管理情報を256個(動的配列1エントリ分)割り当てておく。初期化後は、必要に応じてヒープ領域から追加のブロック管理情報を割当てる。</p>
-                <br>
-                <br>
-                <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
-                <p>ヒープ領域に確保したブロック管理情報全てを未使用リンクリストに追加する。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="start">仮想メモリ領域管理開始</a></h1>
-                <p>プロセス毎の仮想メモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="start.png"><br>
-                    仮想メモリ領域管理開始シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>仮想メモリ領域の割当と解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="init-list">リンクリスト初期化</a></h2>
+                    <p>未使用リンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-procinfo">プロセス管理情報用動的配列初期化</a></h2>
+                    <p>MLibライブラリの動的配列を用いてプロセス毎の仮想メモリ領域情報を管理するため、動的配列を下記パラメータで初期化する。</p>
+                    <br>
+                    <div class="center">プロセス毎管理用動的配列パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">設定値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">チャンクサイズ</td>
+                            <td class="center">128</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">エントリサイズ</td>
+                            <td class="center">(プロセス毎管理情報サイズ)</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">最大エントリ数</td>
+                            <td class="center">1,024</td>
+                            <td>カーネルにおける最大プロセス数</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <br>
+                    <h2><a name="init-areainfo">未使用ブロック管理情報用動的配列初期化</a></h2>
+                    <p>MLibライブラリの動的配列を用いてヒープ領域にブロック管理情報を確保するため、動的配列を下記パラメータで初期化する。</p>
+                    <br>
+                    <div class="center">未使用ブロック管理情報用動的配列パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">設定値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">チャンクサイズ</td>
+                            <td class="center">1</td>
+                            <td>チャンク内1エントリ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">エントリサイズ</td>
+                            <td class="center">(ブロック管理情報のサイズ * 256)</td>
+                            <td>
+                                1エントリに256個のブロック管理情報を<br>
+                                持たせる。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">最大エントリ数</td>
+                            <td class="center">4,096</td>
+                            <td>
+                                4GBを4KBで必要なブロック管理情報数を<br>
+                                256で1エントリとした時の最大エントリ数。<br>
+                                =(4GB/4KB)/256
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="init-add">未使用ブロック管理情報追加</a></h2>
+                    <p>MLibライブラリの動的配列を使って、ヒープ領域からブロック管理情報を256個(動的配列1エントリ分)割り当てておく。初期化後は、必要に応じてヒープ領域から追加のブロック管理情報を割当てる。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
+                    <p>ヒープ領域に確保したブロック管理情報全てを未使用リンクリストに追加する。</p>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="start-procinfo">プロセス管理情報割当て</a></h2>
-                <p>MLibライブラリを用いて、プロセス管理情報用の動的配列エントリ割当てを行う。</p>
-                <br>
-                <br>
-                <h2><a name="start-list">リンクリスト初期化</a></h2>
-                <p>割当済リンクリストと未割当リンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
-                <br>
-                <br>
-                <h2><a name="start-add">未使用ブロック管理情報追加</a></h2>
-                <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
-                <br>
-                <br>
-                <h2><a name="start-free">未割当メモリ領域追加</a></h2>
-                <p>下記メモリ領域をメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
-                <br>
-                <div class="center">未割当リンクリスト追加対象のメモリ領域</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">概要</td>
-                        <td class="title">アドレス</td>
-                        <td class="title">サイズ</td>
-                        <td class="title">備考</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td>全メモリ領域</td>
-                        <td class="center">0x0000_0000</td>
-                        <td class="center">0xFFFF_FFFC</td>
-                        <td>4GBは表せられないため4GB-4</td>
-                    </tr>
-                </table>
-                <br>
-                <h2><a name="start-alloc">割当済メモリ領域追加</a></h2>
-                <p>割当不可領域として、下記メモリ領域をメモリ領域管理サブモジュールの機能を用いて割り当てておく。</p>
-                <br>
-                <div class="center">割当済とするメモリ領域</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">概要</td>
-                        <td class="title">アドレス</td>
-                        <td class="title">サイズ</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">ブートデータ</td>
-                        <td class="center">0x0000_0000</td>
-                        <td class="center">0x0010_0000</td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">カーネル空間領域</td>
-                        <td class="center">0x0010_0000</td>
-                        <td class="center">0x3FF0_0000</td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td class="center">ユーザ空間領域</td>
-                        <td class="center">0x4000_0000</td>
-                        <td class="center">0x4000_0000</td>
-                    </tr>
-                </table>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="end">仮想メモリ領域管理終了</a></h1>
-                <p>プロセスの管理を終了し管理情報を解放する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="end.png"><br>
-                    仮想メモリ領域管理終了シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="start">仮想メモリ領域管理開始</a></h1>
+                    <p>プロセス毎の仮想メモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="start.png"><br>
+                        仮想メモリ領域管理開始シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="start-procinfo">プロセス管理情報割当て</a></h2>
+                    <p>MLibライブラリを用いて、プロセス管理情報用の動的配列エントリ割当てを行う。</p>
+                    <br>
+                    <br>
+                    <h2><a name="start-list">リンクリスト初期化</a></h2>
+                    <p>割当済リンクリストと未割当リンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
+                    <br>
+                    <br>
+                    <h2><a name="start-add">未使用ブロック管理情報追加</a></h2>
+                    <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="start-free">未割当メモリ領域追加</a></h2>
+                    <p>下記メモリ領域をメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
+                    <br>
+                    <div class="center">未割当リンクリスト追加対象のメモリ領域</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">概要</td>
+                            <td class="title">アドレス</td>
+                            <td class="title">サイズ</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>全メモリ領域</td>
+                            <td class="center">0x0000_0000</td>
+                            <td class="center">0xFFFF_FFFC</td>
+                            <td>4GBは表せられないため4GB-4</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="start-alloc">割当済メモリ領域追加</a></h2>
+                    <p>割当不可領域として、下記メモリ領域をメモリ領域管理サブモジュールの機能を用いて割り当てておく。</p>
+                    <br>
+                    <div class="center">割当済とするメモリ領域</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">概要</td>
+                            <td class="title">アドレス</td>
+                            <td class="title">サイズ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">ブートデータ</td>
+                            <td class="center">0x0000_0000</td>
+                            <td class="center">0x0010_0000</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">カーネル空間領域</td>
+                            <td class="center">0x0010_0000</td>
+                            <td class="center">0x3FF0_0000</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">ユーザ空間領域</td>
+                            <td class="center">0x4000_0000</td>
+                            <td class="center">0x4000_0000</td>
+                        </tr>
+                    </table>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="end-procinfo">プロセス管理情報取得</a></h2>
-                <p>プロセス管理情報をMLIBライブラリの動的配列エントリ取得機能を用いて取得する。</p>
-                <br>
-                <br>
-                <h2><a name="end-list">リンクリストエントリ解放</a></h2>
-                <p>割当済リンクリストと未割当リンクリストの全エントリを未使用リンクリストに追加する。リンクリストからの削除とリンクリストへの追加はMLIBライブラリを用いて行う。</p>
-                <br>
-                <br>
-                <h2><a name="end-free">プロセス管理情報解放</a></h2>
-                <p>プロセス管理情報用の動的配列エントリをMLIBライブラリを用いて解放する。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="alloc">仮想メモリ領域割当</a></h1>
-                <p>仮想メモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="alloc.png"><br>
-                    物理メモリ領域割当シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="end">仮想メモリ領域管理終了</a></h1>
+                    <p>プロセスの管理を終了し管理情報を解放する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="end.png"><br>
+                        仮想メモリ領域管理終了シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="end-procinfo">プロセス管理情報取得</a></h2>
+                    <p>プロセス管理情報をMLIBライブラリの動的配列エントリ取得機能を用いて取得する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="end-list">リンクリストエントリ解放</a></h2>
+                    <p>割当済リンクリストと未割当リンクリストの全エントリを未使用リンクリストに追加する。リンクリストからの削除とリンクリストへの追加はMLIBライブラリを用いて行う。</p>
+                    <br>
+                    <br>
+                    <h2><a name="end-free">プロセス管理情報解放</a></h2>
+                    <p>プロセス管理情報用の動的配列エントリをMLIBライブラリを用いて解放する。</p>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="alloc-procinfo">プロセス管理情報取得</a></h2>
-                <p>プロセス管理情報をMLIBライブラリの動的配列エントリ取得機能を用いて取得する。</p>
-                <br>
-                <br>
-                <h2><a name="alloc-align">割当サイズアライメント</a></h2>
-                <p>要求されたメモリ領域のサイズが4KBでない場合は、要求された割当サイズを満たす様に4KBアライメントする。</p>
-                <br>
-                <br>
-                <h2><a name="alloc-add">未使用ブロック管理情報追加</a></h2>
-                <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
-                <br>
-                <br>
-                <h2><a name="alloc-alloc">メモリ領域割当</a></h2>
-                <p>メモリ領域割当は、各種リンクリストと4KBアライメントした割当サイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="free">仮想メモリ領域解放</a></h1>
-                <p>仮想メモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="free.png"><br>
-                    シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="alloc">仮想メモリ領域割当</a></h1>
+                    <p>仮想メモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="alloc.png"><br>
+                        物理メモリ領域割当シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-procinfo">プロセス管理情報取得</a></h2>
+                    <p>プロセス管理情報をMLIBライブラリの動的配列エントリ取得機能を用いて取得する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-align">割当サイズアライメント</a></h2>
+                    <p>要求されたメモリ領域のサイズが4KBでない場合は、要求された割当サイズを満たす様に4KBアライメントする。</p>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-add">未使用ブロック管理情報追加</a></h2>
+                    <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-alloc">メモリ領域割当</a></h2>
+                    <p>メモリ領域割当は、各種リンクリストと4KBアライメントした割当サイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="free-procinfo">プロセス管理情報取得</a></h2>
-                <p>プロセス管理情報をMLIBライブラリの動的配列エントリ取得機能を用いて取得する。</p>
-                <br>
-                <br>
-                <h2><a name="free-free">メモリ領域解放</a></h2>
-                <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
-                <br>
-                <br>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="free">仮想メモリ領域解放</a></h1>
+                    <p>仮想メモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="free.png"><br>
+                        シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="free-procinfo">プロセス管理情報取得</a></h2>
+                    <p>プロセス管理情報をMLIBライブラリの動的配列エントリ取得機能を用いて取得する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="free-free">メモリ領域解放</a></h2>
+                    <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
+                    <br>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
             </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a></li>
+                        <a href="#init"><li>初期化</li></a><ol>
+                            <a href="#init-list"><li>リンクリスト初期化</li></a></li>
+                            <a href="#init-procinfo"><li>プロセス管理情報用動的配列初期化</li></a></li>
+                            <a href="#init-areainfo"><li>未使用ブロック管理情報用動的配列初期化</li></a></li>
+                            <a href="#init-add"><li>未使用ブロック管理情報追加</li></a></li>
+                            <a href="#init-unused"><li>未使用リンクリスト追加</li></a></li></ol></li>
+                        <a href="#start"><li>仮想メモリ領域管理開始</li></a><ol>
+                            <a href="#start-procinfo"><li>プロセス毎管理情報割当て</li></a></li>
+                            <a href="#start-list"><li>リンクリスト初期化</li></a></li>
+                            <a href="#start-add"><li>未使用ブロック管理情報追加</li></a></li>
+                            <a href="#start-free"><li>未割当メモリ領域追加</li></a></li>
+                            <a href="#start-alloc"><li>割当済メモリ領域追加</li></a></li></ol></li>
+                        <a href="#end"><li>仮想メモリ領域管理終了</li></a><ol>
+                            <a href="#end-procinfo"><li>プロセス管理情報取得</li></a>
+                            <a href="#end-list"><li>リンクリストエントリ解放</li></a>
+                            <a href="#end-free"><li>プロセス管理情報解放</li></a></ol>
+                        <a href="#alloc"><li>仮想メモリ領域割当</li></a><ol>
+                            <a href="#alloc-procinfo"><li>プロセス管理情報取得</li></a>
+                            <a href="#alloc-align"><li>割当サイズアライメント</li></a>
+                            <a href="#alloc-add"><li>未使用ブロック管理情報追加</li></a>
+                            <a href="#alloc-alloc"><li>メモリ領域割当</li></a></ol>
+                        <a href="#free"><li>仮想メモリ領域解放</li></a><ol>
+                            <a href="#free-procinfo"><li>プロセス管理情報取得</li></a>
+                            <a href="#free-free"><li>メモリ領域解放</li></a></ol>
+                    </ol>
+                </div>
+            </div>
         </div>
         <div id="footer">
             <div id="copyright">

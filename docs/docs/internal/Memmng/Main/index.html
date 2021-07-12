@@ -50,35 +50,38 @@
                     <meta itemprop="position" content="5"></li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <h1>I/Oメモリ領域管理 - 目次</h1>
-                <ol>
-                    <li><a href="#abstruct">概要</a></li>
-                    <li><a href="#init">初期化</a></li>
-                </ol>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="abstruct">概要</a></h1>
-                <p>サブモジュールを初期化してメモリ管理機能を有効にする。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="init">初期化</a></h1>
-                <p>各サブモジュールの初期化を行う。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="init.png"><br>
-                    初期化シーケンス
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>サブモジュールを初期化してメモリ管理機能を有効にする。</p>
+                    <br>
                 </div>
-                <br>
-                <p>ページング管理サブモジュールは、物理メモリ領域管理機能を使用するため、物理メモリ領域管理サブモジュールの後に初期化する。I/Oメモリ領域管理と仮想メモリ領域管理サブモジュールは、ページングを有効にしたヒープ領域で管理するため、ヒープ管理とページング管理サブモジュールの後に初期化する。</p>
-                <br>
-                <br>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>各サブモジュールの初期化を行う。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <p>ページング管理サブモジュールは、物理メモリ領域管理機能を使用するため、物理メモリ領域管理サブモジュールの後に初期化する。I/Oメモリ領域管理と仮想メモリ領域管理サブモジュールは、ページングを有効にしたヒープ領域で管理するため、ヒープ管理とページング管理サブモジュールの後に初期化する。</p>
+                    <br>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
             </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#init"><li>初期化</li></a>
+                    </ol>
+                </div>
+            </div>
         </div>
         <div id="footer">
             <div id="copyright">

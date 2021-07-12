@@ -50,159 +50,162 @@
                     <meta itemprop="position" content="5"></li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <h1>I/Oメモリ領域管理 - 目次</h1>
-                <ol>
-                    <li><a href="#abstruct">概要</a></li>
-                    <li><a href="#init">初期化</a><ol>
-                        <li><a href="#init-linklist">リンクリスト初期化</a></li>
-                        <li><a href="#init-dynamicarray">動的配列初期化</a></li>
-                        <li><a href="#init-add">未使用ブロック管理情報追加</a></li>
-                        <li><a href="#init-unused">未使用リンクリスト追加</a></li>
-                        <li><a href="#init-free">未割当メモリ領域追加</a></li></ol></li>
-                    <li><a href="#alloc">I/Oメモリ領域割当</a><ol>
-                        <li><a href="#alloc-check">アライメントチェック</a></li>
-                        <li><a href="#alloc-add">未使用ブロック管理情報追加</a></li>
-                        <li><a href="#alloc-alloc">メモリ領域割当</a></li></ol></li>
-                    <li><a href="#free">I/Oメモリ領域解放</a><ol>
-                        <li><a href="#free-free">メモリ領域解放</a></li></ol></li>
-                </ol>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="abstruct">概要</a></h1>
-                <p>システム全体のI/Oメモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
-                <br>
-                <div class="center">リンクリスト一覧</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">リンクリスト名</td>
-                        <td class="title" width="500">概要</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">未使用リンクリスト</td>
-                        <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">未割当リンクリスト</td>
-                        <td>未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td clasS="center">割当済リンクリスト</td>
-                        <td>割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
-                    </tr>
-                </table>
-                <br>
-                <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="init">初期化</a></h1>
-                <p>I/Oメモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="init.png"><br>
-                    初期化シーケンス
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>システム全体のI/Oメモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
+                    <br>
+                    <div class="center">リンクリスト一覧</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">リンクリスト名</td>
+                            <td class="title" width="500">概要</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">未使用リンクリスト</td>
+                            <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">未割当リンクリスト</td>
+                            <td>未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td clasS="center">割当済リンクリスト</td>
+                            <td>割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="init-list">リンクリスト初期化</a></h2>
-                <p>概要で記載した3つ全てのリンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
-                <br>
-                <br>
-                <h2><a name="init-dynamicarray">動的配列初期化</a></h2>
-                <p>ブロック管理情報はMLibライブラリの動的配列を使ってヒープ領域に動的に確保する。そのために、動的配列を下記パラメータで初期化する。</p>
-                <br>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">パラメータ</td>
-                        <td class="title">設定値</td>
-                        <td class="title">備考</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">チャンクサイズ</td>
-                        <td class="center">1</td>
-                        <td>チャンク内1エントリ</td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">エントリサイズ</td>
-                        <td class="center">(ブロック管理情報のサイズ * 256)</td>
-                        <td>
-                            1エントリに256個のブロック管理情報を<br>
-                            持たせる。
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td class="center">最大エントリ数</td>
-                        <td class="center">4,096</td>
-                        <td>
-                            4GBを4KB単位で必要なブロック管理情報数を<br>
-                            256で1エントリとした時の最大エントリ数。<br>
-                            =(4GB/4KB)/256
-                        </td>
-                    </tr>
-                </table>
-                <br>
-                <h2><a name="init-add">未使用ブロック管理情報追加</a></h2>
-                <p>MLibライブラリの動的配列を使って、ヒープ領域からブロック管理情報を256個(動的配列1エントリ分)割り当てておく。初期化後は、必要に応じてヒープ領域から追加のブロック管理情報を割当てる。</p>
-                <br>
-                <br>
-                <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
-                <p>ヒープ領域に確保したブロック管理情報全てを未使用リンクリストに追加する。</p>
-                <br>
-                <br>
-                <h2><a name="init-free">未割当メモリ領域追加</a></h2>
-                <p>初期化時に渡されたメモリマップの全エントリについて1エントリ毎に予約済みメモリ領域か判定し、予約済メモリ領域である場合は未割当メモリ領域としてメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="alloc">I/Oメモリ領域割当</a></h1>
-                <p>I/Oメモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="alloc.png"><br>
-                    物理メモリ領域割当シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>I/Oメモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="init-list">リンクリスト初期化</a></h2>
+                    <p>概要で記載した3つ全てのリンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-dynamicarray">動的配列初期化</a></h2>
+                    <p>ブロック管理情報はMLibライブラリの動的配列を使ってヒープ領域に動的に確保する。そのために、動的配列を下記パラメータで初期化する。</p>
+                    <br>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">設定値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">チャンクサイズ</td>
+                            <td class="center">1</td>
+                            <td>チャンク内1エントリ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">エントリサイズ</td>
+                            <td class="center">(ブロック管理情報のサイズ * 256)</td>
+                            <td>
+                                1エントリに256個のブロック管理情報を<br>
+                                持たせる。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">最大エントリ数</td>
+                            <td class="center">4,096</td>
+                            <td>
+                                4GBを4KB単位で必要なブロック管理情報数を<br>
+                                256で1エントリとした時の最大エントリ数。<br>
+                                =(4GB/4KB)/256
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="init-add">未使用ブロック管理情報追加</a></h2>
+                    <p>MLibライブラリの動的配列を使って、ヒープ領域からブロック管理情報を256個(動的配列1エントリ分)割り当てておく。初期化後は、必要に応じてヒープ領域から追加のブロック管理情報を割当てる。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
+                    <p>ヒープ領域に確保したブロック管理情報全てを未使用リンクリストに追加する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-free">未割当メモリ領域追加</a></h2>
+                    <p>初期化時に渡されたメモリマップの全エントリについて1エントリ毎に予約済みメモリ領域か判定し、予約済メモリ領域である場合は未割当メモリ領域としてメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
+                    <br>
                 </div>
-                <br>
-                <h2><a name="alloc-check">アライメントチェック</a></h2>
-                <p>要求されたメモリ領域の先頭アドレスとサイズが4KB単位でない場合は、割当てを行わない。</p>
-                <br>
-                <br>
-                <h2><a name="alloc-add">未使用ブロック管理情報追加</a></h2>
-                <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
-                <br>
-                <br>
-                <h2><a name="alloc-alloc">指定メモリ領域割当</a></h2>
-                <p>指定メモリ領域割当は、各種リンクリストと割当て先頭アドレスとサイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="free">I/Oメモリ領域解放</a></h1>
-                <p>I/Oメモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="free.png"><br>
-                    シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="alloc">I/Oメモリ領域割当</a></h1>
+                    <p>I/Oメモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="alloc.png"><br>
+                        物理メモリ領域割当シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="alloc-check">アライメントチェック</a></h2>
+                    <p>要求されたメモリ領域の先頭アドレスとサイズが4KB単位でない場合は、割当てを行わない。</p>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-add">未使用ブロック管理情報追加</a></h2>
+                    <p>未使用リンクリストのエントリ数が5未満の場合は、MLibライブラリの動的配列エントリ割当て機能を用いて新しく256個のブロック管理情報をヒープ領域に割当て、未使用リンクリストに追加する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-alloc">指定メモリ領域割当</a></h2>
+                    <p>指定メモリ領域割当は、各種リンクリストと割当て先頭アドレスとサイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
+                    <br>
                 </div>
-                <br>
-                <h2><a name="free-free">メモリ領域解放</a></h2>
-                <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
-                <br>
-                <br>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="free">I/Oメモリ領域解放</a></h1>
+                    <p>I/Oメモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="free.png"><br>
+                        シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="free-free">メモリ領域解放</a></h2>
+                    <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
+                    <br>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
             </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#init"><li>初期化</li></a><ol>
+                            <a href="#init-linklist"><li>リンクリスト初期化</li></a>
+                            <a href="#init-dynamicarray"><li>動的配列初期化</li></a>
+                            <a href="#init-add"><li>未使用ブロック管理情報追加</li></a>
+                            <a href="#init-unused"><li>未使用リンクリスト追加</li></a>
+                            <a href="#init-free"><li>未割当メモリ領域追加</li></a></ol>
+                        <a href="#alloc"><li>I/Oメモリ領域割当</li></a><ol>
+                            <a href="#alloc-check"><li>アライメントチェック</li></a>
+                            <a href="#alloc-add"><li>未使用ブロック管理情報追加</li></a>
+                            <a href="#alloc-alloc"><li>メモリ領域割当</li></a></ol>
+                        <a href="#free"><li>I/Oメモリ領域解放</li></a><ol>
+                            <a href="#free-free"><li>メモリ領域解放</li></a></ol>
+                    </ol>
+                </div>
+            </div>
         </div>
         <div id="footer">
             <div id="copyright">

@@ -42,48 +42,59 @@
                 </li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <a name="external"></a>
-                <h1>外部仕様</h1>
-                <ol>
-                    <li><a href="external/intro/index.html">はじめに</a></li>
-                    <li>機能<ol>
-                        <li>メモリ管理機能<ol>
-                            <li><a href="external/memory/phys/index.html">物理メモリ管理</a></li>
-                            <li><a href="external/memory/virt/index.html">仮想メモリ管理</a></li></ol></li>
-                        <li>割込み管理機能</li>
-                        <li>タイマ管理機能</li>
-                        <li>タスク管理機能</li>
-                        <li>タスク間通信機能</li>
-                        <li>入出力制御機能</li></ol></li>
-                </ol>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <a name="external"></a>
+                    <h1>外部仕様</h1>
+                    <ol>
+                        <li><a href="external/intro/index.html">はじめに</a></li>
+                        <li>機能<ol>
+                            <li>メモリ管理機能<ol>
+                                <li><a href="external/memory/phys/index.html">物理メモリ管理</a></li>
+                                <li><a href="external/memory/virt/index.html">仮想メモリ管理</a></li></ol></li>
+                            <li>割込み管理機能</li>
+                            <li>タイマ管理機能</li>
+                            <li>タスク管理機能</li>
+                            <li>タスク間通信機能</li>
+                            <li>入出力制御機能</li></ol></li>
+                    </ol>
+                </div>
+                <div>
+                    <a name="internal"></a>
+                    <h1>内部仕様</h1>
+                    <ol>
+                        <li>モジュール構成</li>
+                        <li>モジュール<ol>
+                            <li>初期化制御</li>
+                            <li><a href="internal/Memmng/index.html">メモリ管理</a><ol>
+                                <li><a href="internal/Memmng/Main/index.html">メイン</a></li>
+                                <li><a href="internal/Memmng/Sgmt/index.html">セグメンテーション管理</a></li>
+                                <li><a href="internal/Memmng/Page/index.html">ページング管理</a></li>
+                                <li><a href="internal/Memmng/Phys/index.html">物理メモリ領域管理</a></li>
+                                <li><a href="internal/Memmng/Virt/index.html">仮想メモリ領域管理</a></li>
+                                <li><a href="internal/Memmng/Area/index.html">メモリ領域管理</a></li>
+                                <li><a href="internal/Memmng/Io/index.html">I/Oメモリ領域管理</a></li>
+                                <li>ヒープ管理</li></ol></li>
+                            <li>割込み管理</li>
+                            <li>タスク管理</li>
+                            <li>タイマ管理</li>
+                            <li>タスク間通信制御</li>
+                            <li>入出力制御</li></ol></li>
+                        <li>メモリマップ<ol>
+                            <li><a href="internal/memmap/phys/index.html">物理メモリマップ</a></li>
+                            <li><a href="internal/memmap/virt/index.html">仮想メモリマップ</a></li></ol>
+                    </ol>
+                </div>
             </div>
             <div>
-                <a name="internal"></a>
-                <h1>内部仕様</h1>
-                <ol>
-                    <li>モジュール構成</li>
-                    <li>モジュール<ol>
-                        <li>初期化制御</li>
-                        <li><a href="internal/Memmng/index.html">メモリ管理</a><ol>
-                            <li><a href="internal/Memmng/Main/index.html">メイン</a></li>
-                            <li><a href="internal/Memmng/Sgmt/index.html">セグメンテーション管理</a></li>
-                            <li><a href="internal/Memmng/Page/index.html">ページング管理</a></li>
-                            <li><a href="internal/Memmng/Phys/index.html">物理メモリ領域管理</a></li>
-                            <li><a href="internal/Memmng/Virt/index.html">仮想メモリ領域管理</a></li>
-                            <li><a href="internal/Memmng/Area/index.html">メモリ領域管理</a></li>
-                            <li><a href="internal/Memmng/Io/index.html">I/Oメモリ領域管理</a></li>
-                            <li>ヒープ管理</li></ol></li>
-                        <li>割込み管理</li>
-                        <li>タスク管理</li>
-                        <li>タイマ管理</li>
-                        <li>タスク間通信制御</li>
-                        <li>入出力制御</li></ol></li>
-                    <li>メモリマップ<ol>
-                        <li><a href="internal/memmap/phys/index.html">物理メモリマップ</a></li>
-                        <li><a href="internal/memmap/virt/index.html">仮想メモリマップ</a></li></ol>
-                </ol>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#external"><li>外部仕様</li></a>
+                        <a href="#internal"><li>内部仕様</li></a>
+                    </ol>
+                </div>
             </div>
         </div>
         <div id="footer">

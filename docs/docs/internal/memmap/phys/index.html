@@ -47,176 +47,186 @@
                     <meta itemprop="position" content="4"></li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <h1>物理メモリマップ</h1>
-                <p>物理メモリマップを以下に示す。</p>
-                <br>
-                <div class="center">物理メモリマップ</div>
-                <table>
-                    <tr>
-                        <td class="title">先頭<br>からの<br>サイズ</td>
-                        <td class="title">先頭アドレス</td>
-                        <td class="title" colspan="3">概要</td>
-                        <td class="title">サイズ<br>(byte)</td>
-                        <td class="title">種別</td>
-                        <td class="title" width="100">備考</td>
-                    </tr>
-                    <tr>
-                        <td class="center" rowspan="7">0B<br>～<br>640kB</td>
-                        <td class="center">0x0000_0000</td>
-                        <td class="center" rowspan="7">conven-<br>tional<br>memory</td>
-                        <td class="center" colspan="2">BIOS<br>割込みテーブル</td>
-                        <td class="right">768</td>
-                        <td class="center">メインメモリ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0000_0300</td>
-                        <td class="center" colspan="2">BIOS<br>スタック</td>
-                        <td class="right">256</td>
-                        <td class="center">メインメモリ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0000_0400</td>
-                        <td class="center" colspan="2">BIOS<br>データ</td>
-                        <td class="right">256</td>
-                        <td class="center">メインメモリ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0000_0500</td>
-                        <td class="center" colspan="2">MochiBooter<br>データ/スタック</td>
-                        <td class="right">29,952</td>
-                        <td class="center">メインメモリ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0000_7A00</td>
-                        <td class="center" colspan="2">IPL</td>
-                        <td class="right">512</td>
-                        <td class="center">メインメモリ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0000_7C00</td>
-                        <td class="center" colspan="2">MochiBooter</td>
-                        <td class="right">33,792</td>
-                        <td class="center">メインメモリ</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0001_0000</td>
-                        <td class="center" colspan="2">MochiKernel<br>実行ファイル<br>バッファ領域</td>
-                        <td class="right">615,424</td>
-                        <td class="center">メインメモリ</td>
-                        <td>0x0009_8000から使用できない可能性有り。</td>
-                    </tr>
-                    <tr>
-                        <td class="center" rowspan="8">640kB<br>～<br>1MB</td>
-                        <td class="center">0x000A_0000</td>
-                        <td class="center" rowspan="8">Upper<br>Memory<br>Area</td>
-                        <td class="center" rowspan="3">ビデオ<br>メモリ</td>
-                        <td class="center">EGA<br>VGA</td>
-                        <td class="right">65,636</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000B_0000</td>
-                        <td class="center">MDA<br>CGAカラー<br>VGAモノクロ</td>
-                        <td class="right">32,768</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000B_8000</td>
-                        <td class="center">CGA<br>EGAカラー<br>VGAカラー</td>
-                        <td class="right">32,768</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000C_0000</td>
-                        <td class="center" colspan="2">ビデオBIOS</td>
-                        <td class="right">32,768</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000C_8000</td>
-                        <td class="center" colspan="2">拡張BIOS</td>
-                        <td class="right">32,768</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000D_0000</td>
-                        <td class="center" colspan="2">拡張BIOS</td>
-                        <td class="right">65,636</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000E_0000</td>
-                        <td class="center" colspan="2">システムBIOS</td>
-                        <td class="right">65,636</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x000F_0000</td>
-                        <td class="center" colspan="2">システムBIOS</td>
-                        <td class="right">65,636</td>
-                        <td class="center">PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center" rowspan="2">1MB<br>～<br>16MB</td>
-                        <td class="center">0x0010_0000</td>
-                        <td class="center" rowspan="3" colspan="3">MochiKernel</td>
-                        <td class="right" rowspan="3">65,011,712</td>
-                        <td class="center">メインメモリ<br>PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x00F0_0000</td>
-                        <td class="center">メインメモリ<br>PCI<br>ISA</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center" rowspan="5">16MB<br>～</td>
-                        <td class="center">0x0100_0000</td>
-                        <td class="center" rowspan="5">メインメモリ<br>PCI</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x03F0_0000</td>
-                        <td class="center" colspan="3">MochiKernel<br>スタック</td>
-                        <td class="right">1,048,576</td>
-                        <td></td>
-                    </tr>
-                        <td class="center">0x0400_0000</td>
-                        <td class="center" colspan="3">プロセスイメージ</td>
-                        <td class="right">16,777,216</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0500_0000</td>
-                        <td class="center" colspan="3">アイドルプロセス用<br>ページディレクトリ</td>
-                        <td class="right">4,096</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td class="center">0x0500_1000</td>
-                        <td class="center" colspan="3">カーネル領域ページテーブル</td>
-                        <td class="right">1,048,576</td>
-                        <td></td>
-                    </tr>
-                </table>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="phymap">物理メモリマップ</a></h1>
+                    <p>物理メモリマップを以下に示す。</p>
+                    <br>
+                    <div class="center">物理メモリマップ</div>
+                    <table>
+                        <tr>
+                            <td class="title">先頭<br>からの<br>サイズ</td>
+                            <td class="title">先頭アドレス</td>
+                            <td class="title" colspan="3">概要</td>
+                            <td class="title">サイズ<br>(byte)</td>
+                            <td class="title">種別</td>
+                            <td class="title" width="100">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center" rowspan="7">0B<br>～<br>640kB</td>
+                            <td class="center">0x0000_0000</td>
+                            <td class="center" rowspan="7">conven-<br>tional<br>memory</td>
+                            <td class="center" colspan="2">BIOS<br>割込みテーブル</td>
+                            <td class="right">768</td>
+                            <td class="center">メインメモリ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0000_0300</td>
+                            <td class="center" colspan="2">BIOS<br>スタック</td>
+                            <td class="right">256</td>
+                            <td class="center">メインメモリ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0000_0400</td>
+                            <td class="center" colspan="2">BIOS<br>データ</td>
+                            <td class="right">256</td>
+                            <td class="center">メインメモリ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0000_0500</td>
+                            <td class="center" colspan="2">MochiBooter<br>データ/スタック</td>
+                            <td class="right">29,952</td>
+                            <td class="center">メインメモリ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0000_7A00</td>
+                            <td class="center" colspan="2">IPL</td>
+                            <td class="right">512</td>
+                            <td class="center">メインメモリ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0000_7C00</td>
+                            <td class="center" colspan="2">MochiBooter</td>
+                            <td class="right">33,792</td>
+                            <td class="center">メインメモリ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0001_0000</td>
+                            <td class="center" colspan="2">MochiKernel<br>実行ファイル<br>バッファ領域</td>
+                            <td class="right">615,424</td>
+                            <td class="center">メインメモリ</td>
+                            <td>0x0009_8000から使用できない可能性有り。</td>
+                        </tr>
+                        <tr>
+                            <td class="center" rowspan="8">640kB<br>～<br>1MB</td>
+                            <td class="center">0x000A_0000</td>
+                            <td class="center" rowspan="8">Upper<br>Memory<br>Area</td>
+                            <td class="center" rowspan="3">ビデオ<br>メモリ</td>
+                            <td class="center">EGA<br>VGA</td>
+                            <td class="right">65,636</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000B_0000</td>
+                            <td class="center">MDA<br>CGAカラー<br>VGAモノクロ</td>
+                            <td class="right">32,768</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000B_8000</td>
+                            <td class="center">CGA<br>EGAカラー<br>VGAカラー</td>
+                            <td class="right">32,768</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000C_0000</td>
+                            <td class="center" colspan="2">ビデオBIOS</td>
+                            <td class="right">32,768</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000C_8000</td>
+                            <td class="center" colspan="2">拡張BIOS</td>
+                            <td class="right">32,768</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000D_0000</td>
+                            <td class="center" colspan="2">拡張BIOS</td>
+                            <td class="right">65,636</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000E_0000</td>
+                            <td class="center" colspan="2">システムBIOS</td>
+                            <td class="right">65,636</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x000F_0000</td>
+                            <td class="center" colspan="2">システムBIOS</td>
+                            <td class="right">65,636</td>
+                            <td class="center">PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center" rowspan="2">1MB<br>～<br>16MB</td>
+                            <td class="center">0x0010_0000</td>
+                            <td class="center" rowspan="3" colspan="3">MochiKernel</td>
+                            <td class="right" rowspan="3">65,011,712</td>
+                            <td class="center">メインメモリ<br>PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x00F0_0000</td>
+                            <td class="center">メインメモリ<br>PCI<br>ISA</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center" rowspan="5">16MB<br>～</td>
+                            <td class="center">0x0100_0000</td>
+                            <td class="center" rowspan="5">メインメモリ<br>PCI</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x03F0_0000</td>
+                            <td class="center" colspan="3">MochiKernel<br>スタック</td>
+                            <td class="right">1,048,576</td>
+                            <td></td>
+                        </tr>
+                            <td class="center">0x0400_0000</td>
+                            <td class="center" colspan="3">プロセスイメージ</td>
+                            <td class="right">16,777,216</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0500_0000</td>
+                            <td class="center" colspan="3">アイドルプロセス用<br>ページディレクトリ</td>
+                            <td class="right">4,096</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0500_1000</td>
+                            <td class="center" colspan="3">カーネル領域ページテーブル</td>
+                            <td class="right">1,048,576</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
             </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#phymap"><li>物理メモリマップ</li></a>
+                    </ol>
+                </div>
+            </div>
         </div>
         <div id="footer">
             <div id="copyright">

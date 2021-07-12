@@ -50,111 +50,114 @@
                     <meta itemprop="position" content="5"></li>
             </ol>
         </div>
-        <div id="content">
-            <div>
-                <h1>物理メモリ領域管理 - 目次</h1>
-                <ol>
-                    <li><a href="#abstruct">概要</a></li>
-                    <li><a href="#init">初期化</a><ol>
-                        <li><a href="#init-linklist">リンクリスト初期化</a></li>
-                        <li><a href="#init-unused">未使用リンクリスト追加</a></li>
-                        <li><a href="#init-free">未割当メモリ領域追加</a></li></ol></li>
-                    <li><a href="#alloc">物理メモリ領域割当</a><ol>
-                        <li><a href="#alloc-align">割当サイズアライメント</a></li>
-                        <li><a href="#alloc-alloc">メモリ領域割当</a></li></ol></li>
-                    <li><a href="#free">物理メモリ領域解放</a><ol>
-                        <li><a href="#free-free">メモリ領域解放</a></li></ol></li>
-                </ol>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="abstruct">概要</a></h1>
-                <p>システム全体の物理メモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
-                <br>
-                <div class="center">リンクリスト一覧</div>
-                <table>
-                    <tr>
-                        <td class="title">#</td>
-                        <td class="title">リンクリスト名</td>
-                        <td class="title" width="500">概要</td>
-                    </tr>
-                    <tr>
-                        <td class="center">1</td>
-                        <td class="center">未使用リンクリスト</td>
-                        <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
-                    </tr>
-                    <tr>
-                        <td class="center">2</td>
-                        <td class="center">未割当リンクリスト</td>
-                        <td>未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
-                    </tr>
-                    <tr>
-                        <td class="center">3</td>
-                        <td clasS="center">割当済リンクリスト</td>
-                        <td>割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
-                    </tr>
-                </table>
-                <br>
-                <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="init">初期化</a></h1>
-                <p>物理メモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="init.png"><br>
-                    初期化シーケンス
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>システム全体の物理メモリ領域の使用状況を4KB単位で管理する。メモリ領域は、先頭アドレスとサイズから成る1ブロック管理情報で表し割当済リンクリストと未割当リンクリストおよび未使用リンクリストにより管理する。各種リンクリストの概要を以下に示す。</p>
+                    <br>
+                    <div class="center">リンクリスト一覧</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">リンクリスト名</td>
+                            <td class="title" width="500">概要</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">未使用リンクリスト</td>
+                            <td>未使用のブロック管理情報をまとめて管理するリンクリスト。未割当領域を新たに追加したり領域の分割によりブロック管理情報が必要になった時はこのリンクリストから1つブロック管理情報を取り出して使用し、領域の結合でブロック管理情報が不要になった時はこのリンクリストに追加しておく。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">未割当リンクリスト</td>
+                            <td>未割当のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td clasS="center">割当済リンクリスト</td>
+                            <td>割当済のメモリ領域であることを表すブロック管理情報をまとめて管理するリンクリスト。リストはアドレスでソートする。結合可能なブロック管理情報は結合する。</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p>アドレスによるソートやブロック管理情報の結合分割などのリンクリスト操作はメモリ領域管理サブモジュールの機能を用いる。</p>
+                    <br>
                 </div>
-                <br>
-                <br>
-                <h2><a name="init-list">リンクリスト初期化</a></h2>
-                <p>概要で記載した3つ全てのリンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
-                <br>
-                <br>
-                <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
-                <p>物理メモリ領域用のブロック管理情報の割り当ては動的に行えない(自身の機能が割当て機能である)ため、扱える最大メモリサイズ4GBを4KB単位に管理する事が可能な1,000個のブロック管理情報を静的に割り当てる。この静的に割り当てた全てのブロック管理情報を未使用リンクリストに追加する。</p>
-                <br>
-                <br>
-                <h2><a name="init-free">未割当メモリ領域追加</a></h2>
-                <p>初期化時に渡されたメモリマップの全エントリについて1エントリ毎に使用可能メモリ領域か判定し、使用可能メモリ領域である場合は未割当メモリ領域としてメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="alloc">物理メモリ領域割当</a></h1>
-                <p>物理メモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="alloc.png"><br>
-                    物理メモリ領域割当シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>物理メモリ領域の割当てと解放を行えるよう管理情報を初期化する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="init-list">リンクリスト初期化</a></h2>
+                    <p>概要で記載した3つ全てのリンクリストを初期化する。リンクリストはMLibライブラリのリンクリスト機能を用いる。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-unused">未使用リンクリスト追加</a></h2>
+                    <p>物理メモリ領域用のブロック管理情報の割り当ては動的に行えない(自身の機能が割当て機能である)ため、扱える最大メモリサイズ4GBを4KB単位に管理する事が可能な1,000個のブロック管理情報を静的に割り当てる。この静的に割り当てた全てのブロック管理情報を未使用リンクリストに追加する。</p>
+                    <br>
+                    <br>
+                    <h2><a name="init-free">未割当メモリ領域追加</a></h2>
+                    <p>初期化時に渡されたメモリマップの全エントリについて1エントリ毎に使用可能メモリ領域か判定し、使用可能メモリ領域である場合は未割当メモリ領域としてメモリ領域管理サブモジュールの機能を用いて未割当リンクリストに追加する。</p>
+                    <br>
                 </div>
-                <br>
-                <h2><a name="alloc-align">割当てサイズアライメント</a></h2>
-                <p>要求されたメモリ領域のサイズが4KBでない場合は、要求された割当サイズを満たす様に4KBアライメントする。</p>
-                <br>
-                <br>
-                <h2><a name="alloc-alloc">メモリ領域割当</a></h2>
-                <p>メモリ領域割当は、各種リンクリストと4KBアライメントした割当サイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
-                <br>
-            </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
-            <div>
-                <h1><a name="free">物理メモリ領域解放</a></h1>
-                <p>物理メモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
-                <br>
-                <div class="center">
-                    <img src="free.png"><br>
-                    シーケンス
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="alloc">物理メモリ領域割当</a></h1>
+                    <p>物理メモリ領域を4KB単位で動的に割り当てる。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="alloc.png"><br>
+                        物理メモリ領域割当シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="alloc-align">割当てサイズアライメント</a></h2>
+                    <p>要求されたメモリ領域のサイズが4KBでない場合は、要求された割当サイズを満たす様に4KBアライメントする。</p>
+                    <br>
+                    <br>
+                    <h2><a name="alloc-alloc">メモリ領域割当</a></h2>
+                    <p>メモリ領域割当は、各種リンクリストと4KBアライメントした割当サイズを基に、メモリ領域管理サブモジュールの機能を用いて行う。</p>
+                    <br>
                 </div>
-                <br>
-                <h2><a name="free-free">メモリ領域解放</a></h2>
-                <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
-                <br>
-                <br>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="free">物理メモリ領域解放</a></h1>
+                    <p>物理メモリ領域割当機能にて割り当てたメモリ領域を解放する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="free.png"><br>
+                        シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="free-free">メモリ領域解放</a></h2>
+                    <p>メモリ領域の解放は、各種リンクリストと解放するアドレスを基にメモリ領域管理サブモジュールの機能を用いて行う。</p>
+                    <br>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
             </div>
-            <div class="totop"><a href="#top">▲上へ</a></div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#init"><li>初期化</li></a><ol>
+                            <a href="#init-linklist"><li>リンクリスト初期化</li></a>
+                            <a href="#init-unused"><li>未使用リンクリスト追加</li></a>
+                            <a href="#init-free"><li>未割当メモリ領域追加</li></a></ol>
+                        <a href="#alloc"><li>物理メモリ領域割当</li></a><ol>
+                            <a href="#alloc-align"><li>割当サイズアライメント</li></a>
+                            <a href="#alloc-alloc"><li>メモリ領域割当</li></a></ol>
+                        <a href="#free"><li>物理メモリ領域解放</li></a><ol>
+                            <a href="#free-free"><li>メモリ領域解放</li></a></ol>
+                    </ol>
+                </div>
+            </div>
         </div>
         <div id="footer">
             <div id="copyright">

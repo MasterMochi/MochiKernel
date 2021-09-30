@@ -1,0 +1,34 @@
+@startuml
+
+box "タスク管理"
+    participant "スレッド管理" as thread
+    participant "タスク管理"   as task
+    participant "スケジューラ" as sched
+end box
+participant "メモリ管理" as Memmng
+
+thread -> task: タスク複製(\n  複製先タスク管理情報,\n  複製元タスク管理情報 )
+activate task
+
+task -> Memmng: カーネルスタック領域割当
+activate Memmng
+ref over Memmng: ヒープ領域割当て
+task <-- Memmng:
+deactivate Memmng
+
+task -> task: カーネルスタック領域複製
+
+task -> task: タスク管理情報設定
+
+task -> sched: スケジュール登録
+activate sched
+ref over sched: スケジュール登録
+task <-- sched:
+deactivate sched
+
+rnote over task #FFFFFF: 複製タスク開始ポイント:
+
+thread <-- task:
+deactivate task
+
+@enduml

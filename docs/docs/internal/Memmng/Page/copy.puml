@@ -1,0 +1,86 @@
+@startuml
+
+participant "タスク管理" as Taskmng
+box "メモリ管理"
+    participant "ページ管理"           as page
+    participant "物理メモリ\n領域管理" as phys
+    participant "メモリ制御"           as ctrl
+end box
+participant "MLib" as mlib
+
+Taskmng -> page: ページ複製\n( 複製元ページディレクトリID,\n  複製先ページディレクトリID,\n  先頭仮想アドレス,\n  サイズ )
+activate page
+
+page -> mlib: ページディレクトリ管理情報取得\n( 複製元ページディレクトリID )
+activate mlib
+ref over mlib: 動的配列
+page <-- mlib:
+deactivate mlib
+
+page -> page: ページディレクトリch1アクセス領域設定
+activate page
+ref over page: マッピング設定
+page --[#DDDDDD]>page:
+deactivate page
+
+page -> mlib: ページディレクトリ管理情報取得\n( 複製先ページディレクトリID )
+activate mlib
+ref over mlib: 動的配列
+page <-- mlib:
+deactivate mlib
+
+page -> page: ページディレクトリch2アクセス領域設定
+activate page
+ref over page: マッピング設定
+page --[#DDDDDD]>page:
+deactivate page
+
+loop 4KBページ毎に繰り返す
+    opt 複製元ページテーブルが存在する
+        page -> page: ページテーブルch1アクセス領域設定
+        activate page
+        ref over page: マッピング設定
+        page --[#FFFFFF]>page:
+        deactivate page
+
+        opt 複製先ページテーブルが存在しない
+            page -> phys: 複製先ページテーブル割当
+            activate phys
+            ref over phys: 物理メモリ領域割当
+            page <-- phys:
+            deactivate phys
+
+            page -> page: 複製先ページディレクトリエントリ設定
+        end opt
+
+        opt 複製元ページが存在する
+            page -> page: ページテーブルch2アクセス領域設定
+            activate page
+            ref over page: マッピング設定
+            page --[#FFFFFF]>page:
+            deactivate page
+
+            opt 複製先ページが存在しない
+                page -> phys: 複製先ページ割当
+                activate phys
+                ref over phys: 物理メモリ領域割当
+                page <-- phys:
+                deactivate phys
+
+                page -> page: 複製先ページテーブルエントリ設定
+            end opt
+
+            page -> ctrl: ページ複製
+            activate ctrl
+            ref over ctrl: メモリコピー(物理->物理)
+            page <-- ctrl:
+            deactivate ctrl
+        end opt
+    end opt
+end loop
+
+Taskmng <-- page:
+deactivate page
+
+@enduml
+

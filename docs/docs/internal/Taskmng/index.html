@@ -21,7 +21,7 @@
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
         <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-        <title>MochiKernel - メモリ管理</title>
+        <title>MochiKernel - タスク管理</title>
     </head>
     <body>
         <a name="totop"></a>
@@ -43,7 +43,7 @@
                     <a itemprop="item" href="../../index.html#internal"><span itemprop="name">内部仕様</span></a>
                     <meta itemprop="position" content="3"></li>
                 <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
-                    <a itemprop="item" href="./index.html"><span itemprop="name">メモリ管理</span></a>
+                    <a itemprop="item" href="./index.html"><span itemprop="name">タスク管理</span></a>
                     <meta itemprop="position" content="4"></li>
             </ol>
         </div>
@@ -51,13 +51,13 @@
             <div id="content">
                 <div>
                     <h1><a name="abstruct">概要</a></h1>
-                    <p>メモリ管理モジュールは、物理メモリ管理、仮想メモリ管理、および、メモリ制御などを行う。</p>
+                    <p>タスク管理モジュールは、プロセス・スレッド・タスク管理とタスクのスケジューリングを行います。また、タスクの名前を管理します。</p>
                     <br>
                 </div>
                 <div class="totop"><a href="#top">▲上へ</a></div>
                 <div>
                     <h1><a name="submodule">サブモジュール構成</a></h1>
-                    <p>メモリ管理モジュールのサブモジュール構成について以下に示す。</p>
+                    <p>タスク管理モジュールのサブモジュール構成について以下に示します。</p>
                     <br>
                     <div class="center">
                         <img src="submodule.png"><br>
@@ -77,57 +77,51 @@
                         </tr>
                         <tr>
                             <td class="center">1</td>
-                            <td><a href="Main/index.html">メイン</a></td>
-                            <td>Memmng</td>
-                            <td>メモリ管理モジュールの共通的な処理を行う。</td>
+                            <td>メイン</td>
+                            <td>Taskmng</td>
+                            <td>タスク管理モジュールの共通的な処理を行います。</td>
                         </tr>
                         <tr>
                             <td class="center">2</td>
-                            <td><a href="Sgmt/index.html">セグメンテーション管理</a></td>
-                            <td>MemmngSgmt</td>
-                            <td>グローバルディスクリプタテーブルを管理しCPUに設定する。</td>
+                            <td><a href="Proc/index.html">プロセス管理</a></td>
+                            <td>TaskmngProc</td>
+                            <td>プロセスを管理します。</td>
                         </tr>
                         <tr>
                             <td class="center">3</td>
-                            <td><a href="Page/index.html">ページング管理</a></td>
-                            <td>MemmngPage</td>
-                            <td>プロセス毎のページディレクトリテーブルとページテーブルの管理を行う。</td>
+                            <td><a href="Thread/index.html">スレッド管理</a></td>
+                            <td>TaskmngThread</td>
+                            <td>スレッドを管理します。</td>
                         </tr>
                         <tr>
                             <td class="center">4</td>
-                            <td><a href="Phys/index.html">物理メモリ領域管理</a></td>
-                            <td>MemmngPhys</td>
-                            <td>システム全体の物理メモリ領域の管理を行う。</td>
+                            <td><a href="Task/index.html">タスク管理</a></td>
+                            <td>TaskmngTask</td>
+                            <td>タスクを管理します。</td>
                         </tr>
                         <tr>
                             <td class="center">5</td>
-                            <td><a href="Virt/index.html">仮想メモリ領域管理</a></td>
-                            <td>MemmngVirt</td>
-                            <td>プロセス毎の仮想メモリ領域の管理を行う。</td>
+                            <td>スケジューラ</td>
+                            <td>TaskmngSched</td>
+                            <td>タスクのスケジューリングを行います。</td>
                         </tr>
                         <tr>
                             <td class="center">6</td>
-                            <td><a href="Area/index.html">メモリ領域管理</a></td>
-                            <td>MemmngArea</td>
-                            <td>物理メモリ領域管理、仮想メモリ領域管理、I/Oメモリ領域管理の共通処理を行う。</td>
+                            <td>TSS管理</a></td>
+                            <td>TaskmngTss</td>
+                            <td>TSS(Task State Segment)を管理します。</td>
                         </tr>
                         <tr>
                             <td class="center">7</td>
-                            <td><a href="Io/index.html">I/Oメモリ領域管理</a></td>
-                            <td>MemmngIo</td>
-                            <td>ドライバプロセス向けにI/Oメモリ領域の管理を行う。</td>
+                            <td>ELF制御</td>
+                            <td>TaskmngElf</td>
+                            <td>ELF形式の実行可能ファイルを制御します。</td>
                         </tr>
                         <tr>
                             <td class="center">8</td>
-                            <td>ヒープ管理</td>
-                            <td>MemmngHeap</td>
-                            <td>カーネル用ヒープ領域の管理を行う。</td>
-                        </tr>
-                        <tr>
-                            <td class="center">9</td>
-                            <td><a href="Ctrl/index.html">メモリ制御</a></td>
-                            <td>MemmngCtrl</td>
-                            <td>メモリコピーなどのメモリに関係する処理を行う。</td>
+                            <td>名前管理</td>
+                            <td>TaskmngName</td>
+                            <td>タスクの名前を管理します。</td>
                         </tr>
                     </table>
                 </div>

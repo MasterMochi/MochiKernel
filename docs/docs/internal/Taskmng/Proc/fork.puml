@@ -1,0 +1,61 @@
+@startuml
+
+participant "割込み\n管理" as Intmng
+box "タスク管理"
+    participant "プロセス\n管理"     as proc
+    participant "スケジュール\n管理" as sched
+    participant "スレッド\n管理"     as thread
+end box
+participant "メモリ\n管理" as Memmng
+participant "MLib"       as mlib
+
+Intmng -> proc: 割込みハンドラ起動\n  ( 機能番号=プロセス複製 )
+activate proc
+
+proc -> sched: 親プロセス管理情報取得
+activate sched
+ref over sched: プロセス管理情報取得
+proc <-- sched:
+deactivate sched
+
+proc -> mlib: 子プロセス管理情報割当て
+activate mlib
+proc <-- mlib:
+deactivate mlib
+
+proc -> Memmng: ページディレクトリ割当て
+activate Memmng
+ref over Memmng: ページング管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> Memmng: PDBR取得
+activate Memmng
+ref over Memmng: ページング管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> Memmng: 仮想メモリ領域管理開始
+activate Memmng
+ref over Memmng: 仮想メモリ領域管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> Memmng: ページ複製
+activate Memmng
+ref over Memmng: ページング管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> proc: 子プロセス管理情報設定
+
+proc -> thread: スレッド複製
+activate thread
+ref over thread: スレッド複製
+proc <-- thread:
+deactivate thread
+
+Intmng <-- proc:
+deactivate proc
+
+@enduml

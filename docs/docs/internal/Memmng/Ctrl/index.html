@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - メモリ管理(メモリ制御)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">メモリ管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">メモリ制御</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>物理アドレス空間から物理アドレス空間、仮想アドレス空間から物理アドレス空間へのメモリコピー制御、物理アドレス空間へのメモリ設定制御を行います。</p>
+                    <br>
+                    <br>
+                    <h2><a name="abstruct-access">物理アドレス空間へのアクセス</a></h2>
+                    <p>物理アドレス空間メモリへのアクセスは、アクセス用の領域を仮想アドレス空間に固定的に設けてページを切り替えながら行います。</p>
+                    <br>
+                    <div class="center">物理アドレス空間アクセス用領域</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">アクセス領域名</td>
+                            <td class="title">仮想アドレス</td>
+                            <td class="title">サイズ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">メモリ制御領域ch1</td>
+                            <td class="center">0x3F00_0000</td>
+                            <td class="right">0x80_0000(8MB)</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">メモリ制御領域ch2</td>
+                            <td class="center">0x3F80_0000</td>
+                            <td class="right">0x80_0000(8MB)</td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="p2p">物理->物理メモリコピー</a></h1>
+                    <p>物理アドレス空間から物理アドレス空間へのメモリコピーを行います。シーケンスを以下に示します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="p2p.png"><br>
+                        物理->物理メモリコピーシーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="p2p-dirid">ページディレクトリID取得</a></h2>
+                    <p>物理アドレス空間アクセス領域のマッピング設定を行うために必要なパラメータである現コンテキストのページディレクトリIDをページング管理サブモジュールから取得します。</p>
+                    <br>
+                    <br>
+                    <h2><a name="p2p-map">メモリ制御領域マッピング設定</a></h2>
+                    <p>物理アドレス空間にアクセスするために、ページング管理サブモジュールの機能を用いてメモリ制御領域を下記の通りにマッピングします。</p>
+                    <br>
+                    <div class="center">メモリ制御領域マッピング設定</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">アクセス領域<br>(仮想アドレス)</td>
+                            <td class="title">マッピング先<br>(物理アドレス)</td>
+                            <td class="title">サイズ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">メモリ制御領域ch1</td>
+                            <td class="center">コピー元物理アドレス+インデックス※</td>
+                            <td class="right">最大8MB</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">メモリ制御領域ch2</td>
+                            <td class="center">コピー先物理アドレス+インデックス※</td>
+                            <td class="right">最大8MB</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p>※ 一回で行えるメモリコピーは最大でメモリ制御領域サイズ(8MB)分に限られるため、コピーサイズを超える場合はコピー領域をずらしながら行う。</p>
+                    <br>
+                    <br>
+                    <h2><a name="p2p-copy">メモリコピー</a></h2>
+                    <p>メモリ制御領域ch1からメモリ制御領域ch2へメモリコピーします。</p>
+                    <br>
+                    <br>
+                    <h2><a name="p2p-unmap">メモリ制御領域マッピング解除</a></h2>
+                    <p>ページング管理サブモジュールの機能を用いてメモリ制御領域ch1/ch2のマッピングを解除します。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="v2p">仮想->物理メモリコピー</a></h1>
+                    <p>仮想アドレス空間から物理アドレス空間へのメモリコピーを行います。シーケンスを以下に示します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="v2p.png"><br>
+                        仮想->物理メモリコピーシーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="v2p-dirid">ページディレクトリID取得</a></h2>
+                    <p>物理アドレス空間アクセス領域のマッピング設定を行うために必要なパラメータである現コンテキストのページディレクトリIDをページング管理サブモジュールから取得します。</p>
+                    <br>
+                    <br>
+                    <h2><a name="v2p-map">メモリ制御領域マッピング設定</a></h2>
+                    <p>物理アドレス空間にアクセスするために、ページング管理サブモジュールの機能を用いてメモリ制御領域を下記の通りにマッピングします。</p>
+                    <br>
+                    <div class="center">メモリ制御領域マッピング設定</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">アクセス領域<br>(仮想アドレス)</td>
+                            <td class="title">マッピング先<br>(物理アドレス)</td>
+                            <td class="title">サイズ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">メモリ制御領域ch1</td>
+                            <td class="center">コピー先物理アドレス+インデックス※</td>
+                            <td class="right">最大8MB</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p>※ 一回で行えるメモリコピーは最大でメモリ制御領域サイズ(8MB)分に限られるため、コピーサイズを超える場合はコピー領域をずらしながら行う。</p>
+                    <br>
+                    <br>
+                    <h2><a name="v2p-copy">メモリコピー</a></h2>
+                    <p>コピー元仮想アドレスのメモリ領域からメモリ制御領域ch1へメモリコピーします。</p>
+                    <br>
+                    <br>
+                    <h2><a name="v2p-unmap">メモリ制御領域マッピング解除</a></h2>
+                    <p>ページング管理サブモジュールの機能を用いてメモリ制御領域ch1のマッピングを解除します。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="set">物理メモリ設定</a></h1>
+                    <p>物理アドレス空間に指定値をメモリ設定します。シーケンスを以下に示します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="set.png"><br>
+                        物理メモリ設定シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="set-dirid">ページディレクトリID取得</a></h2>
+                    <p>物理アドレス空間アクセス領域のマッピング設定を行うために必要なパラメータである現コンテキストのページディレクトリIDをページング管理サブモジュールから取得します。</p>
+                    <br>
+                    <br>
+                    <h2><a name="set-map">メモリ制御領域マッピング設定</a></h2>
+                    <p>物理アドレス空間にアクセスするために、ページング管理サブモジュールの機能を用いてメモリ制御領域を下記の通りにマッピングします。</p>
+                    <br>
+                    <div class="center">メモリ制御領域マッピング設定</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">アクセス領域<br>(仮想アドレス)</td>
+                            <td class="title">マッピング先<br>(物理アドレス)</td>
+                            <td class="title">サイズ</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">メモリ制御領域ch1</td>
+                            <td class="center">設定先物理アドレス+インデックス※</td>
+                            <td class="right">最大8MB</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p>※ 一回で行えるメモリ設定は最大でメモリ制御領域サイズ(8MB)分に限られるため、設定サイズを超える場合は設定領域をずらしながら行う。</p>
+                    <br>
+                    <br>
+                    <h2><a name="set-set">メモリ設定</a></h2>
+                    <p>32bit毎にメモリ制御領域ch1へメモリ設定を行います。</p>
+                    <br>
+                    <br>
+                    <h2><a name="set-unmap">メモリ制御領域マッピング解除</a></h2>
+                    <p>ページング管理サブモジュールの機能を用いてメモリ制御領域ch1のマッピングを解除します。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a><ol>
+                            <a href="#abstruct-access"><li>物理アドレス空間へのアクセス</li></a></ol>
+                        <a href="#p2p"><li>物理->物理メモリコピー</li></a><ol>
+                            <a href="#p2p-dirid"><li>ページディレクトリID取得</li></a>
+                            <a href="#p2p-map"><li>メモリ制御領域マッピング設定</li></a>
+                            <a href="#p2p-copy"><li>メモリコピー</li></a>
+                            <a href="#p2p-unmap"><li>メモリ制御領域マッピング解除</li></a></ol>
+                        <a href="#v2p"><li>仮想->物理メモリコピー</li></a><ol>
+                            <a href="#v2p-dirid"><li>ページディレクトリID取得</li></a>
+                            <a href="#v2p-map"><li>メモリ制御領域マッピング設定</li></a>
+                            <a href="#v2p-copy"><li>メモリコピー</li></a>
+                            <a href="#v2p-unmap"><li>メモリ制御領域マッピング解除</li></a></ol>
+                        <a href="#set"><li>物理メモリ設定</li></a><ol>
+                            <a href="#set-dirid"><li>ページディレクトリID取得</li></a>
+                            <a href="#set-map"><li>メモリ制御領域マッピング設定</li></a>
+                            <a href="#set-set"><li>メモリ設定</li></a>
+                            <a href="#set-unmap"><li>メモリ制御領域マッピング解除</li></a></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

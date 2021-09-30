@@ -65,12 +65,12 @@
                             <td class="center">0x0000_0000</td>
                             <td class="center" colspan="2">ブートデータ</td>
                             <td class="right">1,048,576</td>
-                            <td class="right" rowspan="8">1,073,741,824</td>
+                            <td class="right" rowspan="10">1,073,741,824</td>
                             <td></td>
                         </tr>
                         <tr>
                             <td class="center">0x0010_0000</td>
-                            <td class="center" rowspan="7">MochiKernel</td>
+                            <td class="center" rowspan="9">カーネル<br>領域</td>
                             <td class="center"><br><br>コード/データ<br><br><br></td>
                             <td class="right" rowspan="3">1,055,916,032</td>
                             <td></td>
@@ -86,38 +86,50 @@
                             <td></td>
                         </tr>
                         <tr>
-                            <td class="center">0x3EFF_E000</td>
-                            <td class="center">ページ<br>ディレクトリ<br>操作領域</td>
+                            <td class="center">0x3EFF_C000</td>
+                            <td class="center">ページディレクトリ<br>ch1アクセス領域</td>
                             <td class="right">4,096</td>
-                            <td></td>
+                            <td>メモリ管理(ページ管理)参照</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x3EFF_D000</td>
+                            <td class="center">ページテーブル<br>ch1アクセス領域</td>
+                            <td class="right">4,096</td>
+                            <td>メモリ管理(ページ管理)参照</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x3EFF_E000</td>
+                            <td class="center">ページディレクトリ<br>ch2アクセス領域</td>
+                            <td class="right">4,096</td>
+                            <td>メモリ管理(ページ管理)参照</td>
                         </tr>
                         <tr>
                             <td class="center">0x3EFF_F000</td>
-                            <td class="center">ページテーブル<br>操作領域</td>
+                            <td class="center">ページテーブル<br>ch2アクセス領域</td>
                             <td class="right">4,096</td>
-                            <td></td>
+                            <td>メモリ管理(ページ管理)参照</td>
                         </tr>
                         <tr>
                             <td class="center">0x3F00_0000</td>
-                            <td class="center">メモリ制御領域1</td>
+                            <td class="center">メモリ制御領域ch1</td>
                             <td class="right">8,388,608</td>
-                            <td></td>
+                            <td>メモリ管理(メモリ制御)参照</td>
                         </tr>
                         <tr>
                             <td class="center">0x3F80_0000</td>
-                            <td class="center">メモリ制御領域2</td>
+                            <td class="center">メモリ制御領域ch2</td>
                             <td class="right">8,388,608</td>
-                            <td></td>
+                            <td>メモリ管理(メモリ制御)参照</td>
                         </tr>
                         <tr>
                             <td class="center">0x4000_0000</td>
-                            <td class="center" colspan="2"><br><br>ユーザ空間<br><br><br></td>
+                            <td class="center" colspan="2"><br><br>ユーザ領域<br><br><br></td>
                             <td class="right" colspan="2">2,147,483,648</td>
                             <td></td>
                         </tr>
                         <tr>
                             <td class="center">0xC000_0000</td>
-                            <td class="center" colspan="2"><br>割り当て可能メモリ領域<br><br></td>
+                            <td class="center" colspan="2"><br>割当て可能メモリ領域<br><br></td>
                             <td class="right" colspan="2">1,073,741,824</td>
                             <td></td>
                         </tr>

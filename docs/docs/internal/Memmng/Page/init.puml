@@ -1,22 +1,18 @@
 @startuml
 
 box "メモリ管理"
-    participant "メイン"               as main
-    participant "ページング\n管理"     as page
-    participant "物理メモリ\n領域管理" as phys
-    participant "メモリマップ\n管理"   as map
+    participant "メイン"         as main
+    participant "ページング管理" as page
 end box
 participant "MLIB" as mlib
 participant "CPU"  as cpu
 
-activate main
-
 main -> page: 初期化
 activate page
 
-page -> page: 操作領域マッピング情報初期化
+page -> page: アクセス領域マッピング情報初期化
 page -> page: アイドルプロセス用\nページディレクトリ初期化
-page -> page: アイドルプロセス用\nページテーブル初期化
+page -> page: カーネル領域\nページテーブル初期化
 
 'page -> page: ページディレクトリ切替
 'activate page
@@ -34,13 +30,13 @@ ref over mlib: 動的配列
 page <-- mlib:
 deactivate mlib
 
-page -> mlib: アイドルプロセス用管理情報取得
+page -> mlib: アイドルプロセス用\nページディレクトリ管理情報取得
 activate mlib
 ref over mlib: 動的配列
 page <-- mlib:
 deactivate mlib
 
-page -> page: アイドルプロセス用\n管理情報設定
+page -> page: アイドルプロセス用\nページディレクトリ管理情報設定
 
 main <-- page:
 deactivate page

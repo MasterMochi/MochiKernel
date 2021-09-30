@@ -1,0 +1,41 @@
+@startuml
+
+box "タスク管理"
+    participant "プロセス管理" as proc
+    participant "スレッド管理" as thread
+    participant "タスク管理"   as task
+    participant "スケジューラ" as sched
+end box
+participant "MLib" as mlib
+
+proc -> thread: スレッド複製(\n  複製先プロセス管理情報,\n  複製元プロセス管理情報 )
+activate thread
+
+thread -> sched: 複製元スレッド管理情報取得
+activate sched
+ref over sched: 現スレッド管理情報取得
+thread <-- sched:
+deactivate sched
+
+thread -> mlib: スレッド管理情報\n動的配列初期化
+activate mlib
+thread <-- mlib:
+deactivate mlib
+
+thread -> mlib: スレッド管理情報割当
+activate mlib
+thread <-- mlib:
+deactivate mlib
+
+thread -> thread: スレッド管理情報設定
+
+thread -> task: タスク複製
+activate task
+ref over task: タスク複製
+thread <-- task:
+deactivate task
+
+proc <-- thread:
+deactivate thread
+
+@enduml

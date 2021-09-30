@@ -61,7 +61,7 @@
 /** ユーザ空間スタック領域サイズ */
 #define MK_CONFIG_SIZE_USER_STACK   ( 0x00008000 )
 /** 全ユーザ空間領域サイズ */
-#define MK_CONFIG_SIZE_USER         ( 0x40000000 )
+#define MK_CONFIG_SIZE_USER         ( 0x80000000 )
 
 /*------------*/
 /* 割込み番号 */

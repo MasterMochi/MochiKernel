@@ -1,0 +1,24 @@
+@startuml
+
+box "タスク管理"
+    participant "スケジューラ" as sched
+    participant "タスク管理"   as task
+end box
+participant "タスク" as apl
+
+sched -> task: タスク切替
+activate task
+
+task -> task: iretd命令向けスタック設定
+
+task -> task: セグメントレジスタ設定用\nスタック設定
+
+task -> task: 汎用レジスタ初期化
+
+task -> task: セグメントレジスタ設定
+
+task -> apl: エントリポイントへ移行
+deactivate task
+activate apl
+
+@enduml

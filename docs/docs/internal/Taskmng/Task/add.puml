@@ -1,0 +1,30 @@
+@startuml
+
+box "タスク管理"
+    participant "スレッド管理" as thread
+    participant "タスク管理"   as task
+    participant "スケジューラ" as sched
+end box
+participant "メモリ管理" as Memmng
+
+thread -> task: タスク追加( タスク管理情報 )
+activate task
+
+task -> Memmng: カーネルスタック領域割当
+activate Memmng
+ref over Memmng: カーネルヒープ割当
+task <-- Memmng:
+deactivate Memmng
+
+task -> task: タスク管理情報設定
+
+task -> sched: スケジュール追加
+activate sched
+ref over sched: スケジュール追加
+task <-- sched:
+deactivate sched
+
+thread <-- task:
+deactivate task
+
+@enduml

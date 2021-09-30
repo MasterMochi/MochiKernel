@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - タスク管理(タスク管理)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">タスク管理</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">タスク管理</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>タスク管理モジュールは、タスク追加、タスク複製、およびタスク起動機能を持ちます。タスクの管理は、スレッド管理情報をタスク管理情報として用いて行います。スレッド管理情報については、スレッド管理サブモジュールを参照して下さい。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>割込みハンドラの設定を行います。初期化シーケンスを以下に示します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="init-hdl"></a>割込みハンドラ設定</h2>
+                    <p>割込み管理モジュールの機能を用いて、スレッド管理が提供するカーネルコールの割込みハンドラを設定します。設定パラメータを以下に示します。</p>
+                    <br>
+                    <div class="center">割込みハンドラ設定パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">割込み番号</td>
+                            <td class="right">0x38</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">特権レベル</td>
+                            <td class="right">3</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="add">タスク追加</a></h1>
+                    <p>カーネル用スタック領域を割当て、タスク管理情報を設定し、スケジューラにタスクを追加します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="add.png"><br>
+                        タスク追加シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="add-allocstack">カーネルスタック領域割当</a></h2>
+                    <p>メモリ管理機能を用いてカーネルヒープ領域から追加するタスクのカーネル用スタック領域を割当てます。割当パラメータを以下に示します。</p>
+                    <br>
+                    <div class="center">カーネルスタック領域割当パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">サイズ</td>
+                            <td class="right">0x2000</td>
+                            <td>byte</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="add-info">タスク管理情報設定</a></h2>
+                    <p>タスク管理情報を以下の通りに設定します。</p>
+                    <br>
+                    <div class="center">タスク管理情報設定値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title" colspan="2">情報</td>
+                            <td class="title">設定値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center" colspan="2">タスクID</td>
+                            <td>スレッドID * プロセス最大数 + PID</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center" rowspan="2">コンテキスト</td>
+                            <td class="center">eip</td>
+                            <td>タスク起動関数ポインタ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">esp</td>
+                            <td>カーネル用スタック領域の終端アドレス</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">4</td>
+                            <td class="center" rowspan="3">カーネル<br>スタック情報</td>
+                            <td class="center">先頭アドレス</td>
+                            <td>カーネル用スタック領域の先頭アドレス</td>
+                            <td>割当て時に取得</td>
+                        </tr>
+                        <tr>
+                            <td class="center">5</td>
+                            <td class="center">終端アドレス</td>
+                            <td>カーネル用スタック領域の終端アドレス</td>
+                            <td>先頭アドレス+0x2000</td>
+                        </tr>
+                        <tr>
+                            <td class="center">6</td>
+                            <td class="center">サイズ</td>
+                            <td class="right">0x2000</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="add-sched">スケジュール追加</a></h2>
+                    <p>スケジューラサブモジュールのスケジュール追加機能を用いて、タスクをスケジューラに登録します。スケジュール追加のパラメータを以下に示します。</p>
+                    <br>
+                    <div class="center">スケジュール追加パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">値</td>
+                            <td clasS="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">タスク管理情報</td>
+                            <td class="center">タスク管理情報へのポインタ</td>
+                            <td>引数から取得</td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="start">タスク起動</a></h1>
+                    <p>レジスタ設定を行って、タスクを起動します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="start.png"><br>
+                        タスク起動シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="start-setiretd">iretd命令向けスタック設定</a></h2>
+                    <p>iretd命令を使ってタスクに移行するために、下記順番でpush命令を使ってスタック設定をしておきます。</p>
+                    <br>
+                    <div class="center">iretd命令向けスタック設定値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">用途</td>
+                            <td class="title">値</td>
+                            <td class="title">概要</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">SS（スタックセグメント）<br>レジスタ</td>
+                            <td>
+                                プロセス種別がカーネルの場合、0x09<br>
+                                プロセス種別がカーネル以外の場合、0x0B
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">espレジスタ</td>
+                            <td>スタックポインタ</td>
+                            <td>タスク管理情報の起動情報から取得</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">eflagsレジスタ</td>
+                            <td class="right">0x00003202</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">4</td>
+                            <td class="center">cs（コードセグメント）<br>レジスタ</td>
+                            <td>
+                                プロセス種別がカーネルの場合、0x08<br>
+                                プロセス種別がカーネル以外の場合、0x0D
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">5</td>
+                            <td class="center">eipレジスタ</td>
+                            <td>エントリポイント</td>
+                            <td>タスク管理情報の起動情報から取得</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <br>
+                    <h2><a name="start-setsgmt">セグメントレジスタ設定向けスタック設定</a></h2>
+                    <p>セグメントレジスタ設定はpop命令を使って行うため、事前に以下の順番でpush命令を使ってスタックにセグメントセレクタ値を設定しておきます。</p>
+                    <br>
+                    <div class="center">セグメントレジスタ設定向けスタック設定値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">用途</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">gsレジスタ</td>
+                            <td rowspan="4">
+                                プロセス種別がカーネルの場合、0x09<br>
+                                プロセス種別がカーネル以外の場合、0x0B
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">fsレジスタ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">esレジスタ</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">4</td>
+                            <td class="center">dsレジスタ</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <br>
+                    <h2><a name="start-genreg">汎用レジスタ初期化</a></h2>
+                    <p>汎用レジスタを以下の通りに設定します。</p>
+                    <br>
+                    <div class="center">汎用レジスタ設定値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">レジスタ</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">eax</td>
+                            <td class="center" rowspan="7">0</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">ecx</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">edx</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">4</td>
+                            <td class="center">ebx</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">5</td>
+                            <td class="center">ebp</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">6</td>
+                            <td class="center">esi</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">7</td>
+                            <td class="center">edi</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <br>
+                    <h2><a name="start-sgmt">セグメントレジスタ設定</a></h2>
+                    <p>pop命令を用いて、ds、es、fs、gsレジスタの順にセグメントレジスタを設定します。</p>
+                    <br>
+                    <br>
+                    <h2><a name="start-iretd">エントリポイントへ移行</a></h2>
+                    <p>iretd命令を用いてタスクのエントリポイントへ移行します。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="copy">タスク複製</a></h1>
+                    <p>カーネル用スタックの割当てと複製、タスク管理情報を設定し、スケジューラに複製したタスクを追加します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="copy.png"><br>
+                        タスク複製シーケンス
+                    </div>
+                    <br>
+                    <br>
+                    <h2><a name="copy-allocstack">カーネルスタック領域割当</a></h2>
+                    <p>メモリ管理機能を用いてカーネルヒープ領域から複製するタスクのカーネル用スタック領域を割当てます。割当パラメータを以下に示します。</p>
+                    <br>
+                    <div class="center">カーネルスタック領域割当パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">サイズ</td>
+                            <td class="right">0x2000</td>
+                            <td>byte</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="copy-stack">カーネルスタック領域複製</a></h2>
+                    <p>複製元タスクのカーネルスタック領域から複製先タスクのカーネルスタック領域にメモリをコピーします。</p>
+                    <br>
+                    <br>
+                    <h2><a name="copy-info">タスク管理情報設定</a></h2>
+                    <p>タスク管理情報を以下の通りに設定します。</p>
+                    <br>
+                    <div class="center">タスク管理情報設定値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title" colspan="2">情報</td>
+                            <td class="title">設定値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center" colspan="2">タスクID</td>
+                            <td>スレッドID * プロセス最大数 + PID</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center" rowspan="3">コンテキスト</td>
+                            <td class="center">eip</td>
+                            <td>複製タスク開始ポイント</td>
+                            <td>スケジュール登録後のポイント</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td class="center">esp</td>
+                            <td>現espレジスタ値</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">4</td>
+                            <td class="center">ebp</td>
+                            <td>現ebpレジスタ値</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">5</td>
+                            <td class="center" rowspan="3">カーネル<br>スタック情報</td>
+                            <td class="center">先頭アドレス</td>
+                            <td>カーネル用スタック領域の先頭アドレス</td>
+                            <td>割当て時に取得</td>
+                        </tr>
+                        <tr>
+                            <td class="center">6</td>
+                            <td class="center">終端アドレス</td>
+                            <td>カーネル用スタック領域の終端アドレス</td>
+                            <td>先頭アドレス+0x2000</td>
+                        </tr>
+                        <tr>
+                            <td class="center">7</td>
+                            <td class="center">サイズ</td>
+                            <td class="right">0x2000</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <br>
+                    <h2><a name="copy-sched">スケジュール追加</a></h2>
+                    <p>スケジューラサブモジュールのスケジュール追加機能を用いて、複製タスクをスケジューラに登録します。スケジュール追加のパラメータを以下に示します。</p>
+                    <br>
+                    <div class="center">スケジュール追加パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">タスク管理情報</td>
+                            <td class="center">タスク管理情報へのポインタ</td>
+                            <td>引数から取得</td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#init"><li>初期化</li></a><ol>
+                            <a href="#init-hdl"><li>割込みハンドラ設定</li></a></ol>
+                        <a href="#add"><li>タスク追加</li></a><ol>
+                            <a href="#add-allocstack"><li>カーネルスタック領域割当</li></a>
+                            <a href="#add-info"><li>タスク管理情報設定</li></a>
+                            <a href="#add-sched"><li>スケジュール追加</li></a></ol>
+                        <a href="#start"><li>タスク起動</li></a><ol>
+                            <a href="#start-setiretd"><li>iretd命令向けスタック設定</li></a>
+                            <a href="#start-setsgmt"><li>セグメントレジスタ設定向けスタック設定</li></a>
+                            <a href="#start-genreg"><li>汎用レジスタ初期化</li></a>
+                            <a href="#start-sgmt"><li>セグメントレジスタ設定</li></a>
+                            <a href="#start-iretd"><li>エントリポイントへ移行</li></a></ol>
+                        <a href="#copy"><li>タスク複製</li></a><ol>
+                            <a href="#copy-allocstack"><li>カーネルスタック領域割当</li></a>
+                            <a href="#copy-stack"><li>カーネルスタック領域複製</li></a>
+                            <a href="#copy-info"><li>タスク管理情報設定</li></a>
+                            <a href="#copy-sched"><li>スケジュール追加</li></a></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

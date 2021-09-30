@@ -1,0 +1,21 @@
+@startuml
+
+box "タスク管理"
+    participant "メイン"     as main
+    participant "タスク管理" as task
+end box
+participant "割込み管理" as Intmng
+
+main -> task: 初期化
+activate task
+
+task -> Intmng: 割込みハンドラ設定
+activate Intmng
+ref over Intmng: 割込みハンドラ設定
+task <-- Intmng:
+deactivate Intmng
+
+main <-- task
+deactivate task
+
+@enduml

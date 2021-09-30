@@ -1,0 +1,35 @@
+@startuml
+
+box "メモリ管理"
+    participant "メモリ制御"     as ctrl
+    participant "ページング管理" as page
+end box
+
+-> ctrl: 仮想->物理メモリコピー\n( コピー先物理アドレス,\n  コピー元仮想アドレス,\n  サイズ )
+activate ctrl
+
+ctrl -> page: ページディレクトリID取得
+activate page
+ctrl <-- page:
+deactivate page
+
+loop メモリ制御領域ch1サイズ毎に繰り返し
+    ctrl -> page: メモリ制御領域ch1マッピング設定
+    activate page
+    ref over page: ページマッピング設定
+    ctrl <-- page:
+    deactivate page
+
+    ctrl -> ctrl: メモリコピー
+end loop
+
+ctrl -> page: メモリ制御領域ch1マッピング解除
+activate page
+ref over page: ページマッピング解除
+ctrl <-- page:
+deactivate page
+
+<-- ctrl:
+deactivate ctrl
+
+@enduml

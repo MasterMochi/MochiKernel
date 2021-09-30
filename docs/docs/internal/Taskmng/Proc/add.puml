@@ -1,0 +1,67 @@
+@startuml
+
+participant "初期化制御" as Initctrl
+box "タスク管理"
+    participant "プロセス管理" as proc
+    participant "ELF制御"      as elf
+    participant "スレッド管理" as thread
+end box
+participant "メモリ管理" as Memmng
+participant "MLib"       as mlib
+
+Initctrl -> proc: タスク追加(\n  プロセス種別,\n  実行ファイルアドレス,\n  実行ファイルサイズ )
+activate proc
+
+proc -> mlib: プロセス管理情報割当て
+activate mlib
+proc <-- mlib:
+deactivate mlib
+
+proc -> Memmng: ページディレクトリ割当て
+activate Memmng
+ref over Memmng: ページ管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> Memmng: PDBR取得
+activate Memmng
+ref over Memmng: ページ管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> Memmng: 仮想メモリ領域管理開始
+activate Memmng
+ref over Memmng: 仮想メモリ領域管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> elf: ELFファイル読込み
+activate elf
+ref over elf: ELFファイル読込み
+proc <-- elf:
+deactivate elf
+
+proc -> Memmng: ユーザスタック用物理メモリ領域割当て
+activate Memmng
+ref over Memmng: 物理メモリ領域管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> Memmng: ユーザスタック向けページマッピング設定
+activate Memmng
+ref over Memmng: ページ管理
+proc <-- Memmng:
+deactivate Memmng
+
+proc -> proc: プロセス管理情報設定
+
+proc -> thread: メインスレッド追加
+activate thread
+ref over thread: メインスレッド追加
+proc <-- thread:
+deactivate thread
+
+Initctrl <-- proc:
+deactivate proc
+
+@enduml

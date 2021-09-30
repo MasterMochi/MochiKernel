@@ -1,0 +1,52 @@
+@startuml
+
+box "タスク管理"
+    participant "メイン"       as main
+    participant "プロセス管理" as proc
+    participant "スレッド管理" as thread
+end box
+participant "割込み管理" as intmng
+participant "メモリ管理" as memmng
+participant "MLIB"       as mlib
+
+main -> proc: 初期化
+activate proc
+
+proc -> mlib: プロセス管理情報動的配列初期化
+activate mlib
+proc <-- mlib:
+deactivate mlib
+
+proc -> mlib: プロセス管理情報割当て
+activate mlib
+proc <-- mlib:
+deactivate mlib
+
+proc -> memmng: PDBR取得( PID=0 )
+activate memmng
+ref over memmng: ページ管理
+proc <- memmng:
+deactivate memmng
+
+proc -> proc: アイドルプロセス管理情報設定
+
+proc -> thread: アイドルプロセス用スレッド設定
+activate thread
+ref over thread
+    アイドルプロセス用スレッド設定
+end ref
+proc <-- thread:
+deactivate thread
+
+proc -> intmng: 割込みハンドラ設定
+activate intmng
+ref over intmng
+    割込みハンドラ設定
+end ref
+proc <-- intmng:
+deactivate intmng
+
+main <-- proc:
+deactivate proc
+
+@enduml

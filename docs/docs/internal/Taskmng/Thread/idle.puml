@@ -1,0 +1,29 @@
+@startuml
+
+box "タスク管理"
+    participant "プロセス管理" as proc
+    participant "スレッド管理" as thread
+end box
+participant "MLib"       as mlib
+
+proc -> thread: アイドルプロセス用\nメインスレッド追加(\n  プロセス管理情報 )
+activate thread
+
+thread -> mlib: スレッド管理情報動的配列初期化
+activate mlib
+thread <-- mlib:
+deactivate mlib
+
+thread -> mlib: スレッド管理情報割当
+activate mlib
+thread <-- mlib:
+deactivate mlib
+
+thread -> thread: スレッド管理情報設定
+
+proc <-- thread:
+deactivate thread
+
+
+@enduml
+

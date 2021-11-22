@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/proc.h                                                              */
-/*                                                                 2019/07/28 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2021/10/25 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __KERNEL_PROC_H__
@@ -25,6 +25,7 @@
 
 /* 機能ID */
 #define MK_PROC_FUNCID_SET_BREAKPOINT ( 0x00000001 )    /**< ブレイクポイント設定 */
+#define MK_PROC_FUNCID_FORK           ( 0x00000002 )    /**< プロセス複製         */
 
 /** プロセス管理パラメータ */
 typedef struct {
@@ -33,6 +34,7 @@ typedef struct {
     MkErr_t  err;           /**< エラー内容       */
     void     *pBreakPoint;  /**< ブレイクポイント */
     int32_t  quantity;      /**< 増減量           */
+    MkPid_t  pid;           /**< プロセスID       */
 } MkProcParam_t;
 
 

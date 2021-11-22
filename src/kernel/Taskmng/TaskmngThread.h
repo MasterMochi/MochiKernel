@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngThread.h                                         */
-/*                                                                 2021/06/20 */
+/*                                                                 2021/10/24 */
 /* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -72,6 +72,8 @@ typedef struct {
 extern MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo );
 /* アイドルプロセス用メインスレッド追加 */
 extern MkTid_t ThreadAddMainIdle( ProcInfo_t *pProcInfo );
+/* スレッド複製 */
+extern MkTid_t ThreadFork( ProcInfo_t *pProcInfo );
 /* スレッド管理情報取得 */
 extern ThreadInfo_t *ThreadGetInfo( ProcInfo_t *pProcInfo,
                                     MkTid_t    tid         );

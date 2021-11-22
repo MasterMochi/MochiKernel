@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* libmk.h                                                                    */
-/*                                                                 2020/04/30 */
-/* Copyright (C) 2018-2020 Mochi.                                             */
+/*                                                                 2021/10/25 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __LIBMK_H__
@@ -148,6 +148,10 @@ extern MkRet_t LibMkMsgSendNB( MkTaskId_t dst,
 /*--------------*/
 /* プロセス管理 */
 /*--------------*/
+/* プロセス複製 */
+extern MkRet_t LibMkProcFork( MkPid_t *pPid,
+                              MkErr_t *pErr  );
+/* ブレイクポイント設定 */
 extern MkRet_t LibMkProcSetBreakPoint( int32_t quantity,
                                        void    *ppBreakPoint,
                                        MkErr_t *pErr          );

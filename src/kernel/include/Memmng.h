@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Memmng.h                                                */
-/*                                                                 2021/05/22 */
+/*                                                                 2021/10/24 */
 /* Copyright (C) 2016-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -80,6 +80,10 @@ extern void MemmngInit( BiosE820Entry_t *pBiosE820,
 /*--------------*/
 /* MemmngCtrl.c */
 /*--------------*/
+/* メモリコピー（物理->物理） */
+extern void MemmngCtrlCopyPhysToPhys( void   *pDst,
+                                      void   *pSrc,
+                                      size_t size   );
 /* メモリコピー（仮想->物理） */
 extern void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                                       void   *pVAddr,
@@ -117,6 +121,11 @@ extern CmnRet_t MemmngMapGetInfo( MkMemMapEntry_t *pInfo,
 /*--------------*/
 /* ページディレクトリ割当 */
 extern MemmngPageDirId_t MemmngPageAllocDir( MkPid_t pid );
+/* ページ複製 */
+extern CmnRet_t MemmngPageCopy( MemmngPageDirId_t dstDirId,
+                                MemmngPageDirId_t srcDirId,
+                                void              *pVirtAddr,
+                                size_t            size        );
 /* ページディレクトリ解放 */
 extern CmnRet_t MemmngPageFreeDir( MemmngPageDirId_t dirId );
 /* ページディレクトリID取得 */

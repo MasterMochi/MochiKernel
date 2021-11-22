@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngCtrl.c                                             */
-/*                                                                 2021/05/30 */
+/*                                                                 2021/10/31 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -46,6 +46,99 @@
 /******************************************************************************/
 /******************************************************************************/
 /**
+ * @brief       メモリコピー（物理->物理）
+ * @details     物理アドレス空間から物理アドレス空間へメモリコピーを行う。
+ *
+ * @param[in]   pDst コピー先物理アドレス
+ * @param[in]   pSrc コピー元物理アドレス
+ * @param[in]   size コピーサイズ
+ *
+ * @attention   引数pDstとpSrcは4KBアライメントであること。
+ */
+/******************************************************************************/
+void MemmngCtrlCopyPhysToPhys( void   *pDst,
+                               void   *pSrc,
+                               size_t size   )
+{
+    size_t   mapSize;   /* マッピングサイズ */
+    size_t   copySize;  /* コピーサイズ     */
+    uint32_t idx;       /* インデックス     */
+    CmnRet_t ret;       /* 関数戻り値       */
+
+    /* 物理マッピング用領域サイズ毎に繰り返し */
+    for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP1 ) {
+        /* 次コピー有無判定 */
+        if ( ( size - idx ) > MK_CONFIG_SIZE_KERNEL_MAP1 ) {
+            /* 次コピー有 */
+
+            /* コピーサイズ設定 */
+            copySize = MK_CONFIG_SIZE_KERNEL_MAP1;
+
+            /* マッピングサイズ設定 */
+            mapSize = copySize;
+
+        } else {
+            /* 次コピー無 */
+
+            /* コピーサイズ設定 */
+            copySize = size - idx;
+
+            /* マッピングサイズ設定 */
+            mapSize = MLIB_UTIL_ALIGN( copySize, IA32_PAGING_PAGE_SIZE );
+        }
+
+        /* メモリ制御領域ch1マッピング設定 */
+        ret = MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
+                             ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
+                             pSrc + idx,
+                             mapSize,
+                             IA32_PAGING_G_NO,
+                             IA32_PAGING_US_SV,
+                             IA32_PAGING_RW_RW                      );
+
+        /* 設定結果判定 */
+        if ( ret == CMN_FAILURE ) {
+            /* 失敗 */
+            /* [TODO] */
+        }
+
+        /* メモリ制御領域ch2マッピング設定 */
+        ret = MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
+                             ( void * ) MK_CONFIG_ADDR_KERNEL_MAP2,
+                             pDst + idx,
+                             mapSize,
+                             IA32_PAGING_G_NO,
+                             IA32_PAGING_US_SV,
+                             IA32_PAGING_RW_RW                      );
+
+        /* 設定結果判定 */
+        if ( ret == CMN_FAILURE ) {
+            /* 失敗 */
+            /* [TODO] */
+        }
+
+        /* メモリコピー */
+        MLibUtilCopyMemory( ( void * ) MK_CONFIG_ADDR_KERNEL_MAP2,
+                            ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
+                            copySize                               );
+    }
+
+    /* メモリ制御領域ch1マッピング解除 */
+    MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
+                     ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
+                     MK_CONFIG_SIZE_KERNEL_MAP1             );
+
+    /* メモリ制御領域ch2マッピング解除 */
+    MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
+                     ( void * ) MK_CONFIG_ADDR_KERNEL_MAP2,
+                     MK_CONFIG_SIZE_KERNEL_MAP2             );
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       メモリコピー（仮想->物理）
  * @details     仮想アドレス空間から物理アドレス空間へメモリコピーを行う。
  *
@@ -60,11 +153,10 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                                void   *pVAddr,
                                size_t size     )
 {
-    size_t            mapSize;  /* マッピングサイズ     */
-    size_t            copySize; /* コピーサイズ         */
-    uint32_t          idx;      /* インデックス         */
-    CmnRet_t          ret;      /* 関数戻り値           */
-    MemmngPageDirId_t dirId;    /* ページディレクトリID */
+    size_t   mapSize;   /* マッピングサイズ */
+    size_t   copySize;  /* コピーサイズ     */
+    uint32_t idx;       /* インデックス     */
+    CmnRet_t ret;       /* 関数戻り値       */
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() start.", __func__ );
@@ -72,9 +164,6 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                pPAddr,
                pVAddr,
                size );
-
-    /* ページディレクトリID取得 */
-    dirId = MemmngPageGetDirId();
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
@@ -99,13 +188,13 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
         }
 
         /* ページマッピング設定 */
-        ret = MemmngPageSet( dirId,
+        ret = MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
                              mapSize,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
-                             IA32_PAGING_RW_RW );
+                             IA32_PAGING_RW_RW                      );
 
         /* 設定結果判定 */
         if ( ret != CMN_SUCCESS ) {
@@ -121,9 +210,9 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
     }
 
     /* ページマッピング解除 */
-    MemmngPageUnset( dirId,
+    MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
-                     MK_CONFIG_SIZE_KERNEL_MAP );
+                     MK_CONFIG_SIZE_KERNEL_MAP              );
 
     /* デバッグトレースログ出力 */
     DEBUG_LOG( "%s() end.", __func__ );
@@ -148,11 +237,10 @@ void MemmngCtrlSet( void    *pPAddr,
                     uint8_t value,
                     size_t  size     )
 {
-    size_t            mapSize;  /* マッピングサイズ     */
-    size_t            setSize;  /* 設定サイズ           */
-    uint32_t          idx;      /* インデックス         */
-    CmnRet_t          ret;      /* 関数戻り値           */
-    MemmngPageDirId_t dirId;    /* ページディレクトリID */
+    size_t   mapSize;   /* マッピングサイズ */
+    size_t   setSize;   /* 設定サイズ       */
+    uint32_t idx;       /* インデックス     */
+    CmnRet_t ret;       /* 関数戻り値       */
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() start. pPAddr=%010p, value=%0#4X, size=%#X",
@@ -160,9 +248,6 @@ void MemmngCtrlSet( void    *pPAddr,
                pPAddr,
                value,
                size );*/
-
-    /* ページディレクトリID取得 */
-    dirId = MemmngPageGetDirId();
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MK_CONFIG_SIZE_KERNEL_MAP ) {
@@ -186,7 +271,7 @@ void MemmngCtrlSet( void    *pPAddr,
         }
 
         /* ページマッピング設定 */
-        ret = MemmngPageSet( dirId,
+        ret = MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
                              ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
                              pPAddr + idx,
                              mapSize,
@@ -208,9 +293,9 @@ void MemmngCtrlSet( void    *pPAddr,
     }
 
     /* ページマッピング解除 */
-    MemmngPageUnset( dirId,
+    MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                      ( void * ) MK_CONFIG_ADDR_KERNEL_MAP1,
-                     MK_CONFIG_SIZE_KERNEL_MAP );
+                     MK_CONFIG_SIZE_KERNEL_MAP              );
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() end.", __func__ );*/

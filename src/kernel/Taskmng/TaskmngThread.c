@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngThread.c                                         */
-/*                                                                 2021/06/20 */
+/*                                                                 2021/10/24 */
 /* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -65,10 +65,6 @@ static void DoCreate( MkThreadParam_t *pParam );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
-/* カーネルスタック設定 */
-static CmnRet_t SetKernelStack( ThreadInfo_t *pThreadInfo );
-/* カーネルスタック削除 */
-static void UnsetKernelStack( ThreadInfo_t *pThreadInfo );
 
 
 /******************************************************************************/
@@ -89,14 +85,12 @@ static void UnsetKernelStack( ThreadInfo_t *pThreadInfo );
 /******************************************************************************/
 MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
 {
-    CmnRet_t     ret;           /* 関数戻り値             */
     MLibErr_t    errMLib;       /* MLIBライブラリエラー値 */
     MLibRet_t    retMLib;       /* MLIBライブラリ戻り値   */
     MkTaskId_t   taskId;        /* タスクID               */
     ThreadInfo_t *pThreadInfo;  /* スレッド管理情報       */
 
     /* 初期化 */
-    ret         = CMN_FAILURE;
     errMLib     = MLIB_ERR_NONE;
     retMLib     = MLIB_RET_FAILURE;
     taskId      = MK_TASKID_NULL;
@@ -131,24 +125,6 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
         return MK_TID_NULL;
     }
 
-    /* カーネルスタック設定 */
-    ret = SetKernelStack( pThreadInfo );
-
-    /* 設定結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* スレッド管理情報解放 */
-        MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
-                              ( uint_t ) pThreadInfo->tid,
-                              &errMLib                     );
-
-        /* スレッド管理情報動的配列削除 */
-        MLibDynamicArrayExit( &( pProcInfo->threadTbl ), NULL );
-
-        return MK_TID_NULL;
-    }
-
     /* 起動時情報設定 */
     pThreadInfo->startInfo.pEntryPoint   = pProcInfo->pEntryPoint;
     pThreadInfo->startInfo.pStackPointer = pProcInfo->userStack.pBottomAddr;
@@ -159,9 +135,6 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
     /* 追加結果判定 */
     if ( taskId == MK_TASKID_NULL ) {
         /* 失敗 */
-
-        /* カーネルスタック削除 */
-        UnsetKernelStack( pThreadInfo );
 
         /* スレッド管理情報解放 */
         MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
@@ -223,6 +196,74 @@ MkTid_t ThreadAddMainIdle( ProcInfo_t *pProcInfo )
 
     /* 割当結果判定 */
     if ( pThreadInfo == NULL ) {
+        /* 失敗 */
+
+        /* スレッド管理情報動的配列削除 */
+        MLibDynamicArrayExit( &( pProcInfo->threadTbl ), NULL );
+
+        return MK_TID_NULL;
+    }
+
+    return pThreadInfo->tid;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       スレッド複製
+ * @details     スレッドを複製する。
+ *
+ * @param[in]   *pProcInfo 複製先プロセス管理情報
+ *
+ * @return      複製結果を返す。
+ * @retval      0           成功（メインスレッドID）
+ * @retval      MK_TID_NULL 失敗
+ */
+/******************************************************************************/
+MkTid_t ThreadFork( ProcInfo_t *pProcInfo )
+{
+    MLibErr_t    errMLib;       /* MLIBライブラリエラー値 */
+    MLibRet_t    retMLib;       /* MLIBライブラリ戻り値   */
+    MkTaskId_t   taskId;        /* タスクID               */
+    ThreadInfo_t *pThreadInfo;  /* スレッド管理情報       */
+
+    /* 初期化 */
+    errMLib     = MLIB_ERR_NONE;
+    retMLib     = MLIB_RET_FAILURE;
+    pThreadInfo = NULL;
+
+    /* スレッド管理情報動的配列初期化 */
+    retMLib = MLibDynamicArrayInit( &( pProcInfo->threadTbl ),
+                                    THREAD_TBL_CHUNK_SIZE,
+                                    sizeof ( ThreadInfo_t ),
+                                    UINT_MAX,
+                                    &errMLib                   );
+
+    /* 初期化結果判定 */
+    if ( retMLib != MLIB_RET_SUCCESS ) {
+        /* 失敗 */
+
+        return MK_TID_NULL;
+    }
+
+    /* スレッド管理情報割当 */
+    pThreadInfo = AllocThreadInfo( pProcInfo );
+
+    /* 割当結果判定 */
+    if ( pThreadInfo == NULL ) {
+        /* 失敗 */
+
+        /* スレッド管理情報動的配列削除 */
+        MLibDynamicArrayExit( &( pProcInfo->threadTbl ), NULL );
+
+        return MK_TID_NULL;
+    }
+
+    /* タスク複製 */
+    taskId = TaskFork( pThreadInfo );
+
+    /* 複製結果判定 */
+    if ( taskId == MK_TASKID_NULL ) {
         /* 失敗 */
 
         /* スレッド管理情報動的配列削除 */
@@ -356,13 +397,11 @@ static ThreadInfo_t *AllocThreadInfo( ProcInfo_t *pProcInfo )
 /******************************************************************************/
 static void DoCreate( MkThreadParam_t *pParam )
 {
-    CmnRet_t     ret;           /* 関数戻り値       */
     MkTaskId_t   taskId;        /* タスクID         */
     ProcInfo_t   *pProcInfo;    /* プロセス管理情報 */
     ThreadInfo_t *pThreadInfo;  /* スレッド管理情報 */
 
     /* 初期化 */
-    ret         = CMN_FAILURE;
     taskId      = MK_TASKID_NULL;
     pProcInfo   = NULL;
     pThreadInfo = NULL;
@@ -396,25 +435,6 @@ static void DoCreate( MkThreadParam_t *pParam )
         return;
     }
 
-    /* カーネルスタック設定 */
-    ret = SetKernelStack( pThreadInfo );
-
-    /* 設定結果判定 */
-    if ( ret != CMN_SUCCESS ) {
-        /* 失敗 */
-
-        /* スレッド管理情報解放 */
-        MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
-                              ( uint_t ) pThreadInfo->tid,
-                              NULL                         );
-
-        /* 戻り値設定 */
-        pParam->ret = MK_RET_FAILURE;
-        pParam->err = MK_ERR_NO_RESOURCE;
-
-        return;
-    }
-
     /* 起動時情報設定 */
     pThreadInfo->startInfo.pEntryPoint   = pParam->pFunc;
     pThreadInfo->startInfo.pStackPointer =
@@ -428,9 +448,6 @@ static void DoCreate( MkThreadParam_t *pParam )
     /* 追加結果判定 */
     if ( taskId == MK_TASKID_NULL ) {
         /* 失敗 */
-
-        /* カーネルスタック削除 */
-        UnsetKernelStack( pThreadInfo );
 
         /* スレッド管理情報解放 */
         MLibDynamicArrayFree( &( pProcInfo->threadTbl ),
@@ -502,71 +519,6 @@ static void HdlInt( uint32_t        intNo,
                __func__,
                pParam->ret,
                pParam->err                  );
-
-    return;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       カーネルスタック設定
- * @details     カーネルスタック領域を新たに割当てて、pThreadInfoにスタック情報
- *              を設定する。
- *
- * @param[in]   *pThreadInfo スレッド管理情報
- *
- * @return      処理結果を返す。
- * @retval      CMN_SUCCESS 成功
- * @retval      CMN_FAILURE 失敗
- */
-/******************************************************************************/
-static CmnRet_t SetKernelStack( ThreadInfo_t *pThreadInfo )
-{
-    void              *pKernelStack;    /* カーネルスタック領域 */
-    ThreadStackInfo_t *pStackInfo;      /* スタック情報         */
-
-    /* 初期化 */
-    pKernelStack = NULL;
-    pStackInfo   = &( pThreadInfo->kernelStack );
-
-    /* カーネルスタック領域割当 */
-    pKernelStack = MemmngHeapAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
-
-    /* 割当結果判定 */
-    if ( pKernelStack == NULL ) {
-        /* 失敗 */
-
-        return CMN_FAILURE;
-    }
-
-    /* カーネルスタック情報設定 */
-    pStackInfo->pTopAddr    = pKernelStack;
-    pStackInfo->pBottomAddr = ( void * ) ( ( uint32_t ) pKernelStack   +
-                                           MK_CONFIG_SIZE_KERNEL_STACK -
-                                           sizeof ( uint32_t )           );
-    pStackInfo->size        = MK_CONFIG_SIZE_KERNEL_STACK;
-
-    return CMN_SUCCESS;
-}
-
-
-/******************************************************************************/
-/**
- * @brief       カーネルスタック削除
- * @details     カーネルスタック領域を解放する。
- *
- * @param[in]   pThreadInfo スレッド管理情報
- */
-/******************************************************************************/
-static void UnsetKernelStack( ThreadInfo_t *pThreadInfo )
-{
-    /* カーネルスタック領域解放 */
-    MemmngHeapFree( pThreadInfo->kernelStack.pTopAddr );
-
-    /* カーネルスタック情報設定 */
-    pThreadInfo->kernelStack.pTopAddr    = NULL;
-    pThreadInfo->kernelStack.pBottomAddr = NULL;
-    pThreadInfo->kernelStack.size        = 0;
 
     return;
 }

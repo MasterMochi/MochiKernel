@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/config.h                                                            */
-/*                                                                 2019/08/11 */
-/* Copyright (C) 2018-2019 Mochi.                                             */
+/*                                                                 2021/10/31 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __KERNEL_CONFIG_H__
@@ -39,7 +39,7 @@
 /** カーネル領域先頭アドレス */
 #define MK_CONFIG_ADDR_KERNEL_START ( MK_ADDR_ENTRY )
 /** カーネル用スタック領域先頭アドレス */
-#define MK_CONFIG_ADDR_KERNEL_STACK ( 0x3EFFE000 )
+#define MK_CONFIG_ADDR_KERNEL_STACK ( 0x3EFFA000 )
 /** カーネル用スタック領域サイズ */
 #define MK_CONFIG_SIZE_KERNEL_STACK ( 0x00002000 )
 /** メモリ制御用領域1先頭アドレス */
@@ -57,7 +57,7 @@
 /** ユーザ空間領域先頭アドレス */
 #define MK_CONFIG_ADDR_USER_START   ( 0x40000000 )
 /** ユーザ空間スタック領域先頭アドレス */
-#define MK_CONFIG_ADDR_USER_STACK   ( 0xBFFFE000 )
+#define MK_CONFIG_ADDR_USER_STACK   ( 0xBFFF8000 )
 /** ユーザ空間スタック領域サイズ */
 #define MK_CONFIG_SIZE_USER_STACK   ( 0x00008000 )
 /** 全ユーザ空間領域サイズ */

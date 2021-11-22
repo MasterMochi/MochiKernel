@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.h                                           */
-/*                                                                 2021/06/09 */
+/*                                                                 2021/10/24 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -32,6 +32,8 @@ typedef ThreadInfo_t TaskInfo_t;
 /******************************************************************************/
 /* タスク追加 */
 extern MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo );
+/* タスク複製 */
+extern MkTaskId_t TaskFork( TaskInfo_t *pTaskInfo );
 /* タスク管理情報取得 */
 extern TaskInfo_t *TaskGetInfo( MkTaskId_t taskId );
 /* タスク制御初期化 */

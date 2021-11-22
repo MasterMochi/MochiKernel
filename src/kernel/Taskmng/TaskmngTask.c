@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.c                                           */
-/*                                                                 2021/06/15 */
+/*                                                                 2021/11/03 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -57,6 +57,13 @@ static void HdlInt( uint32_t        intNo,
                     IntMngContext_t context );
 /* タスク起動 */
 static void Start( void );
+/* 複製タスク開始ポイント */
+void TaskForkStart( void );
+/* カーネルスタック設定 */
+static CmnRet_t SetKernelStack( TaskInfo_t *pTaskInfo );
+/* カーネルスタック削除 */
+static void UnsetKernelStack( TaskInfo_t *pTaskInfo );
+
 
 
 /******************************************************************************/
@@ -176,6 +183,16 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
                pTaskInfo->tid,
                pTaskInfo->startInfo.pEntryPoint );
 
+    /* カーネルスタック設定 */
+    ret = SetKernelStack( pTaskInfo );
+
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        return MK_TASKID_NULL;
+    }
+
     /* タスク管理情報設定 */
     pTaskInfo->taskId      = MK_TASKID_MAKE( pTaskInfo->pProcInfo->pid,
                                              pTaskInfo->tid             );
@@ -189,6 +206,9 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
     if ( ret == CMN_FAILURE ) {
         /* 失敗 */
 
+        /* カーネルスタック削除 */
+        UnsetKernelStack( pTaskInfo );
+
         return MK_TASKID_NULL;
     }
 
@@ -196,6 +216,93 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
     DEBUG_LOG( "%s() end. ret=%u", __func__, pTaskInfo->taskId );
 
     return pTaskInfo->taskId;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       タスク複製
+ * @details     タスクを複製する。
+ *
+ * @params[in]  *pChildInfo 複製先タスク管理情報
+ *
+ * @return      複製したタスクIDを返す。
+ * @retval      MK_TASKID_NULL 失敗
+ * @retval      MK_TASKID_MIN  タスクID最小値
+ * @retval      MK_TASKID_MAX  タスクID最大値
+ */
+/******************************************************************************/
+MkTaskId_t TaskFork( TaskInfo_t *pChildInfo )
+{
+    uint32_t   esp;             /* ESPレジスタ      */
+    uint32_t   ebp;             /* ebpレジスタ      */
+    CmnRet_t   ret;             /* 戻り値           */
+    TaskInfo_t *pSelfInfo;      /* 現タスク管理情報 */
+
+    /* 初期化 */
+    esp       = 0;
+    ebp       = 0;
+    ret       = CMN_FAILURE;
+    pSelfInfo = NULL;
+
+    /* タスクID設定 */
+    pChildInfo->taskId = MK_TASKID_MAKE( pChildInfo->pProcInfo->pid,
+                                         pChildInfo->tid             );
+
+    /* カーネルスタック設定 */
+    ret = SetKernelStack( pChildInfo );
+
+    /* 設定結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        return MK_TASKID_NULL;
+    }
+
+    /* コンテキスト保存 */
+    esp = IA32InstructionGetEsp();
+    ebp = IA32InstructionGetEbp();
+
+    /* 複製タスク開始ポイント */
+    __asm__ __volatile__ ( "TaskForkStart:\n"
+                           :
+                           :
+                           : "eax", "ebx", "ecx", "edx", "esi", "edi" );
+
+    /* 現タスク情報取得 */
+    pSelfInfo = SchedGetTaskInfo();
+
+    /* 親タスク判定 */
+    if ( pChildInfo != pSelfInfo ) {
+        /* 親タスク */
+
+        /* カーネルスタック領域複製 */
+        MLibUtilCopyMemory( pChildInfo->kernelStack.pTopAddr,
+                            pSelfInfo->kernelStack.pTopAddr,
+                            MK_CONFIG_SIZE_KERNEL_STACK      );
+
+        /* コンテキスト設定 */
+        pChildInfo->context.eip = ( uint32_t ) TaskForkStart;
+        pChildInfo->context.esp = esp                                         -
+                                 ( uint32_t ) pSelfInfo->kernelStack.pTopAddr +
+                                 ( uint32_t ) pChildInfo->kernelStack.pTopAddr;
+        pChildInfo->context.ebp = ebp;
+
+        /* スケジュール追加 */
+        ret = SchedAdd( pChildInfo );
+
+        /* 追加結果判定 */
+        if ( ret == CMN_FAILURE ) {
+            /* 失敗 */
+
+            /* カーネルスタック削除 */
+            UnsetKernelStack( pChildInfo );
+
+            return MK_TASKID_NULL;
+        }
+    }
+
+    return pChildInfo->taskId;
 }
 
 
@@ -333,6 +440,71 @@ static void HdlInt( uint32_t        intNo,
                __func__,
                pParam->ret,
                pParam->err                   );
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       カーネルスタック設定
+ * @details     カーネルスタック領域を新たに割当てて、タスク管理情報ににスタッ
+ *              ク情報を設定する。
+ *
+ * @param[in]   *pTaskInfo タスク管理情報
+ *
+ * @return      処理結果を返す。
+ * @retval      CMN_SUCCESS 成功
+ * @retval      CMN_FAILURE 失敗
+ */
+/******************************************************************************/
+static CmnRet_t SetKernelStack( TaskInfo_t *pTaskInfo )
+{
+    void              *pKernelStack;    /* カーネルスタック領域 */
+    ThreadStackInfo_t *pStackInfo;      /* スタック情報         */
+
+    /* 初期化 */
+    pKernelStack = NULL;
+    pStackInfo   = &( pTaskInfo->kernelStack );
+
+    /* カーネルスタック領域割当 */
+    pKernelStack = MemmngHeapAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
+
+    /* 割当結果判定 */
+    if ( pKernelStack == NULL ) {
+        /* 失敗 */
+
+        return CMN_FAILURE;
+    }
+
+    /* カーネルスタック情報設定 */
+    pStackInfo->pTopAddr    = pKernelStack;
+    pStackInfo->pBottomAddr = ( void * ) ( ( uint32_t ) pKernelStack   +
+                                           MK_CONFIG_SIZE_KERNEL_STACK -
+                                           sizeof ( uint32_t )           );
+    pStackInfo->size        = MK_CONFIG_SIZE_KERNEL_STACK;
+
+    return CMN_SUCCESS;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       カーネルスタック削除
+ * @details     カーネルスタック領域を解放する。
+ *
+ * @param[in]   pThreadInfo スレッド管理情報
+ */
+/******************************************************************************/
+static void UnsetKernelStack( ThreadInfo_t *pThreadInfo )
+{
+    /* カーネルスタック領域解放 */
+    MemmngHeapFree( pThreadInfo->kernelStack.pTopAddr );
+
+    /* カーネルスタック情報設定 */
+    pThreadInfo->kernelStack.pTopAddr    = NULL;
+    pThreadInfo->kernelStack.pBottomAddr = NULL;
+    pThreadInfo->kernelStack.size        = 0;
+
     return;
 }
 

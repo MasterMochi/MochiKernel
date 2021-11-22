@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngProc.c                                           */
-/*                                                                 2021/06/13 */
+/*                                                                 2021/10/25 */
 /* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -383,6 +383,151 @@ static ProcInfo_t *AllocProcInfo( uint8_t type )
 
 /******************************************************************************/
 /**
+ * @brief           プロセス複製
+ * @details         プロセスを複製する。
+ *
+ * @param[in,out]   *pParam パラメータ
+ */
+/******************************************************************************/
+static void DoFork( MkProcParam_t *pParam )
+{
+    MkTid_t    tid;             /* スレッドID         */
+    CmnRet_t   ret;             /* 関数戻り値         */
+    ProcInfo_t *pChildInfo;     /* 子プロセス管理情報 */
+    ProcInfo_t *pParentInfo;    /* 親プロセス管理情報 */
+    ProcInfo_t *pNewInfo;       /* 現プロセス管理情報 */
+
+    /* 初期化 */
+    tid         = MK_TID_NULL;
+    ret         = CMN_FAILURE;
+    pChildInfo  = NULL;
+    pParentInfo = NULL;
+
+    /* 親プロセス管理情報取得 */
+    pParentInfo = SchedGetProcInfo();
+
+    /* 子プロセス管理情報割当 */
+    pChildInfo = AllocProcInfo( TASKMNG_PROC_TYPE_USER );
+
+    /* 割当結果判定 */
+    if ( pChildInfo == NULL ) {
+        /* 失敗 */
+
+        /* 戻り値設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
+
+        return;
+    }
+
+    /* ページディレクトリ割当 */
+    pChildInfo->dirId = MemmngPageAllocDir( pChildInfo->pid );
+
+    /* 割当結果判定 */
+    if ( pChildInfo->dirId == MEMMNG_PAGE_DIR_ID_NULL ) {
+        /* 失敗 */
+
+        /* プロセス管理情報解放 */
+        FreeProcInfo( pChildInfo );
+
+        /* 戻り値設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
+
+        return;
+    }
+
+    /* PDBR取得 */
+    pChildInfo->pdbr = MemmngPageGetPdbr( pChildInfo->dirId );
+
+    /* 仮想メモリ領域管理開始 */
+    ret = MemmngVirtStart( pChildInfo->pid );
+
+    /* 開始結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        /* プロセス管理情報解放 */
+        FreeProcInfo( pChildInfo );
+
+        /* 戻り値設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
+
+        return;
+    }
+
+    /* ページ複製 */
+    ret = MemmngPageCopy( pChildInfo->dirId,
+                          pParentInfo->dirId,
+                          ( void * ) MK_CONFIG_ADDR_USER_START,
+                          MK_CONFIG_SIZE_USER                   );
+
+    /* 複製結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        /* プロセス管理情報解放 */
+        FreeProcInfo( pChildInfo );
+
+        /* 戻り値設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
+
+        return;
+    }
+
+    /* 子プロセス管理情報設定 */
+    pChildInfo->parent              = pParentInfo->pid;
+    pChildInfo->pEntryPoint         = pParentInfo->pEntryPoint;
+    pChildInfo->userHeap            = pParentInfo->userHeap;
+    pChildInfo->userStack           = pParentInfo->userStack;
+    pChildInfo->userStack.pPhysAddr = NULL;
+
+    /* スレッド複製 */
+    tid = ThreadFork( pChildInfo );
+
+    /* 複製結果判定 */
+    if ( tid == MK_TID_NULL ) {
+        /* 失敗 */
+
+        /* プロセス管理情報解放 */
+        FreeProcInfo( pChildInfo );
+
+        /* 戻り値設定 */
+        pParam->ret = MK_RET_FAILURE;
+        pParam->err = MK_ERR_NO_RESOURCE;
+
+        return;
+    }
+
+    /* プロセス管理情報取得 */
+    pNewInfo = SchedGetProcInfo();
+
+    /* 子プロセス判定 */
+    if ( pNewInfo == pChildInfo ) {
+        /* 子プロセス */
+
+        /* プロセスID設定 */
+        pParam->pid = pNewInfo->pid;
+
+    } else {
+        /* 親プロセス */
+
+        /* プロセスID設定 */
+        pParam->pid = MK_PID_NULL;
+    }
+
+    /* 戻り値設定 */
+    pParam->ret = MK_RET_SUCCESS;
+    pParam->err = MK_ERR_NONE;
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
  * @brief       プロセス管理情報解放
  * @details     プロセス管理情報を解放する。
  *
@@ -447,6 +592,11 @@ static void HdlInt( uint32_t        intNo,
         case MK_PROC_FUNCID_SET_BREAKPOINT:
             /* ブレイクポイント設定 */
             SetBreakPoint( pParam );
+            break;
+
+        case MK_PROC_FUNCID_FORK:
+            /* プロセス複製 */
+            DoFork( pParam );
             break;
 
         default:

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngName.c                                           */
-/*                                                                 2021/05/22 */
+/*                                                                 2021/11/27 */
 /* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -24,7 +24,7 @@
 /* モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <IntMng.h>
+#include <Intmng.h>
 #include <Taskmng.h>
 
 
@@ -61,7 +61,7 @@ static void doUnregister( MkTaskNameParam_t *pParam );
 static TaskNameEntry_t *GetUnusedEntry( void );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context );
+                    IntmngContext_t context );
 /* タスクID検索 */
 static TaskNameEntry_t *SearchTaskId( MkTaskId_t taskId );
 /* タスク名検索 */
@@ -104,7 +104,7 @@ void NameInit( void )
     }
 
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( MK_CONFIG_INTNO_TASKNAME,     /* 割込み番号     */
+    IntmngHdlSet( MK_CONFIG_INTNO_TASKNAME,     /* 割込み番号     */
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3     );  /* 特権レベル     */
 
@@ -375,7 +375,7 @@ static TaskNameEntry_t *GetUnusedEntry( void )
  */
 /******************************************************************************/
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context )
+                    IntmngContext_t context )
 {
     MkTaskNameParam_t *pParam;  /* パラメータ */
 

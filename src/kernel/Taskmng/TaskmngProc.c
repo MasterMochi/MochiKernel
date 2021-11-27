@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngProc.c                                           */
-/*                                                                 2021/10/25 */
+/*                                                                 2021/11/27 */
 /* Copyright (C) 2018-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -24,7 +24,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <IntMng.h>
+#include <Intmng.h>
 #include <Memmng.h>
 #include <Taskmng.h>
 
@@ -61,7 +61,7 @@ static ProcInfo_t *AllocProcInfo( uint8_t type );
 static void FreeProcInfo( ProcInfo_t *pProcInfo );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context );
+                    IntmngContext_t context );
 /* ブレイクポイント設定 */
 static void SetBreakPoint( MkProcParam_t *pParam );
 /* ユーザスタック情報設定 */
@@ -317,7 +317,7 @@ void ProcInit( void )
     ThreadAddMainIdle( pProcInfo );
 
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( MK_PROC_INTNO,            /* 割込み番号     */
+    IntmngHdlSet( MK_PROC_INTNO,            /* 割込み番号     */
                   HdlInt,                   /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
 
@@ -573,7 +573,7 @@ static void FreeProcInfo( ProcInfo_t *pProcInfo )
  */
 /******************************************************************************/
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context )
+                    IntmngContext_t context )
 {
     MkProcParam_t *pParam;  /* パラメータ */
 

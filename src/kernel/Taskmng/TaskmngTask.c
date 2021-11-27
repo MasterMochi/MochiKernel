@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.c                                           */
-/*                                                                 2021/11/03 */
+/*                                                                 2021/11/27 */
 /* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -24,7 +24,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <IntMng.h>
+#include <Intmng.h>
 #include <Memmng.h>
 #include <Taskmng.h>
 
@@ -54,7 +54,7 @@
 static void DoGetId( MkTaskParam_t *pParam );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context );
+                    IntmngContext_t context );
 /* タスク起動 */
 static void Start( void );
 /* 複製タスク開始ポイント */
@@ -224,7 +224,7 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
  * @brief       タスク複製
  * @details     タスクを複製する。
  *
- * @params[in]  *pChildInfo 複製先タスク管理情報
+ * @param[in]   *pChildInfo 複製先タスク管理情報
  *
  * @return      複製したタスクIDを返す。
  * @retval      MK_TASKID_NULL 失敗
@@ -356,7 +356,7 @@ void TaskInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( MK_CONFIG_INTNO_TASK,     /* 割込み番号     */
+    IntmngHdlSet( MK_CONFIG_INTNO_TASK,     /* 割込み番号     */
                   HdlInt,                   /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
 
@@ -401,7 +401,7 @@ static void DoGetId( MkTaskParam_t *pParam )
  */
 /******************************************************************************/
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context )
+                    IntmngContext_t context )
 {
     MkTaskParam_t *pParam;  /* パラメータ */
 

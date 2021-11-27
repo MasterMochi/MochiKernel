@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2021/05/29 *#
+#*                                                                 2021/11/27 *#
 #* Copyright (C) 2016-2021 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -12,7 +12,7 @@
 PROG = kernel
 
 # ソースコード
-SRCS  = InitCtrl/InitCtrl.c
+SRCS  = Initctrl/Initctrl.c
 SRCS += Debug/Debug.c
 SRCS += Debug/DebugLog.c
 SRCS += Memmng/Memmng.c
@@ -33,19 +33,19 @@ SRCS += Taskmng/TaskmngSched.c
 SRCS += Taskmng/TaskmngTask.c
 SRCS += Taskmng/TaskmngThread.c
 SRCS += Taskmng/TaskmngTss.c
-SRCS += IntMng/IntMng.c
-SRCS += IntMng/IntMngIdt.c
-SRCS += IntMng/IntMngHdl.c
-SRCS += IntMng/IntMngPic.c
-SRCS += IntMng/IntMngCtrl.c
-SRCS += TimerMng/TimerMng.c
-SRCS += TimerMng/TimerMngCtrl.c
-SRCS += TimerMng/TimerMngPit.c
-SRCS += ItcCtrl/ItcCtrl.c
-SRCS += ItcCtrl/ItcCtrlMsg.c
-SRCS += IoCtrl/IoCtrl.c
-SRCS += IoCtrl/IoCtrlPort.c
-SRCS += IoCtrl/IoCtrlMem.c
+SRCS += Intmng/Intmng.c
+SRCS += Intmng/IntmngIdt.c
+SRCS += Intmng/IntmngHdl.c
+SRCS += Intmng/IntmngPic.c
+SRCS += Intmng/IntmngCtrl.c
+SRCS += Timermng/Timermng.c
+SRCS += Timermng/TimermngCtrl.c
+SRCS += Timermng/TimermngPit.c
+SRCS += Itcctrl/Itcctrl.c
+SRCS += Itcctrl/ItcctrlMsg.c
+SRCS += Ioctrl/Ioctrl.c
+SRCS += Ioctrl/IoctrlPort.c
+SRCS += Ioctrl/IoctrlMem.c
 
 # ビルドディレクトリ
 BUILD_DIR   = ../../build

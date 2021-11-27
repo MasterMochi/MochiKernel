@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngThread.c                                         */
-/*                                                                 2021/10/24 */
+/*                                                                 2021/11/27 */
 /* Copyright (C) 2019-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -27,7 +27,7 @@
 /* 外部モジュールヘッダ */
 #include <Cmn.h>
 #include <Debug.h>
-#include <IntMng.h>
+#include <Intmng.h>
 #include <Memmng.h>
 #include <Taskmng.h>
 
@@ -64,7 +64,7 @@ static ThreadInfo_t *AllocThreadInfo( ProcInfo_t *pProcInfo );
 static void DoCreate( MkThreadParam_t *pParam );
 /* 割込みハンドラ */
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context );
+                    IntmngContext_t context );
 
 
 /******************************************************************************/
@@ -329,7 +329,7 @@ void ThreadInit( void )
     DEBUG_LOG( "%s() start.", __func__ );
 
     /* 割込みハンドラ設定 */
-    IntMngHdlSet( MK_CONFIG_INTNO_THREAD,       /* 割込み番号     */
+    IntmngHdlSet( MK_CONFIG_INTNO_THREAD,       /* 割込み番号     */
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3   );    /* 特権レベル     */
 
@@ -480,7 +480,7 @@ static void DoCreate( MkThreadParam_t *pParam )
  */
 /******************************************************************************/
 static void HdlInt( uint32_t        intNo,
-                    IntMngContext_t context )
+                    IntmngContext_t context )
 {
     MkThreadParam_t *pParam;    /* パラメータ */
 

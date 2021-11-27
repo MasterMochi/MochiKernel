@@ -1,0 +1,90 @@
+/******************************************************************************/
+/*                                                                            */
+/* src/kernel/include/Intmng.h                                                */
+/*                                                                 2021/11/27 */
+/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                            */
+/******************************************************************************/
+#ifndef INTMNG_H
+#define INTMNG_H
+/******************************************************************************/
+/* インクルード                                                               */
+/******************************************************************************/
+/* 標準ヘッダ */
+#include <stdint.h>
+
+/* 共通ヘッダ */
+#include <hardware/IA32/IA32.h>
+#include <hardware/IA32/IA32Descriptor.h>
+
+
+/******************************************************************************/
+/* 定義                                                                       */
+/******************************************************************************/
+/* 割込み番号定義 */
+#define INTMNG_INT_NO_MIN    (   0 )                    /**< 割込み番号最小値 */
+#define INTMNG_INT_NO_MAX    ( 255 )                    /**< 割込み番号最大値 */
+#define INTMNG_INT_NO_NUM    ( INTMNG_INT_NO_MAX + 1 )  /**< 割込み番号数     */
+
+/** PICベクタ番号ベース */
+#define INTMNG_PIC_VCTR_BASE ( 0x20 )
+
+/** セグメントレジスタ情報 */
+typedef struct {
+    uint32_t        ds;         /**< DSレジスタ */
+    uint32_t        es;         /**< ESレジスタ */
+    uint32_t        fs;         /**< FSレジスタ */
+    uint32_t        gs;         /**< GSレジスタ */
+} IntmngSegReg_t;
+
+/** 割込み発生時コンテキスト */
+typedef struct {
+    IA32Pushad_t    genReg;     /**< 汎用レジスタ       */
+    IntmngSegReg_t  segReg;     /**< セグメントレジスタ */
+    IA32ErrCode_t   errCode;    /**< エラーコード       */
+    IA32IretdInfo_t iretdInfo;  /**< 割込みリターン情報 */
+} IntmngContext_t;
+
+/** 割込みハンドラ関数型 */
+typedef void ( *IntmngHdl_t )( uint32_t        intNo,
+                               IntmngContext_t context );
+
+
+/******************************************************************************/
+/* グローバル関数プロトタイプ宣言                                             */
+/******************************************************************************/
+/*----------*/
+/* Intmng.c */
+/*----------*/
+/* 割込み管理初期化 */
+extern void IntmngInit( void );
+
+/*-------------*/
+/* IntmngHdl.c */
+/*-------------*/
+/* 割込みハンドラ設定 */
+extern void IntmngHdlSet( uint32_t    intNo,
+                          IntmngHdl_t func,
+                          uint8_t     level  );
+
+/*-------------*/
+/* IntmngPic.c */
+/*-------------*/
+/* PIC割込み許可 */
+extern void IntmngPicAllowIrq( uint8_t irqNo );
+
+/* PIC割込み拒否 */
+extern void IntmngPicDenyIrq( uint8_t irqNo );
+
+/* PIC割込み無効化 */
+extern void IntmngPicDisable( void );
+
+/* PIC割込み有効化 */
+extern void IntmngPicEnable( void );
+
+/* PIC割込みEOI通知 */
+extern void IntmngPicEoi( uint8_t irqNo );
+
+
+/******************************************************************************/
+#endif

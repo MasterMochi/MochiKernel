@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/booter/Driver/DriverAta.c                                              */
-/*                                                                 2020/12/31 */
-/* Copyright (C) 2017-2020 Mochi.                                             */
+/*                                                                 2021/11/27 */
+/* Copyright (C) 2017-2021 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,7 +24,7 @@
 #include <Cmn.h>
 #include <Debug.h>
 #include <Driver.h>
-#include <IntMng.h>
+#include <Intmng.h>
 
 
 /******************************************************************************/
@@ -83,10 +83,10 @@ void DriverAtaInit( void )
     gInterruptFlag = ATA_INT_FLAG_OFF;
 
     /* 割込み許可設定 */
-    IntMngPicAllowIrq( I8259A_IRQ14 );
+    IntmngPicAllowIrq( I8259A_IRQ14 );
 
     /* 割込みハンドラ登録 */
-    IntMngHdlSet( INTMNG_PIC_VCTR_BASE + I8259A_IRQ14,
+    IntmngHdlSet( INTMNG_PIC_VCTR_BASE + I8259A_IRQ14,
                   DriverAtaHandler );
 
     /* デバッグトレースログ出力 */
@@ -113,7 +113,7 @@ void DriverAtaHandler( uint32_t intNo )
     gInterruptFlag = ATA_INT_FLAG_ON;
 
     /* EOI命令発行 */
-    IntMngPicEoi( I8259A_IRQ14 );
+    IntmngPicEoi( I8259A_IRQ14 );
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG( "%s() end.", __func__ );*/

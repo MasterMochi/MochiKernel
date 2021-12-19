@@ -1,0 +1,37 @@
+@startuml
+
+participant "送信元タスク" as src
+participant "MochiKernel"  as kernel
+participant "送信先タスク" as dst
+
+activate src
+activate dst
+
+== 送信先タスクがメッセージ受信状態にない場合 ==
+||10||
+src ->> kernel: メッセージ送信(ノンブロック)
+activate kernel
+src <<-- kernel:
+deactivate kernel
+
+kernel <<- dst: メッセージ受信
+activate kernel
+kernel -->> dst:
+deactivate kernel
+
+||10||
+== 送信先タスクがメッセージ受信状態にある場合 ==
+kernel <<- dst: メッセージ受信
+activate kernel
+
+src ->> kernel: メッセージ送信(ノンブロック)
+activate kernel
+src <<-- kernel:
+deactivate kernel
+
+kernel -->> dst:
+deactivate kernel
+
+||10||
+
+@enduml

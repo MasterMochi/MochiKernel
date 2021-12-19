@@ -1,0 +1,45 @@
+@startuml
+
+participant "送信タスク"  as send
+participant "MochiKernel" as kernel
+participant "受信タスク"  as recv
+
+activate send
+activate recv
+
+kernel <<- recv: メッセージ受信
+activate kernel
+
+opt タイムアウト有り
+    kernel ->> kernel: タイマ設定
+end opt
+
+kernel ->> kernel: 受信タスクsleep
+...
+
+alt メッセージ受信
+    send ->> kernel: メッセージ送信
+    activate kernel
+    note right
+        ノンブロック型でも同じ
+    end note
+
+    kernel ->> kernel: 受信タスクwakeup
+    send <<-- kernel:
+    deactivate kernel
+
+else タイムアウト
+    kernel ->> kernel: タイムアウト
+    activate kernel
+    kernel ->> kernel: 受信タスクwakeup
+    kernel --[#FFFFFF]>> kernel:
+    deactivate kernel
+    ||5||
+end alt
+
+kernel -->> recv:
+deactivate kernel
+
+||10||
+
+@enduml

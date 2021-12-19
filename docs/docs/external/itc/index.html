@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - タスク間通信機能</title>
+    </head>
+    <body>
+        <a name="top"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html#external"><span itemprop="name">外部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">タスク間通信機能</span></a>
+                    <meta itemprop="position" content="4">
+                </li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">タスク間通信機能</a></h1>
+                    <p>MochiKernelはタスクにタスク間通信機能を提供します。タスクは自身のタスクレベルと同じか隣接するタスクレベルのタスクとのみ通信が行えます。</p>
+                    <br>
+                    <div class="center">通信可能なタスクレベル</div>
+                    <table>
+                        <tr>
+                            <td class="title">タスクレベル</td>
+                            <td class="title">ドライバ</td>
+                            <td class="title">サーバ</td>
+                            <td class="title">ユーザ</td>
+                        </tr>
+                        <tr>
+                            <td class="title">ドライバ</td>
+                            <td class="center">〇</td>
+                            <td class="center">〇</td>
+                            <td class="center"></td>
+                        </tr>
+                        <tr>
+                            <td class="title">サーバ</td>
+                            <td class="center">〇</td>
+                            <td class="center">〇</td>
+                            <td class="center">〇</td>
+                        </tr>
+                        <tr>
+                            <td class="title">ユーザ</td>
+                            <td class="center"></td>
+                            <td class="center">〇</td>
+                            <td class="center">〇</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="msg">メッセージパッシング</a></h1>
+                    <p>メッセージパッシングは任意(上限有り)のサイズのバイト列の送受信をタスク間で行います。</p>
+                    <br>
+                    <br>
+                    <h2><a name="msg-send">メッセージ送信</a></h2>
+                    <p>メッセージ送信したタスクはメッセージ送信先タスクが受信するまでブロックします。</p>
+                    <br>
+                    <div class="center">
+                        <img src="send.png"><br>
+                        メッセージ送信シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="msg-send-nb">メッセージ送信（ノンブロック）</a></h2>
+                    <p>ノンブロック型メッセージ送信は、送信先タスクの状態に関わらず、ブロックせずにすぐ完了します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="sendnb.png"><br>
+                        ノンブロック型メッセージ送信シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="msg-recv">メッセージ受信</a></h2>
+                    <p>メッセージ受信時に受信するメッセージが無い場合は、メッセージを受信するかタイムアウトするまでブロックします。</p>
+                    <br>
+                    <div class="center">
+                        <img src="recv.png"><br>
+                        メッセージ受信シーケンス
+                    </div>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>タスク通信機能</li></a>
+                        <a href="#msg"><li>メッセージパッシング</li></a><ol>
+                            <a href="#msg-send"><li>メッセージ送信</li></a>
+                            <a href="#msg-send-nb"><li>メッセージ送信（ノンブロック）</li></a>
+                            <a href="#msg-recv"><li>メッセージ受信</li></a></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

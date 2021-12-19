@@ -1,0 +1,31 @@
+@startuml
+
+participant "送信元タスク" as src
+participant "MochiKernel"  as kernel
+participant "送信先タスク" as dst
+
+activate src
+activate dst
+
+||10||
+src ->> kernel: メッセージ送信
+activate kernel
+
+kernel -> kernel: 送信元タスクsleep
+...
+
+kernel <<- dst: メッセージ受信
+activate kernel
+
+kernel -> kernel: 送信元タスクwakeup
+kernel -->> dst:
+deactivate kernel
+
+||10||
+
+src <<-- kernel:
+deactivate kernel
+
+||10||
+
+@enduml

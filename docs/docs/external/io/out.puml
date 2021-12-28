@@ -1,0 +1,25 @@
+@startuml
+
+participant "ドライバ"    as driver
+participant "MochiKernel" as kernel
+participant "CPU"         as cpu
+
+activate driver
+
+driver ->> kernel: I/Oポート出力( I/Oポート番号, データ )
+activate kernel
+
+break タスク種別 != ドライバ
+    driver <<-- kernel:
+end break
+
+kernel ->> cpu: out命令
+activate cpu
+kernel <<-- cpu:
+deactivate cpu
+
+driver <<-- kernel:
+deactivate kernel
+
+
+@enduml

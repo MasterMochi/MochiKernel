@@ -1,0 +1,29 @@
+@startuml
+
+participant "各モジュール" as other
+box "デバッグ"
+    participant "メイン"     as Debug
+    participant "メモリ出力" as DebugMem
+    participant "VRAM出力"   as DebugVram
+end box
+
+other -> Debug: ログ出力(\n  モジュールID,\n  行番号,\n  フォーマット,\n  ... )
+activate Debug
+
+Debug -> Debug: フォーマット文字列生成
+
+Debug -> DebugMem: ログ出力(\n  モジュールID,\n  行番号,\n  文字列 )
+activate DebugMem
+Debug <-- DebugMem:
+deactivate DebugMem
+
+Debug -> DebugVram: ログ出力(\n  モジュールID,\n  行番号,\n  文字列 )
+activate DebugVram
+Debug <-- DebugVram:
+deactivate DebugVram
+
+other <-- Debug:
+deactivate Debug
+
+@enduml
+

@@ -1,0 +1,52 @@
+@startuml
+
+box "デバッグ"
+    participant "メイン"     as Debug
+    participant " VRAM出力 " as DebugVram
+end box
+database "VRAM" as mem
+
+Debug -> DebugVram: ログ出力(\n  モジュールID,\n  行番号,\n  文字列 )
+activate DebugVram
+
+DebugVram -> DebugVram: モジュールID->文字列変換
+
+DebugVram -> DebugVram: VRAM出力( モジュール名・行番号 )
+activate DebugVram
+ref over DebugVram: VRAM出力
+' DUMMY
+-[#DDDDDD]-> DebugVram:
+deactivate DebugVram
+
+
+DebugVram -> DebugVram: VRAM出力( 文字列 )
+activate DebugVram
+ref over DebugVram: VRAM出力
+' DUMMY
+-[#DDDDDD]-> DebugVram:
+deactivate DebugVram
+
+DebugVram -> DebugVram: カーソル行++
+
+Debug <-- DebugVram:
+deactivate DebugVram
+
+== VRAM出力 ==
+DebugVram -> DebugVram: VRAM出力
+activate DebugVram
+
+loop 一文字毎繰り返し
+    opt カーソル行 >= 25
+        DebugVram -\ mem: 行スクロール
+    end opt
+
+    alt エスケープシーケンス
+        DebugVram -> DebugVram: 管理データ設定
+    else
+        DebugVram -\ mem: 文字コード・属性書込み
+        DebugVram -> DebugVram: カーソル更新(1文字)
+    end alt
+end loop
+
+@enduml
+

@@ -1,0 +1,26 @@
+@startuml
+
+participant "初期化制御" as Initctrl
+box "Debug"
+    participant "メイン"     as Debug
+    participant "メモリ出力" as DebugMem
+    participant "VRAM出力"   as DebugVram
+end box
+
+Initctrl -> Debug: 初期化
+activate Debug
+
+Debug -> DebugMem: 初期化
+activate DebugMem
+Debug <-- DebugMem:
+deactivate DebugMem
+
+Debug -> DebugVram: 初期化
+activate DebugVram
+Debug <-- DebugVram:
+deactivate DebugVram
+
+Initctrl <-- Debug:
+deactivate Debug
+
+@enduml

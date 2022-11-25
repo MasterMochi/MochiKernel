@@ -1,0 +1,20 @@
+@startuml
+
+box "デバッグ"
+    participant "メイン"   as Debug
+    participant "VRAM出力" as DebugVram
+end box
+database "VRAM" as vram
+
+Debug -> DebugVram: 初期化
+activate DebugVram
+
+DebugVram -> DebugVram: 管理データ初期化
+
+DebugVram -\ vram: vram初期化
+
+Debug <-- DebugVram:
+deactivate DebugVram
+
+@enduml
+

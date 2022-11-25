@@ -1,0 +1,29 @@
+@startuml
+
+box "デバッグ"
+    participant "メイン"     as Debug
+    participant "メモリ出力" as DebugMem
+end box
+database "デバッグ用\nメモリ領域" as mem
+
+Debug -> DebugMem: 初期化
+activate DebugMem
+
+DebugMem /- mem: 起動フラグ取得
+
+alt 通常起動
+    DebugMem -\ mem: 起動フラグ設定
+    DebugMem -\ mem: ログ領域0初期化
+    DebugMem -> DebugMem: 管理データ初期化
+
+else 異常再起動
+    loop
+        DebugMem -> DebugMem: hlt
+    end loop
+end alt
+
+Debug <-- DebugMem:
+deactivate DebugMem
+
+@enduml
+

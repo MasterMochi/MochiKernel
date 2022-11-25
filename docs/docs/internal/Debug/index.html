@@ -21,10 +21,10 @@
         <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
         <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-        <title>MochiKernel - タスク管理機能</title>
+        <title>MochiKernel - デバッグ</title>
     </head>
     <body>
-        <a name="top"></a>
+        <a name="totop"></a>
         <div id="header">
             <div id="menu">
                 <a href="../../../index.html"><div id="logo">MochiKernel</div></a>
@@ -40,71 +40,60 @@
                     <a itemprop="item" href="../../index.html"><span itemprop="name">Docs</span></a>
                     <meta itemprop="position" content="2"></li>
                 <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
-                    <a itemprop="item" href="../../index.html#external"><span itemprop="name">外部仕様</span></a>
+                    <a itemprop="item" href="../../index.html#internal"><span itemprop="name">内部仕様</span></a>
                     <meta itemprop="position" content="3"></li>
                 <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
-                    <a itemprop="item" href="./index.html"><span itemprop="name">タスク管理機能</span></a>
-                    <meta itemprop="position" content="4">
-                </li>
+                    <a itemprop="item" href="./index.html"><span itemprop="name">デバッグ</span></a>
+                    <meta itemprop="position" content="4"></li>
             </ol>
         </div>
         <div id="main">
             <div id="content">
                 <div>
-                    <h1><a name="abstruct">タスク管理機能</a></h1>
-                    <p>MochiKernel上で動作するプログラム（コンテキスト）の最小単位をタスク、または、スレッドと呼び、同じメモリ空間を共有するスレッドのグループをプロセスと呼ぶ。MochiKernelは組込み済プロセス起動、スレッド起動、プロセス複製、スケジューリングを行う。</p>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>デバッグモジュールは、カーネルがクラッシュした時またはカーネルテスト用に解析出来るよう、カーネルログのビデオ出力、メモリ出力を行う。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="submodule">サブモジュール構成</a></h1>
+                    <p>デバッグモジュールのサブモジュール構成について以下に示す。</p>
                     <br>
                     <div class="center">
-                        <img class="dark" src="task.png"><br>
-                        タスクとプロセス
+                        <img src="submodule.png"><br>
+                        サブモジュール構成図
                     </div>
                     <br>
-                </div>
-                <div class="totop"><a href="#top">▲上へ</a></div>
-                <div>
-                    <h1><a name="startup">組込み済プロセス起動</a></h1>
-                </div>
-                <div class="totop"><a href="#top">▲上へ</a></div>
-                <div>
-                    <h1><a name="thread">スレッド生成</a></h1>
-                </div>
-                <div class="totop"><a href="#top">▲上へ</a></div>
-                <div>
-                    <h1><a name="fork">プロセス複製(fork)</a></h1>
-                    <p>MochiKernelはプロセスを複製して新しいプロセスを生成する機能forkを提供する。forkを呼び出したプロセスは親プロセス、forkによって複製された新しいプロセスを子プロセスと呼ぶ。forkによって複製されるリソースを以下に示す。</p>
-                    <br>
-                    <div class="center">forkにより複製されるリソース</div>
+                    <div class="center">サブモジュール概要</div>
                     <table>
                         <tr>
-                            <td class="title">#</td>
-                            <td class="title">リソース</td>
-                            <td class="title">複製内容</td>
-                            <td class="title">備考</td>
+                            <td class="title" rowspan="2">#</td>
+                            <td class="title" colspan="2">サブモジュール名</td>
+                            <td class="title" rowspan="2" width="450">概要</td>
+                        </tr>
+                        <tr>
+                            <td class="title">和名</td>
+                            <td class="title">コード名</td>
                         </tr>
                         <tr>
                             <td class="center">1</td>
-                            <td>メモリ</td>
-                            <td>ユーザ空間のメモリ領域は以下を除き複製する。<br>・I/Oメモリ領域</td>
-                            <td>Copy On Write 未対応</td>
+                            <td><a href="Main/index.html">メイン</a></td>
+                            <td>Debug</td>
+                            <td>デバッグモジュールの共通的な処理を行う。</td>
                         </tr>
                         <tr>
                             <td class="center">2</td>
-                            <td>スレッド</td>
-                            <td>forkを呼び出したスレッドのみ複製する。</td>
-                            <td></td>
+                            <td><a href="Vram/index.html">VRAM出力</a></td>
+                            <td>DebugVram</td>
+                            <td>ビデオにログ出力を行う。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td><a href="Mem/index.html">メモリ出力</a></td>
+                            <td>DebugMem</td>
+                            <td>メモリにログ出力を行う。</td>
                         </tr>
                     </table>
-                    <br>
-                </div>
-                <div class="totop"><a href="#top">▲上へ</a></div>
-                <div>
-                    <h1><a name="sched">スケジューリング</a></h1>
-                    <p>MochiKernelはハードウェアタイマを用いて一定時間で、または、タスクがカーネルを呼び出した時にタスクを切り替えること(コンテキストスイッチ)によってプリエンプティブ・マルチタスクをサポートする。</p>
-                    <br>
-                    <div class="center">
-                        <img src="sched.png"><br>
-                        ハードウェアタイマによるタスクのコンテキストスイッチ例
-                    </div>
                     <br>
                 </div>
                 <div class="totop"><a href="#top">▲上へ</a></div>
@@ -113,18 +102,15 @@
                 <div id="content-menu">
                     <h1>目次</h1>
                     <ol>
-                        <a href="#abstruct"><li>タスク管理機能</li></a>
-                        <a href="#startup"><li>組込み済プロセス起動</li></a>
-                        <a href="#thread"><li>スレッド生成</li></a>
-                        <a href="#fork"><li>プロセス複製(fork)</li></a>
-                        <a href="#sched"><li>スケジューリング</li></a>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#submodule"><li>サブモジュール構成</li></a>
                     </ol>
                 </div>
             </div>
         </div>
         <div id="footer">
             <div id="copyright">
-                Copyright &copy 2020 Mochi. All rights reserved.
+                Copyright &copy 2022 Mochi. All rights reserved.
             </div>
         </div>
     </body>

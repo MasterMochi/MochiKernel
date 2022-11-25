@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - デバッグ(メモリ出力)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">デバッグ</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">メモリ出力</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>異常再起動時は、デバッグ用メモリ領域のダンプ時間を確保するために、MochiKernelの起動を中断する。デバッグ出力用メモリ領域にログ出力を行う。</p>
+                    <br>
+                    <h2><a name="abstruct-mem">デバッグ用メモリ領域</a></h2>
+                    <p>デバッグ用メモリ領域のフォーマットを以下に示す。</p>
+                    <br>
+                    <div class="center">デバッグ用メモリ領域</div>
+                    <table>
+                        <tr>
+                            <td class="title">インデックス</td>
+                            <td class="title">内容</td>
+                            <td class="title">説明</td>
+                        </tr>
+                        <tr>
+                            <td class="center">+0</td>
+                            <td class="center">起動フラグ</td>
+                            <td>
+                                通常起動か異常再起動か判定するために使用する。<br>
+                                <table>
+                                    <tr>
+                                        <td class="title">#</td>
+                                        <td class="title">値</td>
+                                        <td class="title">意味</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">1</td>
+                                        <td>0xDEAD_DEAD以外</td>
+                                        <td>初期起動 / 通常再起動</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">2</td>
+                                        <td>0xDEAD_DEAD</td>
+                                        <td>異常再起動</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="center">+4</td>
+                            <td>ログ出力領域</td>
+                            <td>
+                                下記構造のログを連続して書込む。<br>
+                                <table>
+                                    <tr>
+                                        <td class="title">インデックス</td>
+                                        <td class="title">サイズ<br>(byte)</td>
+                                        <td class="title">内容</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">+0</td>
+                                        <td class="right">4</td>
+                                        <td>ログ番号</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">+4</td>
+                                        <td class="right">2</td>
+                                        <td>モジュールID</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">+6</td>
+                                        <td class="right">2</td>
+                                        <td>行番号</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">+8</td>
+                                        <td class="center">1～</td>
+                                        <td>文字列。最後に必ずNULL文字(\0)をとる。</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="abstruct-mngData">管理データ</a></h2>
+                    <p>メモリ出力サブモジュールが管理する管理データを以下に示す。</p>
+                    <br>
+                    <div class="center">管理データ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">管理データ名</td>
+                            <td class="title">サイズ<br>(byte)</td>
+                            <td class="title">説明</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>書込み先インデックス</td>
+                            <td>4</td>
+                            <td>デバッグ用メモリ領域のログ出力先インデックス。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>ログ番号</td>
+                            <td>2</td>
+                            <td>次にログ出力を行う時に付与するログ番号</td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>初期起動時または通常再起動時にデバッグ出力用メモリ領域を初期化する。異常再起動時はハングアップする。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="init-flag">起動フラグ取得</a></h2>
+                    <p>通常起動か異常再起動かを判断するために、デバッグ用メモリ領域から起動フラグを取得する。</p>
+                    <br>
+                    <h2><a name="init-init">デバッグ用メモリ領域初期化</a></h2>
+                    <p>通常起動である場合、起動フラグを0xDEAD_DEADに設定し、ログ領域を0初期化する。</p>
+                    <br>
+                    <h2><a name="init-mngData">管理データ初期化</a></h2>
+                    <p>下記の通り管理データを初期化する。</p>
+                    <br>
+                    <div class="center">管理データの初期値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">管理データ名</td>
+                            <td class="title">初期値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>書込み先インデックス</td>
+                            <td class="right">0</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>ログ番号</td>
+                            <td class="right">0</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="init-hlt">ハングアップ</a></h2>
+                    <p>異常再起動である場合、hlt命令を無限実行することでハングアップさせる。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="Output">ログ出力</a></h1>
+                    <p>デバッグ用メモリ領域にログ出力を行う。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="output.png"><br>
+                        ログ出力シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="Output-overlap">オーバーラップ</a></h2>
+                    <p>書込みサイズを計算し、デバッグ用メモリ領域内にログ出力が行えるか判定する。ログ出力が行えない場合は残りの領域を0埋めし、ログ出力をオーバーラップさせるため書込み先インデックスを0に初期化する。</p>
+                    <br>
+                    <h2><a name="Output-write">メモリ書込み</a></h2>
+                    <p>デバッグ用メモリ領域の書込み先インデックスが指すアドレスにログを出力する。</p>
+                    <br>
+                    <h2><a name="Output-update">管理データ更新</a></h2>
+                    <p>管理データを下記の通り更新する</p>
+                    <br>
+                    <div class="center">更新する管理データ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">管理データ</td>
+                            <td class="title">内容</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>書込み先インデックス</td>
+                            <td>メモリ書込みサイズを加算する。<br>デバッグ用メモリ領域を超えた場合は、0に初期化する。</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>ログ番号</td>
+                            <td>インクリメントする</td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a><ol>
+                            <a href="#abstruct-mem"><li>デバッグ用メモリ領域</li></a>
+                            <a href="#abstruct-mngData"><li>管理データ</li></a></ol>
+                        <a href="#init"><li>初期化</li></a><ol>
+                            <a href="#init-flag"><li>起動フラグ取得</li></a>
+                            <a href="#init-init"><li>デバッグ用メモリ領域初期化</li></a>
+                            <a href="#init-mngData"><li>管理データ初期化</li></a>
+                            <a href="#init-hlt"><li>ハングアップ</li></a></ol>
+                        <a href="#Output"><li>ログ出力</li></a><ol>
+                            <a href="#Output-overlap"><li>オーバーラップ</li></a>
+                            <a href="#Output-write"><li>メモリ書込み</li></a>
+                            <a href="#Output-update"><li>管理データ更新</li></a></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2022 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

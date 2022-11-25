@@ -187,9 +187,9 @@
                             <td></td>
                         </tr>
                         <tr>
-                            <td class="center" rowspan="5">16MB<br>～</td>
+                            <td class="center" rowspan="6">16MB<br>～</td>
                             <td class="center">0x0100_0000</td>
-                            <td class="center" rowspan="5">メインメモリ<br>PCI</td>
+                            <td class="center" rowspan="6">メインメモリ<br>PCI</td>
                             <td></td>
                         </tr>
                         <tr>
@@ -205,12 +205,18 @@
                         </tr>
                         <tr>
                             <td class="center">0x0500_0000</td>
+                            <td class="center" colspan="3">デバッグ用メモリ領域</td>
+                            <td class="right">1,048,576</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0600_0000</td>
                             <td class="center" colspan="3">アイドルプロセス用<br>ページディレクトリ</td>
                             <td class="right">4,096</td>
                             <td></td>
                         </tr>
                         <tr>
-                            <td class="center">0x0500_1000</td>
+                            <td class="center">0x0600_1000</td>
                             <td class="center" colspan="3">カーネル領域ページテーブル</td>
                             <td class="right">1,048,576</td>
                             <td></td>

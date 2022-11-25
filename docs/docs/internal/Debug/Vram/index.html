@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - デバッグ(VRAM出力)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">デバッグ</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">VRAM出力</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>テキストモード3番のVRAM(0x000B_8000)にログ出力を行う。</p>
+                    <br>
+                    <h2><a name="abstruct-mngData">管理データ</a></h2>
+                    <p>VRAM出力で管理するデータを以下に示す。</p>
+                    <br>
+                    <div class="center">管理データ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">管理データ</td>
+                            <td class="title">サイズ<br>(byte)</td>
+                            <td class="title">説明</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>カーソル行</td>
+                            <td class="right">4</td>
+                            <td>ログ出力先の行インデックス</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>カーソル列</td>
+                            <td class="right">4</td>
+                            <td>ログ出力先の列インデックス</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td>文字属性</td>
+                            <td class="right">1</td>
+                            <td>
+                                1文字毎にVRAMに設定する文字属性。<br>
+                                <table>
+                                    <tr>
+                                        <td class="title">bit</td>
+                                        <td class="title">7</td>
+                                        <td class="title">6</td>
+                                        <td class="title">5</td>
+                                        <td class="title">4</td>
+                                        <td class="title">3</td>
+                                        <td class="title">2</td>
+                                        <td class="title">1</td>
+                                        <td class="title">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="title">内容</td>
+                                        <td class="center">点<br>滅<br>フ<br>ラ<br>グ</td>
+                                        <td class="center" colspan="3">背景色</td>
+                                        <td class="center">明<br>色<br>フ<br>ラ<br>グ</td>
+                                        <td class="center" colspan="3">文字色</td>
+                                    </tr>
+                                </table>
+                                色値を下記に示す。<br>
+                                <table>
+                                    <tr>
+                                        <td class="title">色値</td>
+                                        <td class="title">説明</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">0</td>
+                                        <td>黒色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">1</td>
+                                        <td>青色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">2</td>
+                                        <td>緑色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">3</td>
+                                        <td>水色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">4</td>
+                                        <td>赤色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">5</td>
+                                        <td>紫色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">6</td>
+                                        <td>茶色</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="center">7</td>
+                                        <td>白色</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>管理データとVRAMを初期化する。シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="init-mngData">管理データ初期化</a></h2>
+                    <p>管理データを下記の通り初期化する。</p>
+                    <br>
+                    <div class="center">管理データの初期値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">管理データ</td>
+                            <td class="title">初期値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>カーソル行</td>
+                            <td class="right">0</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>カーソル列</td>
+                            <td class="right">0</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td>文字属性</td>
+                            <td class="right">0x0F</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="init-vram">VRAM初期化</a></h2>
+                    <p>VRAM領域を全て下記の2byteデータで初期化する。</p>
+                    <br>
+                    <div class="center">初期化値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">データ</td>
+                            <td class="title">サイズ<br>(byte)</td>
+                            <td class="title">値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>文字コード</td>
+                            <td class="right">1</td>
+                            <td>' '(スペース)</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>文字属性</td>
+                            <td class="right">1</td>
+                            <td>0x0F</td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="Output">ログ出力</a></h1>
+                    <p>シーケンスを以下に示す。</p>
+                    <br>
+                    <div class="center">
+                        <img src="output.png"><br>
+                        ログ出力シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="Output-modexc">モジュールID->文字列変換</a></h2>
+                    <p>モジュールIDを文字列に変換する。変換は<a href="../../modid/index.html">モジュールID一覧</a>を参照のこと。</p>
+                    <br>
+                    <h2><a name="Output-modline">モジュール名・行番号書込み</a></h2>
+                    <p>下記の通り文字列を生成しVRAMに書込む。</p>
+                    <br>
+                    <div class="center">\e[32m<i>XXX-XXXX</i>:<i>LLLL</i> \e[0m</div>
+                    <br>
+                    <p><i>XXX-XXXX</i>にはモジュール名を<i>LLLL</i>には0埋めの行番号を設定する。</p>
+                    <br>
+                    <h2><a name="Output-scroll">行スクロール</a></h2>
+                    <p>カーソル行が25を超えていた場合は、VRAMの2～25行目を1～24行目にコピーし、25行目を全て' '(スペース)と文字属性で初期化する。そしてカーソル行を24に設定する。</p>
+                    <br>
+                    <h2><a name="Output-escape">エスケープシーケンス処理</a></h2>
+                    <p>下記の通り、エスケープシーケンス毎に管理データの設定を変更する。</p>
+                    <br>
+                    <div class="center">エスケープシーケンス毎の管理データ更新</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">エスケープシーケンス</td>
+                            <td class="title">管理データ更新内容</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>\e[0m</td>
+                            <td>文字属性の点滅フラグを0に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>\e[30m</td>
+                            <td>文字属性の文字色を明るい黒色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td>\e[31m</td>
+                            <td>文字属性の文字色を明るい赤色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">4</td>
+                            <td>\e[32m</td>
+                            <td>文字属性の文字色を明るい緑色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">5</td>
+                            <td>\e[33m</td>
+                            <td>文字属性の文字色を明るい黄色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">6</td>
+                            <td>\e[34m</td>
+                            <td>文字属性の文字色を明るい青色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">7</td>
+                            <td>\e[35m</td>
+                            <td>文字属性の文字色を明るい紫色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">8</td>
+                            <td>\e[36m</td>
+                            <td>文字属性の文字色を明るい水色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">9</td>
+                            <td>\e[37m</td>
+                            <td rowspan="2">文字属性の文字色を明るい白色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">10</td>
+                            <td>\e[39m</td>
+                        </tr>
+                        <tr>
+                            <td class="center">11</td>
+                            <td>\e[40m</td>
+                            <td rowspan="2">文字属性の背景色を黒色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">12</td>
+                            <td>\e[49m</td>
+                        </tr>
+                        <tr>
+                            <td class="center">13</td>
+                            <td>\e[41m</td>
+                            <td>文字属性の背景色を赤色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">14</td>
+                            <td>\e[42m</td>
+                            <td>文字属性の背景色を緑色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">15</td>
+                            <td>\e[43m</td>
+                            <td>文字属性の背景色を黄色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">16</td>
+                            <td>\e[44m</td>
+                            <td>文字属性の背景色を青色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">17</td>
+                            <td>\e[45m</td>
+                            <td>文字属性の背景色を紫色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">18</td>
+                            <td>\e[46m</td>
+                            <td>文字属性の背景色を水色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">19</td>
+                            <td>\e[47m</td>
+                            <td>文字属性の背景色を白色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">20</td>
+                            <td>\e[5m</td>
+                            <td>文字属性の点滅フラグを1に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">21</td>
+                            <td>\e[7m</td>
+                            <td>文字属性の背景色を文字色に、文字色を背景色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">22</td>
+                            <td>\e[90m</td>
+                            <td>文字属性の文字色を黒色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">23</td>
+                            <td>\e[91m</td>
+                            <td>文字属性の文字色を赤色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">24</td>
+                            <td>\e[92m</td>
+                            <td>文字属性の文字色を緑色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">25</td>
+                            <td>\e[93m</td>
+                            <td>文字属性の文字色を黄色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">26</td>
+                            <td>\e[94m</td>
+                            <td>文字属性の文字色を青色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">27</td>
+                            <td>\e[95m</td>
+                            <td>文字属性の文字色を紫色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">28</td>
+                            <td>\e[96m</td>
+                            <td>文字属性の文字色を水色に設定</td>
+                        </tr>
+                        <tr>
+                            <td class="center">29</td>
+                            <td>\e[97m</td>
+                            <td>文字属性の文字色を白色に設定</td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="Output-char">文字コード・属性書込み</a></h2>
+                    <p>文字コードと文字属性の2byteをVRAMのカーソル行・列インデックスに書込む。カーソル行と列インデックスが指すVRAMアドレスは下記の通りに算出する。</p>
+                    <br>
+                    <div class="center">VRAMアドレス + カーソル行 × 80 × 2 + カーソル列 × 2</div>
+                    <br>
+                    <h2><a name="Output-next">カーソル更新(1文字)</a></h2>
+                    <p>カーソル列をインクリメントする。カーソル列が80となった場合は0に設定し、カーソル行をインクリメントする。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a><ol>
+                            <a href="#abstruct-mngData"><li>管理データ</li></a></ol>
+                        <a href="#init"><li>初期化</li></a><ol>
+                            <a href="#init-mngData"><li>管理データ初期化</li></a>
+                            <a href="#init-vram"><li>VRAM初期化</li></a></ol>
+                        <a href="#Output"><li>ログ出力</li></a><ol>
+                            <a href="#Output-modexc"><li>モジュールID->文字列変換</li></a>
+                            <a href="#Output-modline"><li>モジュール名・行番号書込み</li></a>
+                            <a href="#Output-scroll"><li>行スクロール</li></a>
+                            <a href="#Output-escape"><li>エスケープシーケンス処理</li></a>
+                            <a href="#Output-char"><li>文字コード・属性書込み</li></a>
+                            <a href="#Output-next"><li>カーソル更新(1文字)</li></a></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2022 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

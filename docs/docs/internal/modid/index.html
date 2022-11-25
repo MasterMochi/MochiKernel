@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - モジュールID</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">モジュールID</span></a>
+                    <meta itemprop="position" content="4"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="modid">モジュールID</a></h1>
+                    <p>モジュールID一覧を以下に示す。</p>
+                    <br>
+                    <div class="center">モジュールID一覧</div>
+                    <table>
+                        <tr>
+                            <td class="title">ID</td>
+                            <td class="title">モジュール名</td>
+                            <td class="title">デバッグログ表示</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0101</td>
+                            <td>初期化制御(メイン)</td>
+                            <td>INI-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0201</td>
+                            <td>デバッグ(メイン)</td>
+                            <td>DBG-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0202</td>
+                            <td>デバッグ(メモリ出力)</td>
+                            <td>DBG-MEM</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0203</td>
+                            <td>デバッグ制御(VRAM出力)</td>
+                            <td>DBG-VRAM</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0301</td>
+                            <td>メモリ管理(メモリ)</td>
+                            <td>MEM-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0302</td>
+                            <td>メモリ管理(セグメント管理)</td>
+                            <td>MEM-SGMT</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0303</td>
+                            <td>メモリ管理(領域)</td>
+                            <td>MEM-AREA</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0304</td>
+                            <td>メモリ管理(ページ)</td>
+                            <td>MEM-PAGE</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0305</td>
+                            <td>メモリ管理(制御)</td>
+                            <td>MEM-CTRL</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0306</td>
+                            <td>メモリ管理(マップ)</td>
+                            <td>MEM-MAP</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0307</td>
+                            <td>メモリ管理(物理)</td>
+                            <td>MEM-PHYS</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0308</td>
+                            <td>メモリ管理(I/O)</td>
+                            <td>MEM-I/O</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0309</td>
+                            <td>メモリ管理(仮想)</td>
+                            <td>MEM-VIRT</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x030A</td>
+                            <td>メモリ管理(ヒープ)</td>
+                            <td>MEM-HEAP</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0401</td>
+                            <td>タスク管理(メイン)</td>
+                            <td>TSK-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0402</td>
+                            <td>タスク管理(TSS)</td>
+                            <td>TSK-TSS</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0403</td>
+                            <td>タスク管理(スケジューラ)</td>
+                            <td>TSK-SCHED</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0404</td>
+                            <td>タスク管理(タスク)</td>
+                            <td>TSK-TASK</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0405</td>
+                            <td>タスク管理(ELFローダ)</td>
+                            <td>TSK-ELF</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0406</td>
+                            <td>タスク管理(プロセス)</td>
+                            <td>TSK-PROC</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0407</td>
+                            <td>タスク管理(名前管理)</td>
+                            <td>TSK-NAME</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0408</td>
+                            <td>タスク管理(スレッド)</td>
+                            <td>TSK-THRD</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0501</td>
+                            <td>割込み管理(メイン)</td>
+                            <td>INT-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0502</td>
+                            <td>割込み管理(PIC)</td>
+                            <td>INT-PIC</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0503</td>
+                            <td>割込み管理(IDT)</td>
+                            <td>INT-IDT</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0504</td>
+                            <td>割込み管理(ハンドラ)</td>
+                            <td>INT-HDL</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0505</td>
+                            <td>割込み管理(ハードウェア)</td>
+                            <td>INT-CTRL</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0601</td>
+                            <td>タイマ管理(メイン)</td>
+                            <td>TIM-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0602</td>
+                            <td>タイマ管理(制御)</td>
+                            <td>TIM-CTRL</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0603</td>
+                            <td>タイマ管理(PIT)</td>
+                            <td>TIM-PIT</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0701</td>
+                            <td>タスク間通信制御(メイン)</td>
+                            <td>ITC-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0702</td>
+                            <td>タスク間通信制御(メッセージ)</td>
+                            <td>ITC-MSG</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0801</td>
+                            <td>入出力制御(メイン)</td>
+                            <td>IOC-MAIN</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0802</td>
+                            <td>入出力制御(I/Oポート)</td>
+                            <td>IOC-PORT</td>
+                        </tr>
+                        <tr>
+                            <td class="center">0x0803</td>
+                            <td>入出力制御(I/Oメモリ)</td>
+                            <td>IOC-MEM</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#modid"><li>モジュールID</li></a>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2022 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

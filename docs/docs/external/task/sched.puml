@@ -1,0 +1,31 @@
+@startuml
+
+participant "HWタイマ"    as timer
+box "タスク"
+    participant "タスクA" as task_a
+    participant "タスクB" as task_b
+end box
+participant "MochiKernel" as kernel
+
+activate task_a
+||10||
+
+timer -->> kernel: タイムアウト
+deactivate task_a
+activate kernel
+
+task_b <<-- kernel: コンテキストスイッチ
+deactivate kernel
+activate task_b
+||10||
+
+timer -->> kernel: タイムアウト
+deactivate task_b
+activate kernel
+
+task_a <<-- kernel: コンテキストスイッチ
+deactivate kernel
+activate task_a
+
+
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+
+box "デバッグ"
+    participant "メイン"     as Debug
+    participant "メモリ出力" as DebugMem
+end box
+database "デバッグ用\nメモリ領域" as mem
+
+Debug -> DebugMem: ログ出力(\n  モジュールID,\n  行番号,\n  文字列 )
+activate DebugMem
+
+DebugMem -> DebugMem: 書込みサイズ計算
+
+opt オーバーラップする
+    DebugMem -\ mem: 残りログ領域を0埋め
+    DebugMem -> DebugMem: 書込み先インデックス初期化
+end opt
+
+DebugMem -\ mem: メモリ書込み
+
+DebugMem -> DebugMem: 管理データ更新
+
+Debug <-- DebugMem:
+deactivate DebugMem
+
+@enduml

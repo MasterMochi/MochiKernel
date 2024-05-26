@@ -1,8 +1,8 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2021/11/27 *#
-#* Copyright (C) 2016-2021 Mochi.                                             *#
+#*                                                                 2024/03/24 *#
+#* Copyright (C) 2016-2024 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
 #******************************************************************************#
@@ -14,7 +14,8 @@ PROG = kernel
 # ソースコード
 SRCS  = Initctrl/Initctrl.c
 SRCS += Debug/Debug.c
-SRCS += Debug/DebugLog.c
+SRCS += Debug/DebugMem.c
+SRCS += Debug/DebugVram.c
 SRCS += Memmng/Memmng.c
 SRCS += Memmng/MemmngSgmt.c
 SRCS += Memmng/MemmngArea.c
@@ -56,12 +57,14 @@ OBJ_DIR     = $(BUILD_DIR)/obj/$(PROG)
 
 # Cフラグ
 CFLAGS   = -O
+CFLAGS  += -g
 CFLAGS  += -Wall
 CFLAGS  += -masm=intel
 CFLAGS  += -m32
 CFLAGS  += -fno-pic
 CFLAGS  += -ffreestanding
-#CFLAGS  += -DDEBUG_LOG_ENABLE
+CFLAGS  += -nostdlib
+CFLAGS  += -DDEBUG_LOG_ENABLE
 CFLAGS  += -Iinclude
 CFLAGS  += -I../include
 CFLAGS  += -I$(RELEASE_DIR)/include
@@ -70,16 +73,24 @@ ifdef BASE_CFLAGS
 CFLAGS  += $(BASE_CFLAGS)
 endif
 
+LD = gcc
+
 # LDフラグ
 LDFLAGS  = -T kernel.lds
-LDFLAGS += -melf_i386
+LDFLAGS += -m32
+LDFLAGS += -ffreestanding
+LDFLAGS += -nostdlib
 LDFLAGS += -L$(BUILD_DIR)/lib
+LDFLAGS += -L$(BUILD_DIR)/release
 ifdef BASE_LDFLAGS
 LDFLAGS += $(BASE_LDFLAGS)
 endif
 
 # LDライブラリフラグ
-LIBS     = -lMLib_fe
+LIBS  = -lc
+LIBS += -lmk
+LIBS += -lMLib_fe
+LIBS += -lgcc
 
 
 #******************************************************************************#

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* kernel/config.h                                                            */
-/*                                                                 2021/10/31 */
-/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                 2023/01/04 */
+/* Copyright (C) 2018-2023 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __KERNEL_CONFIG_H__
@@ -28,40 +28,6 @@
 /*------*/
 /** tick間隔(hz) */
 #define MK_CONFIG_TICK_HZ ( 100 )
-
-/*----------------------*/
-/* 仮想メモリマップ定義 */
-/*----------------------*/
-/** ブートデータ領域先頭アドレス */
-#define MK_CONFIG_ADDR_BOOTDATA     ( NULL )
-/** ブートデータ領域サイズ */
-#define MK_CONFIG_SIZE_BOOTDATA     ( 0x00100000 )
-/** カーネル領域先頭アドレス */
-#define MK_CONFIG_ADDR_KERNEL_START ( MK_ADDR_ENTRY )
-/** カーネル用スタック領域先頭アドレス */
-#define MK_CONFIG_ADDR_KERNEL_STACK ( 0x3EFFA000 )
-/** カーネル用スタック領域サイズ */
-#define MK_CONFIG_SIZE_KERNEL_STACK ( 0x00002000 )
-/** メモリ制御用領域1先頭アドレス */
-#define MK_CONFIG_ADDR_KERNEL_MAP1  ( 0x3F000000 )
-/** メモリ制御用領域1サイズ */
-#define MK_CONFIG_SIZE_KERNEL_MAP1  ( 0x00800000 )
-/** メモリ制御用領域2先頭アドレス */
-#define MK_CONFIG_ADDR_KERNEL_MAP2  ( 0x3F800000 )
-/** メモリ制御用領域2サイズ */
-#define MK_CONFIG_SIZE_KERNEL_MAP2  ( 0x00800000 )
-/** メモリ制御用領域全サイズ */
-#define MK_CONFIG_SIZE_KERNEL_MAP   ( 0x01000000 )
-/** 全カーネル領域サイズ */
-#define MK_CONFIG_SIZE_KERNEL       ( 0x3FF00000 )
-/** ユーザ空間領域先頭アドレス */
-#define MK_CONFIG_ADDR_USER_START   ( 0x40000000 )
-/** ユーザ空間スタック領域先頭アドレス */
-#define MK_CONFIG_ADDR_USER_STACK   ( 0xBFFF8000 )
-/** ユーザ空間スタック領域サイズ */
-#define MK_CONFIG_SIZE_USER_STACK   ( 0x00008000 )
-/** 全ユーザ空間領域サイズ */
-#define MK_CONFIG_SIZE_USER         ( 0x80000000 )
 
 /*------------*/
 /* 割込み番号 */

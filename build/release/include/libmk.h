@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* libmk.h                                                                    */
-/*                                                                 2021/10/25 */
-/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                 2024/03/24 */
+/* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __LIBMK_H__
@@ -69,7 +69,7 @@ extern MkRet_t LibMkIntDisable( uint8_t irqNo,
                                 MkErr_t *pErr  );
 /* ハードウェア割込み有効化 */
 extern MkRet_t LibMkIntEnable( uint8_t irqNo,
-                               MkRet_t *pErr  );
+                               MkErr_t *pErr  );
 /* ハードウェア割込み監視開始 */
 extern MkRet_t LibMkIntStartMonitoring( uint8_t irqNo,
                                         MkErr_t *pErr  );

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngElf.c                                            */
-/*                                                                 2021/05/22 */
-/* Copyright (C) 2017-2021 Mochi.                                             */
+/*                                                                 2023/01/04 */
+/* Copyright (C) 2017-2023 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -17,6 +17,7 @@
 
 /* 共通ヘッダ */
 #include <elf.h>
+#include <memmap.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/config.h>
 
@@ -32,10 +33,10 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_TASKMNG_ELF, \
-                    __LINE__,               \
-                    __VA_ARGS__             )
+#define DEBUG_LOG( ... )                 \
+    DebugOutput( CMN_MODULE_TASKMNG_ELF, \
+                 __LINE__,               \
+                 __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -338,8 +339,8 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     }
 
     /* エントリポイントチェック */
-    if ( ( pHdr->e_entry <  MK_CONFIG_ADDR_USER_START ) &&
-         ( pHdr->e_entry >= MK_CONFIG_ADDR_USER_STACK )    ) {
+    if ( ( pHdr->e_entry < MEMMAP_VADDR_USER       ) &&
+         ( pHdr->e_entry > MEMMAP_VADDR_USER_STACK )    ) {
         /* 不正値 */
 
         /* デバッグトレースログ出力 */
@@ -456,9 +457,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         }
 
         /* 仮想メモリチェック */
-        if ( ( pEntry->p_vaddr < MK_CONFIG_ADDR_USER_START      ) ||
-             ( ( pEntry->p_vaddr + pEntry->p_memsz ) >=
-               MK_CONFIG_ADDR_USER_STACK                        ) ||
+        if ( ( pEntry->p_vaddr < MEMMAP_VADDR_USER              ) ||
+             ( ( pEntry->p_vaddr + pEntry->p_memsz ) >
+               MEMMAP_VADDR_USER_STACK                          ) ||
              ( ( pEntry->p_vaddr % IA32_PAGING_PAGE_SIZE ) != 0 )    ) {
             /* 不正値 */
 

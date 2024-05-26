@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.c                                           */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2017-2021 Mochi.                                             */
+/*                                                                 2023/01/04 */
+/* Copyright (C) 2017-2023 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -16,6 +16,7 @@
 #include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
+#include <memmap.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <kernel/config.h>
 #include <kernel/task.h>
@@ -38,10 +39,10 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_TASKMNG_TASK,    \
-                    __LINE__,                   \
-                    __VA_ARGS__              )
+#define DEBUG_LOG( ... )                     \
+    DebugOutput( CMN_MODULE_TASKMNG_TASK,    \
+                 __LINE__,                   \
+                 __VA_ARGS__              )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -279,7 +280,7 @@ MkTaskId_t TaskFork( TaskInfo_t *pChildInfo )
         /* カーネルスタック領域複製 */
         MLibUtilCopyMemory( pChildInfo->kernelStack.pTopAddr,
                             pSelfInfo->kernelStack.pTopAddr,
-                            MK_CONFIG_SIZE_KERNEL_STACK      );
+                            MEMMAP_PSIZE_KERNEL_STACK         );
 
         /* コンテキスト設定 */
         pChildInfo->context.eip = ( uint32_t ) TaskForkStart;
@@ -467,7 +468,7 @@ static CmnRet_t SetKernelStack( TaskInfo_t *pTaskInfo )
     pStackInfo   = &( pTaskInfo->kernelStack );
 
     /* カーネルスタック領域割当 */
-    pKernelStack = MemmngHeapAlloc( MK_CONFIG_SIZE_KERNEL_STACK );
+    pKernelStack = MemmngHeapAlloc( MEMMAP_PSIZE_KERNEL_STACK );
 
     /* 割当結果判定 */
     if ( pKernelStack == NULL ) {
@@ -478,10 +479,10 @@ static CmnRet_t SetKernelStack( TaskInfo_t *pTaskInfo )
 
     /* カーネルスタック情報設定 */
     pStackInfo->pTopAddr    = pKernelStack;
-    pStackInfo->pBottomAddr = ( void * ) ( ( uint32_t ) pKernelStack   +
-                                           MK_CONFIG_SIZE_KERNEL_STACK -
-                                           sizeof ( uint32_t )           );
-    pStackInfo->size        = MK_CONFIG_SIZE_KERNEL_STACK;
+    pStackInfo->pBottomAddr = ( void * ) ( ( uint32_t ) pKernelStack +
+                                           MEMMAP_PSIZE_KERNEL_STACK -
+                                           sizeof ( uint32_t )         );
+    pStackInfo->size        = MEMMAP_PSIZE_KERNEL_STACK;
 
     return CMN_SUCCESS;
 }

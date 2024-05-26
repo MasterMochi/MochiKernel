@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/hardware/Vga/Vga.h                                      */
-/*                                                                 2019/07/23 */
-/* Copyright (C) 2017-2019 Mochi.                                             */
+/*                                                                 2022/12/04 */
+/* Copyright (C) 2017-2022 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef VGA_H
@@ -40,6 +40,17 @@
 #define VGA_M3_ATTR_BG_BROWN  ( 0x60 )      /**< 茶色背景属性 */
 #define VGA_M3_ATTR_BG_WHITE  ( 0x70 )      /**< 白色背景属性 */
 #define VGA_M3_ATTR_BLINK     ( 0x80 )      /**< 点滅文字属性 */
+
+/** テキストバッファ型 */
+typedef struct {
+    uint8_t code;
+    uint8_t attr;
+} __attribute__(( __packed__ )) VgaTextBuffer_t;
+
+/** テキストバッファ操作マクロ */
+#define VGA_M3_TEXT_BUFFER( __ROW, __COLUMN ) (     \
+    ( ( VgaTextBuffer_t * ) VGA_M3_VRAM_ADDR )[     \
+        ( __ROW ) * VGA_M3_COLUMN + ( __COLUMN ) ] )
 
 
 /******************************************************************************/

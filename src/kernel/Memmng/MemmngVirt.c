@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngVirt.c                                             */
-/*                                                                 2021/02/01 */
-/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                 2024/05/13 */
+/* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,6 +18,7 @@
 #include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
+#include <memmap.h>
 #include <hardware/IA32/IA32Paging.h>
 #include <kernel/kernel.h>
 
@@ -36,10 +37,10 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_MEMMNG_VIRT, \
-                    __LINE__,               \
-                    __VA_ARGS__             )
+#define DEBUG_LOG( ... )                 \
+    DebugOutput( CMN_MODULE_MEMMNG_VIRT, \
+                 __LINE__,               \
+                 __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -340,22 +341,22 @@ CmnRet_t MemmngVirtStart( MkPid_t pid )
     AreaAllocSpec( &( pProcInfo->allocList ),
                    &( pProcInfo->freeList  ),
                    &( gVirtTbl.unusedList  ),
-                   ( void * ) MK_CONFIG_ADDR_BOOTDATA,
-                   MK_CONFIG_SIZE_BOOTDATA             );
+                   ( void * ) MEMMAP_VADDR_BOOTDATA,
+                   MEMMAP_VSIZE_BOOTDATA             );
 
     /* カーネル領域割当 */
     AreaAllocSpec( &( pProcInfo->allocList ),
                    &( pProcInfo->freeList  ),
                    &( gVirtTbl.unusedList  ),
-                   ( void * ) MK_CONFIG_ADDR_KERNEL_START,
-                   MK_CONFIG_SIZE_KERNEL                   );
+                   ( void * ) MEMMAP_VADDR_KERNEL,
+                   MEMMAP_VSIZE_KERNEL             );
 
     /* ユーザ領域割当 */
     AreaAllocSpec( &( pProcInfo->allocList ),
                    &( pProcInfo->freeList  ),
                    &( gVirtTbl.unusedList  ),
-                   ( void * ) MK_CONFIG_ADDR_USER_START,
-                   MK_CONFIG_SIZE_USER                   );
+                   ( void * ) MEMMAP_VADDR_USER,
+                   MEMMAP_VSIZE_USER             );
 
     return CMN_SUCCESS;
 }

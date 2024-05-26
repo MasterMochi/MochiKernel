@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngProc.c                                           */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                 2023/01/04 */
+/* Copyright (C) 2018-2023 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -17,6 +17,7 @@
 #include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
+#include <memmap.h>
 #include <kernel/config.h>
 #include <kernel/proc.h>
 #include <kernel/types.h>
@@ -40,10 +41,10 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                        \
-    DebugLogOutput( CMN_MODULE_TASKMNG_PROC,    \
-                    __LINE__,                   \
-                    __VA_ARGS__              )
+#define DEBUG_LOG( ... )                     \
+    DebugOutput( CMN_MODULE_TASKMNG_PROC,    \
+                 __LINE__,                   \
+                 __VA_ARGS__              )
 #else
 #define DEBUG_LOG( ... )
 #endif
@@ -460,8 +461,8 @@ static void DoFork( MkProcParam_t *pParam )
     /* ページ複製 */
     ret = MemmngPageCopy( pChildInfo->dirId,
                           pParentInfo->dirId,
-                          ( void * ) MK_CONFIG_ADDR_USER_START,
-                          MK_CONFIG_SIZE_USER                   );
+                          ( void * ) MEMMAP_VADDR_USER,
+                          MEMMAP_VSIZE_USER             );
 
     /* 複製結果判定 */
     if ( ret != CMN_SUCCESS ) {
@@ -774,7 +775,7 @@ static CmnRet_t SetUserStack( ProcInfo_t *pProcInfo )
     pStackInfo = &( pProcInfo->userStack );
 
     /* 物理メモリ領域割当 */
-    pPhysAddr = MemmngPhysAlloc( MK_CONFIG_SIZE_USER_STACK );
+    pPhysAddr = MemmngPhysAlloc( MEMMAP_VSIZE_USER_STACK );
 
     /* 割当結果判定 */
     if ( pPhysAddr == NULL ) {
@@ -786,9 +787,9 @@ static CmnRet_t SetUserStack( ProcInfo_t *pProcInfo )
     /* ページマッピング設定 */
     ret = MemmngPageSet(
               pProcInfo->dirId,                     /* ページディレクトリID */
-              ( void * ) MK_CONFIG_ADDR_USER_STACK, /* 仮想アドレス         */
+              ( void * ) MEMMAP_VADDR_USER_STACK,   /* 仮想アドレス         */
               pPhysAddr,                            /* 物理アドレス         */
-              MK_CONFIG_SIZE_USER_STACK,            /* マッピングサイズ     */
+              MEMMAP_VSIZE_USER_STACK,              /* マッピングサイズ     */
               IA32_PAGING_G_NO,                     /* グローバルフラグ     */
               IA32_PAGING_US_USER,                  /* ユーザ/スーパバイザ  */
               IA32_PAGING_RW_RW                     /* 読込/書込許可        */
@@ -806,11 +807,11 @@ static CmnRet_t SetUserStack( ProcInfo_t *pProcInfo )
 
     /* ユーザスタック情報設定 */
     pStackInfo->pPhysAddr   = pPhysAddr;
-    pStackInfo->pTopAddr    = ( void * ) MK_CONFIG_ADDR_USER_STACK;
-    pStackInfo->pBottomAddr = ( void * ) ( MK_CONFIG_ADDR_USER_STACK +
-                                           MK_CONFIG_SIZE_USER_STACK -
-                                           sizeof ( uint32_t )         );
-    pStackInfo->size        = MK_CONFIG_SIZE_USER_STACK;
+    pStackInfo->pTopAddr    = ( void * ) MEMMAP_VADDR_USER_STACK;
+    pStackInfo->pBottomAddr = ( void * ) ( MEMMAP_VADDR_USER_STACK +
+                                           MEMMAP_VSIZE_USER_STACK -
+                                           sizeof ( uint32_t )       );
+    pStackInfo->size        = MEMMAP_VSIZE_USER_STACK;
 
     return CMN_SUCCESS;
 }

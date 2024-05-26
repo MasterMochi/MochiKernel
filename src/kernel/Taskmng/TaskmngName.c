@@ -33,10 +33,10 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                      \
-    DebugLogOutput( CMN_MODULE_TASKMNG_NAME,  \
-                    __LINE__,                 \
-                    __VA_ARGS__               )
+#define DEBUG_LOG( ... )                   \
+    DebugOutput( CMN_MODULE_TASKMNG_NAME,  \
+                 __LINE__,                 \
+                 __VA_ARGS__               )
 #else
 #define DEBUG_LOG( ... )
 #endif

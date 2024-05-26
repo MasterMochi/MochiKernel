@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Cmn.h                                                   */
-/*                                                                 2021/05/29 */
-/* Copyright (C) 2017-2021 Mochi.                                             */
+/*                                                                 2023/01/04 */
+/* Copyright (C) 2017-2023 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef CMN_H
@@ -28,7 +28,8 @@
 /* モジュール・サブモジュール識別子 */
 #define CMN_MODULE_INIT_MAIN      ( 0x0101 )/**< 初期化制御(メイン)           */
 #define CMN_MODULE_DEBUG_MAIN     ( 0x0201 )/**< デバッグ制御(メイン)         */
-#define CMN_MODULE_DEBUG_LOG      ( 0x0202 )/**< デバッグ制御(ログ管理)       */
+#define CMN_MODULE_DEBUG_MEM      ( 0x0202 )/**< デバッグ制御(メモリ出力)     */
+#define CMN_MODULE_DEBUG_VRAM     ( 0x0203 )/**< デバッグ制御(VRAM出力)       */
 #define CMN_MODULE_MEMMNG_MAIN    ( 0x0301 )/**< メモリ管理(メイン)           */
 #define CMN_MODULE_MEMMNG_SGMT    ( 0x0302 )/**< メモリ管理(セグメント管理)   */
 #define CMN_MODULE_MEMMNG_AREA    ( 0x0303 )/**< メモリ管理(領域)             */

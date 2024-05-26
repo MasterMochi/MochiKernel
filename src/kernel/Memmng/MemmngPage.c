@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPage.c                                             */
-/*                                                                 2021/10/31 */
-/* Copyright (C) 2017-2021 Mochi.                                             */
+/*                                                                 2023/01/05 */
+/* Copyright (C) 2017-2023 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -18,6 +18,7 @@
 #include <MLib/MLibUtil.h>
 
 /* 共通ヘッダ */
+#include <memmap.h>
 #include <hardware/IA32/IA32.h>
 #include <hardware/IA32/IA32Instruction.h>
 #include <hardware/IA32/IA32Paging.h>
@@ -34,39 +35,24 @@
 /******************************************************************************/
 /** デバッグトレースログ出力マクロ */
 #ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                    \
-    DebugLogOutput( CMN_MODULE_MEMMNG_PAGE, \
-                    __LINE__,               \
-                    __VA_ARGS__             )
+#define DEBUG_LOG( ... )                 \
+    DebugOutput( CMN_MODULE_MEMMNG_PAGE, \
+                 __LINE__,               \
+                 __VA_ARGS__             )
 #else
 #define DEBUG_LOG( ... )
 #endif
 
-/** アイドルプロセス用ページディレクトリアドレス */
-#define IDLE_PAGE_DIR_ADDR ( 0x05000000 )
-
-/** カーネル領域サイズ */
-#define KERNEL_AREA_SIZE    ( 0x40000000 )
 /** カーネル領域用ページディレクトリエントリ数 */
-#define KERNEL_AREA_PDE_NUM ( ( ( ( KERNEL_AREA_SIZE ) - 1 ) >> 22 ) + 1 )
+#define KERNEL_AREA_PDE_NUM \
+    ( ( ( ( MEMMAP_VSIZE_BOOTDATA + MEMMAP_VSIZE_KERNEL ) - 1 ) >> 22 ) + 1 )
 /** カーネル領域用ページディレクトリエントリサイズ */
 #define KERNEL_AREA_PAGE_DIR_SIZE \
     ( KERNEL_AREA_PDE_NUM * sizeof ( IA32PagingPDE_t ) )
 
-/** カーネル領域用ページテーブルアドレス */
-#define KERNEL_AREA_PAGE_TBL_ADDR ( 0x05001000 )
 /** カーネル領域用ページテーブルサイズ */
 #define KERNEL_AREA_PAGE_TBL_SIZE \
     ( KERNEL_AREA_PDE_NUM * sizeof ( IA32PagingTbl_t ) )
-
-/* ページングアクセス領域 */
-#define CH1_PAGE_DIR_ADDR ( 0x3EFFC000 )    /**< ch1PDアクセス領域 */
-#define CH1_PAGE_TBL_ADDR ( 0x3EFFD000 )    /**< ch1PTアクセス領域 */
-#define CH2_PAGE_DIR_ADDR ( 0x3EFFE000 )    /**< ch1PDアクセス領域 */
-#define CH2_PAGE_TBL_ADDR ( 0x3EFFF000 )    /**< ch1PTアクセス領域 */
-
-/* ユーザ空間先頭アドレス */
-#define USER_AREA_ADDR ( 0x40000000 )
 
 /** ch毎アクセス領域マッピング情報 */
 typedef struct {
@@ -170,7 +156,7 @@ MemmngPageDirId_t MemmngPageAllocDir( MkPid_t pid )
 
     /* 初期化 */
     pMngInfo     = NULL;
-    pPageDir     = ( IA32PagingDir_t * ) CH1_PAGE_DIR_ADDR;
+    pPageDir     = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD1;
     pPageDirPhys = NULL;
     dirId        = 0;
 
@@ -210,8 +196,8 @@ MemmngPageDirId_t MemmngPageAllocDir( MkPid_t pid )
 
     /* カーネル領域マッピング設定 */
     MLibUtilCopyMemory( pPageDir,
-                        ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR,
-                        KERNEL_AREA_PAGE_DIR_SIZE                 );
+                        ( IA32PagingDir_t * ) MEMMAP_PADDR_IDLE_PD,
+                        KERNEL_AREA_PAGE_DIR_SIZE                   );
 
     return dirId;
 }
@@ -313,7 +299,7 @@ CmnRet_t MemmngPageFreeDir( MemmngPageDirId_t dirId )
 
     /* 初期化 */
     pMngInfo     = NULL;
-    pPageDir     = ( IA32PagingDir_t * ) CH1_PAGE_DIR_ADDR;
+    pPageDir     = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD1;
     pPageTblPhys = NULL;
 
     /* 管理情報取得 */
@@ -594,10 +580,10 @@ void PageInit( void )
 
     /* アクセス領域マッピング情報初期化 */
     MLibUtilSetMemory32( &gMapInfo, 0, sizeof ( mapInfo_t ) );
-    gMapInfo.ch1.pDirVirt = ( IA32PagingDir_t * ) CH1_PAGE_DIR_ADDR;
-    gMapInfo.ch1.pTblVirt = ( IA32PagingTbl_t * ) CH1_PAGE_TBL_ADDR;
-    gMapInfo.ch2.pDirVirt = ( IA32PagingDir_t * ) CH2_PAGE_DIR_ADDR;
-    gMapInfo.ch2.pTblVirt = ( IA32PagingTbl_t * ) CH2_PAGE_TBL_ADDR;
+    gMapInfo.ch1.pDirVirt = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD1;
+    gMapInfo.ch1.pTblVirt = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT1;
+    gMapInfo.ch2.pDirVirt = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD2;
+    gMapInfo.ch2.pTblVirt = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT2;
 
     /* アイドルプロセス用ページディレクトリ初期化 */
     InitIdlePageDir();
@@ -610,7 +596,7 @@ void PageInit( void )
 
     /* ページディレクトリベースレジスタ値作成 */
     IA32_PAGING_SET_PDBR( pdbr,
-                          IDLE_PAGE_DIR_ADDR,
+                          MEMMAP_PADDR_IDLE_PD,
                           IA32_PAGING_PCD_ENABLE,
                           IA32_PAGING_PWT_WT      );
 
@@ -758,11 +744,11 @@ static CmnRet_t Copy( void *pVirtAddr )
     /* 初期化 */
     pdeIdx      = IA32_PAGING_GET_PDE_IDX( pVirtAddr );
     pteIdx      = IA32_PAGING_GET_PTE_IDX( pVirtAddr );
-    pSrcDir     = ( IA32PagingDir_t * ) CH1_PAGE_DIR_ADDR;
-    pSrcTbl     = ( IA32PagingTbl_t * ) CH1_PAGE_TBL_ADDR;
+    pSrcDir     = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD1;
+    pSrcTbl     = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT1;
     pSrcPde     = &( pSrcDir->entry[ pdeIdx ] );
-    pDstDir     = ( IA32PagingDir_t * ) CH2_PAGE_DIR_ADDR;
-    pDstTbl     = ( IA32PagingTbl_t * ) CH2_PAGE_TBL_ADDR;
+    pDstDir     = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD2;
+    pDstTbl     = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT2;
     pDstTblPhys = NULL;
     pDstPde     = &( pDstDir->entry[ pdeIdx ] );
 
@@ -931,9 +917,9 @@ static void FreeMngInfo( MemmngPageDirId_t dirId )
 static void FreePageTbl( IA32PagingTbl_t *pPageTblPhys )
 {
     /* ページテーブル初期化 */
-    MLibUtilSetMemory32( ( IA32PagingTbl_t * ) CH1_PAGE_TBL_ADDR,
+    MLibUtilSetMemory32( ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT1,
                          0,
-                         sizeof ( IA32PagingTbl_t )               );
+                         sizeof ( IA32PagingTbl_t )                     );
 
     /* ページテーブル解放 */
     MemmngPhysFree( pPageTblPhys );
@@ -1003,7 +989,7 @@ static void InitIdleInfo( void )
 
     /* アイドルプロセス用管理情報設定 */
     pMngInfo->pid          = MK_PID_IDLE;
-    pMngInfo->pPageDirPhys = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+    pMngInfo->pPageDirPhys = ( IA32PagingDir_t * ) MEMMAP_PADDR_IDLE_PD;
 
     return;
 }
@@ -1025,8 +1011,8 @@ static void InitIdlePageDir( void )
 
     /* 初期化 */
     idx      = 0;
-    pPageDir = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
-    pPageTbl = ( IA32PagingTbl_t * ) KERNEL_AREA_PAGE_TBL_ADDR;
+    pPageDir = ( IA32PagingDir_t * ) MEMMAP_PADDR_IDLE_PD;
+    pPageTbl = ( IA32PagingTbl_t * ) MEMMAP_PADDR_KERNEL_PT;
     pPde     = NULL;
 
     /* アイドルプロセス用ページディレクトリ0初期化 */
@@ -1074,7 +1060,7 @@ static void InitIdlePageTbl( void )
     pPhysAddr  = NULL;
     pdeIdx     = 0;
     pteIdx     = 0;
-    pPageTbl   = ( IA32PagingTbl_t * ) KERNEL_AREA_PAGE_TBL_ADDR;
+    pPageTbl   = ( IA32PagingTbl_t * ) MEMMAP_PADDR_KERNEL_PT;
     pPte       = NULL;
 
     /* アイドルプロセス用ページテーブル0初期化 */
@@ -1157,11 +1143,11 @@ static CmnRet_t Set( void     *pVirtAddr,
     pPde         = NULL;
 
     /* カーネル領域判定 */
-    if ( pVirtAddr < ( void * ) USER_AREA_ADDR ) {
+    if ( pVirtAddr < ( void * ) MEMMAP_VADDR_USER ) {
         /* カーネル領域 */
 
         /* アドレス設定 */
-        pPageDir = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+        pPageDir = ( IA32PagingDir_t * ) MEMMAP_PADDR_IDLE_PD;
         pPde     = &( pPageDir->entry[ pdeIdx ] );
         pPageTbl = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
 
@@ -1169,9 +1155,9 @@ static CmnRet_t Set( void     *pVirtAddr,
         /* ユーザ領域 */
 
         /* アドレス設定 */
-        pPageDir = ( IA32PagingDir_t * ) CH1_PAGE_DIR_ADDR;
+        pPageDir = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD1;
         pPde     = &( pPageDir->entry[ pdeIdx ] );
-        pPageTbl = ( IA32PagingTbl_t * ) CH1_PAGE_TBL_ADDR;
+        pPageTbl = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT1;
 
 
         /* ページテーブル存在チェック */
@@ -1310,7 +1296,7 @@ static void TryToFreePageTbl( IA32PagingPDE_t *pPde,
     IA32PagingTbl_t *pPageTbl;  /* ページテーブル                     */
 
     /* 初期化 */
-    pPageTbl = ( IA32PagingTbl_t * ) CH1_PAGE_TBL_ADDR;
+    pPageTbl = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT1;
 
     /* ページテーブル毎に繰り返す */
     for ( idx = 0; idx < IA32_PAGING_PTE_NUM; idx++ ) {
@@ -1359,11 +1345,11 @@ static void Unset( void *pVirtAddr )
     pPde         = NULL;
 
     /* カーネル領域判定 */
-    if ( pVirtAddr < ( void * ) USER_AREA_ADDR ) {
+    if ( pVirtAddr < ( void * ) MEMMAP_VADDR_USER ) {
         /* カーネル領域 */
 
         /* アドレス設定 */
-        pPageDir = ( IA32PagingDir_t * ) IDLE_PAGE_DIR_ADDR;
+        pPageDir = ( IA32PagingDir_t * ) MEMMAP_PADDR_IDLE_PD;
         pPde     = &( pPageDir->entry[ pdeIdx ] );
         pPageTbl = ( IA32PagingTbl_t * ) IA32_PAGING_GET_BASE( pPde );
 
@@ -1371,9 +1357,9 @@ static void Unset( void *pVirtAddr )
         /* ユーザ領域 */
 
         /* アドレス設定 */
-        pPageDir = ( IA32PagingDir_t * ) CH1_PAGE_DIR_ADDR;
+        pPageDir = ( IA32PagingDir_t * ) MEMMAP_VADDR_KERNEL_PD1;
         pPde     = &( pPageDir->entry[ pdeIdx ] );
-        pPageTbl = ( IA32PagingTbl_t * ) CH1_PAGE_TBL_ADDR;
+        pPageTbl = ( IA32PagingTbl_t * ) MEMMAP_VADDR_KERNEL_PT1;
 
         /* ページテーブル存在チェック */
         if ( pPde->attr_p == IA32_PAGING_P_NO ) {
@@ -1398,7 +1384,7 @@ static void Unset( void *pVirtAddr )
     IA32InstructionInvlpg( pVirtAddr );
 
     /* カーネル領域判定 */
-    if ( pVirtAddr >= ( void * ) USER_AREA_ADDR ) {
+    if ( pVirtAddr >= ( void * ) MEMMAP_VADDR_USER ) {
         /* ユーザ領域 */
 
         /* ページテーブル解放試行 */

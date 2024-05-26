@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - コーディング規則</title>
+    </head>
+    <body>
+        <div id="header">
+            <div id="menu">
+                <a href="../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1">
+                </li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2">
+                </li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">コーディング規則</span></a>
+                    <meta itemprop="position" content="3">
+                </li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <a name="code"></a>
+                    <h1>コード</h1>
+                    <h2><a name="code-char">文字コード</a></h2>
+                    <p>UTF-8</p>
+                    <br>
+                    <h2><a name="code-line">改行コード</a></h2>
+                    <p>LF</p>
+                    <br>
+                </div>
+                <div>
+                    <a name="name"></a>
+                    <h1>命名規則</h1>
+                    <h2><a name="name-function">関数</a></h2>
+                    <table>
+                        <tr>
+                            <td class="title">種別</td>
+                            <td class="title">規則</td>
+                            <td class="title">例</td>
+                        </tr>
+                        <tr>
+                            <td class="center">外部モジュール向け<br>グローバル関数</td>
+                            <td rowspan="2">&lt;外部モジュール名&gt;&lt;内部モジュール名&gt;&lt;動詞&gt;[&lt;名詞,etc&gt;]</td>
+                            <td rowspan="2">
+                                DebugInit<br>
+                                DebugMemInit<br>
+                                IoctrlMemInit<br>
+                                MemmngAreaAlloc
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="center">内部モジュール向け<br>グローバル関数</td>
+                        </tr>
+                        <tr>
+                            <td class="center">ローカル関数</td>
+                            <td>&lt;動詞&gt;[&lt;名詞,etc&gt;]</td>
+                            <td>
+                                Alloc<br>
+                                SetBreakPoint
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#code"><li>コード</li></a><ol>
+                            <a href="#code-char"><li>文字コード</li></a>
+                            <a href="#code-line"><li>改行コード</li></a></ol>
+                        <a href="#name"><li>命名規則</li></a><ol>
+                            <a href="#name-function"><li>関数</li></a></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2020 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

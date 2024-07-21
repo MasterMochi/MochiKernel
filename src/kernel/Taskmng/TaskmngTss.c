@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTss.c                                            */
-/*                                                                 2021/05/22 */
-/* Copyright (C) 2017-2021 Mochi.                                             */
+/*                                                                 2024/06/16 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -29,15 +29,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_TASKMNG_TSS, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_TSS
 
 
 /******************************************************************************/
@@ -62,8 +55,7 @@ void TssInit( void )
     uint16_t index;     /* GDTエントリ番号    */
     uint16_t selector;  /* セグメントセレクタ */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* TSS初期化 */
     MLibUtilSetMemory8( &gTss, 0, sizeof ( IA32Tss_t ) );
@@ -89,8 +81,7 @@ void TssInit( void )
     /* TR設定 */
     IA32InstructionLtr( selector );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngTask.c                                           */
-/*                                                                 2023/01/04 */
-/* Copyright (C) 2017-2023 Mochi.                                             */
+/*                                                                 2024/06/18 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -37,15 +37,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                     \
-    DebugOutput( CMN_MODULE_TASKMNG_TASK,    \
-                 __LINE__,                   \
-                 __VA_ARGS__              )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_TASK
 
 
 /******************************************************************************/
@@ -177,12 +170,11 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
     /* 初期化 */
     ret = CMN_FAILURE;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( "  pid=%u, tid=%u, pAddr=%010p",
-               pTaskInfo->pProcInfo->pid,
-               pTaskInfo->tid,
-               pTaskInfo->startInfo.pEntryPoint );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "  pid=%u, tid=%u, pAddr=%010p",
+                   pTaskInfo->pProcInfo->pid,
+                   pTaskInfo->tid,
+                   pTaskInfo->startInfo.pEntryPoint );
 
     /* カーネルスタック設定 */
     ret = SetKernelStack( pTaskInfo );
@@ -213,8 +205,7 @@ MkTaskId_t TaskAdd( TaskInfo_t *pTaskInfo )
         return MK_TASKID_NULL;
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%u", __func__, pTaskInfo->taskId );
+    DEBUG_LOG_TRC( "%s() end. ret=%u", __func__, pTaskInfo->taskId );
 
     return pTaskInfo->taskId;
 }
@@ -353,16 +344,14 @@ TaskInfo_t *TaskGetInfo( MkTaskId_t taskId )
 /******************************************************************************/
 void TaskInit( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 割込みハンドラ設定 */
     IntmngHdlSet( MK_CONFIG_INTNO_TASK,     /* 割込み番号     */
                   HdlInt,                   /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -409,13 +398,13 @@ static void HdlInt( uint32_t        intNo,
     /* 初期化 */
     pParam = ( MkTaskParam_t * ) context.genReg.esi;
 
-    DEBUG_LOG( "%s(): start. pParam=%p", __func__, pParam );
+    DEBUG_LOG_TRC( "%s(): start. pParam=%p", __func__, pParam );
 
     /* パラメータチェック */
     if ( pParam == NULL ) {
         /* 不正 */
 
-        DEBUG_LOG( "%s(): end.", __func__ );
+        DEBUG_LOG_TRC( "%s(): end.", __func__ );
 
         return;
     }
@@ -425,7 +414,7 @@ static void HdlInt( uint32_t        intNo,
         case MK_TASK_FUNCID_GET_ID:
             /* タスクID取得 */
 
-            DEBUG_LOG( "%s(): get.", __func__ );
+            DEBUG_LOG_TRC( "%s(): get.", __func__ );
             DoGetId( pParam );
             break;
 
@@ -437,10 +426,10 @@ static void HdlInt( uint32_t        intNo,
             pParam->err = MK_ERR_PARAM;
     }
 
-    DEBUG_LOG( "%s(): end. ret=%d, err=%u",
-               __func__,
-               pParam->ret,
-               pParam->err                   );
+    DEBUG_LOG_TRC( "%s(): end. ret=%d, err=%u",
+                   __func__,
+                   pParam->ret,
+                   pParam->err                  );
     return;
 }
 
@@ -525,9 +514,6 @@ static void Start( void )
     ProcInfo_t *pProcInfo;      /* プロセス管理情報         */
     TaskInfo_t *pTaskInfo;      /* タスク管理情報           */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-
     /* 初期化 */
     pTaskInfo     = SchedGetTaskInfo();
     pProcInfo     = pTaskInfo->pProcInfo;
@@ -536,9 +522,9 @@ static void Start( void )
     codeSegSel    = 0;
     dataSegSel    = 0;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG(
-        "pid=%u, pEntryPoint=%p, pStackPointer=%p",
+    DEBUG_LOG_INF(
+        "%s(): pid=%u, pEntryPoint=%p, pStackPointer=%p",
+        __func__,
         pProcInfo->pid,
         pEntryPoint,
         pStackPointer

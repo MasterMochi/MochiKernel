@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/hardware/Vga/Vga.h                                      */
-/*                                                                 2022/12/04 */
-/* Copyright (C) 2017-2022 Mochi.                                             */
+/*                                                                 2024/06/22 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef VGA_H
@@ -48,9 +48,9 @@ typedef struct {
 } __attribute__(( __packed__ )) VgaTextBuffer_t;
 
 /** テキストバッファ操作マクロ */
-#define VGA_M3_TEXT_BUFFER( __ROW, __COLUMN ) (     \
-    ( ( VgaTextBuffer_t * ) VGA_M3_VRAM_ADDR )[     \
-        ( __ROW ) * VGA_M3_COLUMN + ( __COLUMN ) ] )
+#define VGA_M3_TEXT_BUFFER( __ROW, __COLUMN )       \
+    ( ( ( VgaTextBuffer_t * ) VGA_M3_VRAM_ADDR )    \
+      [ ( __ROW ) * VGA_M3_COLUMN + ( __COLUMN ) ] )
 
 
 /******************************************************************************/

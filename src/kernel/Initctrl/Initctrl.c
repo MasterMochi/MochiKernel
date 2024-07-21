@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Initctrl/Initctrl.c                                             */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2016-2021 Mochi.                                             */
+/*                                                                 2024/06/18 */
+/* Copyright (C) 2016-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -35,15 +35,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_INIT_MAIN,   \
-                 __LINE__,               \
-                 __VA_ARGS__           )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_INIT_MAIN
 
 /** ラッパー関数テーブル */
 static const MLibWrapperFunc_t gMLibFunc =
@@ -78,8 +71,7 @@ void InitctrlInit( void )
     /* デバッグ制御初期化 */
     DebugInit();
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "Mochi Kernel start!!!" );
+    DEBUG_LOG_INF( "Mochi Kernel start!!!" );
 
     /* メモリ管理モジュール初期化 */
     MemmngInit( ( BiosE820Entry_t * ) 0x00000504,
@@ -109,8 +101,7 @@ void InitctrlInit( void )
     IntmngPicEnable();
     IA32InstructionSti();
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "Idle running." );
+    DEBUG_LOG_INF( "Idle running." );
 
     /* アイドル（仮） */
     while ( 1 ) {
@@ -138,8 +129,7 @@ static void LoadProcImg( void )
     MkPid_t    pid;         /* プロセスID       */
     MkImgHdr_t *pHeader;    /* ファイルヘッダ   */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 初期化 */
     pAddr   = ( void * ) MK_ADDR_PROCIMG;
@@ -152,12 +142,6 @@ static void LoadProcImg( void )
 
         /* ファイルヘッダアドレス設定 */
         pAddr = pAddr + sizeof ( MkImgHdr_t );
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "Header:" );
-        DEBUG_LOG( " Name=%s", pHeader->fileName );
-        DEBUG_LOG( " Size=%d", pHeader->fileSize );
-        DEBUG_LOG( " Type=%d", pHeader->fileType );
 
         /* プロセスタイプ判定 */
         if ( pHeader->fileType == MK_PROC_TYPE_DRIVER ) {
@@ -188,14 +172,25 @@ static void LoadProcImg( void )
         if ( pid == MK_PID_NULL ) {
             /* 失敗 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "TaskmngProcAdd() error." );
+            DEBUG_LOG_ERR(
+                "%s(): failed. name=%s, size=%d, type=%d",
+                __func__,
+                pHeader->fileName,
+                pHeader->fileSize,
+                pHeader->fileType
+            );
 
         } else {
             /* 成功 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "TaskmngProcAdd() OK. pid=%d", pid );
+            DEBUG_LOG_INF(
+                "%s(): name=%s, size=%d, type=%d, pid=%d",
+                __func__,
+                pHeader->fileName,
+                pHeader->fileSize,
+                pHeader->fileType,
+                pid
+            );
         }
 
         /* アドレス更新 */
@@ -203,8 +198,7 @@ static void LoadProcImg( void )
         pHeader = ( MkImgHdr_t * ) pAddr;
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }

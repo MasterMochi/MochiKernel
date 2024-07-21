@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngElf.c                                            */
-/*                                                                 2023/01/04 */
-/* Copyright (C) 2017-2023 Mochi.                                             */
+/*                                                                 2024/06/02 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -31,15 +31,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_TASKMNG_ELF, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_ELF
 
 
 /******************************************************************************/
@@ -87,10 +80,9 @@ CmnRet_t ElfLoad( void              *pAddr,
     Elf32_Phdr *pPrgHdr;    /* プログラムヘッダテーブル         */
     Elf32_Phdr *pEntry;     /* プログラムヘッダテーブルエントリ */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.",                   __func__            );
-    DEBUG_LOG( " pAddr=%010p, size=%u",         pAddr, size         );
-    DEBUG_LOG( " dirId=%u, ppEntryPoint=%010p", dirId, ppEntryPoint );
+    DEBUG_LOG_TRC( "%s() start.",                   __func__            );
+    DEBUG_LOG_TRC( " pAddr=%010p, size=%u",         pAddr, size         );
+    DEBUG_LOG_TRC( " dirId=%u, ppEntryPoint=%010p", dirId, ppEntryPoint );
 
     /* 初期化 */
     pElfHdr = ( Elf32_Ehdr * ) pAddr;
@@ -103,8 +95,7 @@ CmnRet_t ElfLoad( void              *pAddr,
     if ( ret != CMN_SUCCESS ) {
         /* 不正 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
 
         return CMN_FAILURE;
     }
@@ -116,8 +107,7 @@ CmnRet_t ElfLoad( void              *pAddr,
     if ( ret != CMN_SUCCESS ) {
         /* 不正 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
 
         return CMN_FAILURE;
     }
@@ -146,8 +136,7 @@ CmnRet_t ElfLoad( void              *pAddr,
         if ( pPhyAddr == NULL ) {
             /* 失敗 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+            DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
 
             return CMN_FAILURE;
         }
@@ -186,8 +175,7 @@ CmnRet_t ElfLoad( void              *pAddr,
         if ( ret != CMN_SUCCESS ) {
             /* 失敗 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
+            DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
 
             return CMN_FAILURE;
         }
@@ -199,10 +187,9 @@ CmnRet_t ElfLoad( void              *pAddr,
     /* エントリポイント設定 */
     *ppEntryPoint = ( void * ) pElfHdr->e_entry;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS, *ppEntryPoint=%010p",
-               __func__,
-               *ppEntryPoint                                     );
+    DEBUG_LOG_TRC( "%s() end. ret=CMN_SUCCESS, *ppEntryPoint=%010p",
+                   __func__,
+                   *ppEntryPoint                                     );
 
     return CMN_SUCCESS;
 }
@@ -229,11 +216,10 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
 {
     Elf32_Ehdr *pHdr;   /* ELFヘッダ */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. pAddr=%010p, size=%u",
-               __func__,
-               pAddr,
-               size );
+    DEBUG_LOG_TRC( "%s() start. pAddr=%010p, size=%u",
+                   __func__,
+                   pAddr,
+                   size );
 
     /* 初期化 */
     pHdr = ( Elf32_Ehdr * ) pAddr;
@@ -242,8 +228,7 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( size < sizeof ( Elf32_Ehdr ) ) {
         /* 不正 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end.", __func__ );
+        DEBUG_LOG_TRC( "%s() end.", __func__ );
 
         return CMN_FAILURE;
     }
@@ -255,13 +240,12 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
          ( pHdr->e_ident[ EI_MAG3 ] != ELFMAG3 )    ) {
         /* 不正ファイル識別子 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-        DEBUG_LOG( " e_ident[ EI_MAG0 ]=%02X %02X %02X %02X",
-                   pHdr->e_ident[ EI_MAG0 ],
-                   pHdr->e_ident[ EI_MAG1 ],
-                   pHdr->e_ident[ EI_MAG2 ],
-                   pHdr->e_ident[ EI_MAG3 ]  );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
+        DEBUG_LOG_TRC( " e_ident[ EI_MAG0 ]=%02X %02X %02X %02X",
+                       pHdr->e_ident[ EI_MAG0 ],
+                       pHdr->e_ident[ EI_MAG1 ],
+                       pHdr->e_ident[ EI_MAG2 ],
+                       pHdr->e_ident[ EI_MAG3 ]  );
 
         return CMN_FAILURE;
     }
@@ -270,10 +254,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_ident[ EI_CLASS ] != ELFCLASS32 ) {
         /* 無効値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_ident[ EI_CLASS ]=0x%02X",
-                   __func__,
-                   pHdr->e_ident[ EI_CLASS ] );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_ident[ EI_CLASS ]=0x%02X",
+                       __func__,
+                       pHdr->e_ident[ EI_CLASS ] );
 
         return CMN_FAILURE;
     }
@@ -282,10 +265,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_ident[ EI_DATA ] != ELFDATA2LSB ) {
         /* 無効値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_ident[ EI_DATA ]=0x%02X",
-                   __func__,
-                   pHdr->e_ident[ EI_DATA ] );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_ident[ EI_DATA ]=0x%02X",
+                       __func__,
+                       pHdr->e_ident[ EI_DATA ] );
 
         return CMN_FAILURE;
     }
@@ -294,10 +276,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_ident[ EI_VERSION ] != EV_CURRENT ) {
         /* 無効値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_ident[ EI_VERSION ]=0x%02X",
-                   __func__,
-                   pHdr->e_ident[ EI_VERSION ] );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_ident[ EI_VERSION ]=0x%02X",
+                       __func__,
+                       pHdr->e_ident[ EI_VERSION ] );
 
         return CMN_FAILURE;
     }
@@ -306,10 +287,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_type != ET_EXEC ) {
         /* 無効値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_type=0x%04X",
-                   __func__,
-                   pHdr->e_type );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_type=0x%04X",
+                       __func__,
+                       pHdr->e_type );
 
         return CMN_FAILURE;
     }
@@ -318,10 +298,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_machine != EM_386 ) {
         /* 無効値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_machine=0x%04X",
-                   __func__,
-                   pHdr->e_machine );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_machine=0x%04X",
+                       __func__,
+                       pHdr->e_machine );
 
         return CMN_FAILURE;
     }
@@ -330,10 +309,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_version != EV_CURRENT ) {
         /* 無効値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_version=0x%08X",
-                   __func__,
-                   pHdr->e_version );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_version=0x%08X",
+                       __func__,
+                       pHdr->e_version );
 
         return CMN_FAILURE;
     }
@@ -343,10 +321,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
          ( pHdr->e_entry > MEMMAP_VADDR_USER_STACK )    ) {
         /* 不正値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_entry=0x%08X",
-                   __func__,
-                   pHdr->e_entry );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_entry=0x%08X",
+                       __func__,
+                       pHdr->e_entry );
 
         return CMN_FAILURE;
     }
@@ -355,10 +332,9 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( pHdr->e_ehsize != sizeof ( Elf32_Ehdr ) ) {
         /* 不正値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE, e_ehsize=0x%04X",
-                   __func__,
-                   pHdr->e_ehsize );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, e_ehsize=0x%04X",
+                       __func__,
+                       pHdr->e_ehsize );
 
         return CMN_FAILURE;
     }
@@ -367,12 +343,11 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( size < ( pHdr->e_phoff + pHdr->e_phentsize * pHdr->e_phnum ) ) {
         /* 不正値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-        DEBUG_LOG( " e_phoff=0x%08X, e_phentsize=0x%04X, e_phnum=0x%04X",
-                   pHdr->e_phoff,
-                   pHdr->e_phentsize,
-                   pHdr->e_phnum );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
+        DEBUG_LOG_TRC( " e_phoff=0x%08X, e_phentsize=0x%04X, e_phnum=0x%04X",
+                       pHdr->e_phoff,
+                       pHdr->e_phentsize,
+                       pHdr->e_phnum );
 
         return CMN_FAILURE;
     }
@@ -381,22 +356,19 @@ static CmnRet_t ElfCheckElfHeader( void   *pAddr,
     if ( size < ( pHdr->e_shoff + pHdr->e_shentsize * pHdr->e_shnum ) ) {
         /* 不正値 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=CMN_FAILURE", __func__ );
-        DEBUG_LOG( " e_shoff=0x%08X, e_shentsize=0x%04X, e_shnum=%04X",
-                   pHdr->e_shoff,
-                   pHdr->e_shentsize,
-                   pHdr->e_shnum );
+        DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE", __func__ );
+        DEBUG_LOG_TRC( " e_shoff=0x%08X, e_shentsize=0x%04X, e_shnum=%04X",
+                       pHdr->e_shoff,
+                       pHdr->e_shentsize,
+                       pHdr->e_shnum );
 
         return CMN_FAILURE;
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
+    DEBUG_LOG_TRC( "%s() end. ret=CMN_SUCCESS", __func__ );
 
     return CMN_SUCCESS;
 }
-
 
 
 /******************************************************************************/
@@ -420,11 +392,10 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
     Elf32_Phdr *pPrgHdr;    /* プログラムヘッダテーブル             */
     Elf32_Phdr *pEntry;     /* プログラムヘッダテーブルエントリ     */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. pAddr=%010p, size=%u",
-               __func__,
-               pAddr,
-               size );
+    DEBUG_LOG_TRC( "%s() start. pAddr=%010p, size=%u",
+                   __func__,
+                   pAddr,
+                   size );
 
     /* 初期化 */
     pElfHdr = ( Elf32_Ehdr * ) pAddr;
@@ -448,10 +419,9 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
         if ( ( pEntry->p_offset + pEntry->p_filesz ) >= size ) {
             /* 不正値 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_FAILURE, size=%d",
-                       __func__,
-                       pEntry->p_offset + pEntry->p_filesz );
+            DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, size=%d",
+                           __func__,
+                           pEntry->p_offset + pEntry->p_filesz );
 
             return CMN_FAILURE;
         }
@@ -463,11 +433,10 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
              ( ( pEntry->p_vaddr % IA32_PAGING_PAGE_SIZE ) != 0 )    ) {
             /* 不正値 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_FAILURE, vaddr=%#010X, end=%#010X",
-                       __func__,
-                       pEntry->p_vaddr,
-                       ( pEntry->p_vaddr + pEntry->p_memsz ) );
+            DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, vaddr=%#010X, end=%#010X",
+                           __func__,
+                           pEntry->p_vaddr,
+                           ( pEntry->p_vaddr + pEntry->p_memsz ) );
 
             return CMN_FAILURE;
         }
@@ -478,17 +447,15 @@ static CmnRet_t ElfCheckPrgHeader( void   *pAddr,
                 MLIB_UTIL_HAVE_FLAG( pEntry->p_flags, PF_R )    ) ) {
             /* 不正値 */
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=CMN_FAILURE, p_flags=%x",
-                       __func__,
-                       pEntry->p_flags );
+            DEBUG_LOG_TRC( "%s() end. ret=CMN_FAILURE, p_flags=%x",
+                           __func__,
+                           pEntry->p_flags );
 
             return CMN_FAILURE;
         }
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=CMN_SUCCESS", __func__ );
+    DEBUG_LOG_TRC( "%s() end. ret=CMN_SUCCESS", __func__ );
 
     return CMN_SUCCESS;
 }

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngName.c                                           */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2019-2021 Mochi.                                             */
+/*                                                                 2024/06/02 */
+/* Copyright (C) 2019-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -31,15 +31,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                   \
-    DebugOutput( CMN_MODULE_TASKMNG_NAME,  \
-                 __LINE__,                 \
-                 __VA_ARGS__               )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_NAME
 
 /** タスク名管理テーブルエントリ */
 typedef struct {
@@ -89,8 +82,7 @@ void NameInit( void )
 {
     uint32_t idx;   /* インデックス */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* タスク名管理テーブルエントリ毎に繰り返す */
     for ( idx = 0; idx < MK_CONFIG_TASKNAME_NUM; idx++ ) {
@@ -108,8 +100,7 @@ void NameInit( void )
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3     );  /* 特権レベル     */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -401,14 +392,14 @@ static void HdlInt( uint32_t        intNo,
         case MK_TASKNAME_FUNCID_REGISTER:
             /* タスク名登録 */
 
-            DEBUG_LOG( "%s(): register.", __func__ );
+            DEBUG_LOG_TRC( "%s(): register.", __func__ );
             doRegister( pParam );
             break;
 
         case MK_TASKNAME_FUNCID_UNREGISTER:
             /* タスク名登録解除 */
 
-            DEBUG_LOG( "%s(): unregister.", __func__ );
+            DEBUG_LOG_TRC( "%s(): unregister.", __func__ );
             doUnregister( pParam );
             break;
 
@@ -421,10 +412,10 @@ static void HdlInt( uint32_t        intNo,
     }
 
     /*
-    DEBUG_LOG( "%s(): end. ret=%d, err=%u",
-               __func__,
-               pParam->ret,
-               pParam->err                  );
+    DEBUG_LOG_TRC( "%s(): end. ret=%d, err=%u",
+                   __func__,
+                   pParam->ret,
+                   pParam->err                  );
     */
     return;
 }

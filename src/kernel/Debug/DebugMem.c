@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/DebugMem.c                                                */
-/*                                                                 2023/01/04 */
-/* Copyright (C) 2023 Mochi.                                                  */
+/*                                                                 2024/06/16 */
+/* Copyright (C) 2023-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -21,6 +21,9 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_DEBUG_MEM
+
 /* 起動フラグ */
 #define MEM_BOOTFLAG_INIT ( 0x00000000 )    /* 起動フラグ初期値       */
 #define MEM_BOOTFLAG_FAIL ( 0xDEADBEAF )    /* 起動フラグ異常値       */
@@ -40,8 +43,9 @@ typedef struct {
     uint32_t logNo;     /**< ログ番号     */
     uint16_t moduleId;  /**< モジュールID */
     uint16_t lineNo;    /**< 行番号       */
+    uint8_t  lv;        /**< ログレベル   */
     char     str[ 0 ];  /**< 文字列       */
-} memLog_t;
+} __attribute__(( __packed__ )) memLog_t;
 
 /** 管理データ型 */
 typedef struct {
@@ -108,11 +112,13 @@ void DebugMemInit( void )
  *
  * @param[in]   moduleId モジュールID
  * @param[in]   lineNo   行番号
+ * @param[in]   lv       ログレベル
  * @param[in]   *pStr    文字列
  */
 /******************************************************************************/
 void DebugMemOutput( uint16_t   moduleId,
                      uint16_t   lineNo,
+                     uint8_t    lv,
                      const char *pStr     )
 {
     size_t   size;  /* 書込みサイズ */
@@ -145,6 +151,7 @@ void DebugMemOutput( uint16_t   moduleId,
     pLog->logNo    = gMemData.logNo;
     pLog->moduleId = moduleId;
     pLog->lineNo   = lineNo;
+    pLog->lv       = lv;
     strcpy( pLog->str, pStr );
 
     /* 管理データ更新 */

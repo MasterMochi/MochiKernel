@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngSched.c                                          */
-/*                                                                 2021/06/15 */
-/* Copyright (C) 2017-2021 Mochi.                                             */
+/*                                                                 2024/06/18 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -39,15 +39,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                     \
-    DebugOutput( CMN_MODULE_TASKMNG_SCHED,   \
-                 __LINE__,                   \
-                 __VA_ARGS__               )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_SCHED
 
 /** 実行可能タスクグループ数 */
 #define SCHED_RUNGRP_NUM       ( 2 )
@@ -134,9 +127,6 @@ void TaskmngSchedExec( void )
     pRunProcInfo  = pRunTaskInfo->pProcInfo;
     pNextTaskInfo = NULL;
     pRunGrp       = NULL;
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start.", __func__ );*/
 
     /* 実行中プロセス判定 */
     if ( pRunProcInfo->pid == TASKMNG_PID_IDLE ) {
@@ -244,9 +234,6 @@ void TaskmngSchedExec( void )
         /* タスクスイッチ */
         SwitchTask( pRunTaskInfo, pNextTaskInfo );
     }
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
 
     return;
 }
@@ -451,8 +438,7 @@ TaskInfo_t *SchedGetTaskInfo( void )
 /******************************************************************************/
 void SchedInit( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* スケジューラテーブル初期化 */
     MLibUtilSetMemory8( &gSchedTbl, 0, sizeof ( schedTbl_t ) );
@@ -468,8 +454,7 @@ void SchedInit( void )
     gSchedTbl.pIdleTaskInfo = TaskGetInfo( TASKMNG_TASKID_IDLE );
     gSchedTbl.pRunTaskInfo  = gSchedTbl.pIdleTaskInfo;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -498,9 +483,6 @@ static void EnqueueToReservedGrp( TaskInfo_t *pTaskInfo )
     retMLib      = MLIB_RET_FAILURE;
     pSchedQ      = NULL;
     pReservedGrp = &gSchedTbl.runGrp[ gSchedTbl.reservedGrpIdx ];
-
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() start. pTaskInfo=%010p", __func__, pTaskInfo );*/
 
     /* プロセスタイプ取得 */
     taskType = pTaskInfo->pProcInfo->type;
@@ -545,9 +527,6 @@ static void EnqueueToReservedGrp( TaskInfo_t *pTaskInfo )
     /* 実行状態設定 */
     pTaskInfo->schedInfo.state = STATE_RUN;
 
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() end.", __func__ );*/
-
     return;
 }
 
@@ -560,18 +539,12 @@ static void EnqueueToReservedGrp( TaskInfo_t *pTaskInfo )
 /******************************************************************************/
 static void SwitchRunGrpRole( void )
 {
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() start.", __func__ );*/
-
     /* グループ役割切替 */
     gSchedTbl.runningGrpIdx  ^= 1;
     gSchedTbl.reservedGrpIdx ^= 1;
 
     /* タスク実行済みフラグ初期化 */
     gSchedTbl.runFlg = false;
-
-    /* デバッグトレースログ出力 */
-    /*DEBUG_LOG( "%s() end.", __func__ );*/
 
     return;
 }
@@ -595,12 +568,6 @@ static __attribute__ ( ( noinline ) )
     ProcInfo_t      *pNextProcInfo; /* 次プロセス管理情報   */
     ThreadContext_t *pRunContext;   /* 現タスクコンテキスト */
     ThreadContext_t *pNextContext;  /* 次タスクコンテキスト */
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start. runTaskId=%u, nextTaskId=%u",
-               __func__,
-               pRunTaskInfo->taskId,
-               pNextTaskInfo->taskId );*/
 
     /* 初期化 */
     pNextProcInfo = pNextTaskInfo->pProcInfo;
@@ -638,9 +605,6 @@ static __attribute__ ( ( noinline ) )
 
     /* ラベル */
     __asm__ __volatile__ ( "SwitchTaskEnd:" );
-
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
 
     return;
 }

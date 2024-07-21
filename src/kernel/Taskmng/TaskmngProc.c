@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngProc.c                                           */
-/*                                                                 2023/01/04 */
-/* Copyright (C) 2018-2023 Mochi.                                             */
+/*                                                                 2024/06/18 */
+/* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -39,15 +39,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                     \
-    DebugOutput( CMN_MODULE_TASKMNG_PROC,    \
-                 __LINE__,                   \
-                 __VA_ARGS__              )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_PROC
 
 /** プロセス管理情報動的配列チャンクサイズ */
 #define PROCTBL_CHUNK_SIZE ( 8 )
@@ -114,9 +107,7 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     tid         = MK_TID_NULL;
     pProcInfo   = NULL;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.",                    __func__          );
-    DEBUG_LOG( " type=%u, pAddr=%010p, size=%d", type, pAddr, size );
+    DEBUG_LOG_TRC( "%s(): start.", __func__ );
 
     /* プロセス管理情報割当 */
     pProcInfo = AllocProcInfo( type );
@@ -125,8 +116,7 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( pProcInfo == NULL ) {
         /* 失敗 */
 
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
+        DEBUG_LOG_ERR( "%s(): failed.", __func__ );
 
         return MK_PID_NULL;
     }
@@ -138,11 +128,10 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( pProcInfo->dirId == MEMMNG_PAGE_DIR_ID_NULL ) {
         /* 失敗 */
 
+        DEBUG_LOG_ERR( "%s(): failed.", __func__ );
+
         /* プロセス管理情報解放 */
         FreeProcInfo( pProcInfo );
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
         return MK_PID_NULL;
     }
@@ -157,11 +146,10 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( ret == CMN_FAILURE ) {
         /* 失敗 */
 
+        DEBUG_LOG_ERR( "%s(): failed.", __func__ );
+
         /* プロセス管理情報解放 */
         FreeProcInfo( pProcInfo );
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
         return MK_PID_NULL;
     }
@@ -177,11 +165,10 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( ret != CMN_SUCCESS ) {
         /* 失敗 */
 
+        DEBUG_LOG_ERR( "%s(): failed.", __func__ );
+
         /* プロセス管理情報解放 */
         FreeProcInfo( pProcInfo );
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
         return MK_PID_NULL;
     }
@@ -199,11 +186,10 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( ret != CMN_SUCCESS ) {
         /* 失敗 */
 
+        DEBUG_LOG_ERR( "%s(): failed.", __func__ );
+
         /* プロセス管理情報解放 */
         FreeProcInfo( pProcInfo );
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
         return MK_PID_NULL;
     }
@@ -215,17 +201,15 @@ MkPid_t TaskmngProcAdd( uint8_t type,
     if ( tid == MK_TID_NULL ) {
         /* 失敗 */
 
+        DEBUG_LOG_ERR( "%s(): failed.", __func__ );
+
         /* プロセス管理情報解放 */
         FreeProcInfo( pProcInfo );
-
-        /* デバッグトレースログ出力 */
-        DEBUG_LOG( "%s() end. ret=NULL", __func__ );
 
         return MK_PID_NULL;
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end. ret=%d", __func__, pProcInfo->pid );
+    DEBUG_LOG_TRC( "%s(): end. ret=%d", __func__, pProcInfo->pid );
 
     return pProcInfo->pid;
 }
@@ -287,8 +271,7 @@ void ProcInit( void )
     ProcInfo_t     *pProcInfo;  /* アイドルプロセス管理情報 */
     ProcHeapInfo_t *pUserHeap;  /* ユーザヒープ情報         */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 初期化 */
     pProcInfo = NULL;
@@ -322,8 +305,7 @@ void ProcInit( void )
                   HdlInt,                   /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3 );  /* 特権レベル     */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -644,6 +626,14 @@ static void SetBreakPoint( MkProcParam_t *pParam )
     pProcInfo  = SchedGetProcInfo();
     breakPoint = ( uint32_t ) pProcInfo->userHeap.pBreakPoint;
 
+    DEBUG_LOG_TRC(
+        "%s(): pid=%#X, quantity=%d, breakPoint=0x%08X",
+        __func__,
+        pProcInfo->pid,
+        remain,
+        breakPoint
+    );
+
     while ( remain != 0 ) {
         /* 残増減量比較 */
         if ( ( ( - IA32_PAGING_PAGE_SIZE ) <= remain                ) &&
@@ -681,7 +671,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             if ( pPhyAddr == NULL ) {
                 /* 失敗 */
 
-                DEBUG_LOG( "%s(): MemmngPhysAlloc() error.", __func__ );
+                DEBUG_LOG_WRN( "%s(): MemmngPhysAlloc() error.", __func__ );
 
                 /* 戻り値設定 */
                 pParam->ret         = MK_RET_FAILURE;
@@ -711,7 +701,7 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             if ( ret != CMN_SUCCESS ) {
                 /* 失敗 */
 
-                DEBUG_LOG( "%s(): MemmngPageSet() error(%d).", __func__, ret );
+                DEBUG_LOG_WRN( "%s(): MemmngPageSet() error(%d).", __func__, ret );
 
                 /* 戻り値設定 */
                 pParam->ret         = MK_RET_FAILURE;
@@ -733,6 +723,11 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             MemmngPageUnset( pProcInfo->dirId,
                              pVirtAddr,
                              IA32_PAGING_PAGE_SIZE );
+
+            /* 物理メモリ領域0初期化 */
+
+            /* 物理メモリ領域解放 */
+
         }
 
         /* ブレイクポイント更新 */

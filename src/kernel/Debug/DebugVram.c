@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/DebugVram.c                                               */
-/*                                                                 2024/01/28 */
+/*                                                                 2024/07/21 */
 /* Copyright (C) 2022-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -21,6 +21,9 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_DEBUG_VRAM
+
 /** 文字色取得マクロ */
 #define VRAM_GET_ATTR_FGC ( gVramData.attr & 0x07 )
 /** 背景色取得マクロ */
@@ -166,11 +169,13 @@ void DebugVramInit( void )
  *
  * @param[in]   moduleId モジュールID
  * @param[in]   lineNo   行番号
+ * @param[in]   lv       ログレベル
  * @param[in]   pStr     文字列
  */
 /******************************************************************************/
 void DebugVramOutput( uint16_t   moduleId,
                       uint16_t   lineNo,
+                      uint16_t   lv,
                       const char *pStr     )
 {
     char       header[ 25 ];
@@ -188,6 +193,7 @@ void DebugVramOutput( uint16_t   moduleId,
 
     /* カーソル行更新 */
     gVramData.row++;
+    gVramData.column = 0;
 
     return;
 }
@@ -292,8 +298,12 @@ static void Output( const char *pStr )
         }
 
         /* 文字コード判定 */
-        if ( *( pChar++ ) == '\e' ) {
+        if ( *pChar == '\e' ) {
             /* エスケープシーケンス */
+
+            /* 次の文字 */
+            pChar++;
+
             ProcEscape( &pChar );
 
         } else {
@@ -383,6 +393,10 @@ static void ProcEscapeCsi( const char **ppChar )
         if ( *pChar == 'm' ) {
             /* SGR */
             ProcEscapeCsiSgr( ppChar );
+
+            /* 次の文字 */
+            ( *ppChar )++;
+
             break;
         }
 
@@ -604,8 +618,8 @@ static void Scroll( void )
     /* 最下行初期化 */
     for ( column = 0; column < VGA_M3_COLUMN; column++ ) {
         /* 1文字出力 */
-        VGA_M3_TEXT_BUFFER( VGA_M3_ROW, column ).code = ' ';
-        VGA_M3_TEXT_BUFFER( VGA_M3_ROW, column ).attr = gVramData.attr;
+        VGA_M3_TEXT_BUFFER( VGA_M3_ROW - 1, column ).code = ' ';
+        VGA_M3_TEXT_BUFFER( VGA_M3_ROW - 1, column ).attr = gVramData.attr;
     }
 
     return;

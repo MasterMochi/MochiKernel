@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngHeap.c                                             */
-/*                                                                 2024/05/13 */
+/*                                                                 2024/07/21 */
 /* Copyright (C) 2019-2024 Mcohi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -26,15 +26,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_MEMMNG_HEAP, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_MEMMNG_HEAP
 
 /** 領域情報 */
 typedef struct {
@@ -394,6 +387,8 @@ static void SetBreakPoint( int quantity )
     uint32_t oldPageNum;    /* 増減前ページ数         */
     uint32_t newPageNum;    /* 増減後ページ数         */
     CmnRet_t ret;           /* 関数戻り値             */
+
+    DEBUG_LOG_TRC( "%s(): quantity=%d", __func__, quantity );
 
     /* 初期化 */
     once       = 0;

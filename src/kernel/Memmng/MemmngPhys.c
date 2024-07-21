@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPhys.c                                             */
-/*                                                                 2024/05/13 */
+/*                                                                 2024/07/21 */
 /* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -21,6 +21,7 @@
 #include <kernel/kernel.h>
 
 /* 外部モジュールヘッダ */
+#include <memmap.h>
 #include <Cmn.h>
 #include <Debug.h>
 
@@ -31,15 +32,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_MEMMNG_PHYS, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_MEMMNG_PHYS
 
 /** ブロック管理情報数 */
 #define AREAINFO_NUM ( 1000 )
@@ -104,6 +98,8 @@ void *MemmngPhysAlloc( size_t size )
                       &( gPhysTbl.unusedList ),
                       size                      );
 
+    DEBUG_LOG_TRC( "%s(): size=%d, pRet=%p", __func__, size, pRet );
+
     return pRet;
 }
 
@@ -123,6 +119,8 @@ void *MemmngPhysAlloc( size_t size )
 CmnRet_t MemmngPhysFree( void *pAddr )
 {
     CmnRet_t ret;   /* 戻り値 */
+
+    DEBUG_LOG_TRC( "%s(): pAddr=%p", __func__, pAddr );
 
     /* メモリ領域解放 */
     ret = AreaFree( &( gPhysTbl.allocList  ),
@@ -184,6 +182,27 @@ void PhysInit( MkMemMapEntry_t *pMemMap,
                      true                      );
         }
     }
+
+    /* デバッグ用メモリ領域割当て */
+    AreaAllocSpec( &( gPhysTbl.allocList  ),
+                   &( gPhysTbl.freeList   ),
+                   &( gPhysTbl.unusedList ),
+                   ( void * ) MEMMAP_PADDR_DEBUG,
+                   MEMMAP_PSIZE_DEBUG             );
+
+    /* アイドルプロセス用ページディレクトリ領域割当て */
+    AreaAllocSpec( &( gPhysTbl.allocList  ),
+                   &( gPhysTbl.freeList   ),
+                   &( gPhysTbl.unusedList ),
+                   ( void * ) MEMMAP_PADDR_IDLE_PD,
+                   MEMMAP_PSIZE_IDLE_PD             );
+
+    /* カーネル領域ページテーブル領域割当て */
+    AreaAllocSpec( &( gPhysTbl.allocList  ),
+                   &( gPhysTbl.freeList   ),
+                   &( gPhysTbl.unusedList ),
+                   ( void * ) MEMMAP_PADDR_KERNEL_PT,
+                   MEMMAP_PSIZE_KERNEL_PT             );
 
     return;
 }

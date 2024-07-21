@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/IntmngCtrl/IntmngCtrl.c                                         */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                 2024/06/18 */
+/* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -30,15 +30,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_INTMNG_CTRL, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_INTMNG_CTRL
 
 /** 割込み待ち情報エントリ数 */
 #define WAITINFO_ENTRY_NUM I8259A_IRQ_NUM
@@ -56,7 +49,7 @@ typedef struct {
 typedef struct {
     MkTaskId_t taskId;      /**< タスクID         */
     uint8_t    monitor;     /**< 監視中IRQ        */
-    uint32_t   flag;        /**< 割込み発生フラグ */
+    uint8_t    flag;        /**< 割込み発生フラグ */
     uint32_t   state;       /**< 割込み待ち状態   */
 } WaitInfo_t;
 
@@ -137,24 +130,24 @@ static volatile WaitInfo_t gWaitInfo[ WAITINFO_ENTRY_NUM ];
 /******************************************************************************/
 static uint32_t AllocWaitInfo( MkTaskId_t taskId )
 {
-    uint32_t index;     /* 割込み待ち情報インデックス */
-    uint32_t free;      /* 空きエントリインデックス   */
+    uint32_t idx;   /* 割込み待ち情報インデックス */
+    uint32_t free;  /* 空きエントリインデックス   */
 
     /* 初期化 */
     free = WAITINFO_ENTRY_NUM;
 
     /* 割込み待ち情報エントリ毎に繰り返し */
-    for ( index = 0; index < WAITINFO_ENTRY_NUM; index++ ) {
+    for ( idx = 0; idx < WAITINFO_ENTRY_NUM; idx++ ) {
         /* タスクID判定 */
-        if ( gWaitInfo[ index ].taskId == taskId ) {
+        if ( gWaitInfo[ idx ].taskId == taskId ) {
             /* 一致 */
 
-            return index;
+            return idx;
 
-        } else if ( gWaitInfo[ index ].taskId == MK_TASKID_NULL ) {
+        } else if ( gWaitInfo[ idx ].taskId == MK_TASKID_NULL ) {
             /* 空きエントリ */
 
-            free = index;
+            free = idx;
         }
     }
 
@@ -183,8 +176,7 @@ void IntmngCtrlInit( void )
 {
     uint32_t i;
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 割込み監視情報初期化 */
     for ( i = 0; i < I8259A_IRQ_NUM; i++ ) {
@@ -217,8 +209,7 @@ void IntmngCtrlInit( void )
     IntmngHdlSet( INTMNG_PIC_VCTR_BASE + I8259A_IRQ14, &HdlHwInt, IA32_DESCRIPTOR_DPL_0 );
     IntmngHdlSet( INTMNG_PIC_VCTR_BASE + I8259A_IRQ15, &HdlHwInt, IA32_DESCRIPTOR_DPL_0 );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -248,20 +239,20 @@ static bool CheckAuthority( MkTaskId_t taskId,
                             uint8_t    irqNo,
                             uint32_t   *pIndex )
 {
-    uint32_t index;     /* 割込み待ち情報インデックス */
+    uint32_t idx;   /* 割込み待ち情報インデックス */
 
     /* 割込み待ち情報インデックス取得 */
-    index = gMonitoringInfo.waitInfoIdx[ irqNo ];
+    idx = gMonitoringInfo.waitInfoIdx[ irqNo ];
 
     /* 割込み待ち情報エントリ有無判定 */
-    if ( index == WAITINFO_ENTRY_NUM ) {
+    if ( idx == WAITINFO_ENTRY_NUM ) {
         /* エントリ無(非監視中) */
 
         return false;
     }
 
     /* 割込み監視開始タスクIDチェック */
-    if ( gWaitInfo[ index ].taskId != taskId ) {
+    if ( gWaitInfo[ idx ].taskId != taskId ) {
         /* タスクID不一致 */
 
         return false;
@@ -271,7 +262,7 @@ static bool CheckAuthority( MkTaskId_t taskId,
     if ( pIndex != NULL ) {
         /* 必要 */
 
-        *pIndex = index;
+        *pIndex = idx;
     }
 
     return true;
@@ -302,6 +293,13 @@ static void Complete( MkTaskId_t   taskId,
         /* エラー設定 */
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_UNAUTHORIZED;
+
+        DEBUG_LOG_WRN(
+            "%s(): unauthorized. irqNo=%d, taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
 
         return;
     }
@@ -342,6 +340,13 @@ static void Disable( MkTaskId_t   taskId,
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_UNAUTHORIZED;
 
+        DEBUG_LOG_WRN(
+            "%s(): unauthorized. irqNo=%d, taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
+
         return;
     }
 
@@ -351,6 +356,8 @@ static void Disable( MkTaskId_t   taskId,
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
     pParam->err = MK_ERR_NONE;
+
+    DEBUG_LOG_INF( "%s(): irqNo=%d, taskId=%d", pParam->irqNo, taskId );
 
     return;
 }
@@ -381,6 +388,13 @@ static void Enable( MkTaskId_t   taskId,
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_UNAUTHORIZED;
 
+        DEBUG_LOG_WRN(
+            "%s(): unauthorized. irqNo=%d, taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
+
         return;
     }
 
@@ -390,6 +404,13 @@ static void Enable( MkTaskId_t   taskId,
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
     pParam->err = MK_ERR_NONE;
+
+    DEBUG_LOG_INF(
+        "%s(): irqNo=%d, taskId=%d",
+        __func__,
+        pParam->irqNo,
+        taskId
+    );
 
     return;
 }
@@ -409,15 +430,15 @@ static void Enable( MkTaskId_t   taskId,
 /******************************************************************************/
 static uint32_t getWaitInfoIdx( MkTaskId_t taskId )
 {
-    uint32_t index; /* 割込み待ち情報インデックス */
+    uint32_t idx;   /* 割込み待ち情報インデックス */
 
     /* 割込み待ち情報エントリ毎に繰り返し */
-    for ( index = 0; index < WAITINFO_ENTRY_NUM; index++ ) {
+    for ( idx = 0; idx < WAITINFO_ENTRY_NUM; idx++ ) {
         /* タスクID判定 */
-        if ( gWaitInfo[ index ].taskId == taskId ) {
+        if ( gWaitInfo[ idx ].taskId == taskId ) {
             /* 一致 */
 
-            return index;
+            return idx;
         }
     }
 
@@ -444,15 +465,17 @@ static void HdlSwInt( uint32_t        intNo,
     /* 初期化 */
     pParam = ( MkIntParam_t * ) context.genReg.esi;
 
+    /* タスクID取得 */
+    taskId = TaskmngSchedGetTaskId();
+
     /* パラメータチェック */
     if ( pParam == NULL ) {
         /* 不正 */
 
+        DEBUG_LOG_WRN( "%s(): invalid parameter. taskId=%d", __func__, taskId );
+
         return;
     }
-
-    /* タスクID取得 */
-    taskId = TaskmngSchedGetTaskId();
 
     /* プロセスタイプ取得 */
     type = TaskmngTaskGetType( taskId );
@@ -464,6 +487,13 @@ static void HdlSwInt( uint32_t        intNo,
         /* エラー設定 */
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_UNAUTHORIZED;
+
+        DEBUG_LOG_WRN(
+            "%s(): invalid proctype(%d). taskId=%d",
+            __func__,
+            type,
+            taskId
+        );
 
         return;
     }
@@ -502,6 +532,13 @@ static void HdlSwInt( uint32_t        intNo,
     } else {
         /* 不明 */
 
+        DEBUG_LOG_WRN(
+            "%s(): invalid funcId(%#x). taskId=%d",
+            __func__,
+            pParam->funcId,
+            taskId
+        );
+
         /* エラー設定 */
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_PARAM;
@@ -526,32 +563,31 @@ static void HdlHwInt( uint32_t        intNo,
                       IntmngContext_t context )
 {
     uint8_t  irqNo;     /* IRQ番号                    */
-    uint32_t index;     /* 割込み待ち情報インデックス */
-
-    DEBUG_LOG( "%s() start. intNo=%#X", __func__, intNo );
+    uint32_t idx;       /* 割込み待ち情報インデックス */
 
     /* IRQ番号算出 */
     irqNo = ( uint8_t ) ( intNo - INTMNG_PIC_VCTR_BASE );
 
     /* 割込み待ち情報インデックス取得 */
-    index = gMonitoringInfo.waitInfoIdx[ irqNo ];
+    idx = gMonitoringInfo.waitInfoIdx[ irqNo ];
 
     /* 割込み待ち情報エントリ有無判定 */
-    if ( index == WAITINFO_ENTRY_NUM ) {
+    if ( idx == WAITINFO_ENTRY_NUM ) {
         /* エントリ無(非監視中) */
 
+        DEBUG_LOG_WRN( "%s(): ignore irqNo(%d)", __func__, irqNo );
         return;
     }
 
     /* 割込み待ち情報設定 */
-    gWaitInfo[ index ].flag |= ( 1 << irqNo );
+    gWaitInfo[ idx ].flag |= ( 1 << irqNo );
 
     /* 割込み待ち状態判定 */
-    if ( gWaitInfo[ index ].state == STATE_WAIT ) {
+    if ( gWaitInfo[ idx ].state == STATE_WAIT ) {
         /* 待ち状態 */
 
         /* スケジュール開始 */
-        TaskmngSchedStart( gWaitInfo[ index ].taskId );
+        TaskmngSchedStart( gWaitInfo[ idx ].taskId );
     }
 
     return;
@@ -570,7 +606,7 @@ static void HdlHwInt( uint32_t        intNo,
 static void StartMonitoring( MkTaskId_t   taskId,
                              MkIntParam_t *pParam )
 {
-    uint32_t index;     /* 割込み待ち情報インデックス */
+    uint32_t idx;   /* 割込み待ち情報インデックス */
 
     /* IRQ番号範囲チェック */
     if ( ( pParam->irqNo >= I8259A_IRQ_NUM ) ||
@@ -583,6 +619,13 @@ static void StartMonitoring( MkTaskId_t   taskId,
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_PARAM;
 
+        DEBUG_LOG_WRN(
+            "%s(): invalid irqNo(%d). taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
+
         return;
     }
 
@@ -594,21 +637,38 @@ static void StartMonitoring( MkTaskId_t   taskId,
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_ALREADY_START;
 
+        DEBUG_LOG_WRN(
+            "%s(): already start. irqNo=%d, taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
+
         return;
     }
 
     /* 割込み待ち情報エントリ割り当て */
-    index = AllocWaitInfo( taskId );
+    idx = AllocWaitInfo( taskId );
 
     /* 割込み監視情報設定 */
-    gMonitoringInfo.waitInfoIdx[ pParam->irqNo ] = index;
+    gMonitoringInfo.waitInfoIdx[ pParam->irqNo ] = idx;
 
     /* 割込み待ち情報設定 */
-    gWaitInfo[ index ].monitor |= ( 1 << pParam->irqNo );
+    gWaitInfo[ idx ].monitor |= ( 1 << pParam->irqNo );
 
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
     pParam->err = MK_ERR_NONE;
+
+    DEBUG_LOG_INF(
+        "%s(): irqNo=%d, taskId=%d, idx=%d, monitor=%02x, flag=%02x",
+        __func__,
+        pParam->irqNo,
+        taskId,
+        idx,
+        gWaitInfo[ idx ].monitor,
+        gWaitInfo[ idx ].flag
+    );
 
     return;
 }
@@ -627,7 +687,7 @@ static void StopMonitoring( MkTaskId_t   taskId,
                             MkIntParam_t *pParam )
 {
     bool     authority;     /* 制御権限                   */
-    uint32_t index;         /* 割込み待ち情報インデックス */
+    uint32_t idx;           /* 割込み待ち情報インデックス */
 
     /* IRQ番号範囲チェック */
     if ( ( pParam->irqNo >= I8259A_IRQ_NUM ) ||
@@ -640,11 +700,18 @@ static void StopMonitoring( MkTaskId_t   taskId,
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_PARAM;
 
+        DEBUG_LOG_WRN(
+            "%s(): invalid irqNo(%d). taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
+
         return;
     }
 
     /* 制御権限チェック */
-    authority = CheckAuthority( taskId, pParam->irqNo, &index );
+    authority = CheckAuthority( taskId, pParam->irqNo, &idx );
 
     /* 制御権限チェック結果判定 */
     if ( authority == false ) {
@@ -654,19 +721,26 @@ static void StopMonitoring( MkTaskId_t   taskId,
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_UNAUTHORIZED;
 
+        DEBUG_LOG_WRN(
+            "%s(): unauthorized. irqNo=%d, taskId=%d",
+            __func__,
+            pParam->irqNo,
+            taskId
+        );
+
         return;
     }
 
     /* 割込み待ち情報設定 */
-    gWaitInfo[ index ].monitor &= ~( 1 << pParam->irqNo );
-    gWaitInfo[ index ].flag    &= ~( 1 << pParam->irqNo );
+    gWaitInfo[ idx ].monitor &= ~( 1 << pParam->irqNo );
+    gWaitInfo[ idx ].flag    &= ~( 1 << pParam->irqNo );
 
     /* 他割込み監視判定 */
-    if ( gWaitInfo[ index ].monitor == 0 ) {
+    if ( gWaitInfo[ idx ].monitor == 0 ) {
         /* 無し */
 
         /* 割込み待ち情報初期化 */
-        gWaitInfo[ index ].taskId = MK_TASKID_NULL;
+        gWaitInfo[ idx ].taskId = MK_TASKID_NULL;
     }
 
     /* 割込み待ち情報インデックス初期化 */
@@ -675,6 +749,16 @@ static void StopMonitoring( MkTaskId_t   taskId,
     /* 戻り値設定 */
     pParam->ret = MK_RET_SUCCESS;
     pParam->err = MK_ERR_NONE;
+
+    DEBUG_LOG_INF(
+        "%s(): irqNo=%d, taskId=%d, idx=%d, monitor=%02x, flag=%02x",
+        __func__,
+        pParam->irqNo,
+        taskId,
+        idx,
+        gWaitInfo[ idx ].monitor,
+        gWaitInfo[ idx ].flag
+    );
 
     return;
 }
@@ -693,28 +777,35 @@ static void StopMonitoring( MkTaskId_t   taskId,
 static void Wait( MkTaskId_t   taskId,
                   MkIntParam_t *pParam )
 {
-    uint32_t index; /* 割込み待ち情報インデックス */
+    uint32_t idx; /* 割込み待ち情報インデックス */
 
     /* 割込み待ち情報インデックス取得 */
-    index = getWaitInfoIdx( taskId );
+    idx = getWaitInfoIdx( taskId );
 
     /* 取得結果判定 */
-    if ( index == WAITINFO_ENTRY_NUM ) {
+    if ( idx == WAITINFO_ENTRY_NUM ) {
         /* 該当エントリ無し */
 
         /* エラー設定 */
         pParam->ret = MK_RET_FAILURE;
         pParam->err = MK_ERR_UNAUTHORIZED;
 
+        DEBUG_LOG_WRN(
+            "%s(): unauthorized. taskId=%d, idx=%d",
+            __func__,
+            taskId,
+            idx
+        );
+
         return;
     }
 
     /* 割込み発生フラグ判定 */
-    if ( gWaitInfo[ index ].flag == 0 ) {
+    if ( gWaitInfo[ idx ].flag == 0 ) {
         /* 割込み未発生 */
 
         /* 割込み状態設定 */
-        gWaitInfo[ index ].state = STATE_WAIT;
+        gWaitInfo[ idx ].state = STATE_WAIT;
 
         /* スケジュール停止 */
         TaskmngSchedStop( taskId );
@@ -726,11 +817,11 @@ static void Wait( MkTaskId_t   taskId,
     /* 戻り値設定 */
     pParam->ret  = MK_RET_SUCCESS;
     pParam->err  = MK_ERR_NONE;
-    pParam->flag = gWaitInfo[ index ].flag;
+    pParam->flag = gWaitInfo[ idx ].flag;
 
     /* 割込み待ち情報設定 */
-    gWaitInfo[ index ].flag  = 0;
-    gWaitInfo[ index ].state = STATE_INIT;
+    gWaitInfo[ idx ].flag  = 0;
+    gWaitInfo[ idx ].state = STATE_INIT;
 
     return;
 }

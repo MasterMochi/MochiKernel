@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Intmng/IntmngHdl.c                                              */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2016-2021 Mochi.                                             */
+/*                                                                 2024/06/16 */
+/* Copyright (C) 2016-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -30,15 +30,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_INTMNG_HDL,  \
-                 __LINE__,               \
-                 __VA_ARGS__            )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_INTMNG_HDL
 
 /** 割込みハンドラ共通関数定義マクロ(エラーコード無し) */
 #define HDL_CMN_PROC( _INT_NO )                                                \
@@ -468,8 +461,7 @@ void IntmngHdlInit( void )
 {
     uint32_t intNo;     /* 割込み番号 */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 全割込み番号毎に繰り返し */
     for ( intNo =  INTMNG_INT_NO_MIN;
@@ -488,8 +480,7 @@ void IntmngHdlInit( void )
             IA32_DESCRIPTOR_DPL_0            ); /* 特権レベル         */
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -805,30 +796,28 @@ HDL_CMN_PROC( 0xFF )
 static void HdlIgnore( uint32_t        intNo,
                        IntmngContext_t context )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() intNo=%d", __func__, intNo );
+    DEBUG_LOG_ERR( "%s() intNo=%d", __func__, intNo );
 
-    /* [TODO]デバッグ用 */
-    DEBUG_LOG( " edi    = %0#10x, esi    = %0#10x, ebp    = %0#10x",
-               context.genReg.edi,
-               context.genReg.esi,
-               context.genReg.ebp                                    );
-    DEBUG_LOG( " esp    = %0#10x, ebx    = %0#10x, edx    = %0#10x",
-               context.genReg.esp,
-               context.genReg.ebx,
-               context.genReg.edx                                    );
-    DEBUG_LOG( " ecx    = %0#10x, eax    = %0#10x, err    = %0#10x",
-               context.genReg.ecx,
-               context.genReg.eax,
-               *( ( uint32_t * )( &context.errCode ) )               );
-    DEBUG_LOG( " eip    = %0#10x, cs     = %0#10x, eflags = %0#10x",
-               context.iretdInfo.eip,
-               context.iretdInfo.cs,
-               context.iretdInfo.eflags                              );
-    DEBUG_LOG( " esp    = %0#10x, ss     = %0#10x, taskId = %d",
-               context.iretdInfo.esp,
-               context.iretdInfo.ss,
-               TaskmngSchedGetTaskId()                               );
+    DEBUG_LOG_ABT( " edi = %0#10x, esi = %0#10x, ebp    = %0#10x",
+                   context.genReg.edi,
+                   context.genReg.esi,
+                   context.genReg.ebp                              );
+    DEBUG_LOG_ABT( " esp = %0#10x, ebx = %0#10x, edx    = %0#10x",
+                   context.genReg.esp,
+                   context.genReg.ebx,
+                   context.genReg.edx                              );
+    DEBUG_LOG_ABT( " ecx = %0#10x, eax = %0#10x, err    = %0#10x",
+                   context.genReg.ecx,
+                   context.genReg.eax,
+                   *( ( uint32_t * )( &context.errCode ) )         );
+    DEBUG_LOG_ABT( " eip = %0#10x, cs  = %0#10x, eflags = %0#10x",
+                   context.iretdInfo.eip,
+                   context.iretdInfo.cs,
+                   context.iretdInfo.eflags                        );
+    DEBUG_LOG_ABT( " esp = %0#10x, ss  = %0#10x, taskId = %d",
+                   context.iretdInfo.esp,
+                   context.iretdInfo.ss,
+                   TaskmngSchedGetTaskId()                         );
 
     while( 1 ) {
         IA32InstructionHlt();

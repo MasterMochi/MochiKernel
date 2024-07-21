@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPage.c                                             */
-/*                                                                 2023/01/05 */
-/* Copyright (C) 2017-2023 Mochi.                                             */
+/*                                                                 2024/06/02 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -33,15 +33,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_MEMMNG_PAGE, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_MEMMNG_PAGE
 
 /** カーネル領域用ページディレクトリエントリ数 */
 #define KERNEL_AREA_PDE_NUM \
@@ -961,7 +954,7 @@ static mngInfo_t *GetMngInfo( MemmngPageDirId_t dirId )
     if ( retMLib != MLIB_RET_SUCCESS ) {
         /* 失敗 */
 
-        DEBUG_LOG( "dirID( %d ) failure.", dirId );
+        DEBUG_LOG_WRN( "dirID( %d ) failure.", dirId );
     }
 
     return pRet;

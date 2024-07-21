@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/Memmng.c                                                 */
-/*                                                                 2021/03/24 */
-/* Copyright (C) 2016-2021 Mochi.                                             */
+/*                                                                 2024/06/02 */
+/* Copyright (C) 2016-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -29,15 +29,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_MEMMNG_MAIN, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_MEMMNG_MAIN
 
 
 /******************************************************************************/
@@ -59,8 +52,7 @@ void MemmngInit( BiosE820Entry_t *pBiosE820,
                  MkMemMapEntry_t *pMemMap,
                  size_t          memMapNum    )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* メモリマップ管理サブモジュール初期化 */
     MapInit( pBiosE820, biosE820Num, pMemMap, memMapNum );
@@ -83,8 +75,7 @@ void MemmngInit( BiosE820Entry_t *pBiosE820,
     /* 仮想メモリ領域管理サブモジュール初期化 */
     VirtInit();
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }

@@ -1,7 +1,7 @@
 #******************************************************************************#
 #*                                                                            *#
 #* src/kernel/Makefile                                                        *#
-#*                                                                 2024/03/24 *#
+#*                                                                 2024/06/02 *#
 #* Copyright (C) 2016-2024 Mochi.                                             *#
 #*                                                                            *#
 #******************************************************************************#
@@ -64,7 +64,14 @@ CFLAGS  += -m32
 CFLAGS  += -fno-pic
 CFLAGS  += -ffreestanding
 CFLAGS  += -nostdlib
-CFLAGS  += -DDEBUG_LOG_ENABLE
+CFLAGS  += -DDEBUG_VRAM_ENABLE
+CFLAGS  += -DDEBUG_MEM_ENABLE
+CFLAGS  += -DDEBUG_ABORT_ENABLE
+CFLAGS  += -DDEBUG_ERROR_ENABLE
+CFLAGS  += -DDEBUG_WARNING_ENABLE
+CFLAGS  += -DDEBUG_INFO_ENABLE
+CFLAGS  += -DDEBUG_TRACE_ENABLE
+CFLAGS  += -DDEBUG_TEMP_ENABLE
 CFLAGS  += -Iinclude
 CFLAGS  += -I../include
 CFLAGS  += -I$(RELEASE_DIR)/include

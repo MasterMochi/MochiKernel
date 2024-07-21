@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Ioctrl/IoctrlPort.c                                             */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2018-2021 Mochi.                                             */
+/*                                                                 2024/06/01 */
+/* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,15 +24,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_IOCTRL_PORT, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_IOCTRL_PORT
 
 /** 機能ID毎関数テーブル型 */
 typedef struct {
@@ -94,16 +87,14 @@ const static FuncTbl_t gFuncTbl[] =
 /******************************************************************************/
 void PortInit( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 割込みハンドラ設定 */
     IntmngHdlSet( MK_CONFIG_INTNO_IOPORT,       /* 割込み番号     */
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3   );    /* 特権レベル     */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -176,7 +167,7 @@ static void InByte( MkIoPortParam_t *pParam )
     MkTaskId_t taskId;  /* タスクID       */
 
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start.", __func__ );*/
+    DEBUG_LOG_TRC( "%s() start.", __func__ );*/
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -202,7 +193,7 @@ static void InByte( MkIoPortParam_t *pParam )
     IA32InstructionInByte( pParam->pData, pParam->portNo );
 
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
+    DEBUG_LOG_TRC( "%s() end.", __func__ );*/
 
     return;
 }
@@ -221,8 +212,7 @@ static void InWord( MkIoPortParam_t *pParam )
     uint8_t    type;    /* プロセスタイプ */
     MkTaskId_t taskId;  /* タスクID       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -248,7 +238,7 @@ static void InWord( MkIoPortParam_t *pParam )
     IA32InstructionInWord( pParam->pData, pParam->portNo );
 
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -267,8 +257,7 @@ static void InDword( MkIoPortParam_t *pParam )
     uint8_t    type;    /* プロセスタイプ */
     MkTaskId_t taskId;  /* タスクID       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -294,7 +283,7 @@ static void InDword( MkIoPortParam_t *pParam )
     IA32InstructionInDWord( pParam->pData, pParam->portNo );
 
     /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -315,7 +304,7 @@ static void OutByte( MkIoPortParam_t *pParam )
     MkTaskId_t taskId;  /* タスクID       */
 
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start.", __func__ );*/
+    DEBUG_LOG_TRC( "%s() start.", __func__ );*/
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -363,8 +352,7 @@ static void OutWord( MkIoPortParam_t *pParam )
     uint8_t    type;    /* プロセスタイプ */
     MkTaskId_t taskId;  /* タスクID       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -389,8 +377,7 @@ static void OutWord( MkIoPortParam_t *pParam )
     /* [TODO]ストリング命令 */
     IA32InstructionOutWord( pParam->portNo, *( ( uint16_t * ) pParam->pData ) );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -409,8 +396,7 @@ static void OutDword( MkIoPortParam_t *pParam )
     uint8_t    type;    /* プロセスタイプ */
     MkTaskId_t taskId;  /* タスクID       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* タスクID取得 */
     taskId = TaskmngSchedGetTaskId();
@@ -435,8 +421,7 @@ static void OutDword( MkIoPortParam_t *pParam )
     /* [TODO]ストリング命令 */
     IA32InstructionOutDWord( pParam->portNo, *( ( uint32_t * ) pParam->pData ) );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }

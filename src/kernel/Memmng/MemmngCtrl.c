@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngCtrl.c                                             */
-/*                                                                 2023/01/04 */
-/* Copyright (C) 2017-2023 Mochi.                                             */
+/*                                                                 2026/07/20 */
+/* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -31,15 +31,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_MEMMNG_CTRL, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_MEMMNG_CTRL
 
 
 /******************************************************************************/
@@ -65,6 +58,14 @@ void MemmngCtrlCopyPhysToPhys( void   *pDst,
     size_t   copySize;  /* コピーサイズ     */
     uint32_t idx;       /* インデックス     */
     CmnRet_t ret;       /* 関数戻り値       */
+
+    DEBUG_LOG_TRC(
+        "%s() start. pDst=%010p, pSrc=%010p, size=%#X",
+        __func__,
+        pDst,
+        pSrc,
+        size
+    );
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MEMMAP_VSIZE_KERNEL_CTRL1 ) {
@@ -159,12 +160,13 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
     uint32_t idx;       /* インデックス     */
     CmnRet_t ret;       /* 関数戻り値       */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
-    DEBUG_LOG( " pPAddr=%010p, pVAddr=%010p, size=%#X",
-               pPAddr,
-               pVAddr,
-               size );
+    DEBUG_LOG_TRC(
+        "%s() start. pPAddr=%010p, pVAddr=%010p, size=%#X",
+        __func__,
+        pPAddr,
+        pVAddr,
+        size
+    );
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MEMMAP_VSIZE_KERNEL_CTRL1 ) {
@@ -215,8 +217,7 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                      ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
                      MEMMAP_VSIZE_KERNEL_CTRL1             );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -243,12 +244,14 @@ void MemmngCtrlSet( void    *pPAddr,
     uint32_t idx;       /* インデックス     */
     CmnRet_t ret;       /* 関数戻り値       */
 
-    /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start. pPAddr=%010p, value=%0#4X, size=%#X",
-               __func__,
-               pPAddr,
-               value,
-               size );*/
+    /* デバッグトレースログ出力 */
+    DEBUG_LOG_TRC(
+        "%s() start. pPAddr=%010p, value=%0#4X, size=%#X",
+        __func__,
+        pPAddr,
+        value,
+        size
+    );
 
     /* 物理マッピング用領域サイズ毎に繰り返し */
     for ( idx = 0; idx < size; idx += MEMMAP_VSIZE_KERNEL_CTRL1 ) {
@@ -299,7 +302,7 @@ void MemmngCtrlSet( void    *pPAddr,
                      MEMMAP_VSIZE_KERNEL_CTRL1             );
 
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
+    DEBUG_LOG_TRC( "%s() end.", __func__ );*/
 
     return;
 }

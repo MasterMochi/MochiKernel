@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngThread.c                                         */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2019-2021 Mochi.                                             */
+/*                                                                 2024/06/16 */
+/* Copyright (C) 2019-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -41,15 +41,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                    \
-    DebugOutput( CMN_MODULE_TASKMNG_THREAD, \
-                 __LINE__,                  \
-                 __VA_ARGS__                )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_TASKMNG_THREAD
 
 /** スレッド管理情報動的配列チャンクサイズ */
 #define THREAD_TBL_CHUNK_SIZE ( 4 )
@@ -96,7 +89,7 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
     taskId      = MK_TASKID_NULL;
     pThreadInfo = NULL;
 
-    DEBUG_LOG( "%s(): start. pProcInfo=%p", __func__, pProcInfo );
+    DEBUG_LOG_TRC( "%s(): start. pProcInfo=%p", __func__, pProcInfo );
 
     /* スレッド管理情報動的配列初期化 */
     retMLib = MLibDynamicArrayInit( &( pProcInfo->threadTbl ),
@@ -147,7 +140,7 @@ MkTid_t ThreadAddMain( ProcInfo_t *pProcInfo )
         return MK_TID_NULL;
     }
 
-    DEBUG_LOG( "%s(): end. ret=%u", __func__, pThreadInfo->tid );
+    DEBUG_LOG_TRC( "%s(): end. ret=%u", __func__, pThreadInfo->tid );
 
     return pThreadInfo->tid;
 }
@@ -326,14 +319,14 @@ ThreadInfo_t *ThreadGetInfo( ProcInfo_t *pProcInfo,
 /******************************************************************************/
 void ThreadInit( void )
 {
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 割込みハンドラ設定 */
     IntmngHdlSet( MK_CONFIG_INTNO_THREAD,       /* 割込み番号     */
                   HdlInt,                       /* 割込みハンドラ */
                   IA32_DESCRIPTOR_DPL_3   );    /* 特権レベル     */
 
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -487,13 +480,13 @@ static void HdlInt( uint32_t        intNo,
     /* 初期化 */
     pParam = ( MkThreadParam_t * ) context.genReg.esi;
 
-    DEBUG_LOG( "%s(): start. pParam=%p", __func__, pParam );
+    DEBUG_LOG_TRC( "%s(): start. pParam=%p", __func__, pParam );
 
     /* パラメータチェック */
     if ( pParam == NULL ) {
         /* 不正 */
 
-        DEBUG_LOG( "%s(): end.", __func__ );
+        DEBUG_LOG_TRC( "%s(): end.", __func__ );
 
         return;
     }
@@ -503,7 +496,7 @@ static void HdlInt( uint32_t        intNo,
         case MK_THREAD_FUNCID_CREATE:
             /* スレッド生成 */
 
-            DEBUG_LOG( "%s(): create.", __func__ );
+            DEBUG_LOG_TRC( "%s(): create.", __func__ );
             DoCreate( pParam );
             break;
 
@@ -515,10 +508,10 @@ static void HdlInt( uint32_t        intNo,
             pParam->err = MK_ERR_PARAM;
     }
 
-    DEBUG_LOG( "%s(): end. ret=%d, err=%u",
-               __func__,
-               pParam->ret,
-               pParam->err                  );
+    DEBUG_LOG_TRC( "%s(): end. ret=%d, err=%u",
+                   __func__,
+                   pParam->ret,
+                   pParam->err                  );
 
     return;
 }

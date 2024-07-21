@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngSgmt.c                                             */
-/*                                                                 2020/11/03 */
-/* Copyright (C) 2016-2020 Mochi.                                             */
+/*                                                                 2024/06/02 */
+/* Copyright (C) 2016-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -24,15 +24,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_MEMMNG_SGMT, \
-                 __LINE__,               \
-                 __VA_ARGS__             )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_MEMMNG_SGMT
 
 
 /******************************************************************************/
@@ -113,14 +106,12 @@ static IA32Descriptor_t gGdt[ MEMMNG_GDT_ENTRY_NUM ] = {
 /******************************************************************************/
 void MemmngSgmtInit( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* GDTR設定 */
     IA32InstructionLgdt( gGdt, sizeof ( gGdt ) - 1 );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -194,17 +185,16 @@ uint16_t MemmngSgmtAdd( void    *pBase,
     uint16_t            index;          /* GDTエントリ番号          */
     IA32DescriptorSeg_t *pDescriptor;   /* セグメントディスクリプタ */
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. pBase=%010p, limit=%u, ",
-               __func__,
-               pBase,
-               limit );
-    DEBUG_LOG( " limitG=%u, sysFlg=%u, type=%u, level=%u, opSize=%u",
-               limitG,
-               sysFlg,
-               type,
-               level,
-               opSize );
+    DEBUG_LOG_TRC( "%s() start. pBase=%010p, limit=%u, ",
+                   __func__,
+                   pBase,
+                   limit );
+    DEBUG_LOG_TRC( " limitG=%u, sysFlg=%u, type=%u, level=%u, opSize=%u",
+                   limitG,
+                   sysFlg,
+                   type,
+                   level,
+                   opSize );
 
     /* 空きディスクリプタ検索 */
     for ( index =  MEMMNG_GDT_ENTRY_MIN;
@@ -232,15 +222,13 @@ uint16_t MemmngSgmtAdd( void    *pBase,
             pDescriptor->attr_g        = limitG;
             pDescriptor->base_high     = IA32_DESCRIPTOR_BASE_HIGH( pBase );
 
-            /* デバッグトレースログ出力 */
-            DEBUG_LOG( "%s() end. ret=%#x", __func__, index );
+            DEBUG_LOG_TRC( "%s() end. ret=%#x", __func__, index );
 
             return index;
         }
     }
 
-    /* デバッグトレースログ */
-    DEBUG_LOG( "%s() end. ret=%#x", __func__, MEMMNG_GDT_ENTRY_FULL );
+    DEBUG_LOG_TRC( "%s() end. ret=%#x", __func__, MEMMNG_GDT_ENTRY_FULL );
 
     /* 空き無しによる追加失敗 */
     return MEMMNG_GDT_ENTRY_FULL;

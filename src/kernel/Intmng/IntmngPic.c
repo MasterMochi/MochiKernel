@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Intmng/IntmngPic.c                                              */
-/*                                                                 2021/11/27 */
-/* Copyright (C) 2016-2021 Mochi.                                             */
+/*                                                                 2024/06/01 */
+/* Copyright (C) 2016-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 /******************************************************************************/
@@ -26,15 +26,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_INTMNG_PIC,  \
-                 __LINE__,               \
-                 __VA_ARGS__            )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_INTMNG_PIC
 
 /* 割込みマスク状態定義 */
 #define PIC_MASK_STATE_DISABLE ( 0 )    /**< マスク無効状態 */
@@ -71,8 +64,7 @@ static picTbl_t gPicTbl;
 /******************************************************************************/
 void IntmngPicInit( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* PIC2（スレーブ）設定 */
     IA32InstructionOutByte( I8259A_S_PORT_ICW1, 0x11 );
@@ -93,8 +85,7 @@ void IntmngPicInit( void )
     /* 割込み無効化 */
     IntmngPicDisable();
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -126,8 +117,7 @@ void IntmngPicInit( void )
 /******************************************************************************/
 void IntmngPicAllowIrq( uint8_t irqNo )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. irqNo=%u", __func__, irqNo );
+    DEBUG_LOG_TRC( "%s() start. irqNo=%u", __func__, irqNo );
 
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
@@ -155,8 +145,7 @@ void IntmngPicAllowIrq( uint8_t irqNo )
         IntmngPicEnable();
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -188,8 +177,7 @@ void IntmngPicAllowIrq( uint8_t irqNo )
 /******************************************************************************/
 void IntmngPicDenyIrq( uint8_t irqNo )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start. irqNo=%u", __func__, irqNo );
+    DEBUG_LOG_TRC( "%s() start. irqNo=%u", __func__, irqNo );
 
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
@@ -222,8 +210,7 @@ void IntmngPicDenyIrq( uint8_t irqNo )
         IntmngPicEnable();
     }
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -237,8 +224,7 @@ void IntmngPicDenyIrq( uint8_t irqNo )
 /******************************************************************************/
 void IntmngPicDisable( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 割込みマスク状態変更 */
     gPicTbl.maskState = PIC_MASK_STATE_DISABLE;
@@ -249,8 +235,7 @@ void IntmngPicDisable( void )
     /* PIC2（スレーブ）割込みマスク設定 */
     IA32InstructionOutByte( I8259A_S_PORT_OCW1, 0xFF );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -264,8 +249,7 @@ void IntmngPicDisable( void )
 /******************************************************************************/
 void IntmngPicEnable( void )
 {
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() start.", __func__ );
+    DEBUG_LOG_TRC( "%s() start.", __func__ );
 
     /* 割込みマスク状態変更 */
     gPicTbl.maskState = PIC_MASK_STATE_ENABLE;
@@ -276,8 +260,7 @@ void IntmngPicEnable( void )
     /* PIC2（スレーブ）割込みマスク設定 */
     IA32InstructionOutByte( I8259A_S_PORT_OCW1, gPicTbl.mask[ PIC_SLAVE  ] );
 
-    /* デバッグトレースログ出力 */
-    DEBUG_LOG( "%s() end.", __func__ );
+    DEBUG_LOG_TRC( "%s() end.", __func__ );
 
     return;
 }
@@ -310,7 +293,7 @@ void IntmngPicEnable( void )
 void IntmngPicEoi( uint8_t irqNo )
 {
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() start. irqNo=%d", __func__, irqNo );*/
+    DEBUG_LOG_TRC( "%s() start. irqNo=%d", __func__, irqNo );*/
 
     /* PIC割込み番号判定 */
     if ( ( irqNo >= I8259A_IRQ0 ) &&
@@ -343,7 +326,7 @@ void IntmngPicEoi( uint8_t irqNo )
     }
 
     /* デバッグトレースログ出力 *//*
-    DEBUG_LOG( "%s() end.", __func__ );*/
+    DEBUG_LOG_TRC( "%s() end.", __func__ );*/
 
     return;
 }

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/Debug.c                                                   */
-/*                                                                 2024/05/13 */
+/*                                                                 2024/05/28 */
 /* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -25,15 +25,8 @@
 /******************************************************************************/
 /* 定義                                                                       */
 /******************************************************************************/
-/** デバッグトレースログ出力マクロ */
-#ifdef DEBUG_LOG_ENABLE
-#define DEBUG_LOG( ... )                 \
-    DebugOutput( CMN_MODULE_DEBUG_MAIN,  \
-                 __LINE__,               \
-                 __VA_ARGS__            )
-#else
-#define DEBUG_LOG( ... )
-#endif
+/* モジュールID */
+#define _MODULE_ID_ CMN_MODULE_DEBUG_MAIN
 
 
 /******************************************************************************/
@@ -47,11 +40,15 @@
 /******************************************************************************/
 void DebugInit( void )
 {
+#ifdef DEBUG_MEM_ENABLE
     /* メモリ出力サブモジュール初期化 */
     DebugMemInit();
+#endif
 
+#ifdef DEBUG_VRAM_ENABLE
     /* VRAM出力サブモジュール初期化 */
     DebugVramInit();
+#endif
 
     return;
 }
@@ -72,6 +69,7 @@ void DebugInit( void )
 /******************************************************************************/
 void DebugOutput( uint16_t   moduleId,
                   uint16_t   lineNo,
+                  uint8_t    lv,
                   const char *pFormat,
                   ...                  )
 {
@@ -84,11 +82,15 @@ void DebugOutput( uint16_t   moduleId,
     /* フォーマット文字列生成 */
     vsnprintf( str, 256, pFormat, vaList );
 
+#ifdef DEBUG_MEM_ENABLE
     /* メモリ出力 */
-    DebugMemOutput( moduleId, lineNo, str );
+    DebugMemOutput( moduleId, lineNo, lv, str );
+#endif
 
+#ifdef DEBUG_VRAM_ENABLE
     /* VRAM出力 */
-    DebugVramOutput( moduleId, lineNo, str );
+    DebugVramOutput( moduleId, lineNo, lv, str );
+#endif
 
     /* 可変長引数リスト解放 */
     va_end( vaList );

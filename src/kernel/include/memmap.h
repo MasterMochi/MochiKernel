@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/memmap.h                                                */
-/*                                                                 2023/01/04 */
-/* Copyright (C) 2023 Mochi.                                                  */
+/*                                                                 2024/07/21 */
+/* Copyright (C) 2023-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef MEMMAP_H
@@ -30,9 +30,11 @@
 /*------------------------*/
 /* 物理メモリマップサイズ */
 /*------------------------*/
-#define MEMMAP_PSIZE_KERNEL       ( MK_SIZE_KERNEL )    /**< カーネル物理サイズ             */
-#define MEMMAP_PSIZE_KERNEL_STACK ( MK_SIZE_STACK )     /**< カーネルスタック物理サイズ     */
-#define MEMMAP_PSIZE_DEBUG        ( 0x01000000 )        /**< デバッグ用メモリ領域物理サイズ */
+#define MEMMAP_PSIZE_KERNEL       ( MK_SIZE_KERNEL )    /**< カーネル物理サイズ                             */
+#define MEMMAP_PSIZE_KERNEL_STACK ( MK_SIZE_STACK )     /**< カーネルスタック物理サイズ                     */
+#define MEMMAP_PSIZE_DEBUG        ( 0x01000000 )        /**< デバッグ用メモリ領域物理サイズ                 */
+#define MEMMAP_PSIZE_IDLE_PD      ( 0x00001000 )        /**< アイドルプロセス用ページディレクトリ物理サイズ */
+#define MEMMAP_PSIZE_KERNEL_PT    ( 0x00100000 )        /**< カーネル領域ページテーブル物理サイズ           */
 
 /*--------------------------*/
 /* 仮想メモリマップアドレス */

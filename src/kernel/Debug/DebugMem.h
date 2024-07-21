@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/DebugMem.h                                                */
-/*                                                                 2023/01/05 */
-/* Copyright (C) 2023 Mochi.                                                  */
+/*                                                                 2024/06/01 */
+/* Copyright (C) 2023-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef DEBUG_MEM_H
@@ -22,6 +22,7 @@ extern void DebugMemInit( void );
 /* ログ出力 */
 extern void DebugMemOutput( uint16_t   moduleId,
                             uint16_t   lineNo,
+                            uint8_t    lv,
                             const char *pStr     );
 
 /******************************************************************************/

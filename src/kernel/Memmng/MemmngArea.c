@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngArea.c                                             */
-/*                                                                 2024/06/02 */
+/*                                                                 2024/08/11 */
 /* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -94,7 +94,7 @@ void AreaAdd( MLibList_t *pAddList,
     pNext = NULL;
 
     do {
-        /* 前後エントリ更新 */
+        /* 前エントリ更新 */
         pPrev = pNext;
 
         /* 次エントリ取得 */
@@ -344,8 +344,8 @@ static void Add( MLibList_t *pAddList,
         /* 隣接かつ結合指定 */
 
         /* 前エントリ編集 */
-        pEdit       = pPrev;
-        pEdit->size = size;
+        pEdit        = pPrev;
+        pEdit->size += size;
 
     } else {
         /* 隣接しないまたは結合しない */
@@ -361,20 +361,19 @@ static void Add( MLibList_t *pAddList,
         MLibListInsertPrev( pAddList, ( MLibListNode_t * ) pNext, &( pEdit->node ) );
     }
 
-    /* 後エントリ有無判定 */
-    if ( pNext != NULL ) {
-        /* 有り */
+    /* 後エントリ有無かつ結合指定判定 */
+    if ( ( pNext != NULL ) && ( merge != false ) ) {
+        /* 有りかつ結合指定 */
 
         /* 追加領域最終アドレス計算 */
         pTmp = MLIB_UTIL_ADDR_ADD_SIZE( pAddr, size );
 
         /* 後エントリ隣接判定 */
-        if ( ( pTmp  == pNext->pAddr ) &&
-             ( merge != false        )    ) {
-            /* 隣接かつ結合指定 */
+        if ( pTmp == pNext->pAddr ) {
+            /* 隣接 */
 
             /* ブロック管理情報編集 */
-            pEdit->size = pNext->size;
+            pEdit->size += pNext->size;
 
             /* 後エントリ削除 */
             MLibListRemove( pAddList, &( pNext->node ) );
@@ -515,9 +514,7 @@ static void *AllocSpec( MLibList_t *pAllocList,
 
         /* 後方の未割当エントリ編集 */
         pUnused->pAddr = pEndSpec;
-        pUnused->size  = pFree->size -
-                         ( ( size_t ) pAddr - ( size_t ) pFree->pAddr ) -
-                         size;
+        pUnused->size  = ( size_t ) pEnd - ( size_t ) pEndSpec;
 
         /* 前方の未割当エントリ編集 */
         pFree->size = ( size_t ) pAddr - ( size_t ) pFree->pAddr;

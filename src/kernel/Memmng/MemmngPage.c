@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPage.c                                             */
-/*                                                                 2024/06/02 */
+/*                                                                 2024/08/10 */
 /* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -109,6 +109,7 @@ static void InitIdlePageTbl( void );
 /* 4KBページマッピング設定 */
 static CmnRet_t Set( void     *pVirtAddr,
                      void     *pPhysAddr,
+                     bool     allocPhys,
                      uint32_t attrGlobal,
                      uint32_t attrUs,
                      uint32_t attrRw      );
@@ -122,7 +123,8 @@ static void SetPageTblMap( chInfo_t        *pChInfo,
 static void TryToFreePageTbl( IA32PagingPDE_t *pPde,
                               IA32PagingTbl_t *pPageTbl );
 /* 4KBページマッピング解除 */
-static void Unset( void *pVirtAddr );
+static void Unset( void *pVirtAddr,
+                   bool freePhys    );
 
 
 /******************************************************************************/
@@ -391,6 +393,9 @@ IA32PagingPDBR_t MemmngPageGetPdbr( MemmngPageDirId_t dirId )
  * @param[in]   *pVirtAddr  仮想アドレス
  * @param[in]   *pPhysAddr  物理アドレス
  * @param[in]   size        マッピングサイズ
+ * @param[in]   allocPhys   物理メモリ領域自動割当て
+ *                  - MEMMNG_PAGE_ALLOC_PHYS_TRUE  割当有り
+ *                  - MEMMNG_PAGE_ALLOC_PHYS_FALSE 割当無し
  * @param[in]   attrGlobal グローバルページ属性
  *                  - IA32_PAGING_G_NO  非グローバルページ
  *                  - IA32_PAGING_G_YES グローバルページ
@@ -412,6 +417,7 @@ CmnRet_t MemmngPageSet( MemmngPageDirId_t dirId,
                         void              *pVirtAddr,
                         void              *pPhysAddr,
                         size_t            size,
+                        bool              allocPhys,
                         uint32_t          attrGlobal,
                         uint32_t          attrUs,
                         uint32_t          attrRw      )
@@ -449,8 +455,14 @@ CmnRet_t MemmngPageSet( MemmngPageDirId_t dirId,
 
     /* 4KB毎に繰り返し */
     while ( remain >= IA32_PAGING_PAGE_SIZE ) {
+
         /* 4KBページマッピング設定 */
-        ret = Set( pNextVirtAddr, pNextPhysAddr, attrGlobal, attrUs, attrRw );
+        ret = Set( pNextVirtAddr,
+                   pNextPhysAddr,
+                   allocPhys,
+                   attrGlobal,
+                   attrUs,
+                   attrRw         );
 
         /* 設定結果判定 */
         if ( ret != CMN_SUCCESS ) {
@@ -471,7 +483,7 @@ CmnRet_t MemmngPageSet( MemmngPageDirId_t dirId,
         /* 失敗 */
 
         /* マッピング解除 */
-        MemmngPageUnset( dirId, pVirtAddr, size - remain );
+        MemmngPageUnset( dirId, pVirtAddr, size - remain, allocPhys );
     }
 
     return ret;
@@ -503,6 +515,9 @@ void MemmngPageSwitchDir( MemmngPageDirId_t dirId )
  * @param[in]   dirId      ページディレクトリID
  * @param[in]   *pVirtAddr 仮想アドレス
  * @param[in]   size       マッピングサイズ
+ * @param[in]   freePhys   物理メモリ領域自動解放
+ *                  - MEMMNG_PAGE_FREE_PHYS_TRUE  解放有り
+ *                  - MEMMNG_PAGE_FREE_PHYS_FALSE 解放無し
  *
  * @return      処理結果を返す。
  * @retval      CMN_SUCCESS 正常終了
@@ -513,7 +528,8 @@ void MemmngPageSwitchDir( MemmngPageDirId_t dirId )
 /******************************************************************************/
 CmnRet_t MemmngPageUnset( MemmngPageDirId_t dirId,
                           void              *pVirtAddr,
-                          size_t            size        )
+                          size_t            size,
+                          bool              freePhys    )
 {
     mngInfo_t *pMngInfo;    /* 管理情報 */
 
@@ -541,7 +557,7 @@ CmnRet_t MemmngPageUnset( MemmngPageDirId_t dirId,
     /* 4KB毎に繰り返し */
     while ( size >= IA32_PAGING_PAGE_SIZE ) {
         /* 4KBページマッピング解除 */
-        Unset( pVirtAddr );
+        Unset( pVirtAddr, freePhys );
 
         /* アドレス更新 */
         pVirtAddr += IA32_PAGING_PAGE_SIZE;
@@ -1096,6 +1112,9 @@ static void InitIdlePageTbl( void )
  *
  * @param[in]   *pVirtAddr 仮想アドレス
  * @param[in]   *pPhysAddr 物理アドレス
+ * @param[in]   allocPhys  物理メモリ領域自動割当
+ *                  - MEMMNG_PAGE_ALLOC_PHYS_TRUE  割当有り
+ *                  - MEMMNG_PAGE_ALLOC_PHYS_FALSE 割当無し
  * @param[in]   attrGlobal グローバルページ属性
  *                  - IA32_PAGING_G_NO  非グローバルページ
  *                  - IA32_PAGING_G_YES グローバルページ
@@ -1115,6 +1134,7 @@ static void InitIdlePageTbl( void )
 /******************************************************************************/
 static CmnRet_t Set( void     *pVirtAddr,
                      void     *pPhysAddr,
+                     bool     allocPhys,
                      uint32_t attrGlobal,
                      uint32_t attrUs,
                      uint32_t attrRw      )
@@ -1134,6 +1154,20 @@ static CmnRet_t Set( void     *pVirtAddr,
     pPageTbl     = NULL;
     pPageTblPhys = NULL;
     pPde         = NULL;
+
+    /* 物理メモリ領域自動割当判定 */
+    if ( allocPhys != false ) {
+        /* 割当有り */
+
+        /* 物理メモリ領域割当 */
+        pPhysAddr = MemmngPhysAlloc( IA32_PAGING_PAGE_SIZE );
+
+        /* 割当結果判定 */
+        if ( pPhysAddr == NULL ) {
+            /* 失敗 */
+            return CMN_FAILURE;
+        }
+    }
 
     /* カーネル領域判定 */
     if ( pVirtAddr < ( void * ) MEMMAP_VADDR_USER ) {
@@ -1229,9 +1263,10 @@ static void SetPageDirMap( chInfo_t        *pChInfo,
                        pChInfo->pDirVirt,
                        pDirPhys,
                        sizeof ( IA32PagingDir_t ),
+                       MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                        IA32_PAGING_G_NO,
                        IA32_PAGING_US_SV,
-                       IA32_PAGING_RW_RW           );
+                       IA32_PAGING_RW_RW             );
     }
 
     return;
@@ -1263,9 +1298,10 @@ static void SetPageTblMap( chInfo_t        *pChInfo,
                        pChInfo->pTblVirt,
                        pTblPhys,
                        sizeof ( IA32PagingTbl_t ),
+                       MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                        IA32_PAGING_G_NO,
                        IA32_PAGING_US_SV,
-                       IA32_PAGING_RW_RW           );
+                       IA32_PAGING_RW_RW             );
     }
 
     return;
@@ -1316,11 +1352,15 @@ static void TryToFreePageTbl( IA32PagingPDE_t *pPde,
  * @details     物理アドレスと仮想アドレスの4KBページをマッピング解除する。
  *
  * @param[in]   *pVirtAddr 仮想アドレス
+ * @param[in]   freePhys   物理メモリ領域自動解放
+ *                  - MEMMNG_PAGE_FREE_PHYS_TRUE  解放有り
+ *                  - MEMMNG_PAGE_FREE_PHYS_FALSE 解放無し
  *
  * @attention   引数pVirtAddrは4KBアライメントされていること。
  */
 /******************************************************************************/
-static void Unset( void *pVirtAddr )
+static void Unset( void *pVirtAddr,
+                   bool freePhys    )
 {
     uint32_t        pdeIdx;         /* ページディレクトリエントリインデックス */
     uint32_t        pteIdx;         /* ページテーブルエントリインデックス     */
@@ -1366,6 +1406,17 @@ static void Unset( void *pVirtAddr )
 
         /* ページテーブル操作領域マッピング */
         SetPageTblMap( &( gMapInfo.ch1 ), pPageTblPhys );
+    }
+
+    /* 物理メモリ領域自動解放判定 */
+    if ( freePhys != false ) {
+        /* 解放有り */
+
+        /* 物理メモリ領域解放 */
+        MemmngPhysFree(
+            IA32_PAGING_GET_BASE( &( pPageTbl->entry[ pteIdx ] ) )
+        );
+
     }
 
     /* ページテーブルエントリ初期化 */

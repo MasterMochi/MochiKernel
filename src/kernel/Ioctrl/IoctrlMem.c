@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Ioctrl/IoctrlMem.c                                              */
-/*                                                                 2024/06/01 */
+/*                                                                 2024/08/10 */
 /* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -137,9 +137,10 @@ static void Alloc( MkIoMemParam_t *pParam )
                          pParam->pVirtAddr,
                          pParam->pIoAddr,
                          pParam->size,
+                         MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                          IA32_PAGING_G_NO,
                          IA32_PAGING_US_USER,
-                         IA32_PAGING_RW_RW    );
+                         IA32_PAGING_RW_RW             );
 
     /* 設定結果判定 */
     if ( ret != CMN_SUCCESS ) {

@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngHeap.c                                             */
-/*                                                                 2024/07/21 */
+/*                                                                 2024/08/10 */
 /* Copyright (C) 2019-2024 Mcohi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -382,7 +382,6 @@ static void InsertFreeList( areaInfo_t *pAreaInfo )
 static void SetBreakPoint( int quantity )
 {
     int      once;          /* ページサイズ以内増減量 */
-    void     *pPhysAddr;    /* 物理アドレス           */
     void     *pVirtAddr;    /* 仮想アドレス           */
     uint32_t oldPageNum;    /* 増減前ページ数         */
     uint32_t newPageNum;    /* 増減後ページ数         */
@@ -392,7 +391,6 @@ static void SetBreakPoint( int quantity )
 
     /* 初期化 */
     once       = 0;
-    pPhysAddr  = NULL;
     pVirtAddr  = NULL;
     oldPageNum = 0;
     newPageNum = 0;
@@ -430,19 +428,6 @@ static void SetBreakPoint( int quantity )
         if ( oldPageNum < newPageNum ) {
             /* ページ数増加 */
 
-            /* 物理メモリ領域割当て */
-            pPhysAddr = MemmngPhysAlloc( IA32_PAGING_PAGE_SIZE );
-
-            /* 割当て結果判定 */
-            if ( pPhysAddr == NULL ) {
-                /* 失敗 */
-
-                return;
-            }
-
-            /* 0初期化 */
-            MemmngCtrlSet( pPhysAddr, 0, IA32_PAGING_PAGE_SIZE );
-
             /* ページ先頭アドレス計算 */
             pVirtAddr = ( void * )
                         MLIB_UTIL_ALIGN( ( int ) ( pgBreakPoint ) - 1,
@@ -451,18 +436,16 @@ static void SetBreakPoint( int quantity )
             /* ページマッピング設定 */
             ret = MemmngPageSet( MEMMNG_PAGE_DIR_ID_IDLE,
                                  pVirtAddr,
-                                 pPhysAddr,
+                                 NULL,
                                  IA32_PAGING_PAGE_SIZE,
+                                 MEMMNG_PAGE_ALLOC_PHYS_TRUE,
                                  IA32_PAGING_G_YES,
                                  IA32_PAGING_US_SV,
-                                 IA32_PAGING_RW_RW        );
+                                 IA32_PAGING_RW_RW           );
 
             /* 設定結果判定 */
             if ( ret != CMN_SUCCESS ) {
                 /* 失敗 */
-
-                /* 物理メモリ領域解放 */
-                MemmngPhysFree( pPhysAddr );
 
                 return;
             }
@@ -478,7 +461,8 @@ static void SetBreakPoint( int quantity )
             /* ページマッピング解除 */
             MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                              pVirtAddr,
-                             IA32_PAGING_PAGE_SIZE    );
+                             IA32_PAGING_PAGE_SIZE,
+                             MEMMNG_PAGE_FREE_PHYS_TRUE );
         }
 
         /* ブレイクポイント更新 */

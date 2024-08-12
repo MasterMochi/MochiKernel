@@ -148,7 +148,7 @@
                         </tr>
                     </table>
                     <br>
-                    <p>なお、アクセス用領域の切替は必要最低限に行うために、アクセス領域マッピング情報を保持しておき、同じマッピング先に切り替え無い様にする。</p>
+                    <p>なお、アクセス用領域の切替は必要最低限に行うために、アクセス領域マッピング情報を保持しておき、同じマッピング先に切り替えない様にします。</p>
                     <br>
                     <div class="center">アクセス領域マッピング情報</div>
                     <table>
@@ -240,7 +240,7 @@
                     <br>
                     <br>
                     <h2><a name="init-global">グローバルページ有効化</a></h2>
-                    <p>CPUにグローバルページ有効化を設定します。詳細は外部使用「仮想メモリ管理機能」を参照。</p>
+                    <p>CPUにグローバルページ有効化を設定します。詳細は外部仕様「仮想メモリ管理機能」を参照。</p>
                     <br>
                     <br>
                     <h2><a name="init-table">ページディレクトリ管理テーブル初期化</a></h2>
@@ -310,7 +310,7 @@
                 <div class="totop"><a href="#top">▲上へ</a></div>
                 <div>
                     <h1><a name="set">ページマッピング設定</a></h1>
-                    <p>物理アドレスと仮想アドレスのマッピングを行うために、ページディレクトリとページテーブルの設定を行います。ページマッピング設定のシーケンスを以下に示します。</p>
+                    <p>物理アドレスと仮想アドレスのマッピングを行うために、ページディレクトリとページテーブルの設定を行います。自動で物理メモリを割り当てることも可能です。ページマッピング設定のシーケンスを以下に示します。</p>
                     <br>
                     <div class="center">
                         <img src="set.png"><br>
@@ -323,7 +323,11 @@
                     <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定は行いません。マッピングする場合は、操作領域マッピング情報を更新し、マッピングは本機能を再帰的に使用します。</p>
                     <br>
                     <br>
-                    <h2><a name="set-alloctbl">ページテーブル割当て</a></h2>
+                    <h2><a name="set-physmem">物理メモリ領域割当</a></h2>
+                    <p>物理メモリ領域自動割当が有効の場合は、物理メモリ領域管理サブモジュールの機能を使って、ページマッピングする4KBの物理メモリ領域を割り当てます。</p>
+                    <br>
+                    <br>
+                    <h2><a name="set-alloctbl">ページテーブル割当</a></h2>
                     <p>仮想アドレスに該当するページテーブルが存在しない場合は、物理メモリ領域管理サブモジュールの機能を使って物理メモリからページテーブルを割り当て、ページディレクトリエントリに設定します。</p>
                     <p>ページディレクトリエントリの設定値は外部仕様の仮想メモリ管理（ユーザ空間用ページマッピング設定）※を参照。</p>
                     <p>※カーネル領域のページテーブルは初期化時に全て割り当てるため、ここでのページテーブル割当はユーザ領域用のみとなります。</p>
@@ -346,7 +350,7 @@
                 <div class="totop"><a href="#top">▲上へ</a></div>
                 <div>
                     <h1><a name="unset">ページマッピング解除</a></h1>
-                    <p>物理アドレスと仮想アドレスのマッピングを解除するために、ページディレクトリとページテーブルの設定を行います。ページマッピング解除のシーケンスを以下に示します。</p>
+                    <p>物理アドレスと仮想アドレスのマッピングを解除するために、ページディレクトリとページテーブルの設定を行います。自動でページマッピングしていた物理メモリ領域を解放することも可能です。ページマッピング解除のシーケンスを以下に示します。</p>
                     <br>
                     <div class="center">
                         <img src="unset.png"><br>
@@ -362,6 +366,10 @@
                     <h2><a name="unset-maptbl">ページテーブル操作領域マッピング</a></h2>
                     <p>仮想アドレスがユーザ領域の場合は、該当するページテーブルエントリを編集するためにページテーブル操作用仮想メモリ領域にページテーブルの物理メモリ領域をマッピングします。</p>
                     <p>なお、操作領域マッピング情報から既にマッピング済みの場合は、改めてマッピング設定は行いません。マッピングする場合は、操作領域マッピング情報を更新し、マッピングは本機能を再帰的に使用します。</p>
+                    <br>
+                    <br>
+                    <h2><a name="unset-physmem">物理メモリ領域解放</a></h2>
+                    <p>物理メモリ領域自動解放が有効の場合は、物理メモリ領域管理サブモジュールの機能を使って、ページマッピングしていた4KBの物理メモリ領域を解放します。</p>
                     <br>
                     <br>
                     <h2><a name="unset-tbl">ページテーブルエントリ0初期化</a></h2>
@@ -561,59 +569,59 @@
                         </tr>
                         <tr>
                             <td class="center" rowspan="11">0-3</td>
-                            <td class="center">0</td>
-                            <td>存在フラグ(P)</td>
-                            <td>1(エントリ有効)</td>
+                            <td class="center">[31:12]</td>
+                            <td>ページテーブル<br>ベースアドレス[31:12]</td>
+                            <td>割当てた物理メモリ領域先頭アドレス</td>
                         </tr>
                         <tr>
-                            <td class="center">1</td>
-                            <td>読書フラグ(R/W)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">2</td>
-                            <td>ユーザ/スーパバイザ(U/S)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">3</td>
-                            <td>ページレベルライトスルー<br>(PWT)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">4</td>
-                            <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">5</td>
-                            <td>アクセス済フラグ(A)</td>
-                            <td>0(未アクセス)</td>
-                        </tr>
-                        <tr>
-                            <td class="center">6</td>
-                            <td>Reserved</td>
-                            <td>0</td>
-                        </tr>
-                        <tr>
-                            <td class="center">7</td>
-                            <td>ページサイズフラグ(PS)</td>
-                            <td>0(4KBページ)</td>
-                        </tr>
-                        <tr>
-                            <td class="center">8</td>
-                            <td>グローバルフラグ(G)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">9-11</td>
+                            <td class="center">[11:9]</td>
                             <td>システムソフトウェア<br>利用可(AVL)</td>
                             <td>0(未使用)</td>
                         </tr>
                         <tr>
-                            <td class="center">12-31</td>
-                            <td>ページテーブル<br>ベースアドレス[31:12]</td>
-                            <td>割当てた物理メモリ領域先頭アドレス</td>
+                            <td class="center">[8]</td>
+                            <td>グローバルフラグ(G)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[7]</td>
+                            <td>ページサイズフラグ(PS)</td>
+                            <td>0(4KBページ)</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[6]</td>
+                            <td>Reserved</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[5]</td>
+                            <td>アクセス済フラグ(A)</td>
+                            <td>0(未アクセス)</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[4]</td>
+                            <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[3]</td>
+                            <td>ページレベルライトスルー<br>(PWT)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[2]</td>
+                            <td>ユーザ/スーパバイザ(U/S)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[1]</td>
+                            <td>読書フラグ(R/W)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[0]</td>
+                            <td>存在フラグ(P)</td>
+                            <td>1(エントリ有効)</td>
                         </tr>
                     </table>
                     <br>
@@ -635,59 +643,59 @@
                         </tr>
                         <tr>
                             <td class="center" rowspan="11">0-3</td>
-                            <td class="center">0</td>
-                            <td>存在フラグ(P)</td>
-                            <td>1(エントリ有効)</td>
+                            <td class="center">[31:12]</td>
+                            <td>ページベースアドレス<br>[31:12]</td>
+                            <td>割当てた物理メモリ領域先頭アドレス</td>
                         </tr>
                         <tr>
-                            <td class="center">1</td>
-                            <td>読書フラグ(R/W)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">2</td>
-                            <td>ユーザ/スーパバイザ(U/S)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">3</td>
-                            <td>ページレベルライトスルー<br>(PWT)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">4</td>
-                            <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">5</td>
-                            <td>アクセス済フラグ(A)</td>
-                            <td>0(未アクセス)</td>
-                        </tr>
-                        <tr>
-                            <td class="center">6</td>
-                            <td>ダーティフラグ(D)</td>
-                            <td>0(ページ書込み無)</td>
-                        </tr>
-                        <tr>
-                            <td class="center">7</td>
-                            <td>ページ属性テーブル<br>インデックス(PAT)</td>
-                            <td>0</td>
-                        </tr>
-                        <tr>
-                            <td class="center">8</td>
-                            <td>グローバルフラグ(G)</td>
-                            <td>複製元ページディレクトリエントリと同値</td>
-                        </tr>
-                        <tr>
-                            <td class="center">9-11</td>
+                            <td class="center">[11:9]</td>
                             <td>システムソフトウェア<br>利用可(AVL)</td>
                             <td>0(未使用)</td>
                         </tr>
                         <tr>
-                            <td class="center">12-31</td>
-                            <td>ページベースアドレス<br>[31:12]</td>
-                            <td>割当てた物理メモリ領域先頭アドレス</td>
+                            <td class="center">[8]</td>
+                            <td>グローバルフラグ(G)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[7]</td>
+                            <td>ページ属性テーブル<br>インデックス(PAT)</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[6]</td>
+                            <td>ダーティフラグ(D)</td>
+                            <td>0(ページ書込み無)</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[5]</td>
+                            <td>アクセス済フラグ(A)</td>
+                            <td>0(未アクセス)</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[4]</td>
+                            <td>ページレベルキャッシュ<br>ディスエーブル(PCD)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[3]</td>
+                            <td>ページレベルライトスルー<br>(PWT)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[2]</td>
+                            <td>ユーザ/スーパバイザ(U/S)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[1]</td>
+                            <td>読書フラグ(R/W)</td>
+                            <td>複製元ページディレクトリエントリと同値</td>
+                        </tr>
+                        <tr>
+                            <td class="center">[0]</td>
+                            <td>存在フラグ(P)</td>
+                            <td>1(エントリ有効)</td>
                         </tr>
                     </table>
                     <br>
@@ -717,13 +725,15 @@
                             <a href="#init-idleset"><li>アイドルプロセス用管理情報設定</li></a></ol>
                         <a href="#set"><li>ページマッピング設定</li></a><ol>
                             <a href="#set-mapdir"><li>ページディレクトリ操作領域マッピング</li></a>
-                            <a href="#set-alloctbl"><li>ページテーブル割当て</li></a>
+                            <a href="#set-physmem"><li>物理メモリ領域割当</li></a>
+                            <a href="#set-alloctbl"><li>ページテーブル割当</li></a>
                             <a href="#set-maptbl"><li>ページテーブル操作領域マッピング</li></a>
                             <a href="#set-tbl"><li>ページテーブルエントリ設定</li></a>
                             <a href="#set-invlgp"><li>TLBフラッシュ</li></a></ol>
                         <a href="#unset"><li>ページマッピング解除</li></a><ol>
                             <a href="#unset-mapdir"><li>ページディレクトリ操作領域マッピング</li></a>
                             <a href="#unset-maptbl"><li>ページテーブル操作領域マッピング</li></a>
+                            <a href="#unset-physmem"><li>物理メモリ領域解放</li></a>
                             <a href="#unset-tbl"><li>ページテーブルエントリ設定</li></a>
                             <a href="#unset-invlpg"><li>TLBフラッシュ</li></a>
                             <a href="#unset-freetbl"><li>ページテーブル解放</li></a></ol>

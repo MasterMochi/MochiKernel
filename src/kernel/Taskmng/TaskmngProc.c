@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngProc.c                                           */
-/*                                                                 2024/06/18 */
+/*                                                                 2024/08/10 */
 /* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -605,7 +605,6 @@ static void HdlInt( uint32_t        intNo,
 /******************************************************************************/
 static void SetBreakPoint( MkProcParam_t *pParam )
 {
-    void       *pPhyAddr;   /* 物理アドレス             */
     void       *pVirtAddr;  /* ページ先頭アドレス       */
     int32_t    remain;      /* 残増減量                 */
     int32_t    quantity;    /* 増減量(ページサイズ以下) */
@@ -616,7 +615,6 @@ static void SetBreakPoint( MkProcParam_t *pParam )
     ProcInfo_t *pProcInfo;  /* プロセス管理情報         */
 
     /* 初期化 */
-    pPhyAddr   = NULL;
     pVirtAddr  = NULL;
     remain     = pParam->quantity;
     quantity   = 0;
@@ -664,26 +662,6 @@ static void SetBreakPoint( MkProcParam_t *pParam )
         if ( oldPageNum < newPageNum ) {
             /* ページ数増加 */
 
-            /* 物理メモリ領域割当 */
-            pPhyAddr = MemmngPhysAlloc( IA32_PAGING_PAGE_SIZE );
-
-            /* 割当結果判定 */
-            if ( pPhyAddr == NULL ) {
-                /* 失敗 */
-
-                DEBUG_LOG_WRN( "%s(): MemmngPhysAlloc() error.", __func__ );
-
-                /* 戻り値設定 */
-                pParam->ret         = MK_RET_FAILURE;
-                pParam->err         = MK_ERR_NO_MEMORY;
-                pParam->pBreakPoint = ( void * ) breakPoint;
-
-                return;
-            }
-
-            /* 0初期化 */
-            MemmngCtrlSet( pPhyAddr, 0, IA32_PAGING_PAGE_SIZE );
-
             /* ページ先頭アドレス計算 */
             pVirtAddr = ( void * ) ( MLIB_UTIL_ALIGN( breakPoint - 1,
                                                       IA32_PAGING_PAGE_SIZE ) );
@@ -691,11 +669,12 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             /* ページングマッピング設定 */
             ret = MemmngPageSet( pProcInfo->dirId,
                                  pVirtAddr,
-                                 pPhyAddr,
+                                 NULL,
                                  IA32_PAGING_PAGE_SIZE,
+                                 MEMMNG_PAGE_ALLOC_PHYS_TRUE,
                                  IA32_PAGING_G_NO,
                                  IA32_PAGING_US_USER,
-                                 IA32_PAGING_RW_RW          );
+                                 IA32_PAGING_RW_RW            );
 
             /* 設定結果判定 */
             if ( ret != CMN_SUCCESS ) {
@@ -722,12 +701,8 @@ static void SetBreakPoint( MkProcParam_t *pParam )
             /* ページングマッピング解除 */
             MemmngPageUnset( pProcInfo->dirId,
                              pVirtAddr,
-                             IA32_PAGING_PAGE_SIZE );
-
-            /* 物理メモリ領域0初期化 */
-
-            /* 物理メモリ領域解放 */
-
+                             IA32_PAGING_PAGE_SIZE,
+                             MEMMNG_PAGE_FREE_PHYS_TRUE );
         }
 
         /* ブレイクポイント更新 */
@@ -781,13 +756,14 @@ static CmnRet_t SetUserStack( ProcInfo_t *pProcInfo )
 
     /* ページマッピング設定 */
     ret = MemmngPageSet(
-              pProcInfo->dirId,                     /* ページディレクトリID */
-              ( void * ) MEMMAP_VADDR_USER_STACK,   /* 仮想アドレス         */
-              pPhysAddr,                            /* 物理アドレス         */
-              MEMMAP_VSIZE_USER_STACK,              /* マッピングサイズ     */
-              IA32_PAGING_G_NO,                     /* グローバルフラグ     */
-              IA32_PAGING_US_USER,                  /* ユーザ/スーパバイザ  */
-              IA32_PAGING_RW_RW                     /* 読込/書込許可        */
+              pProcInfo->dirId,                     /* ページディレクトリID   */
+              ( void * ) MEMMAP_VADDR_USER_STACK,   /* 仮想アドレス           */
+              pPhysAddr,                            /* 物理アドレス           */
+              MEMMAP_VSIZE_USER_STACK,              /* マッピングサイズ       */
+              MEMMNG_PAGE_ALLOC_PHYS_FALSE,         /* 物理メモリ領域自動割当 */
+              IA32_PAGING_G_NO,                     /* グローバルフラグ       */
+              IA32_PAGING_US_USER,                  /* ユーザ/スーパバイザ    */
+              IA32_PAGING_RW_RW                     /* 読込/書込許可          */
           );
 
     /* 設定結果判定 */
@@ -828,9 +804,10 @@ static void UnsetUserStack( ProcInfo_t *pProcInfo )
 
         /* メモリマッピング解除 */
         MemmngPageUnset(
-            pProcInfo->dirId,               /* ページディレクトリID */
-            pProcInfo->userStack.pTopAddr,  /* 仮想アドレス         */
-            pProcInfo->userStack.size       /* マッピングサイズ     */
+            pProcInfo->dirId,               /* ページディレクトリID   */
+            pProcInfo->userStack.pTopAddr,  /* 仮想アドレス           */
+            pProcInfo->userStack.size,      /* マッピングサイズ       */
+            MEMMNG_PAGE_FREE_PHYS_FALSE     /* 物理メモリ領域自動解放 */
         );
 
         /* 物理メモリ領域解放 */

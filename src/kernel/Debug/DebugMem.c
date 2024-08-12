@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Debug/DebugMem.c                                                */
-/*                                                                 2024/06/16 */
+/*                                                                 2024/08/11 */
 /* Copyright (C) 2023-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -128,7 +128,7 @@ void DebugMemOutput( uint16_t   moduleId,
     /* 初期化 */
     size = 0;
     i    = 0;
-    pLog = ( memLog_t * ) &( pgMemArea->log[ gMemData.idx ] );
+    pLog = NULL;
 
     /* 書込みサイズ計算 */
     size  = sizeof ( memLog_t );
@@ -148,6 +148,7 @@ void DebugMemOutput( uint16_t   moduleId,
     }
 
     /* メモリ書込み */
+    pLog           = ( memLog_t * ) &( pgMemArea->log[ gMemData.idx ] );
     pLog->logNo    = gMemData.logNo;
     pLog->moduleId = moduleId;
     pLog->lineNo   = lineNo;

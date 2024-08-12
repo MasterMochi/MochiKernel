@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngCtrl.c                                             */
-/*                                                                 2026/07/20 */
+/*                                                                 2026/08/10 */
 /* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -94,6 +94,7 @@ void MemmngCtrlCopyPhysToPhys( void   *pDst,
                              ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
                              pSrc + idx,
                              mapSize,
+                             MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW                     );
@@ -109,6 +110,7 @@ void MemmngCtrlCopyPhysToPhys( void   *pDst,
                              ( void * ) MEMMAP_VADDR_KERNEL_CTRL2,
                              pDst + idx,
                              mapSize,
+                             MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW                     );
@@ -128,12 +130,14 @@ void MemmngCtrlCopyPhysToPhys( void   *pDst,
     /* メモリ制御領域ch1マッピング解除 */
     MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                      ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
-                     MEMMAP_VSIZE_KERNEL_CTRL1             );
+                     MEMMAP_VSIZE_KERNEL_CTRL1,
+                     MEMMNG_PAGE_FREE_PHYS_FALSE           );
 
     /* メモリ制御領域ch2マッピング解除 */
     MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                      ( void * ) MEMMAP_VADDR_KERNEL_CTRL2,
-                     MEMMAP_VSIZE_KERNEL_CTRL2             );
+                     MEMMAP_VSIZE_KERNEL_CTRL2,
+                     MEMMNG_PAGE_FREE_PHYS_FALSE           );
 
     return;
 }
@@ -195,6 +199,7 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
                              ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
                              pPAddr + idx,
                              mapSize,
+                             MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW                     );
@@ -215,7 +220,8 @@ void MemmngCtrlCopyVirtToPhys( void   *pPAddr,
     /* ページマッピング解除 */
     MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                      ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
-                     MEMMAP_VSIZE_KERNEL_CTRL1             );
+                     MEMMAP_VSIZE_KERNEL_CTRL1,
+                     MEMMNG_PAGE_FREE_PHYS_FALSE           );
 
     DEBUG_LOG_TRC( "%s() end.", __func__ );
 
@@ -279,6 +285,7 @@ void MemmngCtrlSet( void    *pPAddr,
                              ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
                              pPAddr + idx,
                              mapSize,
+                             MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_SV,
                              IA32_PAGING_RW_RW                     );
@@ -299,7 +306,8 @@ void MemmngCtrlSet( void    *pPAddr,
     /* ページマッピング解除 */
     MemmngPageUnset( MEMMNG_PAGE_DIR_ID_IDLE,
                      ( void * ) MEMMAP_VADDR_KERNEL_CTRL1,
-                     MEMMAP_VSIZE_KERNEL_CTRL1             );
+                     MEMMAP_VSIZE_KERNEL_CTRL1,
+                     MEMMNG_PAGE_FREE_PHYS_FALSE           );
 
     /* デバッグトレースログ出力 *//*
     DEBUG_LOG_TRC( "%s() end.", __func__ );*/

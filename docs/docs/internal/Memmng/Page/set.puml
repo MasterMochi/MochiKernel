@@ -7,7 +7,7 @@ end box
 participant "MLIB" as mlib
 participant "CPU"  as cpu
 
--> page: ページマッピング設定(\n  ページディレクトリID,\n  仮想アドレス@ページアライメント,\n  物理アドレス@ページアライメント,\n  サイズ@ページアライメント,\n  ページ属性 )
+-> page: ページマッピング設定(\n  ページディレクトリID,\n  仮想アドレス@ページアライメント,\n  物理メモリ領域自動割当,\n  物理アドレス@ページアライメント,\n  サイズ@ページアライメント,\n  ページ属性 )
 activate page
 
 opt アイドルプロセス用ページディレクトリIDでない
@@ -25,6 +25,13 @@ opt アイドルプロセス用ページディレクトリIDでない
 end opt
 
 loop 1ページ(4KBサイズ)毎に繰り返し
+    opt 物理メモリ領域自動割当が有効
+        page -> phys: 物理メモリ領域割当
+        activate phys
+        ref over phys: 物理メモリ領域割当
+        page <-- phys:
+        deactivate phys
+    end opt
     opt 仮想アドレスがユーザ領域
 
         alt ページテーブルが存在しない

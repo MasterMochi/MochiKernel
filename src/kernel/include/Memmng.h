@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/Memmng.h                                                */
-/*                                                                 2021/10/24 */
-/* Copyright (C) 2016-2021 Mochi.                                             */
+/*                                                                 2024/08/10 */
+/* Copyright (C) 2016-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef MEMMNG_H
@@ -11,6 +11,7 @@
 /* インクルード                                                               */
 /******************************************************************************/
 /* 標準ヘッダ */
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -63,6 +64,14 @@
 
 /** ページディレクトリID */
 typedef uint32_t MemmngPageDirId_t;
+
+/* 物理メモリ領域自動割当 */
+#define MEMMNG_PAGE_ALLOC_PHYS_TRUE  ( true  )  /**< 物理メモリ領域自動割当有 */
+#define MEMMNG_PAGE_ALLOC_PHYS_FALSE ( false )  /**< 物理メモリ領域自動割当無 */
+
+/* 物理メモリ領域自動解放 */
+#define MEMMNG_PAGE_FREE_PHYS_TRUE  ( true  )   /**< 物理メモリ領域自動解放有 */
+#define MEMMNG_PAGE_FREE_PHYS_FALSE ( false )   /**< 物理メモリ領域自動解放無 */
 
 
 /******************************************************************************/
@@ -137,6 +146,7 @@ extern CmnRet_t MemmngPageSet( MemmngPageDirId_t dirId,
                                void              *pVirtAddr,
                                void              *pPhysAddr,
                                size_t            size,
+                               bool              allocPhys,
                                uint32_t          attrGlobal,
                                uint32_t          attrUs,
                                uint32_t          attrRw      );
@@ -145,7 +155,8 @@ extern void MemmngPageSwitchDir( MemmngPageDirId_t dirId );
 /* ページマッピング解除 */
 extern CmnRet_t MemmngPageUnset( MemmngPageDirId_t dirId,
                                  void              *pVirtAddr,
-                                 size_t            size        );
+                                 size_t            size,
+                                 bool              freePhys    );
 
 /*--------------*/
 /* MemmngPhys.c */

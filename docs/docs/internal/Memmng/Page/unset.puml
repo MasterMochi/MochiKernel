@@ -7,7 +7,7 @@ end box
 participant "MLIB" as mlib
 participant "CPU"  as cpu
 
--> page: ページマッピング解除(\n  ページディレクトリID,\n  仮想アドレス@ページアライメント,\n  サイズ@ページアライメント )
+-> page: ページマッピング解除(\n  ページディレクトリID,\n  仮想アドレス@ページアライメント,\n  サイズ@ページアライメント,\n  物理メモリ領域自動解放 )
 activate page
 
 opt アイドルプロセス用ページディレクトリIDでない
@@ -32,6 +32,14 @@ loop 1ページ(4KBサイズ)毎に繰り返し
         ref over page: マッピング設定
         page /[#FFFFFF]-- page:
         deactivate page
+    end opt
+
+    opt 物理メモリ領域自動解放が有効
+        page -> phys: 物理メモリ領域解放
+        activate phys
+        ref over phys: 物理メモリ領域解放
+        page <-- phys:
+        deactivate phys
     end opt
 
     page -> page: ページテーブルエントリ0初期化

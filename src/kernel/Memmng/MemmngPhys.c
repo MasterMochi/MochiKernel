@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Memmng/MemmngPhys.c                                             */
-/*                                                                 2024/07/21 */
+/*                                                                 2024/08/11 */
 /* Copyright (C) 2018-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -24,6 +24,7 @@
 #include <memmap.h>
 #include <Cmn.h>
 #include <Debug.h>
+#include <Memmng.h>
 
 /* 内部モジュールヘッダ */
 #include "MemmngArea.h"
@@ -36,7 +37,7 @@
 #define _MODULE_ID_ CMN_MODULE_MEMMNG_PHYS
 
 /** ブロック管理情報数 */
-#define AREAINFO_NUM ( 1000 )
+#define AREAINFO_NUM ( 1048575 )
 
 /** 物理メモリ領域管理テーブル */
 typedef struct {
@@ -60,7 +61,8 @@ static PhysTbl_t gPhysTbl;
 /******************************************************************************/
 /**
  * @brief       物理メモリ領域割当
- * @details     指定サイズを満たす物理メモリ領域を割り当てる。
+ * @details     指定サイズを満たす物理メモリ領域を割り当てる。割当て領域は、0で
+ *              初期化する。
  *
  * @param[in]   size 割当サイズ
  *
@@ -98,7 +100,20 @@ void *MemmngPhysAlloc( size_t size )
                       &( gPhysTbl.unusedList ),
                       size                      );
 
-    DEBUG_LOG_TRC( "%s(): size=%d, pRet=%p", __func__, size, pRet );
+    /* 割当結果判定 */
+    if ( pRet != NULL ) {
+        /* 成功 */
+
+        DEBUG_LOG_TRC( "%s(): addr=%p, size=%d", __func__, pRet, size );
+
+        /* 0初期化 */
+        MemmngCtrlSet( pRet, 0, size );
+
+    } else {
+        /* 失敗 */
+
+        DEBUG_LOG_ERR( "%s(): failure! size=%d", __func__, size );
+    }
 
     return pRet;
 }
@@ -107,7 +122,7 @@ void *MemmngPhysAlloc( size_t size )
 /******************************************************************************/
 /**
  * @brief       物理メモリ領域解放
- * @details     割当中の物理メモリ領域を解放する。
+ * @details     割当済みの物理メモリ領域を解放する。
  *
  * @param[in]   *pAddr 解放するメモリアドレス
  *
@@ -127,6 +142,13 @@ CmnRet_t MemmngPhysFree( void *pAddr )
                     &( gPhysTbl.freeList   ),
                     &( gPhysTbl.unusedList ),
                     pAddr                     );
+
+    /* メモリ解放結果判定 */
+    if ( ret != CMN_SUCCESS ) {
+        /* 失敗 */
+
+        DEBUG_LOG_ERR( "%s(): failure! pAddr=%p", __func__, pAddr );
+    }
 
     return ret;
 }

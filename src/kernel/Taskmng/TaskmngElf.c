@@ -1,7 +1,7 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/Taskmng/TaskmngElf.c                                            */
-/*                                                                 2024/06/02 */
+/*                                                                 2024/08/10 */
 /* Copyright (C) 2017-2024 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
@@ -167,9 +167,10 @@ CmnRet_t ElfLoad( void              *pAddr,
                              ( void * ) pEntry->p_vaddr,
                              pPhyAddr,
                              size,
+                             MEMMNG_PAGE_ALLOC_PHYS_FALSE,
                              IA32_PAGING_G_NO,
                              IA32_PAGING_US_USER,
-                             attrRw                      );
+                             attrRw                        );
 
         /* 設定結果判定 */
         if ( ret != CMN_SUCCESS ) {

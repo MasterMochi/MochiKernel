@@ -52,7 +52,7 @@
             <div id="content">
                 <div>
                     <h1><a name="abstruct">タスク管理機能</a></h1>
-                    <p>MochiKernel上で動作するプログラム（コンテキスト）の最小単位をタスク、または、スレッドと呼び、同じメモリ空間を共有するスレッドのグループをプロセスと呼ぶ。MochiKernelは組込み済プロセス起動、スレッド起動、プロセス複製、スケジューリングを行う。</p>
+                    <p>MochiKernel上で動作するプログラム（コンテキスト）の最小単位をタスク、または、スレッドと呼び、同じメモリ空間を共有するスレッドのグループをプロセスと呼びます。MochiKernelは組込み済プロセス起動、スレッド起動、プロセス複製、スケジューリングを行います。</p>
                     <br>
                     <div class="center">
                         <img class="dark" src="task.png"><br>
@@ -71,7 +71,7 @@
                 <div class="totop"><a href="#top">▲上へ</a></div>
                 <div>
                     <h1><a name="fork">プロセス複製(fork)</a></h1>
-                    <p>MochiKernelはプロセスを複製して新しいプロセスを生成する機能forkを提供する。forkを呼び出したプロセスは親プロセス、forkによって複製された新しいプロセスを子プロセスと呼ぶ。forkによって複製されるリソースを以下に示す。</p>
+                    <p>MochiKernelはプロセスを複製して新しいプロセスを生成する機能forkを提供します。forkを呼び出したプロセスは親プロセス、forkによって複製された新しいプロセスを子プロセスと呼びます。forkによって複製されるリソースを以下に示します。</p>
                     <br>
                     <div class="center">forkにより複製されるリソース</div>
                     <table>
@@ -84,13 +84,13 @@
                         <tr>
                             <td class="center">1</td>
                             <td>メモリ</td>
-                            <td>ユーザ空間のメモリ領域は以下を除き複製する。<br>・I/Oメモリ領域</td>
+                            <td>ユーザ空間のメモリ領域は以下を除き複製します。<br>・I/Oメモリ領域</td>
                             <td>Copy On Write 未対応</td>
                         </tr>
                         <tr>
                             <td class="center">2</td>
                             <td>スレッド</td>
-                            <td>forkを呼び出したスレッドのみ複製する。</td>
+                            <td>forkを呼び出したスレッドのみ複製します。</td>
                             <td></td>
                         </tr>
                     </table>
@@ -99,7 +99,7 @@
                 <div class="totop"><a href="#top">▲上へ</a></div>
                 <div>
                     <h1><a name="sched">スケジューリング</a></h1>
-                    <p>MochiKernelはハードウェアタイマを用いて一定時間で、または、タスクがカーネルを呼び出した時にタスクを切り替えること(コンテキストスイッチ)によってプリエンプティブ・マルチタスクをサポートする。</p>
+                    <p>MochiKernelはハードウェアタイマを用いて一定時間で、または、タスクがカーネルを呼び出した時にタスクを切り替えること(コンテキストスイッチ)によってプリエンプティブ・マルチタスクをサポートします。</p>
                     <br>
                     <div class="center">
                         <img src="sched.png"><br>

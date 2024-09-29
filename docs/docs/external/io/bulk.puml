@@ -1,0 +1,46 @@
+@startuml
+
+participant "ドライバ"    as driver
+participant "MochiKernel" as kernel
+participant "CPU"         as cpu
+
+activate driver
+
+loop 最大32回
+    alt I/Oポート入力を登録する
+        driver ->> driver: I/Oポート入力登録( バルクデータ, I/Oポート番号 )
+    else I/Oポート出力を登録する
+        driver ->> driver: I/Oポート出力登録( バルクデータ, I/Oポート番号, データ )
+    end
+end
+
+driver ->> kernel: I/Oポートバルク実行( バルクデータ )
+activate kernel
+
+break タスク種別 != ドライバ
+    driver <<-- kernel:
+end
+
+loop 最大32回
+    alt I/Oポート入力
+        kernel ->> cpu: in命令
+        activate cpu
+        kernel <<-- cpu: データ
+        deactivate cpu
+    else I/Oポート出力
+        kernel ->> cpu: out命令
+        activate cpu
+        kernel <<-- cpu:
+        deactivate cpu
+    end
+end
+
+driver <<-- kernel:
+deactivate kernel
+
+loop 最大32回
+    driver ->> driver: I/Oポートデータ取出し( バルクデータ )
+end
+
+@enduml
+

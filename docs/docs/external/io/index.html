@@ -77,6 +77,14 @@
                         I/Oポート出力シーケンス
                     </div>
                     <br>
+                    <h2><a name="port-bulk">I/Oポートバルク入出力</a></h2>
+                    <p>I/Oポートのデータ入出力をまとめて行います。ドライバは予め入出力するI/Oポートアドレスとサイズ、出力を行う場合は出力値をバルクデータに順番に登録しておき、バルクデータを用いてバルク入出力を行います。</p>
+                    <br>
+                    <div class="center">
+                        <img src="bulk.png"><br>
+                        I/Oポートバルク入出力シーケンス
+                    </div>
+                    <br>
                 </div>
                 <div class="totop"><a href="#top">▲上へ</a></div>
                 <div>
@@ -102,7 +110,8 @@
                         <a href="#abstruct"><li>入出力制御機能</li></a>
                         <a href="#port"><li>ポートマップドI/O制御</li></a><ol>
                             <a href="#port-in"><li>I/Oポート入力</li></a>
-                            <a href="#port-out"><li>I/Oポート出力</li></a></ol>
+                            <a href="#port-out"><li>I/Oポート出力</li></a>
+                            <a href="#port-bulk"><li>I/Oポートバルク入出力</li></a></ol>
                         <a href="#mem"><li>メモリマップドI/O制御</li></a><ol>
                             <a href="#mem-alloc"><li>I/Oメモリ領域割当て</li></a>
                     </ol>

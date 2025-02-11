@@ -5,19 +5,22 @@ participant "MochiKernel" as kernel
 participant "CPU"         as cpu
 activate driver
 
-driver ->> kernel: I/Oポート入力( I/Oポート番号 )
+driver ->> kernel: I/Oポート入力( I/Oポート番号, データ格納先, 入力回数 )
 activate kernel
 
 break タスク種別 != ドライバ
     driver <<-- kernel:
 end break
 
-kernel ->> cpu: in命令
-activate cpu
-kernel <<-- cpu: データ
-deactivate cpu
+loop 入力回数
+    kernel ->> cpu: in命令
+    activate cpu
+    kernel <<-- cpu: データ
+    deactivate cpu
+    kernel -> kernel: データインデックス+=1
+end loop
 
-driver <<-- kernel: データ
+driver <<-- kernel:
 deactivate kernel
 
 @enduml

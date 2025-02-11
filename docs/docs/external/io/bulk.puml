@@ -8,7 +8,7 @@ activate driver
 
 loop 最大32回
     alt I/Oポート入力を登録する
-        driver ->> driver: I/Oポート入力登録( バルクデータ, I/Oポート番号 )
+        driver ->> driver: I/Oポート入力登録( バルクデータ, I/Oポート番号, データ格納先 )
     else I/Oポート出力を登録する
         driver ->> driver: I/Oポート出力登録( バルクデータ, I/Oポート番号, データ )
     end
@@ -28,7 +28,7 @@ loop 最大32回
         kernel <<-- cpu: データ
         deactivate cpu
     else I/Oポート出力
-        kernel ->> cpu: out命令
+        kernel ->> cpu: out命令( データ )
         activate cpu
         kernel <<-- cpu:
         deactivate cpu
@@ -37,10 +37,6 @@ end
 
 driver <<-- kernel:
 deactivate kernel
-
-loop 最大32回
-    driver ->> driver: I/Oポートデータ取出し( バルクデータ )
-end
 
 @enduml
 

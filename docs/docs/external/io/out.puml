@@ -6,17 +6,20 @@ participant "CPU"         as cpu
 
 activate driver
 
-driver ->> kernel: I/Oポート出力( I/Oポート番号, データ )
+driver ->> kernel: I/Oポート出力( I/Oポート番号, データ格納先, 出力回数 )
 activate kernel
 
 break タスク種別 != ドライバ
     driver <<-- kernel:
 end break
 
-kernel ->> cpu: out命令
-activate cpu
-kernel <<-- cpu:
-deactivate cpu
+loop 出力回数
+    kernel ->> cpu: out命令( データ )
+    activate cpu
+    kernel <<-- cpu:
+    deactivate cpu
+    kernel -> kernel: データインデックス+=1
+end loop
 
 driver <<-- kernel:
 deactivate kernel

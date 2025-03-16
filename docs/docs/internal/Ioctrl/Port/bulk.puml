@@ -1,0 +1,52 @@
+@startuml
+
+participant "割込み管理" as Intmng
+box "入出力制御"
+    participant "ポートマップドI/O制御" as port
+end box
+participant "タスク管理" as Taskmng
+participant "CPU" as cpu
+
+Intmng -> port: 割込みハンドラ( 割込み番号, コンテキスト )
+activate port
+
+opt 機能ID == I/Oポートバルク入出力
+
+    port -> Taskmng: タスクID取得
+    activate Taskmng
+    ref over Taskmng: タスクID取得
+    port <-- Taskmng:
+    deactivate Taskmng
+
+    port -> Taskmng: プロセスタイプ取得
+    activate Taskmng
+    ref over Taskmng: プロセスタイプ取得
+    port <-- Taskmng:
+    deactivate Taskmng
+
+    break プロセスタイプ != ドライバ
+        Intmng <-- port:
+    end
+
+    loop 最大32回
+        alt I/Oポート入力
+            port -> cpu: in命令
+            activate cpu
+            port <-- cpu: データ
+            deactivate cpu
+        else I/Oポート出力
+            port -> cpu: out命令( データ )
+            activate cpu
+            port <-- cpu:
+            deactivate cpu
+        end
+    end loop
+
+end
+
+Intmng <-- port:
+deactivate port
+
+@enduml
+
+

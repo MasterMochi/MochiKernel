@@ -1,0 +1,99 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36" version="24.7.16">
+  <diagram name="ページ1" id="sW8xyi3ToL150gHZTHVQ">
+    <mxGraphModel dx="1147" dy="586" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-1" value="MochiKernel" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="700" height="310" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-2" value="入出力制御" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=bottom;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="100" y="250" width="580" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-9" value="初期化" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=2;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-3" target="X_gpG3CvC2Lm7OAAnQWN-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-3" value="メイン" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="300" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-8" value="初期化" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=2;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-4" target="X_gpG3CvC2Lm7OAAnQWN-3">
+          <mxGeometry x="0.2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-4" value="初期化制御" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="190" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-5" value="メモリ管理" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="410" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-12" value="割込みハンドラ設定" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;entryX=0.094;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-6" target="X_gpG3CvC2Lm7OAAnQWN-11">
+          <mxGeometry x="0.155" y="-2" relative="1" as="geometry">
+            <mxPoint x="297.5" y="301" as="sourcePoint" />
+            <mxPoint x="300" y="240" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-15" value="タスクID取得&lt;div&gt;プロセスタイプ取得&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;spacingRight=2;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-6" target="X_gpG3CvC2Lm7OAAnQWN-14">
+          <mxGeometry x="0.1429" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-6" value="ポートマップド&lt;span style=&quot;background-color: initial;&quot;&gt;I/O制御&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="300" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-7" target="X_gpG3CvC2Lm7OAAnQWN-14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="548" y="360" />
+              <mxPoint x="335" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.095;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-7" target="X_gpG3CvC2Lm7OAAnQWN-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="548" y="280" />
+              <mxPoint x="298" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-19" value="ページディレクトリID取得&lt;div&gt;I/Oメモリ領域割当&lt;/div&gt;&lt;div&gt;仮想メモリ領域割当&lt;/div&gt;&lt;div&gt;ページマッピング設定&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=2;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-7" target="X_gpG3CvC2Lm7OAAnQWN-5">
+          <mxGeometry x="-0.1429" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-7" value="メモリマップド&lt;span style=&quot;background-color: initial;&quot;&gt;I/O制御&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="300" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-13" value="割込みハンドラ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.906;exitY=1.005;exitDx=0;exitDy=0;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;entryX=0.75;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;spacingLeft=2;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-11" target="X_gpG3CvC2Lm7OAAnQWN-6">
+          <mxGeometry x="-0.8135" relative="1" as="geometry">
+            <mxPoint x="410" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="622" y="270" />
+              <mxPoint x="373" y="270" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.905;exitY=1.025;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" edge="1" parent="1" source="X_gpG3CvC2Lm7OAAnQWN-11" target="X_gpG3CvC2Lm7OAAnQWN-7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="623" y="231" />
+              <mxPoint x="623" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-11" value="割込み管理" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="190" width="400" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-14" value="タスク管理" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="410" width="150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="X_gpG3CvC2Lm7OAAnQWN-20" value="（各サブモジュール）" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="100" y="360" width="140" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

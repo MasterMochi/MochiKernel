@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - 入出力制御(メイン)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">入出力制御</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">メイン</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>サブモジュールを初期化して入出力制御を有効にします。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>各サブモジュールの初期化を行います。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#init"><li>初期化</li></a>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2024 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

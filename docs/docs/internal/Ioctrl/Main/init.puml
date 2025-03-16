@@ -1,0 +1,26 @@
+@startuml
+
+participant "初期化制御" as Initctrl
+box "入出力制御"
+    participant "メイン"                as Ioctrl
+    participant "ポートマップドI/O制御" as IoctrlPort
+    participant "メモリマップドI/O制御" as IoctrlMem
+end box
+
+Initctrl -> Ioctrl: 初期化
+activate Ioctrl
+
+Ioctrl -> IoctrlPort: 初期化
+activate IoctrlPort
+Ioctrl <-- IoctrlPort:
+deactivate IoctrlPort
+
+Ioctrl -> IoctrlMem: 初期化
+activate IoctrlMem
+Ioctrl <-- IoctrlMem:
+deactivate IoctrlMem
+
+Initctrl <-- Ioctrl:
+deactivate Ioctrl
+
+@enduml

@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"><!-- IE互換モード回避 -->
+        <meta name="author" content="Mochi">
+        <meta name="viewport" content="width=device-width,initial-scale=1"><!-- レスポンシブデザイン -->
+        <meta name="description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <meta name="format-detection" content="email=no,telephone=no,address=no">
+        <meta property="og:url" content="https://MasterMochi.github.io/MochiKernel/">
+        <meta property="og:title" content="MochiKernel">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="MochiKernelはフルスクラッチで開発中のマイクロカーネルです。">
+        <!-- <meta property="og:image" content=""> -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="@master_mochi">
+        <!-- <meta name="msapplication-TileImage" content="" --><!-- MSWIN8～ピン留め対応 -->
+        <meta name="msapplication-TitleColor" content="#424242"><!-- MSWIN8～ピン留め対応 -->
+        <link rel="stylesheet" href="../../../../style.css">
+        <link rel="canonical" href="https://MasterMochi.github.io/MochiKernel/">
+        <link href="https://fonts.googleapis.com/css?family=Cutive+Mono" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Sawarabi+Mincho" rel="stylesheet">
+        <link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+        <title>MochiKernel - 入出力制御(ポートマップドI/O制御)</title>
+    </head>
+    <body>
+        <a name="totop"></a>
+        <div id="header">
+            <div id="menu">
+                <a href="../../../../index.html"><div id="logo">MochiKernel</div></a>
+                <a href="../../../index.html"><div>Docs</div></a>
+            </div>
+        </div>
+        <div id="crumb">
+            <ol itemscope itemtype="http://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+                    <meta itemprop="position" content="1"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html"><span itemprop="name">Docs</span></a>
+                    <meta itemprop="position" content="2"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../../../index.html#internal"><span itemprop="name">内部仕様</span></a>
+                    <meta itemprop="position" content="3"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="../index.html"><span itemprop="name">入出力制御</span></a>
+                    <meta itemprop="position" content="4"></li>
+                <li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                    <a itemprop="item" href="./index.html"><span itemprop="name">ポートマップドI/O制御</span></a>
+                    <meta itemprop="position" content="5"></li>
+            </ol>
+        </div>
+        <div id="main">
+            <div id="content">
+                <div>
+                    <h1><a name="abstruct">概要</a></h1>
+                    <p>ポートマップドI/O制御モジュールは、ドライバタスクからのI/Oポートの入力要求、出力要求、バルク実行要求を処理します。</p>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="init">初期化</a></h1>
+                    <p>ドライバタスクからの要求を受け取れる様に、割込みハンドラを設定します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="init.png"><br>
+                        初期化シーケンス
+                    </div>
+                    <br>
+                    <h2><a name="init-hdl">割込みハンドラ設定</a></h2>
+                    <p>割込み管理モジュールの機能を用いて、ポートマップドI/O制御が提供するカーネルコールの割込みハンドラを設定します。設定パラメータを以下に示します。</p>
+                    <br>
+                    <div class="center">割込みハンドラ設定パラメータ</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">パラメータ</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td class="center">割込み番号</td>
+                            <td class~"right">0x31</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td class="center">特権レベル</td>
+                            <td class="right">3</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="in">I/Oポート入力</a></h1>
+                    <p>指定されたI/Oポートからデータを入力し返します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="in.png"><br>
+                        I/Oポート入力
+                    </div>
+                    <br>
+                    <h2><a name="in-id">タスクID取得</a></h2>
+                    <p>要求したタスクのプロセスタイプを取得するために、タスクIDを取得します。</p>
+                    <br>
+                    <h2><a name="in-type">プロセスタイプ取得とチェック</a></h2>
+                    <p>タスクID使ってプロセスタイプを取得し、ドライバプロセスであるかチェックします。ドライバプロセスでない場合は、エラーを返します。</p>
+                    <br>
+                    <div class="center">ドライバプロセスでない場合のカーネルコール戻り値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ret</td>
+                            <td>MK_RET_FAILURE</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>err</td>
+                            <td>MK_ERR_UNAUTHORIZED</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="in-exe">in命令実行</a></h2>
+                    <p>指定されたI/Oポートからデータを入力するために、指定回数のin命令を実行します（実際には、1回のrep ins命令で効率化します）。</p>
+                    <br>
+                    <div class="center">カーネルコール戻り値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ret</td>
+                            <td>MK_RET_SUCCESS</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>err</td>
+                            <td>MK_ERR_NONE</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td>*pData</td>
+                            <td>(入力データ)</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="out">I/Oポート出力</a></h1>
+                    <p>指定されたI/Oポートにデータを出力します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="out.png"><br>
+                        I/Oポート出力
+                    </div>
+                    <br>
+                    <h2><a name="out-id">タスクID取得</a></h2>
+                    <p>要求したタスクのプロセスタイプを取得するために、タスクIDを取得します。</p>
+                    <br>
+                    <h2><a name="out-type">プロセスタイプ取得とチェック</a></h2>
+                    <p>タスクID使ってプロセスタイプを取得し、ドライバプロセスであるかチェックします。ドライバプロセスでない場合は、エラーを返します。</p>
+                    <br>
+                    <div class="center">ドライバプロセスでない場合のカーネルコール戻り値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ret</td>
+                            <td>MK_RET_FAILURE</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>err</td>
+                            <td>MK_ERR_UNAUTHORIZED</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="out-exe">out命令実行</a></h2>
+                    <p>指定されたI/Oポートにデータを出力するために、指定回数のout命令を実行します（実際には、1回のrep outs命令で効率化します）。</p>
+                    <br>
+                    <div class="center">カーネルコール戻り値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ret</td>
+                            <td>MK_RET_SUCCESS</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>err</td>
+                            <td>MK_ERR_NONE</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+                <div>
+                    <h1><a name="bulk">I/Oポートバルク入出力</a></h1>
+                    <p>バルクデータに従ってI/Oポートにデータを入出力します。</p>
+                    <br>
+                    <div class="center">
+                        <img src="bulk.png"><br>
+                        I/Oポートバルク入出力
+                    </div>
+                    <br>
+                    <h2><a name="bulk-id">タスクID取得</a></h2>
+                    <p>要求したタスクのプロセスタイプを取得するために、タスクIDを取得します。</p>
+                    <br>
+                    <h2><a name="bulk-type">プロセスタイプ取得とチェック</a></h2>
+                    <p>タスクID使ってプロセスタイプを取得し、ドライバプロセスであるかチェックします。ドライバプロセスでない場合は、エラーを返します。</p>
+                    <br>
+                    <div class="center">ドライバプロセスでない場合のカーネルコール戻り値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ret</td>
+                            <td>MK_RET_FAILURE</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>err</td>
+                            <td>MK_ERR_UNAUTHORIZED</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="bulk-data">バルクデータ</a></h2>
+                    <p>バルクデータの構造は下記の通りです。</p>
+                    <br>
+                    <div class="center">バルクデータ構造</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">説明</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>size</td>
+                            <td>入出力数（最大32）</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>data[]</td>
+                            <td>
+                                I/Oポート入出力データリスト<br>
+                                <br>
+                                データは入出力処理順で設定します。<br>
+                                先頭からsizeで指定したエントリ数のみ参照するため、<br>
+                                必ず32エントリ分の領域を用意する必要はありません。
+                            </td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <div class="center">I/Oポート入出力データ構造</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">説明</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>method</td>
+                            <td>
+                                入力か出力かを表す。<br>
+                                <table>
+                                    <tr><td>0</td><td>入力(8bit)</td>
+                                    <tr><td>1</td><td>入力(16bit)</td>
+                                    <tr><td>2</td><td>入力(32bit)</td>
+                                    <tr><td>3</td><td>出力(8bit)</td>
+                                    <tr><td>4</td><td>出力(16bit)</td>
+                                    <tr><td>5</td><td>出力(32bit)</td>
+                                </table>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>portNo</td>
+                            <td>I/Oポート番号</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">3</td>
+                            <td>*pData</td>
+                            <td>入出力データ格納先</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <h2><a name="bulk-in">in命令実行</a></h2>
+                    <p>指定されたI/Oポートからデータを入力するために、in命令を実行します。入力したデータは入出力データのpDataが指す領域に格納します。</p>
+                    <br>
+                    <h2><a name="bulk-out">out命令実行</a></h2>
+                    <p>指定されたI/Oポートにデータを出力するために、out命令を実行します。出力するデータは入出力データのpDataが指す領域を参照します。</p>
+                    <br>
+                    <h2><a name="bulk-return">カーネルコール戻り値設定</a></h2>
+                    <p>全ての入出力を終えた後、下記のカーネルコール戻り値を設定します。</p>
+                    <br>
+                    <div class="center">カーネルコール戻り値</div>
+                    <table>
+                        <tr>
+                            <td class="title">#</td>
+                            <td class="title">メンバ変数</td>
+                            <td class="title">値</td>
+                            <td class="title">備考</td>
+                        </tr>
+                        <tr>
+                            <td class="center">1</td>
+                            <td>ret</td>
+                            <td>MK_RET_SUCCESS</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="center">2</td>
+                            <td>err</td>
+                            <td>MK_ERR_NONE</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="totop"><a href="#top">▲上へ</a></div>
+            </div>
+            <div>
+                <div id="content-menu">
+                    <h1>目次</h1>
+                    <ol>
+                        <a href="#abstruct"><li>概要</li></a>
+                        <a href="#init"><li>初期化</li></a>
+                        <a href="#in"><li>I/Oポート入力</li></a><ol>
+                            <a href="#in-id"><li>タスクID取得</li></a>
+                            <a href="#in-type"><li>プロセスタイプ取得とチェック</li></a>
+                            <a href="#in-exe"><li>in命令実行</a></li></ol>
+                        <a href="#out"><li>I/Oポート出力</li></a><ol>
+                            <a href="#out-id"><li>タスクID取得</li></a>
+                            <a href="#out-type"><li>プロセスタイプ取得とチェック</li></a>
+                            <a href="#out-exe"><li>out命令実行</a></li></ol>
+                        <a href="#bulk"><li>I/Oポートバルク入出力</li></a><ol>
+                            <a href="#bulk-id"><li>タスクID取得</li></a>
+                            <a href="#bulk-type"><li>プロセスタイプ取得とチェック</li></a>
+                            <a href="#bulk-data"><li>バルクデータ</a></li>
+                            <a href="#bulk-in"><li>in命令実行</a></li>
+                            <a href="#bulk-out"><li>out命令実行</a></li>
+                            <a href="#bulk-return"><li>カーネルコール戻り値設定</a></li></ol>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="copyright">
+                Copyright &copy 2024 Mochi. All rights reserved.
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,21 @@
+@startuml
+
+box "入出力制御"
+    participant "メイン"                as main
+    participant "ポートマップドI/O制御" as port
+end box
+participant "割込み管理" as Intmng
+
+main -> port: 初期化
+activate port
+
+port -> Intmng: 割込みハンドラ設定
+activate Intmng
+ref over Intmng: 割込みハンドラ設定
+port <-- Intmng:
+deactivate Intmng
+
+main <-- port
+deactivate port
+
+@enduml

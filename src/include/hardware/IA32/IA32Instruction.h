@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* src/kernel/include/hardware/IA32/IA32Instruction.h                         */
-/*                                                                 2019/07/23 */
-/* Copyright (C) 2016-2019 Mochi.                                             */
+/*                                                                 2025/03/30 */
+/* Copyright (C) 2016-2025 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef IA32_INSTRUCTION_H
@@ -630,31 +630,164 @@ static inline void IA32InstructionPushGs( void )
 
 /******************************************************************************/
 /**
- * @brief       rep insw命令実行
- * @details     rep insw命令を実行して、指定I/Oポートから16bitの値を読み込み、
- *              指定アドレスに格納する処理をアドレスを進めながら指定回数分繰り
- *              返す。
+ * @brief       rep insb命令実行
+ * @details     指定I/Oポートから8bitの値を指定アドレスに格納する命令を、格納先
+ *              アドレスを進めながら指定回数繰り返す。
  *
- * @param[out]  *pAddr 格納先アドレス
- * @param[in]   port   I/Oポート番号
+ * @param[out]  *pAddr 格納先先頭アドレス
+ * @param[in]   portNo I/Oポート番号
  * @param[in]   count  繰り返し回数
  */
 /******************************************************************************/
-static inline void IA32InstructionRepInsw( void     *pAddr,
-                                           uint16_t port,
+static inline void IA32InstructionRepInsb( uint8_t  *pAddr,
+                                           uint16_t portNo,
                                            size_t   count   )
 {
-    /* insw命令実行 */
-    __asm__ __volatile__ ( "mov edi, %0;"   /* edi 格納先アドレス設定 */
-                           "cld;"           /* 増加設定               */
-                           "rep insw"       /* insw命令実行           */
-                           :                /* 出力無し               */
-                           : "m" ( pAddr ), /* edi 格納先アドレス     */
-                             "d" ( port  ), /* dx  I/Oポート番号設定  */
-                             "c" ( count )  /* ecx 繰り返し回数設定   */
-                           : "edi",         /* ediレジスタ破壊指定    */
-                             //"cx",         /* ecxレジスタ破壊指定    */
-                             "cc" );        /* EFLAGSレジスタ破壊指定 */
+    __asm__ __volatile__ ( "cld; rep insb"
+                           : "=D" ( pAddr  ),       /* output : edi */
+                             "=c" ( count  )        /* output : ecx */
+                           : "0"  ( pAddr  ),       /* input  : edi */
+                             "1"  ( count  ),       /* input  : ecx */
+                             "d"  ( portNo )        /* input  : edx */
+                           : "memory",
+                             "cc"             );    /* clobber: DF  */
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       rep insd命令実行
+ * @details     指定I/Oポートから32bitの値を指定アドレスに格納する命令を、格納
+ *              先アドレスを進めながら指定回数繰り返す。
+ *
+ * @param[out]  *pAddr 格納先先頭アドレス
+ * @param[in]   portNo I/Oポート番号
+ * @param[in]   count  繰り返し回数
+ */
+/******************************************************************************/
+static inline void IA32InstructionRepInsd( uint32_t *pAddr,
+                                           uint16_t portNo,
+                                           size_t   count   )
+{
+    __asm__ __volatile__ ( "cld; rep insd"
+                           : "=D" ( pAddr  ),       /* output : edi */
+                             "=c" ( count  )        /* output : ecx */
+                           : "0"  ( pAddr  ),       /* input  : edi */
+                             "1"  ( count  ),       /* input  : ecx */
+                             "d"  ( portNo )        /* input  : edx */
+                           : "memory",
+                             "cc"             );    /* clobber: DF  */
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       rep insw命令実行
+ * @details     指定I/Oポートから16bitの値を指定アドレスに格納する命令を、格納
+ *              先アドレスを進めながら指定回数繰り返す。
+ *
+ * @param[out]  *pAddr 格納先先頭アドレス
+ * @param[in]   portNo I/Oポート番号
+ * @param[in]   count  繰り返し回数
+ */
+/******************************************************************************/
+static inline void IA32InstructionRepInsw( uint16_t *pAddr,
+                                           uint16_t portNo,
+                                           size_t   count   )
+{
+    __asm__ __volatile__ ( "cld; rep insw"
+                           : "=D" ( pAddr  ),       /* output : edi */
+                             "=c" ( count  )        /* output : ecx */
+                           : "0"  ( pAddr  ),       /* input  : edi */
+                             "1"  ( count  ),       /* input  : ecx */
+                             "d"  ( portNo )        /* input  : edx */
+                           : "memory",
+                             "cc"             );    /* clobber: DF  */
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       rep outsb命令実行
+ * @details     指定アドレスから8bitの値を指定I/Oポートに格納する命令を、読込み
+ *              元アドレスを進めながら指定回数繰り返す。
+ *
+ * @param[in]   *pAddr 読込み元先頭アドレス
+ * @param[in]   portNo I/Oポート番号
+ * @param[in]   count  繰り返し回数
+ */
+/******************************************************************************/
+static inline void IA32InstructionRepOutsb( const uint16_t *pAddr,
+                                            uint16_t       portNo,
+                                            size_t         count   )
+{
+    __asm__ __volatile__ ( "cld; rep outsb"
+                           : "=S" ( pAddr  ),       /* output : esi */
+                             "=c" ( count  )        /* output : ecx */
+                           : "0"  ( pAddr  ),       /* input  : esi */
+                             "1"  ( count  ),       /* input  : ecx */
+                             "d"  ( portNo )        /* input  : edx */
+                           : "cc"             );    /* clobber: DF  */
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       rep outsd命令実行
+ * @details     指定アドレスから32bitの値を指定I/Oポートに格納する命令を、読込
+ *              み元アドレスを進めながら指定回数繰り返す。
+ *
+ * @param[in]   *pAddr 読込み元先頭アドレス
+ * @param[in]   portNo I/Oポート番号
+ * @param[in]   count  繰り返し回数
+ */
+/******************************************************************************/
+static inline void IA32InstructionRepOutsd( const uint32_t *pAddr,
+                                            uint16_t       portNo,
+                                            size_t         count   )
+{
+    __asm__ __volatile__ ( "cld; rep outsd"
+                           : "=S" ( pAddr  ),       /* output : esi */
+                             "=c" ( count  )        /* output : ecx */
+                           : "0"  ( pAddr  ),       /* input  : esi */
+                             "1"  ( count  ),       /* input  : ecx */
+                             "d"  ( portNo )        /* input  : edx */
+                           : "cc"             );    /* clobber: DF  */
+
+    return;
+}
+
+
+/******************************************************************************/
+/**
+ * @brief       rep outsw命令実行
+ * @details     指定アドレスから16bitの値を指定I/Oポートに格納する命令を、読込
+ *              み元アドレスを進めながら指定回数繰り返す。
+ *
+ * @param[in]   *pAddr 読込み元先頭アドレス
+ * @param[in]   portNo I/Oポート番号
+ * @param[in]   count  繰り返し回数
+ */
+/******************************************************************************/
+static inline void IA32InstructionRepOutsw( const uint32_t *pAddr,
+                                            uint16_t       portNo,
+                                            size_t         count   )
+{
+    __asm__ __volatile__ ( "cld; rep outsw"
+                           : "=S" ( pAddr  ),       /* output : esi */
+                             "=c" ( count  )        /* output : ecx */
+                           : "0"  ( pAddr  ),       /* input  : esi */
+                             "1"  ( count  ),       /* input  : ecx */
+                             "d"  ( portNo )        /* input  : edx */
+                           : "cc"             );    /* clobber: DF  */
 
     return;
 }

@@ -1,8 +1,8 @@
 /******************************************************************************/
 /*                                                                            */
 /* libmk.h                                                                    */
-/*                                                                 2024/03/24 */
-/* Copyright (C) 2018-2024 Mochi.                                             */
+/*                                                                 2025/04/02 */
+/* Copyright (C) 2018-2025 Mochi.                                             */
 /*                                                                            */
 /******************************************************************************/
 #ifndef __LIBMK_H__
@@ -92,6 +92,9 @@ extern MkRet_t LibMkIoMemAlloc( void     *pIoAddr,
 /*-----------*/
 /* I/Oポート */
 /*-----------*/
+/* I/Oポートバルク入出力 */
+extern MkRet_t LibMkIoPortBulk( MkIoPortBulk_t *pData,
+                                MkErr_t        *pErr   );
 /* I/Oポート入力(1byte) */
 extern MkRet_t LibMkIoPortInByte( uint16_t portNo,
                                   void     *pData,
